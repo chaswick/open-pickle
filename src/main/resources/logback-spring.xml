@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- Include default Spring Boot logback configuration for console output -->
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+  
+  <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/application.log</file>
+    <filter class="com.w3llspring.fhpb.web.logging.MdcValueFilter">
+      <key>fhpbLogChannel</key>
+      <value>jobs</value>
+      <onMatch>DENY</onMatch>
+      <onMismatch>NEUTRAL</onMismatch>
+    </filter>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!-- daily rollover, split large days, keep 30 days, cap archived size -->
+      <fileNamePattern>logs/application.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <maxFileSize>20MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} : %msg%n%ex</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="JOB_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/jobs.log</file>
+    <filter class="com.w3llspring.fhpb.web.logging.MdcValueFilter">
+      <key>fhpbLogChannel</key>
+      <value>jobs</value>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>logs/jobs.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <maxFileSize>20MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>512MB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{fhpbJobName}] %logger{36} : %msg%n%ex</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Root logger to ensure exceptions are logged to console and durable file logs -->
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="APP_FILE"/>
+    <appender-ref ref="JOB_FILE"/>
+  </root>
+
+  <!-- Keep default Spring Boot appenders untouched; add dedicated file appenders for transcript/perf logging -->
+
+  <appender name="TRANSCRIPT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/transcripts.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!-- daily rollover, split large days, keep 30 days, cap archived size -->
+      <fileNamePattern>logs/transcripts.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <maxFileSize>20MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>256MB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Logger specifically for transcript entries -->
+  <logger name="com.w3llspring.fhpb.transcripts" level="INFO" additivity="false">
+    <appender-ref ref="TRANSCRIPT_FILE" />
+  </logger>
+
+  <appender name="PERF_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/perf.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!-- daily rollover, split large days, keep 30 days, cap archived size -->
+      <fileNamePattern>logs/perf.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <maxFileSize>20MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>512MB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} %-5level %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Logger specifically for request timing entries (JSON lines) -->
+  <logger name="com.w3llspring.fhpb.perf" level="INFO" additivity="false">
+    <appender-ref ref="PERF_FILE" />
+  </logger>
+
+  <!-- Ensure web exceptions are logged with full stack traces -->
+  <logger name="org.springframework.web" level="DEBUG"/>
+  <logger name="org.springframework.web.servlet.DispatcherServlet" level="DEBUG"/>
+  <logger name="org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver" level="DEBUG"/>
+  <logger name="org.springframework.boot.web.servlet.error" level="DEBUG"/>
+
+  <!-- Enable debug logging for our web controllers so controller-level debug statements appear -->
+  <logger name="com.w3llspring.fhpb.web.controller" level="DEBUG"/>
+
+</configuration>

@@ -1,0 +1,151 @@
+<!doctype html>
+
+<div xmlns:th="http://www.thymeleaf.org"
+     th:fragment="standingsList(ladderDisplay, currentUserId, listId, listClass, showCompetitionFeatures, reportedCompetitionUserIds, playedAgainstUserIds, showFilteredEmptyState, filteredEmptyId, filteredEmptyMessage)">
+    <div class="list-group"
+         th:id="${listId}"
+         th:classappend="${listClass != null ? listClass : ''}">
+        <div class="list-group-item ladder-standing-row ladder-header-row"
+             th:if="${ladderDisplay != null and !#lists.isEmpty(ladderDisplay) and !ladderDisplay[0].showBandHeader}">
+            <div class="ladder-row-inner text-uppercase small fw-semibold text-muted">
+                <span class="text-muted" title="Form">Frm</span>
+                <span class="ladder-rank" title="Rank">#</span>
+                <span class="player-cell">Player</span>
+                <span class="ladder-rating">Rating</span>
+            </div>
+        </div>
+        <th:block th:each="row : ${ladderDisplay}">
+            <div class="list-group-item ladder-band-header"
+                 th:if="${row.showBandHeader}"
+                 data-band-header="true"
+                 th:classappend="${' ' + row.bandCssClass}"
+                 th:text="${row.bandName}">
+                Division Name
+            </div>
+            <div class="list-group-item ladder-standing-row ladder-header-row"
+                 th:if="${row.showBandHeader}">
+                <div class="ladder-row-inner text-uppercase small fw-semibold text-muted">
+                    <span class="text-muted" title="Form">Frm</span>
+                    <span class="ladder-rank" title="Rank">#</span>
+                    <span class="player-cell">Player</span>
+                    <span class="ladder-rating">Rating</span>
+                </div>
+            </div>
+            <div class="list-group-item ladder-standing-row"
+                 data-player-row="true"
+                 th:id="${showCompetitionFeatures and row.userId == currentUserId ? 'competition-row-me' : null}"
+                 th:attr="data-user-id=${showCompetitionFeatures ? row.userId : null},data-current-user=${showCompetitionFeatures ? row.userId == currentUserId : null},data-played-against=${showCompetitionFeatures and playedAgainstUserIds != null and row.userId != null and playedAgainstUserIds.contains(row.userId)}"
+                 th:classappend="${' ' + row.bandCssClass + (row.userId == currentUserId ? ' current-user-row' : '')}">
+                <div class="ladder-row-inner">
+                    <span class="badge rounded-pill bg-light border ladder-momentum d-inline-flex align-items-center gap-1"
+                          aria-live="polite"
+                          th:title="${(row.momentum > 0 ? '+' : '') + row.momentum + ' form'}"
+                          th:classappend="
+                                ${row.momentum >= 12} ? ' text-success border-success' :
+                                (${row.momentum >= 8}  ? ' text-success border-success' :
+                                (${row.momentum >= 4}  ? ' text-success border-success' :
+                                (${row.momentum > 0}   ? ' text-success border-success' :
+                                (${row.momentum == 0}  ? ' text-muted border-secondary' :
+                                (${row.momentum <= -12}? ' text-danger border-danger' :
+                                (${row.momentum <= -8} ? ' text-danger border-danger' :
+                                (${row.momentum <= -4} ? ' text-warning border-warning' :
+                                                          ' text-warning border-warning')))))))">
+                        <i class="bi"
+                           th:classappend="
+                                ${row.momentum >= 12} ? ' bi-fire' :
+                                (${row.momentum >= 8}  ? ' bi-triangle-fill' :
+                                (${row.momentum >= 4}  ? ' bi-triangle-half' :
+                                (${row.momentum > 0}   ? ' bi-triangle' :
+                                (${row.momentum == 0}  ? ' bi-dash-circle' :
+                                (${row.momentum <= -12}? ' bi-snow' :
+                                (${row.momentum <= -8} ? ' bi-triangle-fill rot-180' :
+                                (${row.momentum <= -4} ? ' bi-triangle-half rot-180' :
+                                                          ' bi-triangle rot-180')))))))"></i>
+                    </span>
+                    <span class="ladder-rank text-muted" th:text="${row.rank}">1</span>
+                    <div class="player-cell" th:title="${row.bandLabel}">
+                        <div class="player-name-with-badges">
+                            <div class="player-name-line">
+                                <a class="player-link link-contrast fw-semibold player-name-label"
+                                   th:if="${row.userPublicCode != null}"
+                                   th:text="${row.displayName}"
+                                   th:href="@{/account(member=${row.userPublicCode})}"></a>
+                                <span class="fw-semibold player-name-label"
+                                      th:if="${row.userPublicCode == null}"
+                                      th:text="${row.displayName}">
+                                    Player Name
+                                </span>
+                                <span th:if="${showCompetitionFeatures and row.competitionSafeDisplayNameActive}"
+                                      class="competition-name-override-indicator"
+                                      title="Original display name hidden after player reports"
+                                      aria-label="Original display name hidden after player reports">
+                                    Hidden
+                                </span>
+                                <span th:if="${row.rank == 1}"
+                                      class="player-crown"
+                                      role="img"
+                                      aria-label="Top ranked player">
+                                    <i class="bi bi-trophy-fill" aria-hidden="true"></i>
+                                </span>
+                                <form th:if="${showCompetitionFeatures and row.userId != null and row.userId != currentUserId and !row.competitionSafeDisplayNameActive}"
+                                      th:action="@{/competition/report-name}"
+                                      method="post"
+                                      class="competition-report-form">
+                                    <input type="hidden" name="targetUserId" th:value="${row.userId}" />
+                                    <button type="submit"
+                                            class="competition-report-btn"
+                                            th:disabled="${reportedCompetitionUserIds != null and reportedCompetitionUserIds.contains(row.userId)}"
+                                            th:title="${reportedCompetitionUserIds != null and reportedCompetitionUserIds.contains(row.userId) ? 'Name already reported' : 'Report name'}"
+                                            th:attr="aria-label=${reportedCompetitionUserIds != null and reportedCompetitionUserIds.contains(row.userId) ? 'Name already reported' : 'Report name'}">
+                                        <i class="bi"
+                                           th:classappend="${reportedCompetitionUserIds != null and reportedCompetitionUserIds.contains(row.userId)} ? ' bi-flag-fill' : ' bi-flag'"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            <span class="name-badge-strip" th:if="${row.badgeViews != null and !#lists.isEmpty(row.badgeViews)}">
+                                <span th:each="badge : ${row.badgeViews}"
+                                      class="name-badge-pill badge-detail-trigger"
+                                      data-badge-detail-trigger
+                                      aria-expanded="false"
+                                      role="button"
+                                      tabindex="0"
+                                      th:title="${badge.title}"
+                                      th:attr="aria-label=${!#strings.isEmpty(badge.unlockCondition) ? 'Unlock details for ' + badge.label + ': ' + badge.unlockCondition : 'Badge details for ' + badge.label}">
+                                    <img class="name-badge-chip"
+                                         th:src="${badge.imageUrl}"
+                                         alt=""
+                                         aria-hidden="true"
+                                         loading="lazy" />
+                                    <span class="name-badge-label"
+                                          th:text="${badge.label}">Badge</span>
+                                    <span class="badge-detail-overlay"
+                                          data-badge-detail-overlay
+                                          th:classappend="${#strings.isEmpty(badge.unlockCondition)} ? ' d-none'">
+                                        <span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
+                                        <span class="badge-detail-overlay-text"
+                                              th:text="${badge.unlockCondition}">Unlock condition</span>
+                                    </span>
+                                </span>
+                            </span>
+                            <span th:if="${showCompetitionFeatures and row.competitionSafeDisplayNameActive and row.userPublicCode != null}"
+                                  class="competition-public-code font-monospace"
+                                  th:text="${row.userPublicCode}"
+                                  th:title="${'Member ID ' + row.userPublicCode}">
+                                PB-sage-ace-247
+                            </span>
+                        </div>
+                    </div>
+                    <span class="ladder-rating text-muted small" th:text="${1000 + row.points}">
+                        0 rating
+                    </span>
+                </div>
+            </div>
+        </th:block>
+        <div class="text-center text-muted mt-3 d-none"
+             th:if="${showFilteredEmptyState}"
+             th:attr="id=${filteredEmptyId}"
+             th:text="${filteredEmptyMessage}">
+            No rows are visible for this filter.
+        </div>
+    </div>
+</div>

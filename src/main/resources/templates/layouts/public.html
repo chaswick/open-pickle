@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+    <div th:replace="~{components/head-analytics :: google-analytics}"></div>
+    
+    <div th:replace="~{components/head-meta :: cache-control}"></div>
+    <div th:replace="~{components/head-meta :: basic-meta}"></div>
+    <div th:replace="~{components/head-meta :: theme-meta}"></div>
+    <div th:replace="~{components/head-meta :: public-social-image}"></div>
+    
+    <title layout:title-pattern="$CONTENT_TITLE | Open-Pickle">Open-Pickle</title>
+    
+    
+    <div th:replace="~{components/head-styles :: landing-styles}"></div>
+    
+    
+    <div th:replace="~{components/head-icons :: favicons}"></div>
+    
+    
+    <div th:replace="~{components/head-external :: external-resources}"></div>
+    
+    
+    <th:block layout:fragment="styles"></th:block>
+</head>
+
+<body class="bg-image-landing">
+    <main>
+        
+        <div layout:fragment="content">
+            <p>Default public content - this should be replaced by page content.</p>
+        </div>
+    </main>
+    
+    
+    <div th:replace="~{components/footer :: footer}"></div>
+    
+    
+    <div th:replace="~{components/head-scripts :: core-scripts}"></div>
+    
+    
+    <div th:replace="~{components/confirm-modal :: confirmModal}"></div>
+    
+    <div th:replace="~{components/head-scripts :: component-scripts}"></div>
+    
+    
+    <th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

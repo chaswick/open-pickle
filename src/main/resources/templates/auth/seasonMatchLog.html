@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/authenticated}">
+
+<head>
+  <title layout:fragment="title" th:text="${recentOnly} ? 'Recent Match Log' : 'Season Match Log'">Season Match Log</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-page">
+    <div class="app-page-header">
+      <div>
+        <h1 class="app-page-title" th:text="${ladder.title}">Group</h1>
+        <p class="app-page-subtitle" th:text="${matchLogSubtitle}">Full season match log.</p>
+        <div class="app-page-subtitle" th:if="${seasonName != null and seasonName != ''}">
+          <div class="fw-semibold" th:text="${seasonName}">Season</div>
+          <div th:text="${seasonDateRange}">Date Range</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-page-back">
+      <a class="btn btn-nav-secondary btn-lg w-100" th:href="${backHref}" th:text="${backLabel}">Back</a>
+    </div>
+
+    <div class="row justify-content-center g-4 text-start">
+      <div class="col-12 col-lg-10 col-xl-8 mx-auto">
+        <div class="text-center mb-4" th:if="${showExport}">
+          <a class="btn btn-sm btn-nav-primary"
+             th:href="@{/seasons/{seasonId}/matches/export(seasonId=${seasonId})}">
+            <i class="fas fa-download me-1"></i>Download CSV
+          </a>
+        </div>
+
+        <div class="card-stack-col text-start">
+          <div class="d-flex justify-content-center mb-3" th:if="${!recentOnly and totalPages != null and totalPages > 1}">
+            <nav>
+              <ul class="pagination">
+                <li class="page-item" th:classappend="${pageNumber == 0} ? 'disabled'">
+                  <a class="page-link" th:href="@{/seasons/{seasonId}/matches(seasonId=${seasonId}, page=${pageNumber-1}, size=${pageSize})}">&laquo; Prev</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">Page <span th:text="${pageNumber + 1}">1</span> of <span th:text="${totalPages}">1</span></span></li>
+                <li class="page-item" th:classappend="${pageNumber + 1 >= totalPages} ? 'disabled'">
+                  <a class="page-link" th:href="@{/seasons/{seasonId}/matches(seasonId=${seasonId}, page=${pageNumber+1}, size=${pageSize})}">Next &raquo;</a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+          <div th:if="${#lists.isEmpty(groups)}" class="card mb-3 shadow card-spotlight">
+            <div class="card-header card-header-title">Full Match Log</div>
+            <div class="card-body text-muted">
+              No matches logged for this season yet.
+            </div>
+          </div>
+
+          <div th:each="group : ${groups}" class="card mb-3 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">
+              <span th:text="${#temporals.format(group.day, 'EEE, MMM d, yyyy')}">Mon, Sep 29, 2025</span>
+            </div>
+
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item p-0"
+                  th:each="row : ${group.rows}">
+                <div th:insert="~{fragments/matchRow :: matchRow(match=${row.match}, confirmable=${pendingByMatchId != null ? pendingByMatchId[row.match.id] : false}, editable=${editableByMatchId != null and editableByMatchId[row.match.id] != null ? editableByMatchId[row.match.id] : row.match.isEditableBy(loggedInUser)}, showTime=true, title=null, showScore=true, showState=true, showAdminControls=${isAdmin}, a1Name=${row.a1}, a2Name=${row.a2}, b1Name=${row.b1}, b2Name=${row.b2}, confirmer=${row.confirmer}, removeOnConfirm=${false})}"></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style layout:fragment="styles">
+    a.match-row-link {
+      transition: all 0.2s ease-in-out;
+      display: block;
+    }
+
+    a.match-row-link:hover {
+      background-color: var(--bs-light, #f8f9fa);
+      box-shadow: inset 0 0 0 2px var(--bs-primary, #0d6efd);
+    }
+  </style>
+</body>
+</html>

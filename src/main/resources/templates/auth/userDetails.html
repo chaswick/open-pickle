@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/authenticated}">
+
+<head>
+  <title layout:fragment="title">User Details</title>
+</head>
+
+<body>
+  <main layout:fragment="content" class="app-page">
+    <div class="app-page-header">
+      <div>
+        <h1 class="app-page-title" th:text="${accountPageTitle}">Account</h1>
+        <p class="app-page-subtitle"
+           th:if="${!#strings.isEmpty(accountPageSubtitle)}"
+           th:text="${accountPageSubtitle}">Update your profile, names, and preferences.</p>
+      </div>
+    </div>
+
+    <div class="app-page-back">
+      <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">Back</a>
+    </div>
+
+    <div class="card-stack-col card-stack-col-desktop-fluid pb-5 text-start">
+      <th:block th:replace="~{fragments/userDetailsFrag}"></th:block>
+    </div>
+  </main>
+
+  <th:block layout:fragment="scripts">
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var picker = document.querySelector('[data-badge-picker]');
+        if (!picker) {
+          return;
+        }
+
+        var filterInput = picker.querySelector('[data-badge-filter]');
+        var clearButton = picker.querySelector('[data-badge-filter-clear]');
+        var optionRows = Array.prototype.slice.call(picker.querySelectorAll('[data-badge-option]'));
+        var optionInputs = Array.prototype.slice.call(picker.querySelectorAll('[data-badge-option-input]'));
+        var matchCount = picker.querySelector('[data-badge-match-count]');
+        var emptyState = picker.querySelector('[data-badge-empty-state]');
+        var previewEmpty = picker.querySelector('[data-badge-preview-empty]');
+        var previewFilled = picker.querySelector('[data-badge-preview-filled]');
+        var previewTrigger = picker.querySelector('[data-badge-preview-trigger]');
+        var previewImage = picker.querySelector('[data-badge-preview-image]');
+        var previewLabel = picker.querySelector('[data-badge-preview-label]');
+        var previewUnlock = picker.querySelector('[data-badge-preview-unlock]');
+        var previewOverlay = picker.querySelector('[data-badge-preview-overlay]');
+        var previewMeta = picker.querySelector('[data-badge-preview-meta]');
+        var previewGroup = picker.querySelector('[data-badge-preview-group]');
+        var previewDivider = picker.querySelector('[data-badge-preview-divider]');
+        var previewAwarded = picker.querySelector('[data-badge-preview-awarded]');
+        var totalOptions = optionRows.length;
+        var defaultVisibleCount = 12;
+        var savePending = false;
+        var committedSelectionValue = '';
+
+        function selectedBadgeInput() {
+          return picker.querySelector('[data-badge-option-input]:checked');
+        }
+
+        function selectedBadgeValue() {
+          var selectedInput = selectedBadgeInput();
+          return selectedInput ? selectedInput.value : '';
+        }
+
+        function findBadgeInputByValue(value) {
+          var normalizedValue = value == null ? '' : String(value);
+          for (var index = 0; index < optionInputs.length; index += 1) {
+            if (optionInputs[index].value === normalizedValue) {
+              return optionInputs[index];
+            }
+          }
+          return null;
+        }
+
+        function restoreCommittedSelection() {
+          var committedInput = findBadgeInputByValue(committedSelectionValue);
+          if (committedInput) {
+            committedInput.checked = true;
+          }
+        }
+
+        function setSavingState(isSaving) {
+          savePending = !!isSaving;
+          picker.setAttribute('aria-busy', savePending ? 'true' : 'false');
+          optionInputs.forEach(function (optionInput) {
+            optionInput.disabled = savePending;
+          });
+        }
+
+        function submitBadgeSelection(value) {
+          var selectionValue = value == null ? selectedBadgeValue() : String(value);
+
+          if (savePending) {
+            return;
+          }
+
+          if (!window.fetch || !window.FHPB || !window.FHPB.Csrf || typeof window.FHPB.Csrf.headers !== 'function') {
+            if (typeof picker.requestSubmit === 'function') {
+              picker.requestSubmit();
+              return;
+            }
+            picker.submit();
+            return;
+          }
+
+          setSavingState(true);
+
+          var headers = window.FHPB.Csrf.headers({
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest'
+          });
+
+          fetch(picker.getAttribute('action'), {
+            method: 'POST',
+            headers: headers,
+            credentials: 'same-origin',
+            body: 'badgeSlot1TrophyId=' + encodeURIComponent(selectionValue)
+          })
+            .then(function (response) {
+              return response.text().then(function (text) {
+                var payload = {};
+                if (text) {
+                  try {
+                    payload = JSON.parse(text);
+                  } catch (error) {
+                    payload = { message: text };
+                  }
+                }
+                return { response: response, payload: payload };
+              });
+            })
+            .then(function (result) {
+              var payload = result.payload || {};
+              if (!result.response.ok || payload.success === false) {
+                var message = payload.message || 'Unable to update badge.';
+                var requestError = new Error(message);
+                requestError.level = payload.level || 'danger';
+                requestError.redirectUrl = payload.redirectUrl || '';
+                throw requestError;
+              }
+
+              committedSelectionValue = selectionValue;
+
+              if (payload.message && typeof window.showToast === 'function') {
+                window.showToast(payload.message, payload.level || 'success');
+              }
+            })
+            .catch(function (error) {
+              restoreCommittedSelection();
+              syncPreview();
+              syncMatches();
+
+              if (error && error.redirectUrl) {
+                window.location.assign(error.redirectUrl);
+                return;
+              }
+
+              if (typeof window.showToast === 'function') {
+                window.showToast(
+                  error && error.message ? error.message : 'Unable to update badge.',
+                  error && error.level ? error.level : 'danger'
+                );
+              }
+            })
+            .finally(function () {
+              setSavingState(false);
+            });
+        }
+
+        function readCardMeta(input) {
+          if (!input) {
+            return null;
+          }
+          var row = input.closest('[data-badge-option]');
+          if (!row) {
+            return null;
+          }
+          var card = row.querySelector('[data-badge-card]');
+          if (!card) {
+            return null;
+          }
+          return {
+            badgeLabel: (card.getAttribute('data-badge-badge-label') || '').trim(),
+            title: (card.getAttribute('data-badge-title') || '').trim(),
+            url: (card.getAttribute('data-badge-url') || '').trim(),
+            unlockCondition: (card.getAttribute('data-badge-unlock') || '').trim(),
+            groupLabel: (card.getAttribute('data-badge-group') || '').trim(),
+            awardedLabel: (card.getAttribute('data-badge-awarded') || '').trim(),
+            isEmpty: input.value === ''
+          };
+        }
+
+        function closeOpenBadgeDetails() {
+          Array.prototype.slice.call(picker.querySelectorAll('[data-badge-detail-trigger].is-details-open')).forEach(function (trigger) {
+            trigger.classList.remove('is-details-open');
+            trigger.setAttribute('aria-expanded', 'false');
+          });
+        }
+
+        function syncSelectedRows() {
+          optionRows.forEach(function (row) {
+            var input = row.querySelector('[data-badge-option-input]');
+            row.classList.toggle('is-selected', !!(input && input.checked));
+          });
+        }
+
+        function syncVisibleCardImages() {
+          optionRows.forEach(function (row) {
+            var card = row.querySelector('[data-badge-card]');
+            var image = row.querySelector('[data-badge-card-image]');
+            if (!card || !image) {
+              return;
+            }
+            var badgeUrl = (card.getAttribute('data-badge-url') || '').trim();
+            if (row.classList.contains('d-none') || badgeUrl === '') {
+              return;
+            }
+            if (!image.getAttribute('src')) {
+              image.setAttribute('src', badgeUrl);
+            }
+          });
+        }
+
+        function syncPreview() {
+          var checkedInput = picker.querySelector('[data-badge-option-input]:checked');
+          var meta = readCardMeta(checkedInput);
+          var hasBadge = meta && !meta.isEmpty && meta.url !== '';
+
+          if (!previewEmpty || !previewFilled || !previewTrigger || !previewOverlay || !previewImage || !previewLabel || !previewUnlock || !previewMeta || !previewGroup || !previewDivider || !previewAwarded) {
+            return;
+          }
+
+          previewEmpty.classList.toggle('d-none', !!hasBadge);
+          previewFilled.classList.toggle('d-none', !hasBadge);
+          closeOpenBadgeDetails();
+          syncSelectedRows();
+
+          if (!hasBadge) {
+            previewTrigger.removeAttribute('title');
+            previewTrigger.setAttribute('aria-label', 'Selected badge preview');
+            previewLabel.textContent = '';
+            previewUnlock.textContent = '';
+            previewOverlay.classList.add('d-none');
+            previewMeta.classList.add('d-none');
+            previewGroup.textContent = '';
+            previewAwarded.textContent = '';
+            previewDivider.classList.add('d-none');
+            previewImage.removeAttribute('src');
+            return;
+          }
+
+          previewTrigger.setAttribute('title', meta.title || meta.badgeLabel);
+          previewTrigger.setAttribute('aria-label',
+            meta.unlockCondition !== ''
+              ? 'Unlock details for ' + meta.badgeLabel + ': ' + meta.unlockCondition
+              : 'Selected badge preview for ' + meta.badgeLabel);
+          previewLabel.textContent = meta.badgeLabel;
+          previewUnlock.textContent = meta.unlockCondition;
+          previewOverlay.classList.toggle('d-none', meta.unlockCondition === '');
+          previewImage.setAttribute('src', meta.url);
+
+          previewGroup.textContent = meta.groupLabel;
+          previewAwarded.textContent = meta.awardedLabel;
+          previewDivider.classList.toggle('d-none', meta.groupLabel === '' || meta.awardedLabel === '');
+          previewMeta.classList.toggle('d-none', meta.groupLabel === '' && meta.awardedLabel === '');
+        }
+
+        function syncMatches() {
+          var term = filterInput ? filterInput.value.trim().toLowerCase() : '';
+          var checkedInput = picker.querySelector('[data-badge-option-input]:checked');
+          var checkedRow = checkedInput ? checkedInput.closest('[data-badge-option]') : null;
+          var matchingRows = [];
+          var visibleCount = 0;
+
+          optionRows.forEach(function (row) {
+            var card = row.querySelector('[data-badge-card]');
+            var searchText = card ? ((card.getAttribute('data-badge-search') || card.getAttribute('data-badge-label') || '').toLowerCase()) : '';
+            var matches = term === '' || searchText.indexOf(term) !== -1;
+            if (!matches) {
+              row.classList.add('d-none');
+              return;
+            }
+            matchingRows.push(row);
+          });
+
+          matchingRows.forEach(function (row, index) {
+            var isVisible = term !== '' || index < defaultVisibleCount || row === checkedRow;
+            row.classList.toggle('d-none', !isVisible);
+            if (isVisible) {
+              visibleCount += 1;
+            }
+          });
+
+          if (matchCount) {
+            if (term === '' && matchingRows.length > visibleCount) {
+              matchCount.textContent = 'Showing ' + visibleCount + ' of ' + matchingRows.length + ' options. Filter to find more.';
+            } else if (term === '') {
+              matchCount.textContent = totalOptions === 1 ? '1 option available.' : totalOptions + ' options available.';
+            } else if (visibleCount === 1) {
+              matchCount.textContent = 'Showing 1 matching option.';
+            } else {
+              matchCount.textContent = 'Showing ' + visibleCount + ' matching options.';
+            }
+          }
+
+          if (emptyState) {
+            emptyState.classList.toggle('d-none', visibleCount !== 0);
+          }
+
+          if (clearButton) {
+            clearButton.disabled = term === '';
+          }
+
+          closeOpenBadgeDetails();
+          syncVisibleCardImages();
+        }
+
+        optionInputs.forEach(function (input) {
+          input.addEventListener('change', function () {
+            if (!input.checked || savePending) {
+              return;
+            }
+            syncPreview();
+            syncMatches();
+            submitBadgeSelection(input.value);
+          });
+        });
+
+        if (filterInput) {
+          filterInput.addEventListener('input', syncMatches);
+        }
+
+        if (clearButton && filterInput) {
+          clearButton.addEventListener('click', function () {
+            filterInput.value = '';
+            filterInput.focus();
+            syncMatches();
+          });
+        }
+
+        committedSelectionValue = selectedBadgeValue();
+        syncPreview();
+        syncMatches();
+      });
+    </script>
+  </th:block>
+</body>
+</html>

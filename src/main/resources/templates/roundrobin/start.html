@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layouts/authenticated}">
+<head>
+    <title layout:fragment="title">Start Round-Robin</title>
+    <style>
+        #rounds::-webkit-outer-spin-button,
+        #rounds::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        #rounds {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+<div layout:fragment="content" class="app-page">
+    <div class="app-page-header">
+        <div>
+            <h1 class="app-page-title">Start Round-Robin</h1>
+            <p class="app-page-subtitle">Choose the players in this group and spin up a round-robin quickly.</p>
+        </div>
+    </div>
+    <div class="app-page-back">
+        <a class="btn btn-nav-secondary btn-lg w-100"
+           th:href="${roundRobinListPath != null ? roundRobinListPath : '/home'}">
+            Back
+        </a>
+    </div>
+    <div class="container">
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Start Round-Robin</div>
+            <div class="card-body">
+                <div class="alert alert-warning text-start"
+                     th:if="${roundRobinAdminOnly}">
+                    Tournament mode only allows group admins to start and manage round-robins. Logged matches for this season must map to an active matchup here.
+                </div>
+                <form method="post" th:action="@{/round-robin/start}">
+                    <input type="hidden" name="ladderId" th:value="${ladderId}" />
+
+                    <div class="mb-4">
+                        <label class="form-label d-block text-center">Round-robin style</label>
+                        <div class="d-flex flex-column align-items-center gap-2">
+                            <div class="form-check text-start">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       id="formatRotatingPartners"
+                                       name="format"
+                                       value="ROTATING_PARTNERS"
+                                       th:checked="${roundRobinFormat == null or roundRobinFormat == 'ROTATING_PARTNERS'}" />
+                                <label class="form-check-label" for="formatRotatingPartners">
+                                    Rotating partners each round
+                                </label>
+                            </div>
+                            <div class="form-check text-start">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       id="formatFixedTeams"
+                                       name="format"
+                                       value="FIXED_TEAMS"
+                                       th:checked="${roundRobinFormat == 'FIXED_TEAMS'}" />
+                                <label class="form-check-label" for="formatFixedTeams">
+                                    Fixed teams
+                                </label>
+                            </div>
+                        </div>
+                        <p class="small text-muted text-center mt-2 mb-0">
+                            Rotating partners reshuffles matchups each round. Fixed teams keep the same team together throughout the bracket.
+                        </p>
+                    </div>
+
+                    <div th:if="${members != null and !members.isEmpty()}">
+                        <div class="mb-2 text-center">
+                            <label class="form-label d-block">Select participants:</label>
+                            <div class="form-check d-inline-flex align-items-center justify-content-center">
+                                <input id="selectAll" type="checkbox" class="form-check-input me-2" />
+                                <label for="selectAll" class="form-check-label mb-0">Select all</label>
+                            </div>
+                        </div>
+                        <div class="row justify-content-center mb-3">
+                            <div class="col-12 col-md-8 col-lg-6">
+                                <div class="row g-2">
+                                    <div class="col-12 col-sm-7">
+                                        <label class="form-label small" for="participantFilter">Find player</label>
+                                        <input id="participantFilter"
+                                               type="search"
+                                               class="form-control"
+                                               placeholder="Filter by court name, member ID, or display name" />
+                                    </div>
+                                    <div class="col-12 col-sm-5">
+                                        <label class="form-label small" for="participantSort">Sort by</label>
+                                        <select id="participantSort" class="form-select">
+                                            <option value="COURT_NAME" selected>Court name</option>
+                                            <option value="MEMBER_ID">Member ID</option>
+                                            <option value="APP_NAME">Display name</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-12 col-md-8 col-lg-6">
+                                <div id="participantList" class="d-flex flex-column align-items-center">
+                                    <div th:each="u : ${members}" class="form-check w-100 text-start mb-2 participant-row">
+                                        <input class="form-check-input participant me-2"
+                                               type="checkbox"
+                                               th:id="${'p_' + u.id}"
+                                               th:name="participantIds"
+                                               th:value="${u.id}"
+                                               th:checked="${selectedParticipantIds != null and #lists.contains(selectedParticipantIds, u.id)}"
+                                               th:attr="data-display-name=${displayNames != null and displayNames.containsKey(u.id) ? displayNames[u.id] : u.nickName},data-public-code=${u.publicCode},data-court-name=${courtNames != null and courtNames.containsKey(u.id) ? courtNames[u.id] : ''},data-app-name=${u.nickName != null ? u.nickName : ''}" />
+                                        <label class="form-check-label"
+                                               th:for="${'p_' + u.id}">
+                                            <span class="d-block fw-semibold"
+                                                  th:text="${displayNames != null and displayNames.containsKey(u.id) ? displayNames[u.id] : u.nickName}">Member Name</span>
+                                            <span th:replace="~{fragments/memberIdentity :: memberIdentity(${u.publicCode})}"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${members == null || #lists.isEmpty(members)}">
+                        <p class="text-muted">No members found for the selected group.</p>
+                    </div>
+
+                    <div id="fixedTeamsBuilder"
+                         class="mt-4 d-none"
+                         th:attr="data-initial-fixed-teams=${fixedTeamsJson}">
+                        <input type="hidden" name="fixedTeamsJson" id="fixedTeamsJson" th:value="${fixedTeamsJson}" />
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-center gap-2 mb-3">
+                                    <button class="btn btn-sm btn-nav-secondary" type="button" id="fixedTeamsRandomize">
+                                        Randomize Teams
+                                    </button>
+                                </div>
+                                <p class="small text-muted text-center mb-3">
+                                    Assign each selected player to a team number. Fixed teams require exactly two players per team.
+                                </p>
+                                <div id="fixedTeamsAssignments" class="mx-auto" style="max-width: 560px;"></div>
+                                <div id="fixedTeamsPreview" class="small text-center mt-3 text-muted"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 d-flex flex-column align-items-center">
+                        <div id="roundsSection" class="mb-2 w-100 text-center">
+                            <label for="rounds" class="form-label d-block">Number of rounds (optional)</label>
+
+                            <div class="input-group mx-auto" style="max-width:220px;">
+                                <button class="btn btn-nav-secondary"
+                                        type="button"
+                                        id="rounds-decrement"
+                                        title="Decrease rounds"
+                                        aria-label="Decrease rounds">-</button>
+                                <input type="number"
+                                       id="rounds"
+                                       name="rounds"
+                                       min="0"
+                                       class="form-control text-center"
+                                       placeholder="Leave blank or 0 for default"
+                                       th:value="${rounds}" />
+                                <button class="btn btn-nav-secondary"
+                                        type="button"
+                                        id="rounds-increment"
+                                        title="Increase rounds"
+                                        aria-label="Increase rounds">+</button>
+                            </div>
+                        </div>
+                        <p id="fixedTeamsRoundsHint" class="small text-muted text-center d-none">
+                            Fixed teams automatically play every other team once, and require an even number of players.
+                        </p>
+                        <button class="btn btn-action-primary btn-workflow-happy w-50" type="submit">Start Round-Robin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const participantBoxes = Array.from(document.querySelectorAll('.participant'));
+            const participantList = document.getElementById('participantList');
+            const participantFilter = document.getElementById('participantFilter');
+            const participantSort = document.getElementById('participantSort');
+            const selectAll = document.getElementById('selectAll');
+            const startButton = document.querySelector('button[type="submit"]');
+            const roundsInput = document.getElementById('rounds');
+            const roundsSection = document.getElementById('roundsSection');
+            const fixedTeamsHint = document.getElementById('fixedTeamsRoundsHint');
+            const fixedTeamsBuilder = document.getElementById('fixedTeamsBuilder');
+            const fixedTeamsAssignments = document.getElementById('fixedTeamsAssignments');
+            const fixedTeamsPreview = document.getElementById('fixedTeamsPreview');
+            const fixedTeamsJson = document.getElementById('fixedTeamsJson');
+            const fixedTeamsRandomize = document.getElementById('fixedTeamsRandomize');
+            const formatInputs = Array.from(document.querySelectorAll('input[name="format"]'));
+            const decBtn = document.getElementById('rounds-decrement');
+            const incBtn = document.getElementById('rounds-increment');
+            let initialAssignmentsApplied = false;
+            let lastFixedTeamsToastKey = null;
+            let lastFixedTeamsToastAt = 0;
+
+            function participantRows() {
+                if (!participantList) {
+                    return [];
+                }
+                return Array.from(participantList.querySelectorAll('.participant-row'));
+            }
+
+            function participantData(box) {
+                return {
+                    id: String(box.value),
+                    name: box.getAttribute('data-display-name') || box.value,
+                    publicCode: box.getAttribute('data-public-code') || '',
+                    courtName: box.getAttribute('data-court-name') || '',
+                    appName: box.getAttribute('data-app-name') || ''
+                };
+            }
+
+            function selectedParticipants() {
+                return participantRows()
+                    .map(function (row) { return row.querySelector('.participant'); })
+                    .filter(function (box) { return box && box.checked; })
+                    .map(participantData);
+            }
+
+            function currentFormat() {
+                const checked = formatInputs.find(function (input) { return input.checked; });
+                return checked ? checked.value : 'ROTATING_PARTNERS';
+            }
+
+            function currentParticipantSort() {
+                return participantSort ? participantSort.value : 'COURT_NAME';
+            }
+
+            function clampRounds(val) {
+                if (val === null || val === undefined || isNaN(val)) return null;
+                val = parseInt(val, 10);
+                if (isNaN(val)) return null;
+                if (val < 0) return 0;
+                return val;
+            }
+
+            function normalizedText(value) {
+                return value ? String(value).trim().toLowerCase() : '';
+            }
+
+            function compareSortText(left, right) {
+                const a = normalizedText(left);
+                const b = normalizedText(right);
+                if (!a && !b) return 0;
+                if (!a) return 1;
+                if (!b) return -1;
+                return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+            }
+
+            function compareParticipantRows(leftRow, rightRow) {
+                const leftBox = leftRow.querySelector('.participant');
+                const rightBox = rightRow.querySelector('.participant');
+                if (!leftBox || !rightBox) {
+                    return 0;
+                }
+
+                const left = participantData(leftBox);
+                const right = participantData(rightBox);
+                const sortMode = currentParticipantSort();
+                let comparison = 0;
+
+                if (sortMode === 'MEMBER_ID') {
+                    comparison = compareSortText(left.publicCode, right.publicCode);
+                    if (comparison !== 0) return comparison;
+                    comparison = compareSortText(left.courtName, right.courtName);
+                    if (comparison !== 0) return comparison;
+                    comparison = compareSortText(left.appName, right.appName);
+                } else if (sortMode === 'APP_NAME') {
+                    comparison = compareSortText(left.appName, right.appName);
+                    if (comparison !== 0) return comparison;
+                    comparison = compareSortText(left.courtName, right.courtName);
+                    if (comparison !== 0) return comparison;
+                    comparison = compareSortText(left.publicCode, right.publicCode);
+                } else {
+                    comparison = compareSortText(left.courtName, right.courtName);
+                    if (comparison !== 0) return comparison;
+                    comparison = compareSortText(left.publicCode, right.publicCode);
+                    if (comparison !== 0) return comparison;
+                    comparison = compareSortText(left.appName, right.appName);
+                }
+
+                if (comparison !== 0) {
+                    return comparison;
+                }
+                const leftIndex = parseInt(leftRow.getAttribute('data-original-index'), 10);
+                const rightIndex = parseInt(rightRow.getAttribute('data-original-index'), 10);
+                return leftIndex - rightIndex;
+            }
+
+            function applyParticipantSort() {
+                if (!participantList) {
+                    return;
+                }
+                const rows = participantRows();
+                rows.sort(compareParticipantRows);
+                rows.forEach(function (row) {
+                    participantList.appendChild(row);
+                });
+            }
+
+            function applyParticipantFilter() {
+                const query = normalizedText(participantFilter ? participantFilter.value : '');
+                participantRows().forEach(function (row) {
+                    const box = row.querySelector('.participant');
+                    const data = box ? participantData(box) : null;
+                    const haystack = data
+                        ? [data.courtName, data.publicCode, data.appName, data.name].map(normalizedText).join(' ')
+                        : '';
+                    const matches = !query || haystack.includes(query);
+                    row.classList.toggle('d-none', !matches);
+                });
+            }
+
+            function refreshParticipantList() {
+                applyParticipantSort();
+                applyParticipantFilter();
+            }
+
+            function showFixedTeamsToast(message) {
+                if (!message) return;
+                const now = Date.now();
+                if (lastFixedTeamsToastKey === message && (now - lastFixedTeamsToastAt) < 1500) {
+                    return;
+                }
+                lastFixedTeamsToastKey = message;
+                lastFixedTeamsToastAt = now;
+                if (typeof window.showError === 'function') {
+                    window.showError(message);
+                }
+            }
+
+            function shuffle(array) {
+                const copy = array.slice();
+                for (let idx = copy.length - 1; idx > 0; idx--) {
+                    const swapIdx = Math.floor(Math.random() * (idx + 1));
+                    const temp = copy[idx];
+                    copy[idx] = copy[swapIdx];
+                    copy[swapIdx] = temp;
+                }
+                return copy;
+            }
+
+            function parseInitialFixedTeams() {
+                if (!fixedTeamsBuilder) return {};
+                const raw = fixedTeamsBuilder.getAttribute('data-initial-fixed-teams');
+                if (!raw) return {};
+                try {
+                    const parsed = JSON.parse(raw);
+                    const assignments = {};
+                    if (!Array.isArray(parsed)) return assignments;
+                    parsed.forEach(function (team, index) {
+                        if (!Array.isArray(team)) return;
+                        team.forEach(function (userId) {
+                            if (userId !== null && userId !== undefined && userId !== '') {
+                                assignments[String(userId)] = index + 1;
+                            }
+                        });
+                    });
+                    return assignments;
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            function sequentialAssignments(selected) {
+                const assignments = {};
+                selected.forEach(function (participant, index) {
+                    assignments[participant.id] = Math.floor(index / 2) + 1;
+                });
+                return assignments;
+            }
+
+            function readAssignmentsFromInputs() {
+                const assignments = {};
+                if (!fixedTeamsAssignments) return assignments;
+                fixedTeamsAssignments.querySelectorAll('.fixed-team-number').forEach(function (input) {
+                    const userId = input.getAttribute('data-user-id');
+                    const teamNumber = parseInt(input.value, 10);
+                    if (userId && Number.isFinite(teamNumber) && teamNumber > 0) {
+                        assignments[userId] = teamNumber;
+                    }
+                });
+                return assignments;
+            }
+
+            function normalizeAssignments(selected, existingAssignments) {
+                const assignments = {};
+                const teamSizes = {};
+                selected.forEach(function (participant) {
+                    const requested = existingAssignments[participant.id];
+                    if (!Number.isFinite(requested) || requested < 1) {
+                        return;
+                    }
+                    const currentCount = teamSizes[requested] || 0;
+                    if (currentCount >= 2) {
+                        return;
+                    }
+                    assignments[participant.id] = requested;
+                    teamSizes[requested] = currentCount + 1;
+                });
+
+                selected.forEach(function (participant) {
+                    if (assignments[participant.id]) {
+                        return;
+                    }
+                    let assigned = false;
+                    Object.keys(teamSizes)
+                        .map(function (teamNumber) { return parseInt(teamNumber, 10); })
+                        .sort(function (a, b) { return a - b; })
+                        .some(function (teamNumber) {
+                            if ((teamSizes[teamNumber] || 0) >= 2) {
+                                return false;
+                            }
+                            assignments[participant.id] = teamNumber;
+                            teamSizes[teamNumber] = (teamSizes[teamNumber] || 0) + 1;
+                            assigned = true;
+                            return true;
+                        });
+                    if (!assigned) {
+                        const nextTeamNumber = Object.keys(teamSizes).length === 0
+                            ? 1
+                            : Math.max.apply(null, Object.keys(teamSizes).map(function (teamNumber) {
+                                return parseInt(teamNumber, 10);
+                            })) + 1;
+                        assignments[participant.id] = nextTeamNumber;
+                        teamSizes[nextTeamNumber] = 1;
+                    }
+                });
+
+                return assignments;
+            }
+
+            function validateFixedTeams(assignments, selected) {
+                if (selected.length < 4) {
+                    return { valid: false, message: 'Select at least 4 players to build fixed teams.' };
+                }
+                if (selected.length % 2 !== 0) {
+                    return { valid: false, message: 'Fixed teams require an even number of players so everyone can be paired.' };
+                }
+
+                const grouped = {};
+                selected.forEach(function (participant) {
+                    const teamNumber = parseInt(assignments[participant.id], 10);
+                    if (!Number.isFinite(teamNumber) || teamNumber < 1) {
+                        return;
+                    }
+                    grouped[teamNumber] = grouped[teamNumber] || [];
+                    grouped[teamNumber].push(participant);
+                });
+
+                const teams = Object.keys(grouped)
+                    .map(function (teamNumber) { return parseInt(teamNumber, 10); })
+                    .sort(function (a, b) { return a - b; })
+                    .map(function (teamNumber) {
+                        return {
+                            teamNumber: teamNumber,
+                            players: grouped[teamNumber]
+                        };
+                    });
+
+                if (teams.length < 2) {
+                    return { valid: false, message: 'Create at least two teams.' };
+                }
+
+                for (let idx = 0; idx < teams.length; idx++) {
+                    const team = teams[idx];
+                    if (!team.players || team.players.length === 0) {
+                        return { valid: false, message: 'Every team must have at least one player.' };
+                    }
+                    if (team.players.length !== 2) {
+                        return { valid: false, message: 'Fixed teams require exactly two players per team.' };
+                    }
+                }
+
+                return {
+                    valid: true,
+                    teams: teams
+                };
+            }
+
+            function assignmentsEqual(selected, left, right) {
+                return selected.every(function (participant) {
+                    const leftValue = parseInt(left[participant.id], 10);
+                    const rightValue = parseInt(right[participant.id], 10);
+                    const normalizedLeft = Number.isFinite(leftValue) ? leftValue : null;
+                    const normalizedRight = Number.isFinite(rightValue) ? rightValue : null;
+                    return normalizedLeft === normalizedRight;
+                });
+            }
+
+            function shouldConfirmRandomize(selected, existingAssignments) {
+                if (!selected || selected.length < 4) {
+                    return false;
+                }
+                const currentAssignments = normalizeAssignments(selected, existingAssignments || {});
+                const defaultAssignments = sequentialAssignments(selected);
+                return !assignmentsEqual(selected, currentAssignments, defaultAssignments);
+            }
+
+            function renderFixedTeamsBuilder(existingAssignments) {
+                if (!fixedTeamsBuilder || !fixedTeamsAssignments || !fixedTeamsPreview || !fixedTeamsJson) {
+                    return true;
+                }
+
+                const selected = selectedParticipants();
+                if (currentFormat() !== 'FIXED_TEAMS') {
+                    fixedTeamsBuilder.classList.add('d-none');
+                    fixedTeamsJson.value = '';
+                    fixedTeamsAssignments.innerHTML = '';
+                    fixedTeamsPreview.textContent = '';
+                    return true;
+                }
+
+                fixedTeamsBuilder.classList.remove('d-none');
+
+                let assignments = existingAssignments || readAssignmentsFromInputs();
+                if (!initialAssignmentsApplied) {
+                    const initialAssignments = parseInitialFixedTeams();
+                    if (Object.keys(initialAssignments).length > 0) {
+                        assignments = initialAssignments;
+                    }
+                    initialAssignmentsApplied = true;
+                }
+                assignments = normalizeAssignments(selected, assignments || {});
+
+                if (selected.length === 0) {
+                    fixedTeamsAssignments.innerHTML = '<div class="text-muted text-center small">Select players above to build fixed teams.</div>';
+                    fixedTeamsPreview.textContent = '';
+                    fixedTeamsJson.value = '';
+                    return false;
+                }
+
+                fixedTeamsAssignments.innerHTML = '';
+                selected.forEach(function (participant) {
+                    const row = document.createElement('div');
+                    row.className = 'd-flex align-items-center justify-content-between gap-3 mb-2';
+
+                    const label = document.createElement('div');
+                    label.className = 'd-flex flex-column text-start';
+
+                    const name = document.createElement('span');
+                    name.className = 'fw-semibold';
+                    name.textContent = participant.name;
+                    label.appendChild(name);
+
+                    if (participant.publicCode) {
+                        const identity = document.createElement('div');
+                        identity.className = 'identity-code';
+
+                        const identityPrefix = document.createElement('span');
+                        identityPrefix.textContent = 'Member ID';
+
+                        const identityValue = document.createElement('span');
+                        identityValue.className = 'identity-code-value font-monospace';
+                        identityValue.textContent = participant.publicCode;
+                        identityValue.title = 'Member ID ' + participant.publicCode;
+
+                        identity.appendChild(identityPrefix);
+                        identity.appendChild(identityValue);
+                        label.appendChild(identity);
+                    }
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = '1';
+                    input.max = String(selected.length);
+                    input.step = '1';
+                    input.value = String(assignments[participant.id] || '');
+                    input.className = 'form-control form-control-sm text-center fixed-team-number';
+                    input.style.maxWidth = '92px';
+                    input.setAttribute('data-user-id', participant.id);
+                    input.setAttribute('aria-label', 'Team number for ' + participant.name);
+                    input.addEventListener('input', function () {
+                        renderFixedTeamsBuilder(readAssignmentsFromInputs());
+                        updateStartButtonState();
+                    });
+
+                    row.appendChild(label);
+                    row.appendChild(input);
+                    fixedTeamsAssignments.appendChild(row);
+                });
+
+                const validation = validateFixedTeams(assignments, selected);
+                if (!validation.valid) {
+                    fixedTeamsPreview.textContent = validation.message;
+                    fixedTeamsPreview.classList.remove('text-muted');
+                    fixedTeamsPreview.classList.add('text-danger');
+                    fixedTeamsJson.value = '';
+                    return false;
+                }
+
+                const serializedTeams = validation.teams.map(function (team) {
+                    return team.players.map(function (player) { return Number(player.id); });
+                });
+                fixedTeamsJson.value = JSON.stringify(serializedTeams);
+
+                fixedTeamsPreview.classList.remove('text-danger');
+                fixedTeamsPreview.classList.add('text-muted');
+                fixedTeamsPreview.innerHTML = '';
+                validation.teams.forEach(function (team) {
+                    const line = document.createElement('div');
+                    const names = team.players.map(function (player) { return player.name; }).join(' & ');
+                    line.textContent = 'Team ' + team.teamNumber + ': ' + names;
+                    fixedTeamsPreview.appendChild(line);
+                });
+                return true;
+            }
+
+            function updateModeState() {
+                const fixedTeamsMode = currentFormat() === 'FIXED_TEAMS';
+                if (roundsSection) {
+                    roundsSection.classList.toggle('d-none', fixedTeamsMode);
+                }
+                if (fixedTeamsHint) {
+                    fixedTeamsHint.classList.toggle('d-none', !fixedTeamsMode);
+                }
+                if (roundsInput) {
+                    roundsInput.disabled = fixedTeamsMode;
+                }
+                renderFixedTeamsBuilder();
+                updateStartButtonState();
+            }
+
+            function updateSelectAllState() {
+                if (!selectAll) return;
+                const selectedCount = participantBoxes.filter(function (box) { return box.checked; }).length;
+                selectAll.checked = participantBoxes.length > 0 && selectedCount === participantBoxes.length;
+                selectAll.indeterminate = selectedCount > 0 && selectedCount < participantBoxes.length;
+            }
+
+            function updateStartButtonState() {
+                if (!startButton) return;
+                const selectedCount = selectedParticipants().length;
+                if (currentFormat() !== 'FIXED_TEAMS') {
+                    startButton.disabled = selectedCount < 4;
+                    return;
+                }
+                renderFixedTeamsBuilder(readAssignmentsFromInputs());
+                startButton.disabled = selectedCount < 4;
+            }
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    const checked = selectAll.checked;
+                    participantBoxes.forEach(function (box) {
+                        box.checked = checked;
+                    });
+                    updateModeState();
+                    updateSelectAllState();
+                });
+            }
+
+            participantBoxes.forEach(function (box) {
+                box.addEventListener('change', function () {
+                    updateModeState();
+                    updateSelectAllState();
+                });
+            });
+
+            formatInputs.forEach(function (input) {
+                input.addEventListener('change', function () {
+                    updateModeState();
+                });
+            });
+
+            if (participantSort) {
+                participantSort.addEventListener('change', function () {
+                    refreshParticipantList();
+                    renderFixedTeamsBuilder(readAssignmentsFromInputs());
+                    updateStartButtonState();
+                });
+            }
+
+            if (participantFilter) {
+                participantFilter.addEventListener('input', function () {
+                    applyParticipantFilter();
+                });
+            }
+
+            if (fixedTeamsRandomize) {
+                fixedTeamsRandomize.addEventListener('click', function () {
+                    const selected = selectedParticipants();
+                    const currentAssignments = readAssignmentsFromInputs();
+                    if (shouldConfirmRandomize(selected, currentAssignments)) {
+                        const proceed = window.confirm('Randomize teams and replace your current pairings?');
+                        if (!proceed) {
+                            return;
+                        }
+                    }
+                    const shuffled = shuffle(selected);
+                    renderFixedTeamsBuilder(sequentialAssignments(shuffled));
+                    updateStartButtonState();
+                });
+            }
+
+            if (decBtn && roundsInput) {
+                decBtn.addEventListener('click', function () {
+                    let value = clampRounds(roundsInput.value);
+                    if (value === null) value = 0;
+                    roundsInput.value = Math.max(0, value - 1);
+                });
+            }
+            if (incBtn && roundsInput) {
+                incBtn.addEventListener('click', function () {
+                    let value = clampRounds(roundsInput.value);
+                    if (value === null) value = 0;
+                    roundsInput.value = value + 1;
+                });
+            }
+
+            const formEl = document.querySelector('form[action$="/round-robin/start"]');
+            if (formEl) {
+                formEl.addEventListener('submit', function (event) {
+                    if (currentFormat() === 'FIXED_TEAMS') {
+                        const valid = renderFixedTeamsBuilder(readAssignmentsFromInputs());
+                        if (!valid) {
+                            const selected = selectedParticipants();
+                            const validation = validateFixedTeams(readAssignmentsFromInputs(), selected);
+                            showFixedTeamsToast(validation && validation.message
+                                ? validation.message
+                                : 'Fixed teams require an even number of players so everyone can be paired.');
+                            event.preventDefault();
+                            return;
+                        }
+                    }
+                    if (roundsInput && !roundsInput.disabled) {
+                        try {
+                            if (roundsInput.value !== null && roundsInput.value.trim() === '0') {
+                                roundsInput.value = '';
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+                    }
+                });
+            }
+
+            participantRows().forEach(function (row, index) {
+                row.setAttribute('data-original-index', String(index));
+            });
+            refreshParticipantList();
+            updateSelectAllState();
+            updateModeState();
+        });
+    </script>
+</th:block>
+
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/public}">
+
+<head>
+    <title layout:fragment="title">Terms of Service</title>
+
+    <th:block layout:fragment="styles">
+        <style>
+            .legal-content {
+                max-width: 900px;
+                margin: 2rem auto;
+                padding: 2rem;
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            }
+
+            .legal-content h1,
+            .legal-content h2 {
+                color: #026441;
+            }
+
+            .legal-content p {
+                line-height: 1.6;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <main class="legal-content">
+            <h1>Terms of Service</h1>
+            <p><strong>Last updated:</strong> March 19, 2026</p>
+            <p><em>This public repo ships a placeholder terms template. Deployment operators should replace the domain, operator identity, contact information, and dispute-resolution details before launching a public service.</em></p>
+
+            <h2>1. Overview</h2>
+            <p>
+                Open-Pickle ("the Service," "we," "us," or "our") is community software that may be deployed at
+                <a href="https://your-domain.example">your-domain.example</a> to help users organize pickleball
+                groups, standings, matches, and related activities.
+                For any public deployment, these Terms should identify the operator of that deployment.
+                By accessing or using the Service, you agree to these Terms of Service ("Terms").
+            </p>
+
+            <h2>2. Eligibility</h2>
+            <p>
+                You must be at least 13 years old to use the Service.
+                If you are under 18, you represent that you have permission from a parent or legal guardian.
+                You are responsible for ensuring your use complies with applicable laws.
+            </p>
+
+            <h2>3. Accounts & Security</h2>
+            <p>
+                You agree to provide accurate information and maintain the security of your login credentials.
+                You are responsible for all activity under your account.
+                We reserve the right to suspend or terminate accounts at our discretion.
+            </p>
+
+            <h2>4. Acceptable Use</h2>
+            <p>You agree to use the Service only for lawful pickleball-related purposes. You may not:</p>
+            <ul>
+                <li>Use the Service for unauthorized commercial purposes</li>
+                <li>Post false, misleading, defamatory, or unlawful content</li>
+                <li>Harass, threaten, or abuse other users</li>
+                <li>Attempt to disrupt or interfere with the Service</li>
+                <li>Create accounts using false information</li>
+            </ul>
+
+            <h2>5. User Content</h2>
+            <p>
+                You retain ownership of content you submit.
+                By submitting content, you grant us a non-exclusive, worldwide, royalty-free license to host, display,
+                reproduce, modify (for formatting purposes), and distribute such content solely to operate and improve
+                the Service.
+                You are solely responsible for your content.
+            </p>
+
+            <h2>6. Community & Match Disputes</h2>
+            <p>
+                The Service provides tools for organizing matches and tracking results.
+                We do not verify match outcomes, mediate disputes, or guarantee fairness.
+                Users are responsible for resolving disputes among themselves.
+            </p>
+
+            <h2>7. Location-Based Check In</h2>
+            <p>
+                The Service may offer an optional Check In feature that uses your device location through your
+                browser or installed progressive web app (PWA).
+                We only request location access after you tap the Check In button and approve the device or browser
+                permission prompt.
+                We do not use Check In for background or continuous location tracking.
+                If you use Check In, you authorize us to use that submitted location to identify or create a nearby
+                play location, associate your account with an active check-in, and support related in-app location
+                counts and naming.
+            </p>
+
+            <h2>8. Assumption of Risk & Sports Disclaimer</h2>
+            <p>
+                Pickleball is a physical activity that carries inherent risks of injury.
+                By participating in matches organized through the Service, you acknowledge that you do so voluntarily
+                and assume all risks associated with such activities.
+                The operator of this deployment is not responsible for injuries, accidents, or damages occurring during matches or
+                events.
+                The Service is a coordination tool only and does not supervise in-person activities.
+            </p>
+
+            <h2>9. Community Funding and Donations</h2>
+            <p>
+                The Service may accept voluntary community funding through donations or similar support channels to
+                help cover development and hosting costs. Donations are voluntary and non-refundable.
+                Core play features of the Service are not sold through subscriptions or feature paywalls.
+                Payments or donations may be processed by third-party providers, for which we are not responsible.
+            </p>
+
+            <h2>10. Intellectual Property</h2>
+            <p>
+                All platform content, software, design, branding, and functionality (excluding user-submitted content)
+                are owned by the operator of this deployment or its licensors.
+                You may not copy, reproduce, reverse engineer, or distribute any part of the Service without permission.
+            </p>
+
+            <h2>11. Third-Party Services</h2>
+            <p>
+                We may use third-party hosting, analytics, or payment providers.
+                We are not responsible for third-party services or their policies.
+            </p>
+
+            <h2>12. Disclaimer of Warranties</h2>
+            <p>
+                The Service is provided on an "AS IS" and "AS AVAILABLE" basis.
+                To the fullest extent permitted by law, we disclaim all warranties, express or implied,
+                including merchantability, fitness for a particular purpose, non-infringement,
+                and accuracy of user-submitted information.
+                We do not guarantee uninterrupted or error-free operation.
+            </p>
+
+            <h2>13. Limitation of Liability</h2>
+            <p>
+                To the fullest extent permitted by law, the operator of this deployment shall not be liable for any indirect,
+                incidental, consequential, special, or punitive damages arising from your use of the Service.
+                Our total liability for any claim shall not exceed the greater of $100 USD or
+                the amount you paid to the Service in the past 12 months.
+            </p>
+
+            <h2>14. Indemnification</h2>
+            <p>
+                You agree to indemnify and hold harmless the operator of this deployment from any claims, damages,
+                losses, or expenses arising out of your use of the Service, your violation of these Terms,
+                or your conduct toward other users.
+            </p>
+
+            <h2>15. Termination</h2>
+            <p>
+                We may suspend or terminate your access to the Service at any time, with or without notice,
+                for any reason, including violation of these Terms.
+            </p>
+
+            <h2>16. Dispute Resolution</h2>
+            <p><strong>Operator template notice:</strong> The governing law, venue, arbitration, and small-claims details for a public deployment should be reviewed and completed by that deployment's operator.</p>
+
+            <p>
+                Before initiating any legal proceeding, you agree to first contact the operator of the deployment you are using at
+                <a href="mailto:support@example.invalid">support@example.invalid</a>
+                and attempt to resolve the dispute informally for at least 30 days.
+            </p>
+
+            <p>
+                Unless the operator publishes a deployment-specific dispute policy, disputes should be brought in a court of
+                competent jurisdiction where that operator is established and under the governing law identified for that deployment.
+            </p>
+
+            <p>
+                If the operator publishes a separate dispute-resolution policy for the hosted service you are using,
+                that published policy controls for that deployment.
+            </p>
+            <h2>17. Force Majeure</h2>
+            <p>
+                We are not liable for delays or failures caused by events beyond our reasonable control,
+                including outages, natural disasters, or governmental actions.
+            </p>
+
+            <h2>18. Changes to Terms</h2>
+            <p>
+                We may update these Terms from time to time.
+                Continued use of the Service after changes become effective constitutes acceptance of the updated Terms.
+            </p>
+
+            <h2>19. Contact</h2>
+            <p>
+                Questions about these Terms? Contact us at
+                <a href="mailto:support@example.invalid">support@example.invalid</a>
+            </p>
+
+            <hr class="my-4">
+
+            <div class="legal-actions">
+                <a th:href="${backHref}" class="btn btn-nav-secondary">
+                    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+                    <span th:text="${backLabel}">Back to Home</span>
+                </a>
+                <a th:href="${alternateLegalHref}" class="btn btn-nav-secondary">Privacy Policy</a>
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

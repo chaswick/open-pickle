@@ -1,0 +1,214 @@
+<th:block th:fragment="ladderContextCardHeader(showStandings)"
+  th:with="showStandings=${showStandings == null ? true : showStandings},
+           navPath=${ladderNavPath != null ? ladderNavPath : '/home'},
+           ladderSelectVisible=${showLadderSelection == null ? true : #strings.equalsIgnoreCase(showLadderSelection, 'true')},
+           compactHeader=${loggedInUser != null and loggedInUser.appUiEnabled and !showStandings}">
+  <div class="card-header card-header-title">
+    <div class="ladder-nav-arrows">
+      <div th:if="${compactHeader or !ladderSelectVisible}" class="ladder-nav-arrow ladder-nav-placeholder" aria-hidden="true"></div>
+      <a th:if="${!compactHeader and ladderSelectVisible}" class="ladder-nav-arrow start" th:classappend="${prevLadderId} == null ? ' disabled' : ''"
+        th:href="${prevLadderId} != null ? @{${navPath}(ladderId=${prevLadderId})} : '#'" aria-label="Previous group">
+        <i class="bi bi-chevron-left"></i>
+      </a>
+      <div class="ladder-nav-header">
+        <div class="text-center" th:if="${!compactHeader}">
+          <div class="card-header-title" style="overflow-wrap: break-word; word-break: break-word; max-width: 100%;" th:text="${ladderName}">Title</div>
+        </div>
+
+        <div class="text-center" th:if="${!compactHeader}">
+          <div class="card-header-title mb-0" style="overflow-wrap: break-word; word-break: break-word; max-width: 100%;" th:text="${seasonName}">Season</div>
+        </div>
+
+        <div class="text-center text-muted small" th:if="${!compactHeader and seasonId != null}">
+          <div class="text-truncate w-100 mx-auto" th:text="${seasonDateRange}">
+            Jan 1, 2025 - Feb 15, 2025
+          </div>
+
+          <div class="text-center text-muted" th:if="${seasonId != null}">
+            <a class="ladder-season-nav-link link-contrast small fw-semibold align-baseline" th:if="${prevSeasonId != null}"
+              th:href="@{${navPath}(ladderId=${ladderId}, seasonId=${prevSeasonId})}"
+              aria-label="Previous season">Older</a>
+            <span class="ladder-season-nav-link link-contrast-disabled small fw-semibold align-baseline" th:if="${prevSeasonId == null}"
+              aria-disabled="true">Older</span>
+            <span class="mx-1">|</span>
+            <a class="ladder-season-nav-link link-contrast small fw-semibold align-baseline" th:if="${nextSeasonId != null}"
+              th:href="@{${navPath}(ladderId=${ladderId}, seasonId=${nextSeasonId})}"
+              aria-label="Next season">Newer</a>
+            <span class="ladder-season-nav-link link-contrast-disabled small fw-semibold align-baseline" th:if="${nextSeasonId == null}"
+              aria-disabled="true">Newer</span>
+          </div>
+        </div>
+      </div>
+      <div th:if="${compactHeader or !ladderSelectVisible}" class="ladder-nav-arrow ladder-nav-placeholder" aria-hidden="true"></div>
+      <a th:if="${!compactHeader and ladderSelectVisible}" class="ladder-nav-arrow end" th:classappend="${nextLadderId} == null ? ' disabled' : ''"
+        th:href="${nextLadderId} != null ? @{${navPath}(ladderId=${nextLadderId})} : '#'" aria-label="Next group">
+        <i class="bi bi-chevron-right"></i>
+      </a>
+    </div>
+
+    <div class="text-center text-muted small mt-2"
+      th:if="${!compactHeader and season != null and season.state != null and season.state.name() == 'SCHEDULED'}">
+      Season is not active yet. Match logging will open once it starts.
+    </div>
+    <div class="text-center text-muted small mt-2"
+      th:if="${!compactHeader and season != null and season.state != null and season.state.name() == 'ENDED'}">
+      Season has ended.
+    </div>
+  </div>
+</th:block>
+
+<div th:fragment="ladderDashboardCard">
+  <div class="card mb-4 shadow card-spotlight">
+    <div th:replace="~{components/ladderV2 :: ladderContextCardHeader(false)}"></div>
+    <div class="card-body">
+      <input type="hidden" id="ladderId" th:value="${ladderId}" />
+      <input type="hidden" id="seasonId" th:value="${seasonId}" />
+      <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.matchLogConfig = window.matchLogConfig || {};
+        window.matchLogConfig.language = /*[[${voiceLanguage}]]*/ 'en-US';
+        window.matchLogConfig.phraseHints = /*[[${voicePhraseHints}]]*/ [];
+        window.matchLogConfig.maxAlternatives = /*[[${voiceMaxAlternatives}]]*/ 3;
+        window.matchLogConfig.postMatchLoggedBaseUrl = /*[[${loggedInUser != null and loggedInUser.appUiEnabled}]]*/ false
+          ? '/match-log'
+          : '/home';
+        /*]]>*/
+      </script>
+
+      <h2 class="ladder-section-title mb-2">Dashboard</h2>
+
+      <div class="position-relative mb-2">
+        <div class="d-flex justify-content-center align-items-center gap-2">
+          <button th:if="${seasonActive}" id="logMatchVoiceBtn" type="button" class="btn btn-action-success btn-lg d-flex align-items-center justify-content-center p-3"
+            aria-pressed="false" aria-label="Log Match by Voice" style="position:relative;">
+            <i class="bi bi-mic fs-4" aria-hidden="true"></i>
+            <span id="logMatchVoiceBtnLabel" class="visually-hidden">Log Match</span>
+            <span id="logMatchVoiceSpinner" class="ms-2 d-none" aria-hidden="true">
+              <span class="spinner-border spinner-border-sm text-warning"></span>
+            </span>
+          </button>
+
+          <a th:if="${seasonActive}" class="btn btn-action-primary btn-lg d-flex align-items-center justify-content-center p-3" title="Log Match (Classic)"
+             th:href="${seasonId} != null ? @{/log-match(ladderId=${ladderId}, seasonId=${seasonId})} : @{/log-match(ladderId=${ladderId})}"
+             aria-label="Log Match (Classic)">
+            <i class="bi bi-pencil-square fs-4" aria-hidden="true"></i>
+            <span class="visually-hidden">Log Match (Classic)</span>
+          </a>
+        </div>
+
+        <div th:if="${!seasonActive}" class="text-center mt-2 mb-2 text-muted small" aria-live="polite">
+          <span th:if="${season == null}">
+            Match logging is unavailable. No active season is selected for this group.
+          </span>
+          <span th:if="${season != null and season.state != null and season.state.name() == 'SCHEDULED'}">
+            Match logging is unavailable. This season has not started yet.
+          </span>
+          <span th:if="${season != null and season.state != null and season.state.name() == 'ENDED'}">
+            Match logging is unavailable. This season has ended.
+          </span>
+          <span th:if="${season != null and season.state != null and season.state.name() != 'SCHEDULED' and season.state.name() != 'ENDED'}">
+            Match logging is unavailable because this season is not active.
+          </span>
+        </div>
+
+        <div th:if="${seasonActive}" id="logMatchVoiceCaption" class="text-center mt-2 mb-2 text-muted d-none" aria-live="polite" data-default-caption='Say something like, "Pam and I beat Ryan and Amy 11-8"'>Say something like, "Pam and I beat Ryan and Amy 11-8"</div>
+      </div>
+
+      <div th:replace="~{components/matchDashboard :: matchDashboard}"></div>
+      <script src="/js/match-log-voice.js" th:src="@{/js/match-log-voice.js(v=${assetVersion})}"></script>
+    </div>
+  </div>
+</div>
+
+<div th:fragment="ladderStandingsCard">
+  <div class="card mb-4 shadow card-spotlight">
+    <div th:replace="~{components/ladderV2 :: ladderContextCardHeader(true)}"></div>
+    <div class="card-body">
+      <div id="ladderStandingsContainer">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+          <h2 class="ladder-section-title mb-0">Standings</h2>
+          <span id="standingsRecalcIndicatorSlot">
+            <span th:if="${standingsRecalculationPending}" id="standingsRecalcIndicator" class="standings-recalc-indicator" role="status" aria-live="polite">
+              <i class="bi bi-arrow-repeat"></i>
+              Please wait, recalculating standings...
+            </span>
+          </span>
+        </div>
+        <div th:if="${storyMode != null and storyMode.enabled}" class="mt-2">
+          <div th:replace="~{components/storyModeStandings :: storyModeStandings}"></div>
+        </div>
+        <div th:if="${(storyMode == null or !storyMode.enabled) and standings != null && #lists.isEmpty(standings) == false}" class="mt-2">
+          <div th:replace="~{fragments/standingsList :: standingsList(
+                ladderDisplay=${ladderDisplay},
+                currentUserId=${currentUserId},
+                listId=${null},
+                listClass=${null},
+                showCompetitionFeatures=false,
+                reportedCompetitionUserIds=${null},
+                playedAgainstUserIds=${null},
+                showFilteredEmptyState=false,
+                filteredEmptyId=${null},
+                filteredEmptyMessage=${null}
+              )}"></div>
+          <div class="mt-3" th:if="${standingsTotalPages != null and standingsTotalPages > 1}">
+            <div class="small text-muted text-center mb-2">
+              Page <span th:text="${standingsPage + 1}">1</span> of <span th:text="${standingsTotalPages}">1</span>
+            </div>
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+              <li class="page-item" th:classappend="${standingsPage == 0} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{${ladderNavPath}(ladderId=${ladderId},seasonId=${seasonId},standingsPage=${standingsPage - 1},standingsSize=${standingsPageSize})}">
+                  Previous
+                </a>
+              </li>
+              <li class="page-item" th:if="${standingsShowFirstPage}" th:classappend="${standingsPage == 0} ? 'active'">
+                <a class="page-link"
+                   th:href="@{${ladderNavPath}(ladderId=${ladderId},seasonId=${seasonId},standingsPage=0,standingsSize=${standingsPageSize})}">1</a>
+              </li>
+              <li class="page-item" th:if="${standingsJumpBackPage != null}">
+                <a class="page-link"
+                   th:href="@{${ladderNavPath}(ladderId=${ladderId},seasonId=${seasonId},standingsPage=${standingsJumpBackPage},standingsSize=${standingsPageSize})}">-5</a>
+              </li>
+              <li class="page-item disabled" th:if="${standingsShowLeadingEllipsis}">
+                <span class="page-link">...</span>
+              </li>
+              <li class="page-item"
+                  th:each="i : ${standingsPageNumbers}"
+                  th:classappend="${i == standingsPage} ? 'active'">
+                <a class="page-link"
+                   th:text="${i + 1}"
+                   th:href="@{${ladderNavPath}(ladderId=${ladderId},seasonId=${seasonId},standingsPage=${i},standingsSize=${standingsPageSize})}">1</a>
+              </li>
+              <li class="page-item disabled" th:if="${standingsShowTrailingEllipsis}">
+                <span class="page-link">...</span>
+              </li>
+              <li class="page-item" th:if="${standingsJumpForwardPage != null}">
+                <a class="page-link"
+                   th:href="@{${ladderNavPath}(ladderId=${ladderId},seasonId=${seasonId},standingsPage=${standingsJumpForwardPage},standingsSize=${standingsPageSize})}">+5</a>
+              </li>
+              <li class="page-item" th:if="${standingsShowLastPage}" th:classappend="${standingsPage == standingsTotalPages - 1} ? 'active'">
+                <a class="page-link"
+                   th:text="${standingsTotalPages}"
+                   th:href="@{${ladderNavPath}(ladderId=${ladderId},seasonId=${seasonId},standingsPage=${standingsTotalPages - 1},standingsSize=${standingsPageSize})}">1</a>
+              </li>
+              <li class="page-item" th:classappend="${standingsPage + 1 >= standingsTotalPages} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{${ladderNavPath}(ladderId=${ladderId},seasonId=${seasonId},standingsPage=${standingsPage + 1},standingsSize=${standingsPageSize})}">
+                  Next
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="text-center text-muted" th:if="${(storyMode == null or !storyMode.enabled) and #lists.isEmpty(ladderDisplay)}">
+          Standings will appear here once matches are logged.
+        </div>
+
+        <div class="mt-2 text-center">
+          <a class="ladder-section-link link-contrast small fw-semibold" th:href="@{/seasons/{sid}/matches(sid=${seasonId})}">view all matches</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

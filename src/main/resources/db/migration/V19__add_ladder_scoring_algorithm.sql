@@ -1,0 +1,2 @@
+ALTER TABLE ladder_config
+    ADD COLUMN scoring_algorithm VARCHAR(32) NOT NULL DEFAULT 'BALANCED_V1';

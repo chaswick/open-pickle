@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Private Groups</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-home">
+        <section class="app-hero">
+            <div class="app-hero-card">
+                <h1 class="app-hero-title">Private Groups</h1>
+                <p class="app-hero-subtitle">Create or choose a group to get started.</p>
+            </div>
+        </section>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">Back</a>
+        </div>
+
+        <section class="app-action-grid" th:if="${privateGroupMemberships != null and !#lists.isEmpty(privateGroupMemberships)}">
+            <a class="app-action-tile app-action-groups"
+               th:each="membership : ${privateGroupMemberships}"
+               th:href="@{/private-groups/{ladderId}(ladderId=${membership.ladderConfig.id})}">
+                <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title" th:text="${membership.ladderConfig.title}">Group Name</div>
+                    <div class="app-action-subtitle"
+                         th:text="${membership.role != null ? membership.role + ' member. Open plans, logging, standings, and round robins.' : 'Open plans, logging, standings, and round robins.'}">
+                        Open plans, logging, standings, and round robins.
+                    </div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-help"
+               th:classappend="${#lists.isEmpty(privateGroupMemberships)} ? ' app-action-start-here' : ''"
+               th:href="@{/groups(returnTo='/private-groups')}">
+                <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
+                <div>
+                    <span class="app-action-callout app-action-callout-top"
+                          th:if="${privateGroupMemberships == null or #lists.isEmpty(privateGroupMemberships)}">Start here</span>
+                    <div class="app-action-title">Create or Join Group</div>
+                    <div class="app-action-subtitle">Make a new private group or use an invite to join one.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-help"
+               th:href="@{/groups/new(returnTo='/private-groups',tournamentMode=true)}">
+                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Create Tournament</div>
+                    <div class="app-action-subtitle">Create a private group with tournament mode, manual seasons, and admin-run round robins.</div>
+                </div>
+            </a>
+        </section>
+
+        <div class="card mt-4 shadow card-spotlight"
+             th:if="${privateGroupMemberships == null or #lists.isEmpty(privateGroupMemberships)}">
+            <div class="card-header card-header-title text-center">No Private Groups Yet</div>
+            <div class="card-body text-center">
+                <p class="text-muted mb-3">Create a group or join one by invite to unlock private play plans, standings, and round robins.</p>
+                <div class="d-grid gap-2 col-sm-8 mx-auto">
+                    <a class="btn btn-action-primary btn-lg" th:href="@{/groups(returnTo='/private-groups')}">Create or Join Group</a>
+                    <a class="btn btn-nav-secondary btn-lg" th:href="@{/groups/new(returnTo='/private-groups',tournamentMode=true)}">Create Tournament</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

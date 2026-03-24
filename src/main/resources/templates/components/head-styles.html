@@ -1,0 +1,32 @@
+
+<th:block th:fragment="core-styles">
+    
+    <link href="/css/bootstrap.min.css" rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    
+    
+    <link href="/css/base.css" rel="stylesheet" th:href="@{/css/base.css(v=${assetVersion})}">
+    
+    
+    <link href="/css/components.css" rel="stylesheet" th:href="@{/css/components.css(v=${assetVersion})}">
+    
+    
+    <link href="/css/site.css" rel="stylesheet" th:href="@{/css/site.css(v=${assetVersion})}">
+</th:block>
+
+
+<th:block th:fragment="form-styles">
+    <div th:replace="~{components/head-styles :: core-styles}"></div>
+    <link href="/css/pages.css" rel="stylesheet" th:href="@{/css/pages.css(v=${assetVersion})}">
+</th:block>
+
+
+<th:block th:fragment="landing-styles">
+    <div th:replace="~{components/head-styles :: core-styles}"></div>
+    <link href="/css/pages.css" rel="stylesheet" th:href="@{/css/pages.css(v=${assetVersion})}">
+</th:block>
+
+
+<th:block th:fragment="trophy-styles">
+    <div th:replace="~{components/head-styles :: core-styles}"></div>
+    <link href="/css/pages.css" rel="stylesheet" th:href="@{/css/pages.css(v=${assetVersion})}">
+</th:block>

@@ -1,0 +1,24 @@
+plugins {
+	id 'java-library'
+}
+
+group = 'com.w3llspring.fhpb'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	api 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 25
+}

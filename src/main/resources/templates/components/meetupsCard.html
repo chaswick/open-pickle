@@ -1,0 +1,436 @@
+<div th:fragment="meetupsCard" class="card mb-4 shadow card-spotlight">
+  <div class="card-header card-header-title text-center">Play Plans</div>
+  <div class="card-body">
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="meetupsEmailOptIn" th:checked="${loggedInUser != null and loggedInUser.meetupsEmailOptIn}" />
+      <label class="form-check-label" for="meetupsEmailOptIn">
+        Notify me by E-mail (no more than once every 8 hours, only if a new meetup is added)
+      </label>
+    </div>
+    <div class="row g-2 align-items-end">
+      <div class="col-6 col-md-3">
+        <label class="form-label mb-1" for="meetupDate">Date</label>
+        <select id="meetupDate" class="form-select"></select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label mb-1" for="meetupTime">Time <span id="meetupTimeZoneLabel" class="text-muted">(ET)</span></label>
+        <select id="meetupTime" class="form-select"></select>
+      </div>
+      <div class="col-12 col-md">
+        <label class="form-label mb-1" for="meetupLadder">Group</label>
+        <select id="meetupLadder" class="form-select">
+          <option th:each="m : ${myMemberships}" th:value="${m.ladderConfig.id}" th:text="${m.ladderConfig.title}"></option>
+        </select>
+      </div>
+      <div class="col-12 col-md-auto">
+        <button id="meetupAddBtn" class="btn btn-action-primary w-100">Add</button>
+      </div>
+    </div>
+
+    <div class="mt-3" id="meetupsList">
+      <div class="text-muted small">Loading…</div>
+    </div>
+
+    <script th:inline="javascript">
+      (function () {
+        const enabled = /*[[${meetupsEnabled}]]*/ false;
+        const userTimeZone = /*[[${@fhpbTime.zoneId(#authentication != null ? #authentication.principal : null)}]]*/ 'America/New_York';
+        const listEl = document.getElementById('meetupsList');
+        function escapeHtml(s) {
+          return String(s)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+        }
+
+        function setStatus(text) {
+          listEl.innerHTML = `<div class="text-muted small">${escapeHtml(text)}</div>`;
+        }
+
+        function showInfoToast(text) {
+          const safe = escapeHtml(text);
+          if (window.showInfo) {
+            window.showInfo(safe);
+          } else {
+            alert(text);
+          }
+        }
+
+        function showErrorToast(text) {
+          const safe = escapeHtml(text);
+          if (window.showError) {
+            window.showError(safe);
+          } else {
+            alert(text);
+          }
+        }
+
+        if (!enabled) {
+          setStatus('Play Plans unavailable.');
+          return;
+        }
+
+        const dateEl = document.getElementById('meetupDate');
+        const timeEl = document.getElementById('meetupTime');
+        const ladderEl = document.getElementById('meetupLadder');
+        const addBtn = document.getElementById('meetupAddBtn');
+        const tzLabelEl = document.getElementById('meetupTimeZoneLabel');
+        const emailOptInEl = document.getElementById('meetupsEmailOptIn');
+
+        function csrfHeaders(baseHeaders) {
+          return window.FHPB.Csrf.headers(baseHeaders);
+        }
+
+        async function safeJson(res) {
+          try { return await res.json(); } catch (e) { return null; }
+        }
+
+        function fmtSlotTime(iso) {
+          const d = new Date(iso);
+          return new Intl.DateTimeFormat([], {
+            timeZone: userTimeZone,
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            timeZoneName: 'short'
+          }).format(d);
+        }
+
+        function fmtDateValueTz(d) {
+          return new Intl.DateTimeFormat('en-CA', {
+            timeZone: userTimeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }).format(d);
+        }
+
+        function fmtDateLabelTz(d) {
+          return new Intl.DateTimeFormat([], {
+            timeZone: userTimeZone,
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric'
+          }).format(d);
+        }
+
+        function fmtTimeLabel(hh, mm) {
+          const hours = Number(hh);
+          const minutes = Number(mm);
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          const h12 = ((hours + 11) % 12) + 1;
+          return `${h12}:${String(minutes).padStart(2, '0')} ${ampm}`;
+        }
+
+        function buildDateOptions() {
+          const now = new Date();
+          for (let i = 0; i < 90; i++) {
+            const d = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+            const opt = document.createElement('option');
+            opt.value = fmtDateValueTz(d);
+            opt.textContent = fmtDateLabelTz(d);
+            dateEl.appendChild(opt);
+          }
+        }
+
+        function buildTimeOptions() {
+          for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 15) {
+              const hh = String(h).padStart(2, '0');
+              const mm = String(m).padStart(2, '0');
+              const opt = document.createElement('option');
+              opt.value = `${hh}:${mm}`;
+              opt.textContent = fmtTimeLabel(hh, mm);
+              timeEl.appendChild(opt);
+            }
+          }
+        }
+
+        function compactNames(names) {
+          if (!names || names.length === 0) return '';
+          const max = 3;
+          const shown = names.slice(0, max);
+          const extra = names.length - shown.length;
+          return escapeHtml(shown.join(', ')) + (extra > 0 ? ` +${extra}` : '');
+        }
+
+        function render(rows) {
+          if (!rows || rows.length === 0) {
+            listEl.innerHTML = '<div class="text-muted small">No upcoming plans yet.</div>';
+            return;
+          }
+
+          const ordered = [...rows].sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
+          const html = ordered.map(r => {
+            const when = fmtSlotTime(r.startsAt);
+            const ladder = escapeHtml(r.ladderTitle);
+            const inNames = compactNames(r.inNames);
+            const maybeNames = compactNames(r.maybeNames);
+            const loc = (r.locationCode || '').trim();
+
+            const my = (r.myStatus || '').toUpperCase();
+            const btnClass = (s) => my === s ? 'btn btn-action-primary py-2' : 'btn btn-nav-secondary py-2';
+            const delBtn = r.canDelete ? `<button class="btn btn-sm btn-danger" data-delete-slot="${r.slotId}">Delete</button>` : '';
+            const locBtn = r.canDelete ? `<button class="btn btn-sm btn-outline-secondary" data-loc-slot="${r.slotId}">${loc ? 'Edit location' : 'Set location'}</button>` : '';
+
+            return `
+              <div class="border rounded p-2 mb-2">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <div class="me-2">
+                    <div class="fw-semibold">${escapeHtml(when)} <span class="badge text-bg-light">${ladder}</span></div>
+                    <div class="small text-muted">In ${r.inCount} · Maybe ${r.maybeCount} · No ${r.cantCount}</div>
+                    ${loc ? `<div class="small text-muted">Location: <span class="fw-semibold">${escapeHtml(loc)}</span></div>` : ''}
+                    ${inNames ? `<div class="small"><span class="text-muted">In:</span> ${inNames}</div>` : ''}
+                    ${maybeNames ? `<div class="small"><span class="text-muted">Maybe:</span> ${maybeNames}</div>` : ''}
+                  </div>
+                  <div class="d-flex flex-column gap-1 align-items-stretch">
+                    <div class="fhpb-rsvp-group" role="group" aria-label="RSVP">
+                      <button class="${btnClass('IN')}" data-slot="${r.slotId}" data-status="IN">In</button>
+                      <button class="${btnClass('MAYBE')}" data-slot="${r.slotId}" data-status="MAYBE">Maybe</button>
+                      <button class="${btnClass('CANT')}" data-slot="${r.slotId}" data-status="CANT">No</button>
+                    </div>
+                    <div class="d-flex gap-1 flex-wrap justify-content-end">
+                      ${locBtn}
+                      ${delBtn}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          listEl.innerHTML = html;
+        }
+
+        function fingerprint(rows) {
+          if (!rows || rows.length === 0) return 'empty';
+          const ordered = [...rows].sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
+          return ordered.map(r => {
+            const inNames = (r.inNames || []).join(',');
+            const maybeNames = (r.maybeNames || []).join(',');
+            return [
+              r.slotId,
+              r.startsAt,
+              r.ladderTitle,
+              (r.locationCode || ''),
+              (r.myStatus || ''),
+              r.inCount,
+              r.maybeCount,
+              r.cantCount,
+              inNames,
+              maybeNames
+            ].join('~');
+          }).join('|');
+        }
+
+        let lastFp = null;
+        let refreshInFlight = false;
+        async function refresh() {
+          if (refreshInFlight) return;
+          refreshInFlight = true;
+          try {
+            const res = await fetch('/api/meetups/upcoming', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) {
+              setStatus(`Unable to load plans (HTTP ${res.status}).`);
+              return;
+            }
+            const rows = await res.json();
+            const fp = fingerprint(rows);
+            if (fp !== lastFp) {
+              lastFp = fp;
+              render(rows);
+            }
+          } finally {
+            refreshInFlight = false;
+          }
+        }
+
+        let pollTimer = null;
+        let pollFailures = 0;
+        function stopPolling() {
+          if (pollTimer) {
+            clearTimeout(pollTimer);
+            pollTimer = null;
+          }
+        }
+
+        function scheduleNextPoll() {
+          stopPolling();
+          const baseMs = 30_000;
+          const maxBackoffMs = 5 * 60_000;
+          const backoffMs = Math.min(baseMs * Math.pow(2, Math.max(0, pollFailures - 1)), maxBackoffMs);
+          const jitterMs = Math.floor(Math.random() * 2_500);
+          pollTimer = setTimeout(async () => {
+            if (document.visibilityState !== 'visible') {
+              scheduleNextPoll();
+              return;
+            }
+            try {
+              await refresh();
+              pollFailures = 0;
+            } catch (e) {
+              pollFailures = Math.min(pollFailures + 1, 6);
+            } finally {
+              scheduleNextPoll();
+            }
+          }, backoffMs + jitterMs);
+        }
+
+        async function createSlot() {
+          if (!ladderEl.value) {
+            showInfoToast('Start or join a group before adding a Play Plan.');
+            return;
+          }
+          if (!dateEl.value || !timeEl.value) return;
+          const payload = { ladderId: Number(ladderEl.value), date: dateEl.value, time: timeEl.value };
+          const res = await fetch('/api/meetups/create', {
+            method: 'POST',
+            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            await refresh();
+          } else {
+            const body = await safeJson(res);
+            const msg = body && (body.detail || body.message || body.error) ? (body.detail || body.message || body.error) : '';
+            if (res.status === 409) {
+              const text = msg || 'A Play Plan already exists for that group and time.';
+              showInfoToast(text);
+              await refresh();
+              return;
+            }
+
+            const text = msg || `Unable to create plan (HTTP ${res.status}).`;
+            showErrorToast(text);
+          }
+        }
+
+        async function setEmailOptIn(optIn) {
+          const res = await fetch('/api/meetups/email-opt-in', {
+            method: 'POST',
+            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ optIn: !!optIn })
+          });
+          if (!res.ok) {
+            const body = await safeJson(res);
+            const msg = body && (body.message || body.error) ? (body.message || body.error) : '';
+            setStatus(`Unable to update email preference (HTTP ${res.status})${msg ? ': ' + msg : ''}.`);
+          }
+        }
+
+        async function setRsvp(slotId, status) {
+          const res = await fetch(`/api/meetups/${slotId}/rsvp`, {
+            method: 'POST',
+            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ status })
+          });
+          if (res.ok) {
+            await refresh();
+          } else {
+            const body = await safeJson(res);
+            const msg = body && (body.message || body.error) ? (body.message || body.error) : '';
+            setStatus(`Unable to RSVP (HTTP ${res.status})${msg ? ': ' + msg : ''}.`);
+          }
+        }
+
+        async function deleteSlot(slotId) {
+          if (!confirm('Remove this plan?')) return;
+          const res = await fetch(`/api/meetups/${slotId}/delete`, {
+            method: 'POST',
+            headers: csrfHeaders()
+          });
+          if (res.ok) {
+            await refresh();
+          } else {
+            const body = await safeJson(res);
+            const msg = body && (body.message || body.error) ? (body.message || body.error) : '';
+            setStatus(`Unable to delete plan (HTTP ${res.status})${msg ? ': ' + msg : ''}.`);
+          }
+        }
+
+        async function updateLocation(slotId) {
+          const input = prompt('Location code (exactly 2 letters/numbers). Leave blank to clear.');
+          if (input === null) return;
+          const res = await fetch(`/api/meetups/${slotId}/location`, {
+            method: 'POST',
+            headers: csrfHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ locationCode: input })
+          });
+          if (res.ok) {
+            await refresh();
+          } else {
+            const body = await safeJson(res);
+            const msg = body && (body.message || body.error) ? (body.message || body.error) : '';
+            setStatus(`Unable to update location (HTTP ${res.status})${msg ? ': ' + msg : ''}.`);
+          }
+        }
+
+        listEl.addEventListener('click', (e) => {
+          const del = e.target.closest('button[data-delete-slot]');
+          if (del) {
+            deleteSlot(del.getAttribute('data-delete-slot'));
+            return;
+          }
+          const loc = e.target.closest('button[data-loc-slot]');
+          if (loc) {
+            updateLocation(loc.getAttribute('data-loc-slot'));
+            return;
+          }
+          const btn = e.target.closest('button[data-slot][data-status]');
+          if (!btn) return;
+          setRsvp(btn.getAttribute('data-slot'), btn.getAttribute('data-status'));
+        });
+
+        addBtn.addEventListener('click', () => createSlot());
+
+        if (emailOptInEl) {
+          emailOptInEl.addEventListener('change', () => setEmailOptIn(emailOptInEl.checked));
+        }
+
+        buildDateOptions();
+        buildTimeOptions();
+
+        const base = new Date(Date.now() + 30 * 60 * 1000);
+        const baseDateTz = fmtDateValueTz(base);
+        const parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: userTimeZone,
+          hour: '2-digit',
+          minute: '2-digit',
+          hourCycle: 'h23'
+        }).formatToParts(base);
+        const hhPart = parts.find(p => p.type === 'hour');
+        const mmPart = parts.find(p => p.type === 'minute');
+        const hh = hhPart ? hhPart.value : '12';
+        const minutes = mmPart ? Number(mmPart.value) : 0;
+        const roundedMinutes = Math.floor(minutes / 15) * 15;
+        const mm = String(roundedMinutes).padStart(2, '0');
+        dateEl.value = baseDateTz;
+        timeEl.value = `${hh}:${mm}`;
+
+        if (tzLabelEl) {
+          try {
+            const tzPart = new Intl.DateTimeFormat([], { timeZone: userTimeZone, timeZoneName: 'short' })
+              .formatToParts(new Date())
+              .find(p => p.type === 'timeZoneName');
+            const abbr = tzPart && tzPart.value ? tzPart.value : userTimeZone;
+            tzLabelEl.textContent = `(${abbr})`;
+          } catch (e) {
+            tzLabelEl.textContent = `(${userTimeZone})`;
+          }
+        }
+
+        refresh();
+        scheduleNextPoll();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            refresh();
+          }
+        });
+      })();
+    </script>
+  </div>
+</div>

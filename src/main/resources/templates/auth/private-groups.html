@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Private Groups</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-home">
+        <section class="app-hero">
+            <div class="app-hero-card">
+                <h1 class="app-hero-title" th:text="${ladderName != null ? ladderName : 'Private Group'}">Private Group</h1>
+                <p class="app-hero-subtitle">Plans, match logging, standings, round robins, and group management.</p>
+                <div class="app-hero-subtitle" th:if="${seasonName != null and seasonName != ''}">
+                    <div class="fw-semibold" th:text="${seasonName}">Season</div>
+                    <div th:text="${seasonDateRange}">Date Range</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/private-groups}">Back</a>
+        </div>
+
+        <section class="app-action-grid">
+            <a class="app-action-tile app-action-plans"
+               th:href="@{/play-plans(ladderId=${ladderId},seasonId=${seasonId})}"
+               th:if="${meetupsEnabled}">
+                <div class="app-action-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Play Plans</div>
+                    <div class="app-action-subtitle">Schedule or RSVP for pickup games.</div>
+                </div>
+            </a>
+            <div class="app-action-tile app-action-plans app-action-disabled" th:unless="${meetupsEnabled}">
+                <div class="app-action-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Play Plans</div>
+                    <div class="app-action-subtitle">Feature is currently disabled.</div>
+                </div>
+            </div>
+
+            <a class="app-action-tile app-action-log" th:href="@{/match-log(ladderId=${ladderId},seasonId=${seasonId})}">
+                <div class="app-action-icon"><i class="bi bi-mic" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Log Match</div>
+                    <div class="app-action-subtitle">Voice or classic logging in seconds.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-standings" th:href="@{/standings(ladderId=${ladderId},seasonId=${seasonId})}">
+                <div class="app-action-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">View Standings</div>
+                    <div class="app-action-subtitle">Check form, rank, and ratings.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-roundrobins"
+               th:href="@{/round-robin/list(ladderId=${ladderId},seasonId=${seasonId})}">
+                <div class="app-action-icon"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Round Robins</div>
+                    <div class="app-action-subtitle">Start or review round-robin sessions.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-groups"
+               th:href="@{/groups/{id}(id=${ladderId})}">
+                <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Manage Group</div>
+                    <div class="app-action-subtitle">Invite players, manage members, and adjust group settings.</div>
+                </div>
+            </a>
+        </section>
+    </div>
+</body>
+
+</html>

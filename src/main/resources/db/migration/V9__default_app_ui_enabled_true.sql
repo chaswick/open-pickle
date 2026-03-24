@@ -1,0 +1,2 @@
+ALTER TABLE users
+  ALTER COLUMN app_ui_enabled SET DEFAULT 1;

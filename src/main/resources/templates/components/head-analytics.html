@@ -1,0 +1,20 @@
+
+<th:block th:fragment="google-analytics"
+          th:with="loaderId=${!#strings.isEmpty(googleAnalyticsMeasurementId) ? googleAnalyticsMeasurementId : googleAdsId}">
+    <th:block th:if="${googleAnalyticsEnabled and !#strings.isEmpty(loaderId)}">
+        <script async th:src="'https://www.googletagmanager.com/gtag/js?id=' + ${loaderId}"></script>
+        <script th:fragment="google-analytics-script" th:inline="javascript">
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+            /*[# th:if="${!#strings.isEmpty(googleAnalyticsMeasurementId)}"]*/
+            gtag('config', [[${googleAnalyticsMeasurementId}]]);
+            /*[/]*/
+            /*[# th:if="${!#strings.isEmpty(googleAdsId)}"]*/
+            gtag('config', [[${googleAdsId}]]);
+            /*[/]*/
+        </script>
+    </th:block>
+</th:block>

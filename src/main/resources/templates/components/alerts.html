@@ -1,0 +1,123 @@
+
+<div th:fragment="global-alerts">
+
+    <div th:if="${competitionAutoModStatus != null and competitionAutoModStatus.visibleBanner}"
+         id="competitionAutoModBanner"
+         class="alert mb-3 border-2 shadow-sm"
+         th:classappend="${competitionAutoModStatus.bannerVariant == 'danger'} ? ' alert-danger' : (${competitionAutoModStatus.bannerVariant == 'warning'} ? ' alert-warning' : ' alert-info')"
+         role="alert">
+        <div class="fw-semibold" th:text="${competitionAutoModStatus.bannerTitle}">Competition Match Lockout</div>
+        <div th:text="${competitionAutoModStatus.bannerMessage}">
+            You cannot be included in competition matches again until the next season starts.
+        </div>
+    </div>
+    
+    <div class="toast-container position-fixed p-3 toast-overlay" id="globalToastContainer" aria-live="polite" style="top:33vh; left:50%; transform:translateX(-50%);"></div>
+
+    
+    <div class="toast-container position-fixed p-3 toast-overlay"
+        th:if="${toastMessage} ?: ${param.left}"
+        style="top:33vh; left:50%; transform:translateX(-50%);">
+        <div class="toast align-items-center border-0"
+             th:classappend="${toastLevel == 'success'} ? ' text-bg-success' : (${toastLevel == 'warning'} ? ' text-bg-warning' : (${toastLevel == 'danger'} ? ' text-bg-danger' : (${toastLevel == 'info'} ? ' text-bg-info' : ' text-bg-light')))"
+               th:attr="data-auto=${toastAuto} ? 'true' : null"
+             id="globalToast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body"
+                     th:text="${toastMessage != null ? toastMessage : 'You left the group.'}">
+                    You left the group.
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"
+                        th:classappend="${toastLevel != null and toastLevel != 'light'} ? ' btn-close-white' : ''"
+                        aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="toast-container position-fixed p-3 toast-overlay"
+        th:if="${param.joined}"
+        style="top:33vh; left:50%; transform:translateX(-50%);">
+        <div class="toast align-items-center border-0 text-bg-success" data-auto="true" id="joinedToast" role="alert"
+             aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">Joined group successfully.</div>
+                <button type="button" class="btn-close me-2 m-auto btn-close-white" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    
+
+    
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}">Success message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}">Error message</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
+
+<script th:fragment="toast-script">
+    document.addEventListener('DOMContentLoaded', function() {
+        var toastElements = document.querySelectorAll('.toast');
+        var hadToasts = toastElements.length > 0;
+        
+        toastElements.forEach(function(toastElement) {
+            var cls = toastElement.className || '';
+            var isSuccessish = cls.indexOf('text-bg-success') !== -1 || cls.indexOf('text-bg-light') !== -1;
+            if (isSuccessish && toastElement.dataset.auto !== 'true') {
+                return;
+            }
+            try {
+                var defaultDelay = (window.FHPB && Number.isFinite(window.FHPB.standardToastDelayMs) && window.FHPB.standardToastDelayMs > 0)
+                    ? window.FHPB.standardToastDelayMs
+                    : 2000;
+                var explicitDelay = parseInt(toastElement.getAttribute('data-delay'), 10);
+                var toast = new bootstrap.Toast(toastElement, {
+                    delay: !isNaN(explicitDelay) && explicitDelay > 0 ? explicitDelay : defaultDelay
+                });
+                toast.show();
+            } catch (e) {}
+        });
+        
+        if (hadToasts) {
+            try {
+                var url = new URL(window.location.href);
+                var params = url.searchParams;
+                var hadToastParams = false;
+                
+                if (params.has('toast')) {
+                    params.delete('toast');
+                    hadToastParams = true;
+                }
+                if (params.has('toastMessage')) {
+                    params.delete('toastMessage');
+                    hadToastParams = true;
+                }
+                if (params.has('matchId')) {
+                    params.delete('matchId');
+                    hadToastParams = true;
+                }
+                if (params.has('joined')) {
+                    params.delete('joined');
+                    hadToastParams = true;
+                }
+                if (params.has('left')) {
+                    params.delete('left');
+                    hadToastParams = true;
+                }
+                if (hadToastParams) {
+                    var newUrl = url.pathname + (params.toString() ? '?' + params.toString() : '');
+                    window.history.replaceState({}, '', newUrl);
+                }
+            } catch (e) {}
+        }
+    });
+</script>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/public}">
+
+<head>
+    <title layout:fragment="title">Privacy Policy</title>
+    
+    <th:block layout:fragment="styles">
+        <style>
+            .legal-content { 
+                max-width: 900px; 
+                margin: 2rem auto; 
+                padding: 2rem; 
+                background: #fff; 
+                border-radius: 12px; 
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            }
+            .legal-content h1, 
+            .legal-content h2 { 
+                color: #026441; 
+            }
+            .legal-content p {
+                line-height: 1.6;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <main class="legal-content">
+            <h1>Privacy Policy</h1>
+            <p><strong>Last updated:</strong> March 19, 2026</p>
+            <p><em>This public repo ships a placeholder privacy-policy template. Deployment operators should replace the operator identity, contact information, and domain details before launching a public service.</em></p>
+
+            <h2>1. Who We Are</h2>
+            <p>
+                Open-Pickle ("we," "us," or "our") is community software that may be operated by the operator of the
+                deployment you are using.
+                This Privacy Policy explains how we collect, use, and protect your information.
+            </p>
+
+            <h2>2. Information We Collect</h2>
+            <p>We collect information you provide directly, including:</p>
+            <ul>
+                <li><strong>Account Information:</strong> Email address, username, encrypted password</li>
+                <li><strong>Profile Information:</strong> Display name, skill level, and preferences</li>
+                <li><strong>Activity Data:</strong> Match results, group participation, and comments</li>
+                <li><strong>Location Data (Optional):</strong> Current device location and submitted location names if you use the Check In feature</li>
+                <li><strong>Voice Feature Data (Optional):</strong> Speech-to-text transcripts (not raw audio) and related metadata if you use voice-assisted match logging</li>
+                <li><strong>Communications:</strong> Messages you send to us</li>
+            </ul>
+
+            <p>We also collect certain information automatically, such as:</p>
+            <ul>
+                <li>IP address</li>
+                <li>Browser and device type</li>
+                <li>Pages visited and usage patterns</li>
+                <li>Cookies and similar technologies</li>
+            </ul>
+
+            <h2>3. How We Use Your Information</h2>
+            <p>We use your information to:</p>
+            <ul>
+                <li>Provide and maintain the Service</li>
+                <li>Display group standings and match results</li>
+                <li>Improve website functionality and user experience</li>
+                <li>Monitor security and prevent abuse</li>
+                <li>Send service-related communications</li>
+                <li>Comply with legal obligations</li>
+            </ul>
+
+            <h2>4. Location-Based Check In</h2>
+            <p>
+                Check In is optional.
+                If you use it, Open-Pickle requests your current location only after you tap the Check In button
+                and approve the browser or installed progressive web app (PWA) permission prompt.
+                We use that location to identify or create a nearby play location, associate your account with an
+                active check-in, support saved location names, and show active player counts within the feature.
+                We do not use Check In for background or continuous location tracking.
+            </p>
+
+            <h2>5. Public Information</h2>
+            <p>
+                Because Open-Pickle is a community platform, certain information such as display names,
+                rankings, match results, and public comments are visible to other users.
+                Please avoid sharing sensitive personal information in public areas.
+            </p>
+
+            <h2>6. Community Funding and Donations</h2>
+            <p>
+                If you choose to support the Service through a voluntary donation or similar community funding channel,
+                payment processing will be handled by third-party providers.
+                We do not store full credit card numbers on our servers.
+            </p>
+
+            <h2>7. Third-Party Services</h2>
+            <p>
+                We may use third-party services such as hosting providers, analytics tools,
+                speech recognition providers (if voice features are enabled),
+                and payment processors (if applicable).
+                These providers may process limited technical information as necessary to provide their services.
+            </p>
+
+            <h2>8. Cookies and Tracking</h2>
+            <p>
+                We use cookies and similar technologies to maintain login sessions,
+                remember preferences, analyze usage patterns (if analytics is enabled),
+                and improve performance. You can manage cookies through your browser settings.
+            </p>
+
+            <h2>9. Data Retention</h2>
+            <p>
+                We retain account information while your account is active.
+                Historical match results may be retained for standings integrity and community continuity.
+                We may retain certain information as required by law or for legitimate business purposes.
+            </p>
+
+            <h2>10. Data Security</h2>
+            <p>
+                We implement reasonable safeguards including encrypted transmission (HTTPS),
+                secure password hashing, limited administrative access, and periodic security review.
+                However, no method of transmission over the Internet is completely secure.
+            </p>
+
+            <h2>11. Your Privacy Rights</h2>
+            <p>
+                Depending on your location, you may have the right to request access,
+                correction, or deletion of your personal information.
+                To exercise these rights, contact us at 
+                <a href="mailto:support@example.invalid">support@example.invalid</a>.
+            </p>
+
+            <h2>12. U.S. State Privacy Notice</h2>
+            <p>
+                We do not sell personal information.
+                We do not use sensitive personal information for behavioral advertising.
+                We collect and use personal information only as described in this Policy.
+            </p>
+
+            <h2>13. Children's Privacy</h2>
+            <p>
+                The Service is not intended for children under 13.
+                If we learn that we have collected information from a child under 13,
+                we will delete it promptly.
+            </p>
+
+            <h2>14. Changes to This Policy</h2>
+            <p>
+                We may update this Privacy Policy from time to time.
+                Material changes will be posted on this page with an updated revision date.
+            </p>
+
+            <h2>15. Contact</h2>
+            <p>
+                Questions about this Privacy Policy? Contact us at 
+                <a href="mailto:support@example.invalid">support@example.invalid</a>.
+            </p>
+
+            <hr class="my-4">
+            
+            <div class="legal-actions">
+                <a th:href="${backHref}" class="btn btn-nav-secondary">
+                  <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+                  <span th:text="${backLabel}">Back to Home</span>
+                </a>
+                <a th:href="${alternateLegalHref}" class="btn btn-nav-secondary">Terms of Service</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

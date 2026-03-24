@@ -1,0 +1,57 @@
+### Build outputs
+.gradle/
+build/
+out/
+bin/
+dist/
+target/
+
+### Gradle wrapper
+!gradle/wrapper/gradle-wrapper.jar
+
+### IDE / editor metadata
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+.apt_generated/
+.springBeans
+.sts4-cache/
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+/.jdks/
+
+### OS files
+.DS_Store
+Thumbs.db
+
+### Local runtime artifacts
+logs/
+*.log
+hs_err_pid*
+replay_pid*
+
+### Local secrets / credentials
+.env
+.env.*
+!.env.example
+secrets.env
+config/local-secrets.env
+token.txt
+new_token.txt
+github_token.txt
+
+### Local investigation / scratch artifacts
+tmp_*.txt
+tmp_*.html
+tmp_*.json
+beta_audit_*/
+*.tmp
+

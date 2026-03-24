@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{layouts/authenticated}">
+
+<head>
+  <title layout:fragment="title">Join Group</title>
+  <meta layout:fragment="meta-tags">
+</head>
+
+<body>
+  <main layout:fragment="content" class="container pt-4 pb-5 mt-4 text-center">
+    <h4 class="mb-3">Join Group</h4>
+
+    
+
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-6 mx-auto card-stack-col">
+        <form method="post" action="/groups/join" th:action="@{/groups/join}" id="joinLadderForm" class="text-start">
+          <input type="hidden" name="returnTo" th:if="${returnToPath != null}" th:value="${returnToPath}">
+
+          <div class="card mb-3 text-center">
+            <div class="card-header card-header-title">Invite Code</div>
+            <div class="card-body">
+              <label class="form-label">Enter the invite (words-digits)</label>
+              <input type="text" class="form-control form-control-lg text-center" name="inviteCode"
+                placeholder="e.g. dink-7" minlength="3" required th:value="${prefillInviteCode}">
+              <div class="form-text">Ask the group admin for the invite code.</div>
+
+              <div class="d-grid gap-2">
+                <button class="btn btn-action-primary btn-lg" type="submit">Join</button>
+                <a class="btn btn-nav-secondary" href="/"
+                   th:href="${returnToPath != null} ? @{${returnToPath}} : @{/home}">Cancel</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script layout:fragment="scripts">
+    // Optional: light normalization so users can paste with spaces/caps
+    (function () {
+      const input = document.querySelector('input[name="inviteCode"]');
+      if (!input) return;
+      input.addEventListener('blur', function () {
+        if (!input.value) return;
+        input.value = input.value.trim().replace(/\s+/g, '-');
+      });
+    })();
+  </script>
+</body>
+
+</html>
+

@@ -1,0 +1,260 @@
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="helpContent">
+  <div class="accordion" id="helpAccordion">
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="competitionWhyHeading">
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#competitionWhyHelp" aria-expanded="true" aria-controls="competitionWhyHelp">
+          Why compete in the Open-Pickle Global Competition?
+        </button>
+      </h2>
+      <div id="competitionWhyHelp" class="accordion-collapse collapse show" aria-labelledby="competitionWhyHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p><strong>Global Competition</strong> is not trying to replace DUPR or Elo. Those systems are built to estimate long-term player skill. This is built to measure something different: <strong>who is performing best over a defined stretch of time against the people they actually play.</strong></p>
+          <ul>
+            <li><strong>Recent performance, not abstract skill:</strong> It reflects how well you are playing right now, not just your underlying level over months or years.</li>
+            <li><strong>Built around real play patterns:</strong> It compares results from your normal sessions, groups, and opponents.</li>
+            <li><strong>Bad-faith gaming is limited:</strong> Like any system, honest logging matters. But the system is designed to be resilient: you choose who you play, only confirmed results count, bogus logs can be disputed and held for review, repeated missed confirmations in Global Competition can trigger season warnings and lockout, and the standings model rewards broader recent variety.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Think of it as a season-long performance race, not a universal skill rating.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="groupsHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#groupsHelp" aria-expanded="false" aria-controls="groupsHelp">
+          Groups and Sessions
+        </button>
+      </h2>
+      <div id="groupsHelp" class="accordion-collapse collapse" aria-labelledby="groupsHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p class="mb-2"><strong>Groups</strong> are the basic container in Open-Pickle. </p>
+          <ul>
+            <li><strong>Global Competition:</strong> Start from Home &rarr; <strong>Start Playing</strong> to start your first session or join one from an invite link during the current 6-week season.</li>
+            <li><strong>Sessions:</strong> A session is a <strong>temporary group</strong> for the people you are playing with right now.</li>
+            <li><strong>Sessions expire automatically:</strong> They are meant for quick competition play, not permanent group management.</li>
+            <li><strong>Groups and Sessions use Invites:</strong> Open the session or group and share its <strong>invite link</strong> or <strong>QR code</strong> to pull players into that roster.</li>
+            <li><strong>Private groups:</strong> Use these for long-running invite-only play.  They have their own seasons, standings, and round robins.</li>
+            <li><strong>Create a private group:</strong> Home &rarr; <strong>Private Groups</strong> &rarr; <strong>Create or Join Group</strong> &rarr; <strong>Create Group</strong>.</li>
+            <li><strong>Invite others:</strong> Open the session or private group and (admins only) use the <strong>Invite Code</strong> or <strong>Session Info</strong> card.</li>
+            <li><strong>Enable invites:</strong> Tap <strong>Enable Invite</strong> to generate an invite.</li>
+            <li><strong>Share:</strong> Share the <strong>QR code</strong> or tap <strong>Copy link</strong> and send it to someone.</li>
+            <li><strong>Lock it back down:</strong> Use <strong>Disable Invite</strong> if you want to stop new joins.</li>
+            <li><strong>Join either one:</strong> Scan the invite QR / open the invite link sent to you by an admin.</li>
+            <li><strong>Where to switch:</strong> Use <strong>Start Playing</strong> to get into a session, then use <strong>Log Matches</strong> to record global competition results. Go Home &rarr; <strong>Private Groups</strong> for your private groups.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Short version: a session is still a group, just a temporary one built for the current global competition season.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="playPlansHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#playPlansHelp" aria-expanded="false" aria-controls="playPlansHelp">
+          Play Plans
+        </button>
+      </h2>
+      <div id="playPlansHelp" class="accordion-collapse collapse" aria-labelledby="playPlansHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p><strong>Play Plans</strong> helps your <strong>private group</strong> coordinate pickup games and see who&rsquo;s in.</p>
+          <ul>
+            <li><strong>Create a plan:</strong> Open your private group, then go to <strong>Play Plans</strong>, pick <strong>Date</strong> and <strong>Time</strong>, then tap <strong>Add</strong>.</li>
+            <li><strong>RSVP:</strong> For each plan, tap <strong>In</strong>, <strong>Maybe</strong>, or <strong>No</strong>. You can change your RSVP later.</li>
+            <li><strong>Notifications:</strong> On the Play Plans page you can opt into email notifications and enable push notifications (recommended if you install the app to your home screen).</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Play Plans are for long-running private groups, not temporary competition sessions. Times are shown in your selected time zone (defaults to Eastern Time).</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="checkInHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#checkInHelp" aria-expanded="false" aria-controls="checkInHelp">
+          Check In
+        </button>
+      </h2>
+      <div id="checkInHelp" class="accordion-collapse collapse" aria-labelledby="checkInHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p><strong>Check In</strong> lets you share where you are playing and see how many other players are checked in there.</p>
+          <ul>
+            <li><strong>You start it:</strong> We only ask for your location after you tap the <strong>Check In</strong> button.</li>
+            <li><strong>Permission is explicit:</strong> Because Check In runs through the browser/PWA, your location is blocked until you allow it. We do not collect background location for Check In.</li>
+            <li><strong>PWA tip:</strong> Check In usually works best after installing Open-Pickle to your home screen and allowing location access there.</li>
+            <li><strong>Known spots are fast:</strong> If you are at one of your saved locations, the app checks you in there right away.</li>
+            <li><strong>Nearby names are flexible:</strong> If other players already use that same place with slightly different names, you can pick from suggestions or enter your own name.</li>
+            <li><strong>It expires automatically:</strong> Each check-in stays active for <strong>3 hours</strong>, then clears on its own.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Check In uses your current location only when you request it, and it works best over HTTPS or from the installed home-screen app.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="logMatchesHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#logMatchesHelp" aria-expanded="false" aria-controls="logMatchesHelp">
+          Log Matches
+        </button>
+      </h2>
+      <div id="logMatchesHelp" class="accordion-collapse collapse" aria-labelledby="logMatchesHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p><strong>Manual Logging:</strong> Prefer the classic form? Use the pencil option from the Log Match page. Both methods create the same match record and update standings.</p>
+          <p class="mb-2"><strong>Guests:</strong> If someone doesn&rsquo;t have an account (or you don&rsquo;t want to select them), choose <strong>Guest</strong> for that player slot.</p>
+          <ul>
+            <li><strong>Guests never appear in Standings</strong> and do not receive points / rating changes.</li>
+            <li><strong>Matches with guests still count</strong> for the real players, but the same score-margin curve is scaled down for fairness: 1 guest = <strong>60%</strong>, 2 guests = <strong>40%</strong>.</li>
+            <li><strong>Edit later if they join:</strong> You can log a match with a guest today, then edit that match later and replace the guest with their user account after they join.</li>
+            <li><strong>Personal records (optional):</strong> Some casual groups allow guest-only opponent matches for tracking/trophies with <strong>0 standings impact</strong>.</li>
+            <li><strong>Guests never get rating changes</strong>, so only the registered players on the match receive the scaled result.</li>
+          </ul>
+          <p><strong>Voice Logging:</strong> Speak naturally to log matches hands-free. Try: &ldquo;Pam and I beat Ryan and Amy 11-8.&rdquo;</p>
+          <ul>
+            <li><strong>Smart Learning:</strong> When you correct voice recognition errors, the system learns from your edits to improve accuracy next time.</li>
+            <li><strong>Court Names:</strong> Use nicknames or real names; the system recognizes both. Update your court names in <strong>Account Settings</strong>.</li>
+            <li><strong>Data Collection:</strong> The app does not send raw audio to our servers. Your browser's speech-recognition feature converts speech to text, which may use your device or browser provider. We send only the transcript to our server to interpret the match.</li>
+          </ul>          
+          <p><strong>View &amp; Export:</strong> Use &ldquo;View All Matches&rdquo; from the group standings area to see season history, or visit your user page to download your match history.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="confirmationHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#confirmationHelp" aria-expanded="false" aria-controls="confirmationHelp">
+          Match Confirmation
+        </button>
+      </h2>
+      <div id="confirmationHelp" class="accordion-collapse collapse" aria-labelledby="confirmationHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p><strong>Standard Mode:</strong> When a match is logged, the opposing team receives a confirmation request. Only one member of the opposing team needs to confirm.</p>
+          <ul>
+            <li><strong>Confirm:</strong> Accept the result as logged.</li>
+            <li><strong>Edit:</strong> The side currently responsible for confirmation can edit a provisional match. Editing keeps the editor&rsquo;s side attested and makes every other unrepresented side review again.</li>
+            <li><strong>48-hour window:</strong> In Standard Mode, if the match is still unconfirmed after <strong>48 hours</strong>, it is <strong>nullified</strong> and will not count in standings.</li>
+            <li><strong>No Cherry Picking:</strong> Selectively confirming only wins can trigger visible season warnings and eventually remove you from competition matches for the rest of that season.</li>
+          </ul>
+          <p><strong>Casual Mode:</strong> In trusted groups, match loggers can immediately confirm their own entries after reviewing for errors.</p>
+          <p class="mb-0"><small class="text-muted">Admins can change the confirmation mode in Group Config.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="rankingsHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#rankingsHelp" aria-expanded="false" aria-controls="rankingsHelp">
+          Rankings Algorithm
+        </button>
+      </h2>
+      <div id="rankingsHelp" class="accordion-collapse collapse" aria-labelledby="rankingsHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p>Rankings use a simple score-margin curve:</p>
+          <ul>
+            <li><strong>1000 baseline:</strong> Ratings display from a familiar 1000 starting point.</li>
+            <li><strong>Dominance, not format:</strong> A shutout like 9-0 or 11-0 moves rating the most.</li>
+            <li><strong>Closer scores move less:</strong> The curve looks at how one-sided the game was across the total points played, so 11-9, 12-10, and 22-20 are all small swings compared with 11-2.</li>
+            <li><strong>Recent variety and streaks matter too:</strong> After the margin sets the base rating change, the last 5 matches can boost winning results when you mix with more unique real partners and opponents. Reusing the same small pod in different partner/opponent roles still counts for some variety. Guest seats still reduce the bonus, and win-streaks award bonuses for 3, 4, and 5+ straight wins.</li>
+            <li><strong>Guest Matches:</strong> Guests don&rsquo;t earn points, and standings-impact matches with guests are weighted less (1 guest = 60%, 2 guests = 40%). If a guest later joins, you can edit the match and replace that guest with their real account. Personal-record matches (guest-only opponents) do not affect standings.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Confirmed results replay through the season so standings stay consistent.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="roundRobinHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#roundRobinHelp" aria-expanded="false" aria-controls="roundRobinHelp">
+          Round Robins
+        </button>
+      </h2>
+      <div id="roundRobinHelp" class="accordion-collapse collapse" aria-labelledby="roundRobinHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p><strong>What are Round Robins?</strong> A structured format where every team plays every other team exactly once.</p>
+          <ul>
+            <li><strong>Private-group setup:</strong> Open your private group, then go to <strong>Round Robins</strong> to create one.</li>
+            <li><strong>Smart Pairing:</strong> Matches and court numbers are generated automatically.</li>
+            <li><strong>Track Progress:</strong> See which matches are complete and which are pending.</li>
+            <li><strong>Counts Toward Group Standings:</strong> Round robin matches count toward that private group&rsquo;s rankings and stats.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Great for events and organized play days inside a private group.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="fairPlayHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fairPlayHelp" aria-expanded="false" aria-controls="fairPlayHelp">
+          Fair Play
+        </button>
+      </h2>
+      <div id="fairPlayHelp" class="accordion-collapse collapse" aria-labelledby="fairPlayHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p>The system encourages clean, honest match results:</p>
+          <ul>
+            <li><strong>Log the score</strong> and your opponents have 48 hours to <strong>confirm it</strong>.</li>
+            <li><strong>Confirm or dispute promptly:</strong> Only confirmed results count. If a logged match is wrong, update it. Your opponents will have the opportunity to confirm your changes. If a match is bogus, dispute it.</li>
+            <li><strong>Global Competition has season enforcement:</strong> Repeated missed confirmations can trigger visible warnings and eventually lock you out of competition matches until the next season. Logging multiple disputed matches may have the same consequence.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Ratings are based on what happened on court. Fair-play warnings and lockouts are a separate system and currently apply to the public competition season, not private groups.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="supportHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#supportHelp" aria-expanded="false" aria-controls="supportHelp">
+          Support &amp; Feedback
+        </button>
+      </h2>
+      <div id="supportHelp" class="accordion-collapse collapse" aria-labelledby="supportHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p>Questions, bugs, or ideas? We want to hear them.</p>
+          <ul>
+            <li><strong>Report issues:</strong> Use the public project issue tracker or the support channel for the deployment you are using.</li>
+            <li><strong>Get help:</strong> Ask questions through the deployment operator's published support route.</li>
+            <li><strong>Share feedback:</strong> Tell the maintainers or deployment operator what would make the app easier to use for your group.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Deployment operators should customize this section with their own support and community links.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="aiUseHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aiUseHelp" aria-expanded="false" aria-controls="aiUseHelp">
+          AI Use in Open-Pickle
+        </button>
+      </h2>
+      <div id="aiUseHelp" class="accordion-collapse collapse" aria-labelledby="aiUseHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p>Open-Pickle uses AI in limited ways, with human oversight.</p>
+          <ul>
+            <li><strong>Development support:</strong> AI is used to help develop parts of the codebase, but that work is reviewed and directed by an experienced web developer.</li>
+            <li><strong>Trophy art:</strong> Some trophy artwork has been generated with AI. Donations help fund commissioned replacements by human artists over time.</li>
+            <li><strong>Not used on your app data:</strong> AI is not used to process your personal information, match data, check-ins, or other user-submitted data inside Open-Pickle.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">The goal is to use AI as a supervised creation tool to improve development speed and quality.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="limitationsHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#limitationsHelp" aria-expanded="false" aria-controls="limitationsHelp">
+          Current Limitations
+        </button>
+      </h2>
+      <div id="limitationsHelp" class="accordion-collapse collapse" aria-labelledby="limitationsHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p>Current hard limits in the app:</p>
+          <ul>
+            <li><strong>Group size:</strong> Up to <strong th:text="${ladderMaxMembers}">40</strong> active members per private group.</li>
+            <li><strong>Season starts:</strong> A private group can start at most <strong>1 new season every 24 hours</strong>.</li>
+            <li><strong>Groups per user:</strong> Most accounts can create up to <strong th:text="${defaultMaxOwnedLadders}">3</strong> private groups.</li>
+            <li><strong>Global Competition fair-play thresholds:</strong> First warning at <strong th:text="${competitionAutoModWarningOneThreshold}">3</strong> missed required confirmations in one season, final warning at <strong th:text="${competitionAutoModWarningTwoThreshold}">5</strong>, and competition lockout at <strong th:text="${competitionAutoModBlockThreshold}">7</strong>.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">These limits may change over time as the app evolves.</small></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

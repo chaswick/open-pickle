@@ -1,0 +1,25 @@
+User-agent: *
+
+# Public marketing/legal pages can be indexed.
+Allow: /
+
+# Private or low-value utility/auth pages should not be indexed.
+Disallow: /home
+Disallow: /account
+Disallow: /competition
+Disallow: /groups
+Disallow: /private-groups
+Disallow: /check-in
+Disallow: /confirm-matches
+Disallow: /stats
+Disallow: /trophies
+Disallow: /help
+Disallow: /login
+Disallow: /register
+Disallow: /registration-success
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /accept-terms
+Disallow: /experimental/
+Disallow: /round-robin/
+Disallow: /meetups/unsubscribe

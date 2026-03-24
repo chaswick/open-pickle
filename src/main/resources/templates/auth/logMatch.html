@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/authenticated}">
+
+<head>
+  <title layout:fragment="title">Log Match</title>
+  
+  
+  <style>
+    .log-match-large {
+      font-size: 1.25rem;
+      line-height: 1.25;
+    }
+    .log-match-large .form-label,
+    .log-match-large label {
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+    .log-match-large .form-select,
+    .log-match-large .form-control,
+    .log-match-large .btn {
+      font-size: 1.15rem;
+      padding: 0.5rem 0.75rem;
+    }
+    .log-match-large .card-header-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .log-match-large .btn-action-primary {
+      padding: 0.65rem 1rem;
+      font-size: 1.2rem;
+    }
+    .log-match-large select option {
+      font-size: 1.1rem;
+    }
+    .score-input {
+      width: 100%;
+      min-height: 4rem;
+      font-size: 1.75rem;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 0.04em;
+      border-radius: 14px;
+    }
+    .score-input::-webkit-outer-spin-button,
+    .score-input::-webkit-inner-spin-button {
+      margin: 0;
+    }
+    .log-match-very-large {
+      font-size: 1.9rem;
+      line-height: 1.35;
+    }
+    .log-match-very-large .form-label,
+    .log-match-very-large label {
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+    .log-match-very-large .form-select,
+    .log-match-very-large .form-control,
+    .log-match-very-large .btn {
+      font-size: 1.6rem;
+      padding: 0.85rem 1.1rem;
+    }
+    .log-match-very-large .card-header-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+    .log-match-very-large select,
+    .log-match-very-large select option {
+      font-size: 1.5rem;
+    }
+    .log-match-very-large select {
+      min-height: 3.2rem;
+      padding: 0.5rem 0.6rem;
+    }
+    .log-match-very-large .score-input {
+      min-height: 4.75rem;
+      font-size: 2rem;
+    }
+    @media (max-width: 576px) {
+      .score-input {
+        min-height: 4.5rem;
+      }
+    }
+    #logMatchSizeToggle {
+      min-width: 220px;
+      padding: 0.8rem 1.2rem;
+      font-size: 1.15rem;
+      border-radius: 12px;
+    }
+    .player-picker-trigger {
+      min-height: 3.25rem;
+      border-radius: 14px;
+      font-weight: 400;
+      text-align: left;
+      white-space: normal;
+      cursor: pointer;
+    }
+    .player-picker-trigger-empty {
+      color: var(--bs-secondary-color);
+      font-weight: 500;
+    }
+    .player-picker-option {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--bs-border-color);
+      border-radius: 14px;
+      background: var(--bs-body-bg);
+      color: var(--bs-body-color);
+      font-size: 1.15rem;
+      font-weight: 400;
+      line-height: 1.35;
+      text-align: left;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .player-picker-option:hover,
+    .player-picker-option:focus-visible {
+      border-color: var(--bs-primary);
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+      outline: none;
+    }
+    .player-picker-option.is-selected {
+      border-color: var(--bs-primary);
+      box-shadow: inset 0 0 0 1px rgba(13, 110, 253, 0.35);
+    }
+    .player-picker-section-label {
+      margin: 0.9rem 0 0.35rem;
+      color: var(--bs-secondary-color);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .log-match-very-large .player-picker-option {
+      font-size: 1.6rem;
+      padding: 0.85rem 1.1rem;
+    }
+    .log-match-very-large .player-picker-section-label {
+      font-size: 1rem;
+    }
+  </style>
+  
+</head>
+
+<body>
+  <div layout:fragment="content"
+       class="log-match-large"
+       th:attr="data-player-picker-mode=${useSearchablePlayerPicker == true ? 'search' : 'native'}">
+    
+    <div th:if="${editMode}" class="alert alert-info mb-3" role="alert">
+      <i class="bi bi-pencil-square me-2"></i>
+      <strong>Editing Match</strong>
+      <span th:if="${match != null}"> #<span th:text="${match.id}">123</span></span>
+    </div>
+    
+    <div class="mb-3 d-flex align-items-center justify-content-center">
+      <button id="logMatchSizeToggle" type="button" class="btn btn-nav-secondary btn-lg" aria-pressed="false"
+        title="Toggle very large text for better outdoor readability">Large text</button>
+    </div>
+
+    <div class="app-page-back mb-3">
+      <a class="btn btn-nav-secondary btn-lg w-100"
+         th:href="${returnToPath != null} ? @{${returnToPath}} : (${competitionLogMode} ? @{/competition/log-match(ladderId=${ladderId})} : @{/private-groups/{ladderId}(ladderId=${ladderId},seasonId=${seasonId})})">
+        Back
+      </a>
+    </div>
+
+    <div th:if="${showLadderSelection}" th:replace="~{components/ladderSelector :: ladderSelector}"></div>
+
+    <form method="post" action="/log-match" th:action="@{/log-match}" id="logMatchForm">
+      <input type="hidden" name="seasonId" th:value="${seasonId}" />
+      <input type="hidden" name="ladderId" th:value="${ladderId}" />
+      <input type="hidden" name="competition" value="true" th:if="${competitionLogMode}" />
+      <input type="hidden" name="returnTo" th:if="${returnToPath != null}" th:value="${returnToPath}" />
+      <input type="hidden" name="returnToRoundRobinId" th:if="${returnToRoundRobinId != null}" th:value="${returnToRoundRobinId}" />
+      <input type="hidden" name="returnToRoundRobinEntryId" th:if="${returnToRoundRobinEntryId != null}" th:value="${returnToRoundRobinEntryId}" />
+      <input type="hidden" name="returnToRoundRobinRound" th:if="${returnToRoundRobinRound != null}" th:value="${returnToRoundRobinRound}" />
+      <input type="hidden" name="voiceReview" value="1" th:if="${voiceReviewMode}" />
+      <input type="hidden" name="transcript" id="voiceReviewTranscript" th:if="${voiceReviewMode}" />
+      <input type="hidden" name="duplicateWarningAcceptedMatchId" id="duplicateWarningAcceptedMatchId" />
+      
+      
+      <input th:if="${editMode}" type="hidden" name="editMatchId" th:value="${editMatchId}" />
+      <input th:if="${editMode}" type="hidden" name="expectedVersion" th:value="${expectedVersion}" />
+
+      
+      <div class="card mb-3">
+        <div class="card-header card-header-title">Team A</div>
+        <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="teamAPlayer1">Player 1</label>
+        
+        <div th:if="${useSearchablePlayerPicker == true and ((editMode == true and hasSeasonAdminOverride == true) or voiceReviewMode == true)}"
+             class="match-log-picker-shell d-none mb-2"
+             data-picker-shell>
+          <button type="button"
+                  class="form-select player-picker-trigger"
+                  data-picker-trigger
+                  data-picker-select-id="teamAPlayer1">
+            Select Team A player 1
+          </button>
+        </div>
+        <select th:if="${(editMode == true and hasSeasonAdminOverride == true) or voiceReviewMode == true}" 
+                      class="form-select" 
+                      id="teamAPlayer1"
+                      name="a1" 
+                      required
+                      th:attr="aria-label=${voiceReviewMode == true ? 'Team A player 1' : 'Player 1 (Admin can edit)'},data-picker-enabled=${useSearchablePlayerPicker == true ? 'true' : null},data-picker-field-label=${useSearchablePlayerPicker == true ? 'Team A player 1' : null}">
+                <option value="guest"
+                        th:selected="${selectedA1Guest == true}"
+                        data-search="guest">Guest</option>
+      <option th:each="u : ${users}" 
+        th:value="${u.id}" 
+        th:text="${playerOptionLabelByUser != null and playerOptionLabelByUser.containsKey(u.id) ? playerOptionLabelByUser[u.id] : (u.nickName ?: 'missing name')}"
+        th:attr="data-search=${playerSearchTextByUser != null and playerSearchTextByUser.containsKey(u.id) ? playerSearchTextByUser[u.id] : (u.nickName ?: '')},data-picker-primary=${playerPrimaryLabelByUser != null and playerPrimaryLabelByUser.containsKey(u.id) ? playerPrimaryLabelByUser[u.id] : (u.nickName ?: 'missing name')},data-picker-secondary=${playerSecondaryLabelByUser != null and playerSecondaryLabelByUser.containsKey(u.id) ? playerSecondaryLabelByUser[u.id] : ''},data-picker-recent=${recentPlayerIds != null and recentPlayerIds.contains(u.id) ? 'true' : null}"
+        th:selected="${selectedA1 != null and selectedA1 == u.id}"></option>
+              </select>
+              
+              
+              <div th:if="${editMode == true and not (hasSeasonAdminOverride == true) and not (voiceReviewMode == true)}">
+                <input type="hidden" name="a1" th:value="${selectedA1}" required>
+                <select class="form-select" id="teamAPlayer1" disabled aria-label="Player 1 (Cannot edit)">
+                  <option value="guest" th:selected="${selectedA1 == null}">Guest</option>
+      <option th:each="u : ${users}" 
+        th:value="${u.id}" 
+        th:text="${playerOptionLabelByUser != null and playerOptionLabelByUser.containsKey(u.id) ? playerOptionLabelByUser[u.id] : (u.nickName ?: 'missing name')}"
+        th:selected="${selectedA1 != null and selectedA1 == u.id}"></option>
+                </select>
+                <small class="text-muted">Only admins can change match reporter</small>
+              </div>
+
+              <div th:if="${useSearchablePlayerPicker == true and not (editMode == true) and not (voiceReviewMode == true) and quickLogAdminMode == true}"
+                   class="match-log-picker-shell d-none mb-2"
+                   data-picker-shell>
+                <button type="button"
+                        class="form-select player-picker-trigger"
+                        data-picker-trigger
+                        data-picker-select-id="teamAPlayer1">
+                  Select Team A player 1
+                </button>
+              </div>
+              <select th:if="${not (editMode == true) and not (voiceReviewMode == true) and quickLogAdminMode == true}"
+                      class="form-select"
+                      id="teamAPlayer1"
+                      name="a1"
+                      required
+                      aria-label="Player 1"
+                      th:attr="data-picker-enabled=${useSearchablePlayerPicker == true ? 'true' : null},data-picker-field-label=${useSearchablePlayerPicker == true ? 'Team A player 1' : null}">
+                <option th:each="u : ${users}"
+                        th:value="${u.id}"
+                        th:text="${playerOptionLabelByUser != null and playerOptionLabelByUser.containsKey(u.id) ? playerOptionLabelByUser[u.id] : (u.nickName ?: 'missing name')}"
+                        th:attr="data-search=${playerSearchTextByUser != null and playerSearchTextByUser.containsKey(u.id) ? playerSearchTextByUser[u.id] : (u.nickName ?: '')},data-picker-primary=${playerPrimaryLabelByUser != null and playerPrimaryLabelByUser.containsKey(u.id) ? playerPrimaryLabelByUser[u.id] : (u.nickName ?: 'missing name')},data-picker-secondary=${playerSecondaryLabelByUser != null and playerSecondaryLabelByUser.containsKey(u.id) ? playerSecondaryLabelByUser[u.id] : ''},data-picker-recent=${recentPlayerIds != null and recentPlayerIds.contains(u.id) ? 'true' : null}"
+                        th:selected="${selectedA1 != null and selectedA1 == u.id}"></option>
+              </select>
+              
+              
+              <div th:if="${not (editMode == true) and not (voiceReviewMode == true) and not (quickLogAdminMode == true)}">
+                <input type="hidden" name="a1" th:value="${loggedInUser != null ? loggedInUser.id : ''}" required>
+                <select class="form-select" id="teamAPlayer1" disabled
+                  th:attr="aria-label=${loggedInUser != null ? 'Logged in user' : 'Login required' }">
+                  <option value="" th:selected="${loggedInUser == null}">Guest</option>
+                  <option th:each="u : ${users}" th:value="${u.id}" th:text="${playerOptionLabelByUser != null and playerOptionLabelByUser.containsKey(u.id) ? playerOptionLabelByUser[u.id] : (u.nickName ?: 'missing name')}"
+                    th:selected="${loggedInUser != null and u.id == loggedInUser.id}"></option>
+                </select>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="teamAPlayer2">Player 2</label>
+              <div th:if="${useSearchablePlayerPicker == true}"
+                   class="match-log-picker-shell d-none mb-2"
+                   data-picker-shell>
+                <button type="button"
+                        class="form-select player-picker-trigger"
+                        data-picker-trigger
+                        data-picker-select-id="teamAPlayer2">
+                  Select Team A player 2
+                </button>
+              </div>
+              <select class="form-select"
+                      id="teamAPlayer2"
+                      name="a2"
+                      required
+                      th:attr="data-picker-enabled=${useSearchablePlayerPicker == true ? 'true' : null},data-picker-field-label=${useSearchablePlayerPicker == true ? 'Team A player 2' : null}">
+                <option value="guest"
+                        th:selected="${selectedA2Guest == null || selectedA2Guest}"
+                        data-search="guest">Guest</option>
+                <option th:each="u : ${otherPlayers}"
+                  th:value="${u.id}"
+                  th:text="${playerOptionLabelByUser != null and playerOptionLabelByUser.containsKey(u.id) ? playerOptionLabelByUser[u.id] : (u.nickName ?: 'missing name')}"
+                  th:attr="data-search=${playerSearchTextByUser != null and playerSearchTextByUser.containsKey(u.id) ? playerSearchTextByUser[u.id] : (u.nickName ?: '')},data-picker-primary=${playerPrimaryLabelByUser != null and playerPrimaryLabelByUser.containsKey(u.id) ? playerPrimaryLabelByUser[u.id] : (u.nickName ?: 'missing name')},data-picker-secondary=${playerSecondaryLabelByUser != null and playerSecondaryLabelByUser.containsKey(u.id) ? playerSecondaryLabelByUser[u.id] : ''},data-picker-recent=${recentPlayerIds != null and recentPlayerIds.contains(u.id) ? 'true' : null}"
+                  th:selected="${selectedA2Id != null and selectedA2Id == u.id}"></option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label d-block" for="teamAScore">Score</label>
+            <input class="form-control score-input"
+                   id="teamAScore"
+                   type="number"
+                   name="scoreA"
+                   min="0"
+                   max="30"
+                   step="1"
+                   inputmode="numeric"
+                   required
+                   th:value="${selectedScoreA}" />
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="card mb-3">
+        <div class="card-header card-header-title">Team B</div>
+        <div class="card-body">
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="teamBPlayer1">Player 1</label>
+              <div th:if="${useSearchablePlayerPicker == true}"
+                   class="match-log-picker-shell d-none mb-2"
+                   data-picker-shell>
+                <button type="button"
+                        class="form-select player-picker-trigger"
+                        data-picker-trigger
+                        data-picker-select-id="teamBPlayer1">
+                  Select Team B player 1
+                </button>
+              </div>
+              <select class="form-select"
+                      id="teamBPlayer1"
+                      name="b1"
+                      required
+                      th:attr="data-picker-enabled=${useSearchablePlayerPicker == true ? 'true' : null},data-picker-field-label=${useSearchablePlayerPicker == true ? 'Team B player 1' : null}">
+                <option value="guest"
+                        th:selected="${selectedB1Guest == null || selectedB1Guest}"
+                        data-search="guest">Guest</option>
+                <option th:each="u : ${users}"
+                  th:value="${u.id}"
+                  th:text="${playerOptionLabelByUser != null and playerOptionLabelByUser.containsKey(u.id) ? playerOptionLabelByUser[u.id] : (u.nickName ?: 'missing name')}"
+                  th:attr="data-search=${playerSearchTextByUser != null and playerSearchTextByUser.containsKey(u.id) ? playerSearchTextByUser[u.id] : (u.nickName ?: '')},data-picker-primary=${playerPrimaryLabelByUser != null and playerPrimaryLabelByUser.containsKey(u.id) ? playerPrimaryLabelByUser[u.id] : (u.nickName ?: 'missing name')},data-picker-secondary=${playerSecondaryLabelByUser != null and playerSecondaryLabelByUser.containsKey(u.id) ? playerSecondaryLabelByUser[u.id] : ''},data-picker-recent=${recentPlayerIds != null and recentPlayerIds.contains(u.id) ? 'true' : null}"
+                  th:selected="${selectedB1Id != null and selectedB1Id == u.id}"></option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="teamBPlayer2">Player 2</label>
+              <div th:if="${useSearchablePlayerPicker == true}"
+                   class="match-log-picker-shell d-none mb-2"
+                   data-picker-shell>
+                <button type="button"
+                        class="form-select player-picker-trigger"
+                        data-picker-trigger
+                        data-picker-select-id="teamBPlayer2">
+                  Select Team B player 2
+                </button>
+              </div>
+              <select class="form-select"
+                      id="teamBPlayer2"
+                      name="b2"
+                      required
+                      th:attr="data-picker-enabled=${useSearchablePlayerPicker == true ? 'true' : null},data-picker-field-label=${useSearchablePlayerPicker == true ? 'Team B player 2' : null}">
+                <option value="guest"
+                        th:selected="${selectedB2Guest == null || selectedB2Guest}"
+                        data-search="guest">Guest</option>
+                <option th:each="u : ${users}"
+                  th:value="${u.id}"
+                  th:text="${playerOptionLabelByUser != null and playerOptionLabelByUser.containsKey(u.id) ? playerOptionLabelByUser[u.id] : (u.nickName ?: 'missing name')}"
+                  th:attr="data-search=${playerSearchTextByUser != null and playerSearchTextByUser.containsKey(u.id) ? playerSearchTextByUser[u.id] : (u.nickName ?: '')},data-picker-primary=${playerPrimaryLabelByUser != null and playerPrimaryLabelByUser.containsKey(u.id) ? playerPrimaryLabelByUser[u.id] : (u.nickName ?: 'missing name')},data-picker-secondary=${playerSecondaryLabelByUser != null and playerSecondaryLabelByUser.containsKey(u.id) ? playerSecondaryLabelByUser[u.id] : ''},data-picker-recent=${recentPlayerIds != null and recentPlayerIds.contains(u.id) ? 'true' : null}"
+                  th:selected="${selectedB2Id != null and selectedB2Id == u.id}"></option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label d-block" for="teamBScore">Score</label>
+            <input class="form-control score-input"
+                   id="teamBScore"
+                   type="number"
+                   name="scoreB"
+                   min="0"
+                   max="30"
+                   step="1"
+                   inputmode="numeric"
+                   required
+                   th:value="${selectedScoreB}" />
+          </div>
+        </div>
+      </div>
+
+      
+
+      <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+  <button type="submit" class="btn btn-action-primary btn-lg" 
+    th:text="${editMode == true ? 'Update Match' : 'Log Match'}">Log Match</button>
+        <a th:href="${returnToRoundRobinId != null}
+                      ? @{/round-robin/view/{id}(id=${returnToRoundRobinId},round=${returnToRoundRobinRound})}
+                      : (${returnToPath != null}
+                          ? @{${returnToPath}}
+                          : (${competitionLogMode}
+                          ? @{/competition/log-match(ladderId=${ladderId})}
+                          : @{/private-groups/{ladderId}(ladderId=${ladderId},seasonId=${seasonId})}))"
+           class="btn btn-nav-secondary btn-lg">Cancel</a>
+      </div>
+    </form>
+
+    <div class="modal fade"
+         id="duplicateMatchWarningModal"
+         tabindex="-1"
+         aria-labelledby="duplicateMatchWarningModalLabel"
+         aria-hidden="true"
+         th:if="${duplicateWarningMessage != null}">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="duplicateMatchWarningModalLabel">Possible duplicate match</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0" id="duplicateMatchWarningMessage" th:text="${duplicateWarningMessage}">
+              It looks like another player already logged this match. Are you sure you want to log it?
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-nav-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button"
+                    class="btn btn-action-danger"
+                    id="duplicateMatchWarningContinue"
+                    th:attr="data-warning-match-id=${duplicateWarningMatchId}">
+              Log Anyway
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade"
+         id="playerPickerModal"
+         tabindex="-1"
+         aria-labelledby="playerPickerModalLabel"
+         aria-hidden="true"
+         th:if="${useSearchablePlayerPicker == true}">
+      <div class="modal-dialog modal-fullscreen-sm-down modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="playerPickerModalLabel">Select player</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label" for="playerPickerSearch">Find player</label>
+            <input type="search"
+                   class="form-control form-control-lg mb-3"
+                   id="playerPickerSearch"
+                   autocomplete="off"
+                   inputmode="search"
+                   placeholder="Search by court name, display name, or member ID" />
+            <div id="playerPickerEmpty" class="small text-muted d-none">No matching players.</div>
+            <div id="playerPickerOptions"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <script layout:fragment="scripts">
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('logMatchForm');
+      if (form) {
+        const duplicateWarningField = document.getElementById('duplicateWarningAcceptedMatchId');
+        const duplicateWarningModalEl = document.getElementById('duplicateMatchWarningModal');
+        const duplicateWarningContinue = document.getElementById('duplicateMatchWarningContinue');
+        const duplicateWarningMessage = document.getElementById('duplicateMatchWarningMessage');
+        const readPlayerId = (slotName) => {
+          const field = form.querySelector(`[name="${slotName}"]`);
+          if (!field) return null;
+          const value = String(field.value || '').trim();
+          if (!value || value.toLowerCase() === 'guest') return null;
+          return value;
+        };
+
+        form.addEventListener('submit', function(event) {
+          const teamA = new Set([readPlayerId('a1'), readPlayerId('a2')].filter(Boolean));
+          const teamB = [readPlayerId('b1'), readPlayerId('b2')].filter(Boolean);
+          const hasCrossTeamDuplicate = teamB.some((id) => teamA.has(id));
+          if (!hasCrossTeamDuplicate) {
+            return;
+          }
+          event.preventDefault();
+          const message = 'A player cannot be selected on both teams.';
+          if (typeof window.showError === 'function') {
+            window.showError(message);
+          } else {
+            window.alert(message);
+          }
+        });
+
+        if (duplicateWarningModalEl && duplicateWarningContinue) {
+          const submitWithDuplicateAcknowledgement = () => {
+            if (duplicateWarningField) {
+              duplicateWarningField.value = duplicateWarningContinue.getAttribute('data-warning-match-id') || '';
+            }
+            form.submit();
+          };
+
+          duplicateWarningContinue.addEventListener('click', function() {
+            submitWithDuplicateAcknowledgement();
+          });
+
+          if (window.bootstrap && typeof window.bootstrap.Modal === 'function') {
+            const duplicateWarningModal = new window.bootstrap.Modal(duplicateWarningModalEl);
+            duplicateWarningModal.show();
+          } else if (!window.confirm(duplicateWarningMessage ? duplicateWarningMessage.textContent : 'Possible duplicate match. Log anyway?')) {
+            if (duplicateWarningField) {
+              duplicateWarningField.value = '';
+            }
+          } else {
+            submitWithDuplicateAcknowledgement();
+          }
+        }
+
+        try {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('voiceReview') === '1') {
+            const raw = window.localStorage.getItem('fhpb_voice_interpretation');
+            window.localStorage.removeItem('fhpb_voice_interpretation');
+            if (raw) {
+              const stored = JSON.parse(raw);
+              const interpretation = stored && stored.interpretation ? stored.interpretation : stored;
+              const teams = Array.isArray(interpretation && interpretation.teams) ? interpretation.teams : [];
+              const teamAPlayers = Array.isArray(teams[0] && teams[0].players) ? teams[0].players : [];
+              const teamBPlayers = Array.isArray(teams[1] && teams[1].players) ? teams[1].players : [];
+              const playerValue = (players, index) => {
+                const player = players[index];
+                if (!player || typeof player !== 'object') return 'guest';
+                return Number.isFinite(player.matchedUserId) ? String(player.matchedUserId) : 'guest';
+              };
+              const setSelectValue = (fieldId, value) => {
+                const field = document.getElementById(fieldId);
+                if (!field) return;
+                const nextValue = value && value !== '' ? String(value) : 'guest';
+                const guestOption = Array.from(field.options || []).find((option) => option.value === 'guest');
+                const hasOption = Array.from(field.options || []).some((option) => option.value === nextValue);
+                if (hasOption) {
+                  field.value = nextValue;
+                } else if (guestOption) {
+                  field.value = 'guest';
+                }
+                field.dispatchEvent(new Event('change', { bubbles: true }));
+              };
+              const setNumericValue = (fieldId, value) => {
+                const field = document.getElementById(fieldId);
+                if (!field || !Number.isFinite(value)) return;
+                field.value = String(value);
+              };
+
+              setSelectValue('teamAPlayer1', playerValue(teamAPlayers, 0));
+              setSelectValue('teamAPlayer2', playerValue(teamAPlayers, 1));
+              setSelectValue('teamBPlayer1', playerValue(teamBPlayers, 0));
+              setSelectValue('teamBPlayer2', playerValue(teamBPlayers, 1));
+              setNumericValue('teamAScore', interpretation && interpretation.scoreTeamA);
+              setNumericValue('teamBScore', interpretation && interpretation.scoreTeamB);
+
+              const transcriptField = document.getElementById('voiceReviewTranscript');
+              if (transcriptField && interpretation && typeof interpretation.transcript === 'string') {
+                transcriptField.value = interpretation.transcript;
+              }
+
+              if (typeof window.showInfo === 'function') {
+                window.showInfo('Review the voice result, fix anything off, then log the match.');
+              }
+            }
+
+            params.delete('voiceReview');
+            const nextUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+            window.history.replaceState({}, '', nextUrl);
+          }
+        } catch (e) {}
+      }
+
+      try {
+        const content = document.querySelector('.log-match-large') || document.querySelector('[layout\\:fragment="content"]');
+        const pickerMode = content ? content.getAttribute('data-player-picker-mode') : 'native';
+        const modalEl = document.getElementById('playerPickerModal');
+        if (pickerMode === 'search' && modalEl && window.bootstrap) {
+          const pickerModal = new window.bootstrap.Modal(modalEl);
+          const modalTitle = document.getElementById('playerPickerModalLabel');
+          const searchInput = document.getElementById('playerPickerSearch');
+          const optionsHost = document.getElementById('playerPickerOptions');
+          const emptyState = document.getElementById('playerPickerEmpty');
+          const triggerBySelectId = new Map();
+          let activeSelect = null;
+          let activeTrigger = null;
+
+          document.querySelectorAll('[data-picker-trigger]').forEach((trigger) => {
+            triggerBySelectId.set(trigger.getAttribute('data-picker-select-id'), trigger);
+          });
+
+          const normalize = (value) => String(value || '').trim().toLowerCase();
+          const optionText = (option) => String(option && (option.textContent || option.label) || '').trim();
+          const isRecentOption = (option) => option && option.getAttribute('data-picker-recent') === 'true';
+          const appendSectionLabel = (label) => {
+            if (!optionsHost || !label) return;
+            const heading = document.createElement('div');
+            heading.className = 'player-picker-section-label';
+            heading.textContent = label;
+            optionsHost.appendChild(heading);
+          };
+          const appendPickerOption = (select, option) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'player-picker-option';
+            if (option.value === select.value) {
+              button.classList.add('is-selected');
+            }
+            button.setAttribute('data-picker-value', option.value);
+            button.textContent = optionText(option);
+            button.setAttribute('title', optionText(option));
+
+            button.addEventListener('click', function() {
+              select.value = option.value;
+              select.dispatchEvent(new Event('change', { bubbles: true }));
+              pickerModal.hide();
+            });
+            optionsHost.appendChild(button);
+          };
+          const setTriggerLabel = (select) => {
+            const trigger = triggerBySelectId.get(select.id);
+            if (!trigger) return;
+            const selectedOption = Array.from(select.options || []).find((option) => option.value === select.value) || select.options[select.selectedIndex];
+            const label = selectedOption ? optionText(selectedOption) : '';
+            trigger.textContent = label || ('Select ' + (select.getAttribute('data-picker-field-label') || 'player'));
+            trigger.classList.toggle('player-picker-trigger-empty', !label);
+            if (label) {
+              trigger.setAttribute('title', label);
+            } else {
+              trigger.removeAttribute('title');
+            }
+          };
+          const visibleOptions = (select, query) => {
+            const needle = normalize(query);
+            return Array.from(select.options || []).filter((option) => {
+              if (!needle) return true;
+              const haystack = normalize(option.getAttribute('data-search') || optionText(option));
+              return haystack.includes(needle);
+            });
+          };
+          const renderPickerOptions = (select, query) => {
+            const matchingOptions = visibleOptions(select, query);
+            optionsHost.innerHTML = '';
+            emptyState.classList.toggle('d-none', matchingOptions.length > 0);
+            if (!matchingOptions.length) {
+              return;
+            }
+
+            const needle = normalize(query);
+            const guestOptions = matchingOptions.filter((option) => option.value === 'guest');
+            const playerOptions = matchingOptions.filter((option) => option.value !== 'guest');
+
+            guestOptions.forEach((option) => appendPickerOption(select, option));
+            if (guestOptions.length && playerOptions.length) {
+              appendSectionLabel('Players');
+            }
+
+            if (needle) {
+              playerOptions.forEach((option) => appendPickerOption(select, option));
+              return;
+            }
+
+            const recentOptions = playerOptions.filter((option) => isRecentOption(option));
+            const otherOptions = playerOptions.filter((option) => !isRecentOption(option));
+
+            if (recentOptions.length) {
+              appendSectionLabel('Recent');
+              recentOptions.forEach((option) => appendPickerOption(select, option));
+            }
+
+            if (otherOptions.length) {
+              if (recentOptions.length) {
+                appendSectionLabel('All players');
+              }
+              otherOptions.forEach((option) => appendPickerOption(select, option));
+            }
+          };
+
+          Array.from(document.querySelectorAll('select[data-picker-enabled="true"]')).forEach((select) => {
+            const trigger = triggerBySelectId.get(select.id);
+            if (!trigger) return;
+            const shell = trigger.closest('[data-picker-shell]');
+            if (!shell) return;
+
+            shell.classList.remove('d-none');
+            select.classList.add('d-none');
+            select.setAttribute('aria-hidden', 'true');
+            setTriggerLabel(select);
+
+            select.addEventListener('change', function() {
+              setTriggerLabel(select);
+              if (activeSelect && activeSelect.id === select.id) {
+                renderPickerOptions(select, searchInput ? searchInput.value : '');
+              }
+            });
+
+            trigger.addEventListener('click', function() {
+              activeSelect = select;
+              activeTrigger = trigger;
+              if (modalTitle) {
+                modalTitle.textContent = select.getAttribute('data-picker-field-label') || 'Select player';
+              }
+              if (searchInput) {
+                searchInput.value = '';
+              }
+              renderPickerOptions(select, '');
+              pickerModal.show();
+            });
+          });
+
+          if (searchInput) {
+            searchInput.addEventListener('input', function() {
+              if (!activeSelect) return;
+              renderPickerOptions(activeSelect, searchInput.value);
+            });
+          }
+
+          modalEl.addEventListener('shown.bs.modal', function() {
+            if (searchInput) {
+              searchInput.focus();
+            }
+          });
+          modalEl.addEventListener('hidden.bs.modal', function() {
+            if (searchInput) {
+              searchInput.value = '';
+            }
+            if (optionsHost) {
+              optionsHost.innerHTML = '';
+            }
+            if (emptyState) {
+              emptyState.classList.add('d-none');
+            }
+            if (activeTrigger) {
+              activeTrigger.focus();
+            }
+            activeSelect = null;
+            activeTrigger = null;
+          });
+        }
+      } catch (e) {}
+
+      try {
+        const content = document.querySelector('.log-match-large') || document.querySelector('[layout\\:fragment="content"]');
+        const toggle = document.getElementById('logMatchSizeToggle');
+        if (!content || !toggle) return;
+        const key = 'logMatchVeryLarge';
+        const applyState = (on) => {
+          if (on) {
+            content.classList.add('log-match-very-large');
+            toggle.classList.remove('btn-nav-secondary');
+            toggle.classList.add('btn-action-danger');
+            toggle.setAttribute('aria-pressed','true');
+            toggle.textContent = 'Very large text: ON';
+          } else {
+            content.classList.remove('log-match-very-large');
+            toggle.classList.remove('btn-action-danger');
+            toggle.classList.add('btn-nav-secondary');
+            toggle.setAttribute('aria-pressed','false');
+            toggle.textContent = 'Very large text';
+          }
+        };
+        const stored = window.localStorage.getItem(key);
+        applyState(stored === 'true');
+        toggle.addEventListener('click', function() {
+          const now = !(window.localStorage.getItem(key) === 'true');
+          window.localStorage.setItem(key, now ? 'true' : 'false');
+          applyState(now);
+        });
+
+        const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+        if (isTouch) {
+          const selects = Array.from(document.querySelectorAll('.log-match-large select:not([data-picker-enabled="true"])'));
+          selects.forEach(s => {
+            s.addEventListener('focus', function() {
+              try {
+                const optCount = Math.min(8, s.options.length || 0);
+                if (optCount > 1) s.size = optCount;
+              } catch (e) {}
+            });
+            s.addEventListener('blur', function() { try { s.size = 1; } catch (e) {} });
+            s.addEventListener('change', function() { try { s.size = 1; } catch (e) {} });
+          });
+        }
+      } catch (e) {}
+      });
+    </script>
+  </body>
+  </html>

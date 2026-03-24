@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Check In</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-home check-in-page" th:attr="data-autostart=${autoStartCheckIn}">
+        <section class="app-hero">
+            <div class="app-hero-card">
+                <h1 class="app-hero-title">Check In</h1>
+                <p class="app-hero-subtitle" th:if="${checkInPage.activeCheckIn == null}">
+                    Share where you're playing and see who else is there.
+                </p>
+                <div class="app-hero-subtitle" th:if="${checkInPage.activeCheckIn != null}">
+                    <div class="fw-semibold" th:text="${checkInPage.activeCheckIn.locationName}">Current Location</div>
+                    <div>
+                        Checked in until
+                        <span th:text="${checkInPage.activeCheckIn.expiresAtLabel}">Mar 15, 8:30 PM</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">Back</a>
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Use Current Location</div>
+            <div class="card-body">
+                <p class="text-muted small mb-3" th:if="${checkInPage.activeCheckIn == null}">
+                    We only request your location after you tap the button. Each check-in stays active for
+                    <span th:text="${checkInExpiryLabel}">3 hours</span>.
+                </p>
+                <p class="form-text mt-n1 mb-3">
+                    Tip: Check In works best after installing Open-Pickle to your home screen and allowing location
+                    access for the app.
+                </p>
+                <p class="text-muted small mb-3" th:if="${checkInPage.activeCheckIn != null}">
+                    Tap the button to refresh your current spot or move to a new one. Your previous check-in ends
+                    as soon as the new one starts.
+                </p>
+                <button class="btn btn-action-primary btn-lg w-100"
+                        id="checkInStartButton"
+                        type="button"
+                        th:attr="data-default-label=${checkInPage.activeCheckIn != null ? 'Update My Check-In' : 'Check In Using My Location'}">
+                    <i class="bi bi-geo-alt-fill me-2" aria-hidden="true"></i><span
+                        th:text="${checkInPage.activeCheckIn != null ? 'Update My Check-In' : 'Check In Using My Location'}">Check In Using My Location</span>
+                </button>
+                <div class="alert d-none mt-3 mb-0" id="checkInStatus" role="status" aria-live="polite"></div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight d-none" id="checkInNameCard">
+            <div class="card-header card-header-title text-center">Name This Location</div>
+            <div class="card-body">
+                <p class="text-muted small mb-3" id="checkInPromptMessage">
+                    Confirm the location name below or enter your own.
+                </p>
+                <form id="checkInNameForm">
+                    <div class="d-grid gap-2" id="checkInSuggestionList"></div>
+                    <div class="mt-3">
+                        <label class="form-label" for="checkInCustomName">Use your own name</label>
+                        <input class="form-control" id="checkInCustomName" type="text"
+                            placeholder="e.g. Lakeside Courts"
+                            autocomplete="off"
+                            th:attr="maxlength=${checkInNameMaxLength}" />
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button class="btn btn-action-primary" type="submit">Finish Check In</button>
+                        <button class="btn btn-nav-secondary" id="checkInCancelButton" type="button">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Your Locations</div>
+            <div class="card-body">
+                <p class="text-muted small mb-0" th:if="${#lists.isEmpty(checkInPage.locations)}">
+                    Use the button above to add your first location.
+                </p>
+                <div class="check-in-location-list" th:if="${!#lists.isEmpty(checkInPage.locations)}">
+                    <article class="check-in-location-card"
+                        th:each="location : ${checkInPage.locations}"
+                        th:classappend="${location.current} ? ' is-current'">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <div class="check-in-location-name" th:text="${location.name}">Court Name</div>
+                                <div class="check-in-location-meta">
+                                    Used
+                                    <span th:text="${location.usageCount}">1</span>
+                                    time<span th:if="${location.usageCount != 1}">s</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="check-in-location-count">
+                                    <span th:text="${location.activeUserCount}">0</span>
+                                    checked in
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <span th:text="${location.privateGroupActiveUserCount}">0</span>
+                                    in your groups
+                                </div>
+                                <span class="badge text-bg-success mt-2" th:if="${location.current}">You're here</span>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Court Flag</div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Want people to know which court you are on? Print the Open-Pickle flag and set it out so other
+                    players can spot you more easily.
+                </p>
+                <a class="btn btn-nav-secondary w-100"
+                   th:href="@{/images/picklebuddies_flag.png}"
+                   href="/images/picklebuddies_flag.png"
+                   target="_blank"
+                   rel="noopener">
+                    Open Flag for Printing
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script layout:fragment="scripts" th:src="@{/js/check-in.js(v=${assetVersion})}" src="/js/check-in.js"></script>
+
+</html>

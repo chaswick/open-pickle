@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Log Match</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-page">
+        <div class="app-page-header">
+            <div>
+                <h1 class="app-page-title">Log Match</h1>
+                <p class="app-page-subtitle">Voice logging, classic logging, and recent matches.</p>
+            </div>
+        </div>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100"
+               th:href="${ladderId != null} ? @{/private-groups/{ladderId}(ladderId=${ladderId},seasonId=${seasonId})} : @{/private-groups}">
+                Back
+            </a>
+        </div>
+
+        <div th:replace="~{components/ladderV2 :: ladderDashboardCard}"></div>
+    </div>
+</body>
+
+</html>

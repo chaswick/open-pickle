@@ -1,0 +1,108 @@
+
+<div th:fragment="userRecentMatches" th:if="${canEditDisplayName}">
+  <div class="card mb-4" data-card-collapse-default="closed">
+    <div class="card-header card-header-title text-center">Recent matches</div>
+    <div class="card-body">
+    <div class="mb-2 text-center">
+      <a class="btn btn-sm btn-nav-primary" th:if="${canEditDisplayName}" th:href="@{/users/{memberCode}/matches/export(memberCode=${memberCode})}">Download CSV</a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(recentMatches)}" class="text-muted">No matches found for this player.</div>
+
+    <ul class="list-group list-group-flush" th:if="${!#lists.isEmpty(recentMatches)}">
+      <li class="list-group-item p-0" th:each="m : ${recentMatches}">
+  <div th:insert="~{fragments/matchRow :: matchRow(match=${m}, confirmable=${pendingByMatchId != null ? pendingByMatchId[m.id] : false}, editable=${editableByMatchId != null and editableByMatchId[m.id] != null ? editableByMatchId[m.id] : m.isEditableBy(loggedInUser)}, showTime=true, title=null, showScore=true, showState=true, showAdminControls=false, a1Name=null, a2Name=null, b1Name=null, b2Name=null, confirmer=${confirmerByMatchId != null ? confirmerByMatchId[m.id] : null}, removeOnConfirm=${false})}"></div>
+      </li>
+      
+      
+      <div th:each="m : ${recentMatches}" th:remove="all">
+        
+      </div>
+    </ul>
+    
+    <div class="mt-3" th:if="${recentMatchesTotalPages != null and recentMatchesTotalPages > 1}">
+      <div class="small text-muted text-center mb-2">
+        Page <span th:text="${recentMatchesPage + 1}">1</span> of <span th:text="${recentMatchesTotalPages}">1</span>
+      </div>
+      <ul class="pagination pagination-sm justify-content-center mb-0">
+        <li class="page-item" th:classappend="${recentMatchesPage == 0} ? 'disabled'">
+          <a class="page-link"
+             th:if="${recentMatchesStandalonePage}"
+             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesPage - 1},size=${recentMatchesPageSize})}">
+            Previous
+          </a>
+          <a class="page-link"
+             th:unless="${recentMatchesStandalonePage}"
+             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesPage - 1})}">
+            Previous
+          </a>
+        </li>
+        <li class="page-item" th:if="${recentMatchesShowFirstPage}" th:classappend="${recentMatchesPage == 0} ? 'active'">
+          <a class="page-link"
+             th:if="${recentMatchesStandalonePage}"
+             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=0,size=${recentMatchesPageSize})}">1</a>
+          <a class="page-link"
+             th:unless="${recentMatchesStandalonePage}"
+             th:href="@{/account(member=${memberCode},recentMatchesPage=0)}">1</a>
+        </li>
+        <li class="page-item" th:if="${recentMatchesShowLeadingEllipsis and recentMatchesJumpBackPage != null}">
+          <a class="page-link"
+             th:if="${recentMatchesStandalonePage}"
+             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesJumpBackPage},size=${recentMatchesPageSize})}">-5</a>
+          <a class="page-link"
+             th:unless="${recentMatchesStandalonePage}"
+             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesJumpBackPage})}">-5</a>
+        </li>
+        <li class="page-item disabled" th:if="${recentMatchesShowLeadingEllipsis}">
+          <span class="page-link">&hellip;</span>
+        </li>
+        <li class="page-item"
+            th:each="i : ${recentMatchesPageNumbers}"
+            th:classappend="${i == recentMatchesPage} ? 'active'">
+          <a class="page-link"
+             th:if="${recentMatchesStandalonePage}"
+             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${i},size=${recentMatchesPageSize})}"
+             th:text="${i + 1}">1</a>
+          <a class="page-link"
+             th:unless="${recentMatchesStandalonePage}"
+             th:href="@{/account(member=${memberCode},recentMatchesPage=${i})}"
+             th:text="${i + 1}">1</a>
+        </li>
+        <li class="page-item disabled" th:if="${recentMatchesShowTrailingEllipsis}">
+          <span class="page-link">&hellip;</span>
+        </li>
+        <li class="page-item" th:if="${recentMatchesShowTrailingEllipsis and recentMatchesJumpForwardPage != null}">
+          <a class="page-link"
+             th:if="${recentMatchesStandalonePage}"
+             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesJumpForwardPage},size=${recentMatchesPageSize})}">+5</a>
+          <a class="page-link"
+             th:unless="${recentMatchesStandalonePage}"
+             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesJumpForwardPage})}">+5</a>
+        </li>
+        <li class="page-item" th:if="${recentMatchesShowLastPage}" th:classappend="${recentMatchesPage == recentMatchesTotalPages - 1} ? 'active'">
+          <a class="page-link"
+             th:if="${recentMatchesStandalonePage}"
+             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesTotalPages - 1},size=${recentMatchesPageSize})}"
+             th:text="${recentMatchesTotalPages}">1</a>
+          <a class="page-link"
+             th:unless="${recentMatchesStandalonePage}"
+             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesTotalPages - 1})}"
+             th:text="${recentMatchesTotalPages}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${recentMatchesPage + 1 >= recentMatchesTotalPages} ? 'disabled'">
+          <a class="page-link"
+             th:if="${recentMatchesStandalonePage}"
+             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesPage + 1},size=${recentMatchesPageSize})}">
+            Next
+          </a>
+          <a class="page-link"
+             th:unless="${recentMatchesStandalonePage}"
+             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesPage + 1})}">
+            Next
+          </a>
+        </li>
+      </ul>
+    </div>
+    </div>
+  </div>
+</div>

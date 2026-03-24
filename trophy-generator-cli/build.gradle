@@ -1,0 +1,29 @@
+plugins {
+	id 'application'
+	id 'java'
+}
+
+group = 'com.w3llspring.fhpb'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation project(':trophy-generator-core')
+}
+
+application {
+	mainClass = 'com.w3llspring.fhpb.trophygen.cli.TrophySqlGeneratorCli'
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 25
+}

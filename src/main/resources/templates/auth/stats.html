@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+  layout:decorate="~{layouts/authenticated}">
+
+<head>
+  <title layout:fragment="title">Platform Stats</title>
+</head>
+
+<body>
+  <main layout:fragment="content" class="app-page">
+    <div class="app-page-header">
+      <div>
+        <h1 class="app-page-title">Stats</h1>
+        <p class="app-page-subtitle">Your pickleball numbers and a live community snapshot.</p>
+      </div>
+    </div>
+
+    <div class="app-page-back">
+      <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">Back</a>
+    </div>
+
+    <div class="card-stack-col card-stack-col-desktop-fluid pb-5 text-start">
+        
+        
+        <div class="card mb-4" th:if="${userStats != null}">
+          <div class="card-header card-header-title text-center">
+            Your Stats
+          </div>
+          <div class="card-body p-4 p-md-5">
+            <h5 class="fw-semibold mb-3 text-center">Performance Stats</h5>
+            <div class="row gy-3 mb-4">
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Matches Played</h6>
+                  <p class="h4 mb-0" th:text="${userStats.totalMatches}">0</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Win Rate</h6>
+                  <p class="h4 mb-0" th:text="${userStats.winRate}">0%</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Wins / Losses</h6>
+                  <p class="h4 mb-0"><span th:text="${userStats.wins}">0</span> / <span th:text="${userStats.losses}">0</span></p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Points For</h6>
+                  <p class="h4 mb-0" th:text="${userStats.pointsFor}">0</p>
+                  <small class="text-muted">Avg: <span th:text="${userStats.avgPointsFor}">0.0</span>/match</small>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Points Against</h6>
+                  <p class="h4 mb-0" th:text="${userStats.pointsAgainst}">0</p>
+                  <small class="text-muted">Avg: <span th:text="${userStats.avgPointsAgainst}">0.0</span>/match</small>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Point Differential</h6>
+                  <p class="h4 mb-0" th:text="${userStats.pointDifferential}">0</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Longest Win Streak</h6>
+                  <p class="h4 mb-0" th:text="${userStats.longestWinStreak}">0</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Current Streak</h6>
+                  <p class="h4 mb-0" th:text="${userStats.currentStreak}">None</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Biggest Win</h6>
+                  <p class="h4 mb-0" th:text="${userStats.biggestWin}">-</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Closest Match</h6>
+                  <p class="h4 mb-0" th:text="${userStats.closestMatch}">-</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Unique Partners</h6>
+                  <p class="h4 mb-0" th:text="${userStats.uniquePartners}">0</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Unique Opponents</h6>
+                  <p class="h4 mb-0" th:text="${userStats.uniqueOpponents}">0</p>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Favorite Partner</h6>
+                  <p class="h5 mb-0" th:text="${userStats.favoritePartner}">None</p>
+                  <small class="text-muted"
+                         th:if="${userStats.favoritePartnerDetail != null and !#strings.isEmpty(userStats.favoritePartnerDetail)}"
+                         th:text="${userStats.favoritePartnerDetail}">0 matches</small>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Beat Most Often</h6>
+                  <p class="h5 mb-0" th:text="${userStats.mostBeatenOpponent}">None</p>
+                  <small class="text-muted"
+                         th:if="${userStats.mostBeatenOpponentDetail != null and !#strings.isEmpty(userStats.mostBeatenOpponentDetail)}"
+                         th:text="${userStats.mostBeatenOpponentDetail}">0 wins</small>
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div th:with="activeStats=${userStats.activeSeasonStats}">
+              <h5 class="fw-semibold mb-3 text-center">Active Seasons Stats</h5>
+              <div class="row gy-3 mb-4">
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Matches Played</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.totalMatches}">0</p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Win Rate</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.winRate}">0%</p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Wins / Losses</h6>
+                    <p class="h4 mb-0"><span th:text="${activeStats.wins}">0</span> / <span th:text="${activeStats.losses}">0</span></p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Points For</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.pointsFor}">0</p>
+                    <small class="text-muted">Avg: <span th:text="${activeStats.avgPointsFor}">0.0</span>/match</small>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Points Against</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.pointsAgainst}">0</p>
+                    <small class="text-muted">Avg: <span th:text="${activeStats.avgPointsAgainst}">0.0</span>/match</small>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Point Differential</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.pointDifferential}">0</p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Longest Win Streak</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.longestWinStreak}">0</p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Current Streak</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.currentStreak}">None</p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Biggest Win</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.biggestWin}">-</p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Closest Match</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.closestMatch}">-</p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Unique Partners</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.uniquePartners}">0</p>
+                  </div>
+                </div>
+                <div class="col-6 col-md-4">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Unique Opponents</h6>
+                    <p class="h4 mb-0" th:text="${activeStats.uniqueOpponents}">0</p>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Favorite Partner</h6>
+                    <p class="h5 mb-0" th:text="${activeStats.favoritePartner}">None</p>
+                    <small class="text-muted"
+                           th:if="${activeStats.favoritePartnerDetail != null and !#strings.isEmpty(activeStats.favoritePartnerDetail)}"
+                           th:text="${activeStats.favoritePartnerDetail}">0 matches</small>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="stat-tile">
+                    <h6 class="fw-semibold mb-1">Beat Most Often</h6>
+                    <p class="h5 mb-0" th:text="${activeStats.mostBeatenOpponent}">None</p>
+                    <small class="text-muted"
+                           th:if="${activeStats.mostBeatenOpponentDetail != null and !#strings.isEmpty(activeStats.mostBeatenOpponentDetail)}"
+                           th:text="${activeStats.mostBeatenOpponentDetail}">0 wins</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            
+            <h5 class="fw-semibold mb-3 text-center">Site Activity</h5>
+            <div class="row gy-3">
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Account Age</h6>
+                  <p class="h4 mb-0" th:text="${userStats.accountAgeDays}">0</p>
+                  <small class="text-muted">days</small>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Active Groups</h6>
+                  <p class="h4 mb-0" th:text="${userStats.activeLadders}">0</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Groups as Admin</h6>
+                  <p class="h4 mb-0" th:text="${userStats.laddersAsAdmin}">0</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Matches Logged</h6>
+                  <p class="h4 mb-0" th:text="${userStats.matchesLogged}">0</p>
+                  <small class="text-muted">by you</small>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Matches Corrected</h6>
+                  <p class="h4 mb-0" th:text="${userStats.matchesCorrected}">0</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Best Current Rank</h6>
+                  <p class="h4 mb-0" th:text="${userStats.bestCurrentRank}">-</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Days Since First Match</h6>
+                  <p class="h4 mb-0" th:text="${userStats.daysSinceFirstMatch}">0</p>
+                </div>
+              </div>
+              <div class="col-6 col-md-4">
+                <div class="stat-tile">
+                  <h6 class="fw-semibold mb-1">Days Since Last Match</h6>
+                  <p class="h4 mb-0" th:text="${userStats.daysSinceLastMatch}">0</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="card">
+          <div class="card-header card-header-title text-center">
+            Community Snapshot
+          </div>
+          <div class="card-body p-4 p-md-5">
+            <p class="text-muted text-center mb-4">
+              Anonymous stats refreshed whenever you open this page.
+            </p>
+
+            <div class="row gy-4">
+              <div class="col-12 col-sm-6">
+                <div class="stat-tile">
+                  <h4 class="fw-semibold mb-1">Registered Players</h4>
+                  <p class="display-6 mb-0" th:text="${stats.userCount}">0</p>
+                  <small class="text-muted">Unique accounts created</small>
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <div class="stat-tile">
+                  <h4 class="fw-semibold mb-1">Active Groups</h4>
+                  <p class="display-6 mb-0" th:text="${stats.ladderCount}">0</p>
+                  <small class="text-muted">Groups currently organizing play</small>
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <div class="stat-tile">
+                  <h4 class="fw-semibold mb-1">Matches Logged</h4>
+                  <p class="display-6 mb-0" th:text="${stats.matchCount}">0</p>
+                  <small class="text-muted">Scorecards tracked so far</small>
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6">
+                <div class="stat-tile">
+                  <h4 class="fw-semibold mb-1">Current Seasons</h4>
+                  <p class="display-6 mb-0" th:text="${stats.activeSeasonCount}">0</p>
+                  <small class="text-muted">Groups with an active season right now</small>
+                </div>
+              </div>
+            </div>
+            <!-- Story not ready for prime time yet
+            <div class="row gy-4 mt-1" th:if="${storyStats != null}">
+              <div class="col-12 col-sm-6">
+                <div class="stat-tile">
+                  <h4 class="fw-semibold mb-1">Story Finishes</h4>
+                  <p class="display-6 mb-0" th:text="${storyStats.finishedCount}">0</p>
+                  <small class="text-muted">Story-mode seasons where Pat completed the full trip</small>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6">
+                <div class="stat-tile">
+                  <h4 class="fw-semibold mb-1">Story Seasons Ended</h4>
+                  <p class="display-6 mb-0" th:text="${storyStats.endedStorySeasons}">0</p>
+                  <small class="text-muted">Ended story-mode seasons tracked so far</small>
+                </div>
+              </div>
+            </div>
+            -->
+
+            <div class="mt-4" th:if="${storyStats != null and storyStats.recentResults != null and !#lists.isEmpty(storyStats.recentResults)}">
+              <h5 class="fw-semibold mb-3 text-center">Recent Story Finishes</h5>
+              <div class="list-group">
+                <div class="list-group-item" th:each="result : ${storyStats.recentResults}">
+                  <div class="d-flex flex-column gap-2">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                      <div>
+                        <strong th:text="${result.ladderTitle}">Group</strong>
+                        <span class="text-muted">|</span>
+                        <span th:text="${result.seasonName}">Season</span>
+                      </div>
+                      <span class="text-muted small"
+                            th:if="${result.endedAt != null}"
+                            th:attr="data-utc-time=${result.endedAt},data-time-format='datetime'"></span>
+                    </div>
+                    <div class="small text-muted" th:text="${result.summary}">Pat finished the trip.</div>
+                    <div class="d-flex flex-wrap gap-3 small">
+                      <span th:text="'Route: ' + ${result.travelMode}">Route: Drive</span>
+                      <span th:text="'Mood: ' + ${result.mood}">Mood: organized and unstoppable</span>
+                      <span th:text="'Matches: ' + ${result.totalMatches}">Matches: 0</span>
+                      <span th:text="'Contributors: ' + ${result.contributorCount}">Contributors: 0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row gy-3">
+              <div class="col-12 col-md-6">
+                <div class="stat-tile">
+                  <h5 class="fw-semibold mb-1">Last Updated</h5>
+                  <p class="lead mb-0" th:text="${stats.uptime}">0h 0m 0s</p>
+                  <small class="text-muted">Time since the last update</small>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="stat-tile">
+                  <h5 class="fw-semibold mb-1">Generated</h5>
+                  <p class="lead mb-0" th:text="${stats.generatedAt}">Just now</p>
+                  <small class="text-muted">Server-local time when these stats were gathered</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+  </main>
+</body>
+
+</html>

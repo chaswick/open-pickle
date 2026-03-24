@@ -1,0 +1,20 @@
+
+<div th:fragment="confirmModal">
+  <div id="fhpbConfirmModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="fhpb-confirm-message mb-0"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-nav-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-action-primary fhpb-confirm-yes">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

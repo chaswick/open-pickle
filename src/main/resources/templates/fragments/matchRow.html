@@ -1,0 +1,404 @@
+
+<style>
+  a.match-row-link {
+    transition: all 0.15s ease-in-out;
+    display: block;
+    position: relative;
+  }
+
+  a.match-row-link:hover {
+    background-color: var(--bs-light, #f8f9fa);
+    box-shadow: inset 0 0 0 2px var(--bs-primary, #0d6efd);
+  }
+
+  .match-row-inline-edit-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.8rem;
+    line-height: 1;
+  }
+
+  .match-row-inline-edit-hint .edit-hint {
+    opacity: 1;
+  }
+
+  .match-row-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .match-row-status-pill-waiting {
+    background: rgba(214, 51, 132, 0.14);
+    color: #b4235c;
+  }
+
+  .match-row-status-pill-disputed {
+    background: rgba(255, 193, 7, 0.18);
+    color: #8a5a00;
+  }
+
+  .match-row-status-pill-nullified {
+    background: rgba(108, 117, 125, 0.16);
+    color: #495057;
+  }
+
+  .match-dashboard-card .px-3.py-2 {
+    border-radius: .5rem;
+    overflow: hidden;
+    background-clip: padding-box;
+  }
+
+  .match-row-context {
+    margin-bottom: 0.6rem;
+  }
+
+  .match-row-context-value {
+    color: var(--bs-body-color, #212529);
+    font-weight: 700;
+  }
+</style>
+<div th:fragment="matchRow_context(match, title)" class="match-row-context">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="small text-muted">
+      <span class="fw-semibold">Group:</span>
+      <span class="match-row-context-value"
+            th:text="${match.season != null and match.season.ladderConfig != null ? match.season.ladderConfig.title : 'Group'}">
+        Group
+      </span>
+    </div>
+    <div th:if="${title != null and !#strings.isEmpty(title)}"
+         class="small text-muted fw-semibold"
+         th:text="${title}">
+      Match
+    </div>
+  </div>
+</div>
+
+<div th:fragment="matchRow_result(match, confirmable, editable, deletable, a1Name, a2Name, b1Name, b2Name, confirmer)">
+  
+
+  <table class="table table-borderless mb-0">
+    <tbody
+      th:with="teamAWinner=${match.scoreA > match.scoreB},
+          confirmableSafe=${confirmable != null and confirmable},
+          editableSafe=${editable != null and editable},
+          deletableSafe=${deletable != null and deletable},
+          aDisplay=${a1Name != null ? a1Name : (match.isA1Guest() ? 'Guest' : (match.a1 != null ? match.a1.nickName : '-'))},
+          aDisplay2=${a2Name != null ? a2Name : (match.isA2Guest() ? 'Guest' : (match.a2 != null ? match.a2.nickName : null))},
+          bDisplay=${b1Name != null ? b1Name : (match.isB1Guest() ? 'Guest' : (match.b1 != null ? match.b1.nickName : '-'))},
+          bDisplay2=${b2Name != null ? b2Name : (match.isB2Guest() ? 'Guest' : (match.b2 != null ? match.b2.nickName : null))},
+          waitingOnOpponent=${waitingOnOpponentByMatchId != null and waitingOnOpponentByMatchId[match.id] != null and waitingOnOpponentByMatchId[match.id]},
+          disputed=${match.state.name() == 'FLAGGED'},
+          nullified=${match.state.name() == 'NULLIFIED'},
+          nullifyRequestable=${nullifyRequestableByMatchId != null and nullifyRequestableByMatchId[match.id] != null and nullifyRequestableByMatchId[match.id]},
+          nullifyApprovable=${nullifyApprovableByMatchId != null and nullifyApprovableByMatchId[match.id] != null and nullifyApprovableByMatchId[match.id]},
+          nullifyWaiting=${nullifyWaitingOnOpponentByMatchId != null and nullifyWaitingOnOpponentByMatchId[match.id] != null and nullifyWaitingOnOpponentByMatchId[match.id]}">
+      <tr th:classappend="${teamAWinner} ? 'fw-bold bg-success bg-opacity-10 rounded' : ''">
+        <td>
+          <div th:text="${aDisplay}">Team A Player 1</div>
+          <div th:if="${aDisplay2 != null}" th:text="${aDisplay2}">Team A Player 2</div>
+        </td>
+        <td class="text-end align-middle"><span class="fs-2" th:text="${match.scoreA}">11</span></td>
+      </tr>
+      
+      <tr th:if="${confirmableSafe or editableSafe or waitingOnOpponent or deletableSafe or nullifyRequestable or nullifyApprovable or nullifyWaiting or disputed or nullified}"
+          class="match-row-divider">
+        <td colspan="2" class="p-0">
+          <div class="d-flex justify-content-center align-items-center gap-3 py-1 match-row-inline-edit-hint">
+            <div th:if="${editableSafe}" class="d-flex align-items-center edit-hint">
+              <i class="bi bi-pencil-square"></i>
+              <span class="ms-1">Click to edit</span>
+            </div>
+            <div
+              th:insert="~{fragments/matchRow :: matchRow_confirmation(match=${match}, pendingForCurrentUser=${confirmableSafe}, waitingOnOpponent=${waitingOnOpponent}, deletable=${deletableSafe})}">
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr th:classappend="${!teamAWinner} ? 'fw-bold bg-success bg-opacity-10 rounded' : ''">
+        <td>
+          <div th:text="${bDisplay}">Team B Player 1</div>
+          <div th:if="${bDisplay2 != null}" th:text="${bDisplay2}">Team B Player 2</div>
+        </td>
+        <td class="text-end align-middle"><span class="fs-2" th:text="${match.scoreB}">9</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<div th:fragment="matchRow_badges(match)">
+  <div class="d-flex gap-1 flex-shrink-0 mt-1">
+    <span th:if="${match.scoreEstimated and match.state.name() != 'CONFIRMED'}" class="badge bg-warning text-dark"
+      title="Score was estimated">11-?</span>
+
+    <span th:if="${match.excludeFromStandings}"
+      class="badge bg-secondary" title="Personal record only">
+      <i class="bi bi-pencil-square"></i>
+    </span>
+
+    <span th:if="${match.confidenceScore != null and match.confidenceScore < 50 and match.state.name() != 'CONFIRMED'}"
+      class="badge bg-info text-dark" title="Needs review">? -?</span>
+  </div>
+</div>
+
+
+<div th:fragment="matchRow_meta(match, showTime, confirmer)">
+  <div th:if="${showTime}" class="small text-muted mt-1 fst-italic"
+    th:with="playedTime=${match.playedAt != null ? match.playedAt : match.createdAt},
+        casualAutoConfirmed=${casualAutoConfirmedByMatchId != null and casualAutoConfirmedByMatchId[match.id] != null ? casualAutoConfirmedByMatchId[match.id] : false}">
+    <span class="text-muted">#<span th:text="${match.id}">0</span></span>
+    Logged by <span th:text="${match.loggedBy != null ? match.loggedBy.nickName : 'Unknown'}">user</span>
+    <span>&bull;</span>
+    Played at <span
+      th:attr="data-utc-time=${playedTime}"
+      th:text="${@fhpbTime.display(playedTime, (#authentication != null ? #authentication.principal : null))}">time</span>
+    <span th:if="${match.state.name() == 'CONFIRMED' and casualAutoConfirmed}"> &middot; Casual mode auto-confirmed</span>
+    <span th:if="${match.state.name() == 'CONFIRMED' and !casualAutoConfirmed and confirmer != null}"> &middot; Confirmed by <span
+        th:text="${confirmer}">-</span></span>
+    <span th:if="${match.state.name() == 'FLAGGED' and match.disputedBy != null}">
+      &middot; Disputed by <span th:text="${match.disputedBy.nickName ?: 'Unknown'}">user</span>
+      <span th:if="${match.disputedAt != null}"> at <span th:attr="data-utc-time=${match.disputedAt}"
+          th:text="${@fhpbTime.display(match.disputedAt, (#authentication != null ? #authentication.principal : null))}">time</span></span>
+    </span>
+    <span th:if="${match.editedBy != null or match.editedAt != null}">
+      &middot; Edited
+      <span th:if="${match.editedBy != null}"> by <span th:text="${match.editedBy.nickName ?: 'Unknown'}">user</span></span>
+      <span th:if="${match.editedAt != null}"> at <span th:attr="data-utc-time=${match.editedAt}"
+          th:text="${@fhpbTime.display(match.editedAt, (#authentication != null ? #authentication.principal : null))}">time</span></span>
+    </span>
+  </div>
+
+  
+  
+</div>
+
+
+<div th:fragment="matchRow_confirmation(match, pendingForCurrentUser, waitingOnOpponent, deletable)">
+  <div class="ms-2 d-flex align-items-center"
+       th:with="pendingForCurrentUserSafe=${pendingForCurrentUser != null and pendingForCurrentUser},
+           waitingOnOpponentSafe=${waitingOnOpponent != null and waitingOnOpponent},
+           deletableSafe=${deletable != null and deletable},
+           disputed=${match.state.name() == 'FLAGGED'},
+           nullified=${match.state.name() == 'NULLIFIED'},
+           nullifyRequestable=${nullifyRequestableByMatchId != null and nullifyRequestableByMatchId[match.id] != null and nullifyRequestableByMatchId[match.id]},
+           nullifyApprovable=${nullifyApprovableByMatchId != null and nullifyApprovableByMatchId[match.id] != null and nullifyApprovableByMatchId[match.id]},
+           nullifyWaiting=${nullifyWaitingOnOpponentByMatchId != null and nullifyWaitingOnOpponentByMatchId[match.id] != null and nullifyWaitingOnOpponentByMatchId[match.id]}">
+    <div th:if="${pendingForCurrentUserSafe}">
+      <div class="d-flex align-items-center gap-2">
+        <form th:action="@{'/matches/' + ${match.id} + '/confirm'}" method="post"
+          class="d-inline-block confirm-match-form" th:attr="data-match-id=${match.id}">
+          <input type="hidden" name="expectedVersion" th:value="${match.version}" />
+          <button type="submit" class="btn btn-action-success btn-workflow-confirm btn-sm shadow">Confirm</button>
+        </form>
+        <form method="post" th:action="@{'/matches/' + ${match.id} + '/dispute'}"
+          class="d-inline-block dispute-match-form" th:attr="data-match-id=${match.id}">
+          <input type="hidden" name="expectedVersion" th:value="${match.version}" />
+          <button type="button" class="btn btn-link p-2 text-warning" aria-label="Dispute match"
+            title="Dispute match"
+            onclick="FHPB.Confirmations.handleDisputeButton(event, this, 'Dispute this match? Do this if you never played this match.')">
+            <i class="bi bi-flag" aria-hidden="true"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+    <div th:if="${waitingOnOpponentSafe and !pendingForCurrentUserSafe}">
+        <span class="match-row-status-pill match-row-status-pill-waiting">
+          <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+          <span>Waiting on opponents</span>
+        </span>
+      </div>
+    <div th:if="${nullifyWaiting and !pendingForCurrentUserSafe}">
+      <span class="match-row-status-pill match-row-status-pill-waiting"
+            title="You asked to nullify this confirmed match. If the other team does nothing, the request expires and the match stays.">
+        <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+        <span>Nullify requested</span>
+      </span>
+    </div>
+    <div th:if="${disputed}" class="ms-2 d-flex align-items-center">
+      <span class="match-row-status-pill match-row-status-pill-disputed" title="Match disputed and awaiting admin review">
+        <i class="bi bi-flag" aria-hidden="true"></i>
+        <span>Disputed</span>
+      </span>
+    </div>
+    <div th:if="${nullified}" class="ms-2 d-flex align-items-center">
+      <span class="match-row-status-pill match-row-status-pill-nullified" title="Match was removed from calculation">
+        <i class="bi bi-slash-circle" aria-hidden="true"></i>
+        <span>Nullified</span>
+      </span>
+    </div>
+    <div th:if="${nullifyApprovable and !pendingForCurrentUserSafe}" class="ms-2 d-flex align-items-center gap-2 flex-wrap">
+      <span class="small text-muted">Other team asked to nullify this match.</span>
+      <form method="post" th:action="@{'/matches/' + ${match.id} + '/request-nullify'}"
+        class="d-inline-block confirm-match-nullify-form" th:attr="data-match-id=${match.id}">
+        <input type="hidden" name="expectedVersion" th:value="${match.version}" />
+        <button type="button" class="btn btn-sm btn-outline-danger"
+          title="Approve if you agree. If you do nothing, the request expires and the match stays."
+          onclick="FHPB.Confirmations.handleConfirmedNullifyButton(event, this, 'The other team requested to nullify this match. Approve only if you agree it should be removed. If you do nothing, the request will expire and the match will remain.')">
+          Approve Removal
+        </button>
+      </form>
+    </div>
+    <div th:if="${nullifyRequestable and !pendingForCurrentUserSafe}" class="ms-2 d-flex align-items-center">
+      <form method="post" th:action="@{'/matches/' + ${match.id} + '/request-nullify'}"
+        class="d-inline-block request-match-nullify-form" th:attr="data-match-id=${match.id}">
+        <input type="hidden" name="expectedVersion" th:value="${match.version}" />
+        <button type="button" class="btn btn-link p-2 text-danger" aria-label="Request match removal"
+          title="Request match removal"
+          onclick="FHPB.Confirmations.handleConfirmedNullifyButton(event, this, 'Request removing this confirmed match? If the other team agrees within 48 hours, it will be nullified.')">
+          <i class="bi bi-trash3" aria-hidden="true"></i>
+        </button>
+      </form>
+    </div>
+    
+    <div th:if="${deletableSafe}" class="ms-2 d-flex align-items-center">
+      
+      <div class="d-flex align-items-center edit-hint">
+        <form method="post" th:action="@{'/matches/' + ${match.id} + '/nullify'}"
+          class="d-inline-block nullify-match-form" th:attr="data-match-id=${match.id}">
+          <input type="hidden" name="expectedVersion" th:value="${match.version}" />
+          <button type="button" class="btn btn-link p-2 text-danger" aria-label="Delete match" title="Delete match"
+            onclick="FHPB.Confirmations.handleNullifyButton(event, this, 'Delete this match? This will mark it nullified and remove it from calculation.')">
+            <i class="bi bi-trash3" aria-hidden="true"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+
+<div
+  th:fragment="matchRow_confirmable(match, confirmable, editable, deletable, showTime, title, showScore, showState, showAdminControls, a1Name, a2Name, b1Name, b2Name, confirmer, removeOnConfirm)">
+  <div class="px-3 py-2">
+    <div th:insert="~{fragments/matchRow :: matchRow_context(match=${match}, title=${title})}"></div>
+    <div
+      th:insert="~{fragments/matchRow :: matchRow_result(match=${match}, confirmable=${confirmable}, editable=${editable}, deletable=${deletable}, a1Name=${a1Name}, a2Name=${a2Name}, b1Name=${b1Name}, b2Name=${b2Name}, confirmer=${confirmer})}">
+    </div>
+
+    <div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <div th:insert="~{fragments/matchRow :: matchRow_badges(match=${match})}"></div>
+      </div>
+
+      <div class="small text-muted">
+        <div
+          th:insert="~{fragments/matchRow :: matchRow_meta(match=${match}, showTime=${showTime}, confirmer=${confirmer})}">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  th:fragment="matchRow_editable(match, confirmable, editable, deletable, showTime, title, showScore, showState, showAdminControls, a1Name, a2Name, b1Name, b2Name, confirmer, removeOnConfirm)">
+  <div class="px-3 py-2">
+    <div th:insert="~{fragments/matchRow :: matchRow_context(match=${match}, title=${title})}"></div>
+    <div
+      th:insert="~{fragments/matchRow :: matchRow_result(match=${match}, confirmable=${confirmable}, editable=${editable}, deletable=${deletable}, a1Name=${a1Name}, a2Name=${a2Name}, b1Name=${b1Name}, b2Name=${b2Name}, confirmer=${confirmer})}">
+    </div>
+
+    <div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <div th:insert="~{fragments/matchRow :: matchRow_badges(match=${match})}"></div>
+      </div>
+
+      <div class="small text-muted">
+        <div
+          th:insert="~{fragments/matchRow :: matchRow_meta(match=${match}, showTime=${showTime}, confirmer=${confirmer})}">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div
+  th:fragment="matchRow_readonly(match, confirmable, editable, deletable, showTime, title, showScore, showState, showAdminControls, a1Name, a2Name, b1Name, b2Name, confirmer, removeOnConfirm)">
+  <div class="px-3 py-2">
+    <div th:insert="~{fragments/matchRow :: matchRow_context(match=${match}, title=${title})}"></div>
+
+    <div
+      th:insert="~{fragments/matchRow :: matchRow_result(match=${match}, confirmable=${confirmable}, editable=${editable}, deletable=${deletable}, a1Name=${a1Name}, a2Name=${a2Name}, b1Name=${b1Name}, b2Name=${b2Name}, confirmer=${confirmer})}">
+    </div>
+
+    <div>
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <div th:insert="~{fragments/matchRow :: matchRow_badges(match=${match})}"></div>
+      </div>
+
+      <div class="small text-muted">
+        <div
+          th:insert="~{fragments/matchRow :: matchRow_meta(match=${match}, showTime=${showTime}, confirmer=${confirmer})}">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:fragment="matchRow_adminControls(match, showAdminControls)">
+  <div th:if="${showAdminControls}" class="px-3 pb-2">
+    <div class="text-center">
+      <form method="post" class="d-inline" th:if="${match.state.name() == 'FLAGGED' and seasonId != null}"
+        th:action="@{/seasons/{seasonId}/matches/{matchId}/reopen(seasonId=${seasonId}, matchId=${match.id})}"
+        onsubmit="return handleConfirmForm(this, 'Reopen this disputed match? It will return to provisional confirmation.')">
+        <button type="submit" class="btn btn-sm btn-outline-warning">Reopen</button>
+      </form>
+      <form method="post" class="d-inline" th:if="${match.isNullifiable()}"
+        th:action="@{/seasons/{seasonId}/matches/{matchId}/nullify(seasonId=${seasonId}, matchId=${match.id})}"
+        onsubmit="return handleConfirmForm(this, 'Nullify this match? This will remove it from calculation.');">
+        <button type="submit" class="btn btn-sm btn-outline-danger">Nullify</button>
+      </form>
+      <span th:if="${!match.isNullifiable()}" class="text-muted small">Nullified</span>
+    </div>
+  </div>
+</div>
+
+
+<div
+  th:fragment="matchRow(match, confirmable, editable, showTime, title, showScore, showState, showAdminControls, a1Name, a2Name, b1Name, b2Name, confirmer, removeOnConfirm)"
+  th:attr="data-remove-on-confirm=${removeOnConfirm} ? 'true' : null, data-match-id=${match.id}"
+  th:with="confirmableSafe=${confirmable != null and confirmable},
+      editableSafe=${editable != null and editable},
+      deletable=${deletableByMatchId != null and deletableByMatchId[match.id] != null ? deletableByMatchId[match.id] : match.isDeletableBy(loggedInUser)}">
+  
+  <div th:if="${confirmableSafe and editableSafe}"
+    th:with="editHref=@{/log-match(editMatchId=${match.id},seasonId=${seasonId},ladderId=${ladderId},returnTo=${returnToPath})}">
+    <a th:href="${editHref}" class="match-row-link text-decoration-none text-reset d-block">
+      <div
+        th:insert="~{fragments/matchRow :: matchRow_confirmable(match=${match}, confirmable=${confirmableSafe}, editable=${editableSafe}, deletable=${deletable}, showTime=${showTime}, title=${title}, showScore=${showScore}, showState=${showState}, showAdminControls=${showAdminControls}, a1Name=${a1Name}, a2Name=${a2Name}, b1Name=${b1Name}, b2Name=${b2Name}, confirmer=${confirmer}, removeOnConfirm=${removeOnConfirm})}">
+      </div>
+    </a>
+  </div>
+
+  <div th:if="${confirmableSafe and !editableSafe}"
+    th:insert="~{fragments/matchRow :: matchRow_confirmable(match=${match}, confirmable=${confirmableSafe}, editable=${editableSafe}, deletable=${deletable}, showTime=${showTime}, title=${title}, showScore=${showScore}, showState=${showState}, showAdminControls=${showAdminControls}, a1Name=${a1Name}, a2Name=${a2Name}, b1Name=${b1Name}, b2Name=${b2Name}, confirmer=${confirmer}, removeOnConfirm=${removeOnConfirm})}">
+  </div>
+
+  <div th:if="${!confirmableSafe and editableSafe}"
+    th:with="editHref=@{/log-match(editMatchId=${match.id},seasonId=${seasonId},ladderId=${ladderId},returnTo=${returnToPath})}">
+    <a th:href="${editHref}" class="match-row-link text-decoration-none text-reset d-block">
+      <div
+        th:insert="~{fragments/matchRow :: matchRow_editable(match=${match}, confirmable=${confirmableSafe}, editable=${editableSafe}, deletable=${deletable}, showTime=${showTime}, title=${title}, showScore=${showScore}, showState=${showState}, showAdminControls=${showAdminControls}, a1Name=${a1Name}, a2Name=${a2Name}, b1Name=${b1Name}, b2Name=${b2Name}, confirmer=${confirmer}, removeOnConfirm=${removeOnConfirm})}">
+      </div>
+    </a>
+  </div>
+
+  
+  <div th:if="${!confirmableSafe and !editableSafe}"
+    th:insert="~{fragments/matchRow :: matchRow_readonly(match=${match}, confirmable=${confirmableSafe}, editable=${editableSafe}, deletable=${deletable}, showTime=${showTime}, title=${title}, showScore=${showScore}, showState=${showState}, showAdminControls=${showAdminControls}, a1Name=${a1Name}, a2Name=${a2Name}, b1Name=${b1Name}, b2Name=${b2Name}, confirmer=${confirmer}, removeOnConfirm=${removeOnConfirm})}">
+  </div>
+
+  <div
+    th:insert="~{fragments/matchRow :: matchRow_adminControls(match=${match}, showAdminControls=${showAdminControls})}">
+  </div>
+</div>

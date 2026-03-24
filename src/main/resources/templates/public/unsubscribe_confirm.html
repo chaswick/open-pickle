@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <div th:replace="~{components/head-analytics :: google-analytics}"></div>
+    <div th:replace="~{components/head-external :: fonts}"></div>
+    <title>Confirm Unsubscribe | Open-Pickle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Roboto, "Helvetica Neue", "Segoe UI", Arial, sans-serif; background-color: #f4f4f4; padding: 20px; text-align: center; }
+        .container { background: #fff; max-width: 500px; margin: 40px auto; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #0d6efd; margin-top: 0; }
+        p { color: #555; font-size: 16px; line-height: 1.5; }
+        a { color: #0d6efd; text-decoration: none; }
+        button { font-family: inherit; background: #dc3545; color: #fff; border: 0; border-radius: 6px; padding: 12px 20px; font-size: 16px; cursor: pointer; }
+        .actions { margin-top: 24px; display: flex; gap: 16px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Confirm Unsubscribe</h1>
+        <p>You are about to stop receiving Open-Pickle Play Plans emails.</p>
+        <form method="post" action="/meetups/unsubscribe" th:action="@{/meetups/unsubscribe}">
+            <input type="hidden" name="token" th:value="${token}">
+            <div class="actions">
+                <button type="submit">Unsubscribe</button>
+                <a href="/">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

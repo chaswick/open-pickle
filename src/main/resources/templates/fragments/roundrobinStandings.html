@@ -1,0 +1,56 @@
+<!doctype html>
+
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="standingsTable(standings, title)" class="ms-2">
+    <h5 th:text="${title}">Standings</h5>
+    <div class="table-responsive">
+        <table class="table table-sm roundrobin-standings-table">
+            <thead>
+            <tr>
+                <th class="text-end">#</th>
+                <th>Player</th>
+                <th class="text-end">PF</th>
+                <th class="text-end">W</th>
+                <th class="text-end roundrobin-standings-last-col">L</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="s,iter : ${standings}">
+                <td class="text-end" th:text="${iter.index + 1}"></td>
+                <td>
+                    <div class="player-name-with-badges">
+                        <span class="player-name-label" th:text="${s.nickName}">Player</span>
+                        <span class="name-badge-strip" th:if="${s.badgeViews != null and !#lists.isEmpty(s.badgeViews)}">
+                            <span th:each="badge : ${s.badgeViews}"
+                                  class="name-badge-pill badge-detail-trigger"
+                                  data-badge-detail-trigger
+                                  aria-expanded="false"
+                                  role="button"
+                                  tabindex="0"
+                                  th:title="${badge.title}"
+                                  th:attr="aria-label=${!#strings.isEmpty(badge.unlockCondition) ? 'Unlock details for ' + badge.label + ': ' + badge.unlockCondition : 'Badge details for ' + badge.label}">
+                                <img class="name-badge-chip"
+                                     th:src="${badge.imageUrl}"
+                                     alt=""
+                                     aria-hidden="true"
+                                     loading="lazy" />
+                                <span class="name-badge-label"
+                                      th:text="${badge.label}">Badge</span>
+                                <span class="badge-detail-overlay"
+                                      data-badge-detail-overlay
+                                      th:classappend="${#strings.isEmpty(badge.unlockCondition)} ? ' d-none'">
+                                    <span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
+                                    <span class="badge-detail-overlay-text"
+                                          th:text="${badge.unlockCondition}">Unlock condition</span>
+                                </span>
+                            </span>
+                        </span>
+                    </div>
+                </td>
+                <td class="text-end" th:text="${s.pointsFor}"></td>
+                <td class="text-end" th:text="${s.wins}"></td>
+                <td class="text-end roundrobin-standings-last-col" th:text="${s.losses}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

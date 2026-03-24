@@ -1,0 +1,386 @@
+
+<div th:if="${canEditDisplayName}">
+	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
+	<div class="card-header card-header-title text-center">Update Display Name</div>
+	<div class="card-body text-center">
+		<div th:if="${displayNameMessage}" th:text="${displayNameMessage}" th:class="'alert mb-3 text-start ' +
+			(${displayNameStatus} == 'success' ? 'alert-success' :
+			(${displayNameStatus} == 'info' ? 'alert-info' : 'alert-danger'))"></div>
+		<p class="text-muted mb-3 small">This is what people see on the standings table.
+		</p>
+		<form method="post" th:action="@{/account/change-display-name}" class="row g-2 align-items-end justify-content-center">
+			<input type="hidden" name="currentName" th:value="${queryName}" />
+			<div class="col-12 col-md-8">
+				<label class="visually-hidden" for="desiredDisplayName">Display name</label>
+				<input type="text" class="form-control form-control-lg text-center" id="desiredDisplayName" name="desiredDisplayName"
+					placeholder="Enter a new display name" autocomplete="off"
+					th:attr="maxlength=${displayNameMaxLength}" th:value="${queryName}" />
+			</div>
+			<div class="col-12 col-md-4 d-grid">
+				<button class="btn btn-nav-primary btn-lg" type="submit">Save</button>
+			</div>
+		</form>
+		<p class="text-muted small mt-3">Display names are limited to <span th:text="${displayNameMaxLength}">24</span>
+			characters and must be unique.</p>
+		<p class="text-muted small mt-3 mb-0" th:if="${profilePublicCode != null and !#strings.isEmpty(profilePublicCode)}">
+			Member ID:
+			<span class="font-monospace small fw-semibold" th:text="${profilePublicCode}"
+				th:title="${'Member ID ' + profilePublicCode}">PB-sage-ace-247</span>
+		</p>
+	</div>
+	</div>
+
+	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
+	<div class="card-header card-header-title text-center">Time Zone</div>
+	<div class="card-body">
+		<p class="text-muted small mb-3">
+			Used to display times across the app (Play Plans, match logs, etc). Defaults to Eastern Time.
+		</p>
+		<form method="post" th:action="@{/account/time-zone}" class="row g-2 align-items-end">
+			<div class="col-12 col-md-8">
+				<label class="form-label mb-1" for="timeZone">Time zone</label>
+				<select class="form-select" id="timeZone" name="timeZone">
+					<option value="" th:selected="${loggedInUser == null or #strings.isEmpty(loggedInUser.timeZone)}">Default (Eastern Time)</option>
+					<option value="America/New_York" th:selected="${loggedInUser != null and loggedInUser.timeZone == 'America/New_York'}">Eastern (America/New_York)</option>
+					<option value="America/Chicago" th:selected="${loggedInUser != null and loggedInUser.timeZone == 'America/Chicago'}">Central (America/Chicago)</option>
+					<option value="America/Denver" th:selected="${loggedInUser != null and loggedInUser.timeZone == 'America/Denver'}">Mountain (America/Denver)</option>
+					<option value="America/Los_Angeles" th:selected="${loggedInUser != null and loggedInUser.timeZone == 'America/Los_Angeles'}">Pacific (America/Los_Angeles)</option>
+					<option value="America/Phoenix" th:selected="${loggedInUser != null and loggedInUser.timeZone == 'America/Phoenix'}">Arizona (America/Phoenix)</option>
+					<option value="America/Anchorage" th:selected="${loggedInUser != null and loggedInUser.timeZone == 'America/Anchorage'}">Alaska (America/Anchorage)</option>
+					<option value="Pacific/Honolulu" th:selected="${loggedInUser != null and loggedInUser.timeZone == 'Pacific/Honolulu'}">Hawaii (Pacific/Honolulu)</option>
+					<option value="UTC" th:selected="${loggedInUser != null and loggedInUser.timeZone == 'UTC'}">UTC</option>
+				</select>
+			</div>
+			<div class="col-12 col-md-4 d-grid">
+				<button class="btn btn-nav-primary" type="submit">Save</button>
+			</div>
+		</form>
+	</div>
+	</div>
+
+	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
+	<div class="card-header card-header-title text-center">Name Badges</div>
+	<div class="card-body">
+		<p class="text-muted small mb-3">
+			Choose one badge to display next to your name in standings tables. Unlocked trophy badges and always-available profile badges both work.
+		</p>
+		<div th:if="${#lists.isEmpty(badgeOptions)}" class="text-muted small">
+			No badge-ready trophies or profile badges are available yet.
+		</div>
+		<form th:if="${!#lists.isEmpty(badgeOptions)}"
+		      method="post"
+		      th:action="@{/account/badges}"
+		      data-badge-picker
+		      th:with="selectedBadgePreview=${#lists.isEmpty(selectedBadgePreviews) ? null : selectedBadgePreviews[0]}">
+			<div class="badge-picker-panel">
+				<div class="row g-3">
+					<div class="col-12">
+						<div class="fw-semibold small text-uppercase text-muted mb-2">Equipped badge</div>
+						<div class="text-muted small"
+						     data-badge-preview-empty
+						     th:classappend="${selectedBadgePreview != null} ? ' d-none'">
+							No badge selected yet.
+						</div>
+						<div class="badge-picker-equipped"
+						     data-badge-preview-filled
+						     th:classappend="${selectedBadgePreview == null} ? ' d-none'">
+								<span class="name-badge-strip">
+									<span class="name-badge-pill badge-detail-trigger"
+									      data-badge-preview-trigger
+									      data-badge-detail-trigger
+									      aria-expanded="false"
+									      role="button"
+									      tabindex="0"
+									      th:title="${selectedBadgePreview != null ? selectedBadgePreview.badgeTitle : ''}"
+									      th:attr="aria-label=${selectedBadgePreview != null and !#strings.isEmpty(selectedBadgePreview.unlockCondition) ? 'Unlock details for ' + selectedBadgePreview.badgeLabel + ': ' + selectedBadgePreview.unlockCondition : 'Selected badge preview'}">
+									<img class="name-badge-chip"
+									     data-badge-preview-image
+									     th:attr="src=${selectedBadgePreview != null ? selectedBadgePreview.badgeUrl : null}"
+									     alt=""
+									     aria-hidden="true"
+									     loading="lazy" />
+									<span class="name-badge-label"
+									      data-badge-preview-label
+									      th:text="${selectedBadgePreview != null ? selectedBadgePreview.badgeLabel : ''}">Badge</span>
+									<span class="badge-detail-overlay"
+									      data-badge-detail-overlay
+									      data-badge-preview-overlay
+									      th:classappend="${selectedBadgePreview == null or #strings.isEmpty(selectedBadgePreview.unlockCondition)} ? ' d-none'">
+										<span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
+										<span class="badge-detail-overlay-text"
+										      data-badge-preview-unlock
+										      th:text="${selectedBadgePreview != null ? selectedBadgePreview.unlockCondition : ''}">Unlock condition</span>
+									</span>
+								</span>
+							</span>
+							<div class="badge-picker-context small text-muted"
+							     data-badge-preview-meta
+							     th:classappend="${(selectedBadgePreview == null) or (#strings.isEmpty(selectedBadgePreview.groupLabel) and #strings.isEmpty(selectedBadgePreview.awardedLabel))} ? ' d-none'">
+								<span data-badge-preview-group
+								      th:text="${selectedBadgePreview != null ? selectedBadgePreview.groupLabel : ''}">Group</span>
+								<span data-badge-preview-divider
+								      th:classappend="${selectedBadgePreview == null or #strings.isEmpty(selectedBadgePreview.groupLabel) or #strings.isEmpty(selectedBadgePreview.awardedLabel)} ? ' d-none'">&bull;</span>
+								<span data-badge-preview-awarded
+								      th:text="${selectedBadgePreview != null ? selectedBadgePreview.awardedLabel : ''}">Awarded Mar 18, 2026</span>
+							</div>
+							<div class="form-text mt-2 mb-0">Tap the badge to view the unlock condition.</div>
+						</div>
+					</div>
+					<div class="col-12">
+						<label class="form-label mb-1" for="badgeFilter">Find a badge</label>
+						<div class="input-group">
+							<span class="input-group-text" aria-hidden="true"><i class="bi bi-search"></i></span>
+							<input type="search"
+							       class="form-control"
+							       id="badgeFilter"
+							       placeholder="Filter by season, trophy, group, or award date"
+							       autocomplete="off"
+							       data-badge-filter />
+							<button class="btn btn-outline-secondary"
+							        type="button"
+							        data-badge-filter-clear>Clear</button>
+						</div>
+						<div class="form-text">Search your unlocked trophies and profile badges, then pick the badge you want next to your name. Try <span class="font-monospace">2026</span>, <span class="font-monospace">Mar 2026</span>, <span class="font-monospace">2026-03-18</span>, <span class="font-monospace">3/18/2026</span>, or a season/group/trophy name.</div>
+					</div>
+					<div class="col-12">
+						<div id="badgeSlot1Legend" class="form-label mb-2">Available badges</div>
+						<div class="badge-picker-summary small text-muted mb-2"
+						     data-badge-match-count
+						     th:text="${badgeOptions.size() == 1 ? '2 options available.' : badgeOptions.size() + 1 + ' options available.'}">
+							2 options available.
+						</div>
+						<div class="badge-picker-list" role="radiogroup" aria-labelledby="badgeSlot1Legend">
+							<div class="badge-picker-row badge-picker-row-empty" data-badge-option>
+								<label class="badge-picker-choice" for="badgeSlot1-none">
+									<input class="form-check-input badge-picker-input"
+									       type="radio"
+									       name="badgeSlot1TrophyId"
+									       id="badgeSlot1-none"
+									       value=""
+									       data-badge-option-input
+									       th:checked="${selectedBadgeSlot1Id == null}" />
+									<span class="badge-picker-select">Hide</span>
+								</label>
+								<div class="badge-picker-row-content badge-picker-row-content-empty"
+								     data-badge-card
+								     data-badge-label="No badge"
+								     data-badge-search="no badge none hide"
+								     data-badge-badge-label=""
+								     data-badge-title=""
+								     data-badge-url=""
+								     data-badge-unlock=""
+								     data-badge-group=""
+								     data-badge-awarded="">
+									<span class="badge-picker-icon" aria-hidden="true">
+										<i class="bi bi-slash-circle"></i>
+									</span>
+									<div class="badge-picker-row-copy">
+										<div class="fw-semibold">No badge</div>
+										<div class="badge-picker-context small text-muted">Hide your trophy badge from standings.</div>
+									</div>
+								</div>
+							</div>
+							<div th:each="option : ${badgeOptions}" class="badge-picker-row" data-badge-option>
+								<label class="badge-picker-choice" th:for="|badgeSlot1-${option.trophyId}|">
+									<input class="form-check-input badge-picker-input"
+									       type="radio"
+									       name="badgeSlot1TrophyId"
+									       th:id="|badgeSlot1-${option.trophyId}|"
+									       th:value="${option.trophyId}"
+									       data-badge-option-input
+									       th:checked="${selectedBadgeSlot1Id != null and selectedBadgeSlot1Id == option.trophyId}" />
+									<span class="badge-picker-select">Equip</span>
+								</label>
+								<div class="badge-picker-row-content"
+								     data-badge-card
+								     th:attr="data-badge-label=${option.pickerLabel},data-badge-search=${option.searchText},data-badge-badge-label=${option.badgeLabel},data-badge-title=${option.badgeTitle},data-badge-url=${option.badgeUrl},data-badge-unlock=${option.unlockCondition},data-badge-group=${option.groupLabel},data-badge-awarded=${option.awardedLabel}">
+									<span class="name-badge-strip">
+										<span class="name-badge-pill badge-detail-trigger"
+										      data-badge-detail-trigger
+										      aria-expanded="false"
+										      role="button"
+										      tabindex="0"
+										      th:title="${option.badgeTitle}"
+										      th:attr="aria-label=${!#strings.isEmpty(option.unlockCondition) ? 'Unlock details for ' + option.badgeLabel + ': ' + option.unlockCondition : 'Badge details for ' + option.badgeLabel}">
+											<img class="name-badge-chip"
+											     data-badge-card-image
+											     alt=""
+											     aria-hidden="true"
+											     loading="lazy" />
+											<span class="name-badge-label"
+											      th:text="${option.badgeLabel}">Badge</span>
+											<span class="badge-detail-overlay"
+											      data-badge-detail-overlay
+											      th:classappend="${#strings.isEmpty(option.unlockCondition)} ? ' d-none'">
+												<span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
+												<span class="badge-detail-overlay-text"
+												      th:text="${option.unlockCondition}">Unlock condition</span>
+											</span>
+										</span>
+									</span>
+									<div class="badge-picker-context small text-muted"
+									     th:if="${!#strings.isEmpty(option.groupLabel) or !#strings.isEmpty(option.awardedLabel)}">
+										<span th:if="${!#strings.isEmpty(option.groupLabel)}"
+										      th:text="${option.groupLabel}">Group</span>
+										<span th:if="${!#strings.isEmpty(option.groupLabel) and !#strings.isEmpty(option.awardedLabel)}">&bull;</span>
+										<span th:if="${!#strings.isEmpty(option.awardedLabel)}"
+										      th:text="${option.awardedLabel}">Awarded Mar 18, 2026</span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="badge-picker-empty-state d-none mt-2" data-badge-empty-state>
+							No badges match that filter.
+						</div>
+						<div class="form-text mt-2 mb-0">Use Equip or Hide to save your selection immediately. Tap the badge itself to view the unlock condition.</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+	</div>
+
+	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
+	<div class="card-header card-header-title text-center">Court Names</div>
+	<div class="card-body">
+		<div th:if="${courtNameMessage}" th:text="${courtNameMessage}" th:class="'alert mb-3 text-start ' +
+			(${courtNameStatus} == 'success' ? 'alert-success' :
+			(${courtNameStatus} == 'info' ? 'alert-info' : 'alert-danger'))"></div>
+		<p class="text-muted small mb-4">
+			What people call you on the court. "John", "Bike Mike", etc. For example,
+			"Me and Juan beat Amy and Ryan 11 to 9."</p>
+		<p class="text-muted small mb-4">If certain private groups call you different names, you can assign court names to specific groups below.</p>
+		<div class="mt-4">
+			<p class="text-muted small" th:if="${#lists.isEmpty(courtNames)}">
+				You haven't added any court names yet.
+			</p>
+			<div th:each="row : ${courtNames}" class="card border-0 shadow-sm mb-3">
+				<div class="card-body">
+					<form method="post" th:action="@{/account/court-names/update}"
+						class="row g-2 align-items-center">
+						<input type="hidden" name="id" th:value="${row.id}" />
+						<div class="col-12 col-lg-5">
+							<label class="visually-hidden" th:for="|courtAlias-${row.id}|">Court name</label>
+							<input type="text" class="form-control" th:id="|courtAlias-${row.id}|" name="alias" th:value="${row.alias}"
+								autocomplete="off" th:attr="maxlength=${courtNameMaxLength}" />
+						</div>
+						<div class="col-12 col-lg-5">
+							<label class="visually-hidden" th:for="|courtLadder-${row.id}|">Group scope</label>
+							<select class="form-select" th:id="|courtLadder-${row.id}|" name="ladderConfigId">
+								<option value="" th:selected="${row.ladderId == null}">All groups</option>
+								<option th:each="option : ${ladderOptions}" th:value="${option.ladderId}"
+									th:text="${option.label}"
+									th:selected="${row.ladderId != null and row.ladderId == option.ladderId}"></option>
+							</select>
+						</div>
+						<div class="col-12 col-lg-2 d-grid">
+							<button class="btn btn-nav-primary" type="submit">Save</button>
+						</div>
+					</form>
+					
+					
+					<div th:if="${row.hasSimilarityWarning()}" class="alert alert-warning mt-3 mb-0 small">
+						<i class="bi bi-exclamation-triangle-fill me-1"></i>
+						<span th:text="${row.similarityWarning}"></span>
+					</div>
+					
+					<form method="post" th:action="@{/account/court-names/delete}" class="mt-2 text-center"
+						th:onsubmit="|return handleConfirmForm(this, this.dataset.confirmMessage);|" th:attr="data-confirm-message=${#strings.isEmpty(row.alias) ? 'Remove this court name?' : 'Remove ' + row.alias + ' from your court names?'}">
+						<input type="hidden" name="id" th:value="${row.id}" />
+						<button class="btn btn-action-danger btn-sm" type="submit">Remove</button>
+					</form>
+				</div>
+			</div>
+		</div>
+		<form method="post" th:action="@{/account/court-names/add}" class="row g-2 align-items-center">
+			<div class="col-12 col-lg-5">
+				<label class="visually-hidden" for="newCourtAlias">Court name</label>
+				<input type="text" class="form-control" id="newCourtAlias" name="alias" placeholder="Add a court name" autocomplete="off"
+					th:attr="maxlength=${courtNameMaxLength}" />
+			</div>
+			<div class="col-12 col-lg-5">
+				<label class="visually-hidden" for="newCourtLadderConfigId">Group scope</label>
+				<select class="form-select" id="newCourtLadderConfigId" name="ladderConfigId">
+					<option value="" selected>All groups</option>
+					<option th:each="option : ${ladderOptions}" th:value="${option.ladderId}" th:text="${option.label}">
+					</option>
+				</select>
+			</div>
+			<div class="col-12 col-lg-2 d-grid">
+				<button class="btn btn-nav-primary" type="submit">Add</button>
+			</div>
+		</form>
+	</div>
+	</div>
+</div>
+
+
+<div th:if="${canEditDisplayName}" th:replace="~{fragments/userRecentMatches :: userRecentMatches}" th:with="memberCode=${memberCode}, canEditDisplayName=${canEditDisplayName}"></div>
+
+
+<div class="card mb-4">
+	<h1 class="card-header card-header-title text-center"><span th:text="${queryName}"></span>'s Styles</h1>
+	<div class="card-body">
+		Player style: <span th:if="${styleList.size() == 0}">No one has
+			voted on this player's styles yet.</span>
+		<ul>
+			<li th:each="style : ${styleList}" th:text="${style.getStyleName()}"></li>
+		</ul>
+		<div class="mt-2">
+			<span th:if="!${canVote}">You already voted on this players style.</span>
+			<span th:if="${canVote}">Vote on this player's style:</span>
+			<p>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}" /> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Banger" />
+				<input type="submit" value="Banger" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Good Serve">
+				<input type="submit" value="Good Serve" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Spin Master">
+				<input type="submit" value="Spin Master" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Baseline Player">
+				<input type="submit" value="Baseline Player" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Net Player">
+				<input type="submit" value="Net Player" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Dinker">
+				<input type="submit" value="Dinker" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Athlete">
+				<input type="submit" value="Athlete" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Super Smasher">
+				<input type="submit" value="Super Smasher" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Strategic">
+				<input type="submit" value="Strategic" class="btn btn-dark" />
+			</form>
+			<form th:if="${canVote}" th:action="@{/account/styles/vote}" method="post" class="vote-style-form">
+				<input type="hidden" name="member" th:value="${memberCode}"> <input type="hidden"
+					th:name="style" id="voteStyle" name="style" value="Lefty">
+				<input type="submit" value="Lefty" class="btn btn-dark" />
+			</form>			
+			</p>
+		</div>
+	</div>
+</div>

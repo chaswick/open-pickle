@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <div th:replace="~{components/head-analytics :: google-analytics}"></div>
+    <div th:replace="~{components/head-external :: fonts}"></div>
+    <title>Unsubscribe | Open-Pickle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Roboto, "Helvetica Neue", "Segoe UI", Arial, sans-serif; background-color: #f4f4f4; padding: 20px; text-align: center; }
+        .container { background: #fff; max-width: 500px; margin: 40px auto; padding: 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #0d6efd; margin-top: 0; }
+        p { color: #555; font-size: 16px; line-height: 1.5; }
+        a { color: #0d6efd; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div th:if="${success}">
+            <h1>Unsubscribed</h1>
+            <p>You have been successfully removed from Open-Pickle Play Plans emails.</p>
+            <p><a href="/">Return to Home</a></p>
+        </div>
+        <div th:unless="${success}">
+            <h1 style="color: #dc3545;">Error</h1>
+            <p th:text="${error}">Something went wrong.</p>
+            <p><a href="/">Return to Home</a></p>
+        </div>
+    </div>
+</body>
+</html>

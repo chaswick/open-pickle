@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Home</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-home">
+        
+        <div th:if="${message != null}" class="alert alert-success text-center" role="alert">
+            [[${message}]]
+        </div>
+        <div th:if="${messageWarning != null}" class="alert alert-danger text-center" role="alert">
+            [[${messageWarning}]]
+        </div>
+
+        <section class="app-hero">
+            <div class="app-hero-card">
+                <h1 class="app-hero-title">Let's Pickle!</h1>
+                <p class="app-hero-subtitle"
+                   th:text="${showCompetitionSessionChooser or activeCompetitionSessionId != null} ? 'Choose log matches to open a session, then record results in the global competition.' : 'Choose start playing to start a session or join one from an invite link.'">
+                    Choose start playing to start a session or join one from an invite link.
+                </p>
+            </div>
+        </section>
+
+        <section class="app-action-grid">
+            <a class="app-action-tile app-action-standings"
+               th:if="${showCompetitionSessionChooser}"
+               th:href="@{/competition/sessions}"
+               th:classappend="${showStartHereCallout} ? ' app-action-start-here' : ''">
+                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                <div>
+                    <span class="app-action-callout app-action-callout-top"
+                          th:if="${showStartHereCallout}">Start here</span>
+                    <div class="app-action-title">Log Matches</div>
+                    <div class="app-action-subtitle"
+                         th:text="${activeCompetitionSessionCount != null and activeCompetitionSessionCount > 1 ? 'Choose which session to open, then log competition matches.' : 'Open your session hub and log competition matches.'}">
+                    </div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-standings"
+               th:classappend="${showStartHereCallout} ? ' app-action-start-here' : ''"
+               th:if="${!showCompetitionSessionChooser and activeCompetitionSessionId != null}"
+               th:href="@{/competition/sessions}">
+                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                <div>
+                    <span class="app-action-callout app-action-callout-top"
+                          th:if="${showStartHereCallout}">Start here</span>
+                    <div class="app-action-title">Log Matches</div>
+                    <div class="app-action-subtitle"
+                         th:text="${activeCompetitionSessionTitle != null ? 'Open ' + activeCompetitionSessionTitle + ' to log matches.' : 'Open your active global competition session to log matches.'}">
+                    </div>
+                </div>
+            </a>
+            <a class="app-action-tile app-action-standings"
+               th:classappend="${showStartHereCallout} ? ' app-action-start-here' : ''"
+               th:if="${!showCompetitionSessionChooser and activeCompetitionSessionId == null}"
+               th:href="@{/competition/sessions}">
+                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                <div>
+                    <span class="app-action-callout app-action-callout-top"
+                          th:if="${showStartHereCallout}">Start here</span>
+                    <div class="app-action-title">Start Playing</div>
+                    <div class="app-action-subtitle">Start a session or join one from an invite link.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-plans" th:href="@{/confirm-matches}">
+                <div class="app-action-icon"><i class="bi bi-check2-square" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Confirm Matches</div>
+                    <div class="app-action-subtitle">Review pending match confirmations.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-log" th:href="@{/competition}">
+                <div class="app-action-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">View Standings</div>
+                    <div class="app-action-subtitle">Open the current global competition standings.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-checkin"
+               th:if="${checkInEnabled}"
+               th:href="@{/check-in(autostart=true)}">
+                <div class="app-action-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Check In</div>
+                    <div class="app-action-subtitle">Share where you're playing and if anyone else is there.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-groups"
+               th:href="@{/private-groups}">
+                <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Private Groups</div>
+                    <div class="app-action-subtitle"
+                         th:text="${#lists.isEmpty(myMemberships)} ? 'Create or join a long-running group when you want something more organized.' : 'Choose a group, then stay scoped to it while you play.'">
+                    </div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-account" th:href="@{/account}">
+                <div class="app-action-icon"><i class="bi bi-gear" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Account Settings</div>
+                    <div class="app-action-subtitle">Names, preferences, and history.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-help"
+               th:href="@{/help}">
+                <div class="app-action-icon"><i class="bi bi-question-circle" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Help</div>
+                    <div class="app-action-subtitle">All the infos.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-trophies" th:href="@{/trophies}">
+                <div class="app-action-icon"><i class="bi bi-award" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Trophies</div>
+                    <div class="app-action-subtitle">See seasonal achievements and badges.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-stats" th:href="@{/stats}">
+                <div class="app-action-icon"><i class="bi bi-graph-up" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Stats</div>
+                    <div class="app-action-subtitle">Track your activity, match history, and community snapshot.</div>
+                </div>
+            </a>
+
+            <form method="post" th:action="@{/logout}" class="m-0">
+                <button type="submit" class="app-action-tile app-action-logout w-100 text-start border-0">
+                    <div class="app-action-icon"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></div>
+                    <div>
+                        <div class="app-action-title">Logout</div>
+                        <div class="app-action-subtitle">Sign out of Open-Pickle on this device.</div>
+                    </div>
+                </button>
+            </form>
+        </section>
+
+    </div>
+</body>
+
+</html>

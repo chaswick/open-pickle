@@ -1,0 +1,943 @@
+/*
+ * FHPB Base Styles
+ * Core styles, layout fundamentals, and consistency foundations
+ * Mobile-first responsive design
+ */
+
+/* ===== CSS Variables ===== */
+:root {
+  /* Z-index layers for consistency */
+  --z-background: 0;
+  --z-overlay: 1;
+  --z-content: 2;
+  --z-navigation: 100;
+  --z-toast: 1080;
+  --z-modal: 1090;
+  
+  /* Card shadows (consistent across all components) */
+  --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+  
+  /* Card border radius consistency */
+  --border-radius: 0.375rem;
+  --border-radius-lg: 1rem;
+  
+  /* Colors for consistency */
+  --bg-light: #e7f1ff;
+  --bg-form: #f5f5f5;
+  --border-light: rgba(0, 0, 0, 0.12);
+  
+  /* Trophy/special colors */
+  --trophy-gold: #ffd700;
+  --trophy-shadow: rgba(255, 215, 0, 0.3);
+  
+  /* Button colors for consistent theming */
+  --btn-primary: #0d6efd;
+  --btn-primary-hover: #0b5ed7;
+  --btn-primary-active: #0a58ca;
+  
+  --btn-success: #198754;
+  --btn-success-hover: #157347;
+  --btn-success-active: #146c43;
+  
+  --btn-warning: #ffc107;
+  --btn-warning-hover: #ffcd39;
+  --btn-warning-active: #ffb700;
+  
+  --btn-danger: #dc3545;
+  --btn-danger-hover: #bb2d3b;
+  --btn-danger-active: #b02a37;
+  
+  --btn-secondary: #6c757d;
+  --btn-secondary-hover: #5c636a;
+  --btn-secondary-active: #565e64;
+  
+  --btn-outline-border: #dee2e6;
+  --btn-outline-hover: #e9ecef;
+
+  /* Accessibility-focused contrast helpers */
+  --link-contrast-color: #1f4f7a;
+  --link-contrast-hover-color: #163a5b;
+  --link-contrast-disabled-color: #5b6670;
+  --btn-outline-contrast-color: #23415c;
+  --btn-outline-contrast-border: #5d7489;
+  --btn-outline-contrast-active: #1a3042;
+  --badge-role-admin-bg: #0d5f73;
+  --bs-font-sans-serif: "Roboto", "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+  --bs-body-font-family: var(--bs-font-sans-serif);
+  --fhpb-display: "Roboto", "Helvetica Neue", "Segoe UI", sans-serif;
+}
+
+/* ===== Base Layout ===== */
+body {
+  font-family: var(--bs-body-font-family);
+  padding-bottom: 20px;
+}
+
+p {
+  font-family: inherit;
+}
+
+/* ===== Consistent Card Styling ===== */
+.card {
+  border: 0;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.card-header-title {
+  /* font-size: clamp(1.25rem, 1.1rem + 0.4vw, 1.6rem); Wierd styling issue on iphone mini*/
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #0d3b66;
+  margin: 0;
+}
+
+.card-header.card-header-title {
+  background-color: var(--bg-light);
+  border-bottom: 2px solid var(--border-light);
+  padding: 0.9rem 1.25rem;
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  overflow: visible;
+}
+
+.card-header.card-header-title.text-center {
+  text-align: center;
+}
+
+.card-collapse-header {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.card-collapse-toggle {
+  display: grid;
+  grid-template-columns: 1.25rem 1fr 1.25rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  border: 0;
+  border-radius: var(--border-radius-lg);
+  background-color: var(--bg-light);
+  color: #0d3b66;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.card-collapse-toggle:hover {
+  background-color: #dbe9fb;
+  color: #0b3155;
+}
+
+.card-collapse-toggle:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(13, 59, 102, 0.18);
+}
+
+.card-collapse-toggle[aria-expanded="true"] {
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  border-bottom: 2px solid var(--border-light);
+}
+
+.card-collapse-title {
+  text-align: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.card-collapse-title > :last-child {
+  margin-bottom: 0;
+}
+
+.card-collapse-spacer,
+.card-collapse-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.card-collapse-icon {
+  transition: transform 0.18s ease;
+}
+
+.card-collapse-toggle[aria-expanded="true"] .card-collapse-icon {
+  transform: rotate(180deg);
+}
+
+/* ===== Z-index Management ===== */
+.toast-overlay {
+  z-index: var(--z-toast);
+  width: min(100%, 26.25rem);
+}
+
+.content-layer {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+.card-spotlight {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+/* ===== Climb Faster Card ===== */
+.climb-faster-card .card-body {
+  font-family: var(--bs-font-sans-serif);
+  color: #24384f;
+}
+
+.climb-faster-card p,
+.climb-faster-card ul,
+.climb-faster-card li,
+.climb-faster-card summary,
+.climb-faster-card span,
+.climb-faster-card h6 {
+  font-family: inherit;
+}
+
+.climb-faster-summary {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: #1f3550;
+}
+
+.climb-faster-detail {
+  font-size: 0.93rem;
+  line-height: 1.5;
+  color: #66788c;
+}
+
+.climb-faster-tips {
+  padding-left: 1.1rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #29415c;
+}
+
+.climb-faster-tips-toggle {
+  border: 1px solid rgba(13, 59, 102, 0.12);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.7rem 0.95rem;
+}
+
+.climb-faster-tips-toggle[open] {
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.climb-faster-tips-summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #55697f;
+}
+
+.climb-faster-tips li + li {
+  margin-top: 0.45rem;
+}
+
+.climb-faster-section-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #55697f;
+}
+
+.climb-faster-changes {
+  gap: 0.75rem;
+}
+
+.climb-faster-change {
+  border: 1px solid rgba(13, 59, 102, 0.12);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.8rem 0.95rem;
+}
+
+.climb-faster-change[open] {
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.climb-faster-change-summary {
+  display: block;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.97rem;
+  line-height: 1.5;
+  font-weight: 600;
+  color: #1f4f7a;
+  text-decoration: none;
+}
+
+.climb-faster-change-summary::-webkit-details-marker {
+  display: none;
+}
+
+.climb-faster-change-summary::marker {
+  content: "";
+}
+
+.climb-faster-change-time {
+  color: #55697f;
+  font-weight: 500;
+}
+
+.climb-faster-change-steps {
+  padding-left: 1.1rem;
+  font-size: 0.93rem;
+  line-height: 1.55;
+  color: #38506b;
+}
+
+.climb-faster-change-steps li + li {
+  margin-top: 0.35rem;
+}
+
+.link-contrast {
+  color: var(--link-contrast-color);
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  text-decoration-thickness: 0.08em;
+}
+
+.link-contrast:hover {
+  color: var(--link-contrast-hover-color);
+}
+
+.link-contrast-disabled {
+  color: var(--link-contrast-disabled-color);
+  text-decoration: none;
+}
+
+.btn-outline-contrast {
+  --bs-btn-color: var(--btn-outline-contrast-color);
+  --bs-btn-border-color: var(--btn-outline-contrast-border);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--btn-outline-contrast-color);
+  --bs-btn-hover-border-color: var(--btn-outline-contrast-color);
+  --bs-btn-focus-shadow-rgb: 35, 65, 92;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--btn-outline-contrast-active);
+  --bs-btn-active-border-color: var(--btn-outline-contrast-active);
+  --bs-btn-disabled-color: #5f6e7d;
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: #98a6b3;
+}
+
+.badge-role-admin {
+  background-color: var(--badge-role-admin-bg);
+  color: #fff;
+}
+
+.identity-code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--bs-secondary-color, #6c757d);
+  font-size: 0.85rem;
+}
+
+.identity-code-value {
+  margin: 0;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(33, 37, 41, 0.06);
+  color: inherit;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+/* ===== Background Patterns ===== */
+.bg-image {
+  background-image: url('/images/pb_tile.jpg');
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Form page background */
+.bg-form {
+  background-color: var(--bg-form);
+}
+
+/* Trophy page background */
+.bg-trophy {
+  background-image: url('/images/trophy-bg.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+}
+
+/* ===== Standardized Button System ===== */
+/*
+ * Professional Button System for FHPB
+ * 
+ * ACTION BUTTONS (for data modification):
+ * - .btn-action-primary: Main actions (Save, Create, Submit, Join)
+ * - .btn-action-success: Positive actions (Confirm, Enable, Restore)
+ * - .btn-action-danger: Destructive actions (Delete, Ban, Remove)
+ * - .btn-action-warning: Cautionary actions (Reset, Clear)
+ * 
+ * NAVIGATION BUTTONS (for movement/navigation):
+ * - .btn-nav-primary: Important navigation (View, Edit, Details)
+ * - .btn-nav-secondary: Neutral navigation (Back, Cancel, Close)
+ * 
+ * SIZE MODIFIERS:
+ * - .btn-card-width: Full width on mobile, auto on desktop
+ * - .btn-inline: Small buttons for inline actions in lists/tables
+ * - .btn-lg: Large buttons for primary actions
+ * - .btn-sm: Small buttons for secondary actions
+ * 
+ * ICON BUTTONS:
+ * - .btn-icon: Buttons with icons
+ * - .btn-icon-only: Icon-only buttons (square aspect ratio)
+ * 
+ * WORKFLOW ENHANCEMENTS (combine with action classes):
+ * - .btn-workflow-destructive: Extra prominent for dangerous actions (pulsing effect)
+ * - .btn-workflow-confirm: Shows checkmark on hover for confirmation actions
+ * - .btn-workflow-happy: Shows celebration emoji on hover for positive flows
+ * - .btn-workflow-critical: Bold styling for high-impact actions
+ * - .btn-workflow-safe: Soft, rounded styling for low-risk actions
+ * 
+ * GROUP CONTAINERS:
+ * - .btn-group-card: For button groups that stack on mobile, inline on desktop
+ * - .btn-group-inline: For inline button groups
+ * 
+ * Examples:
+ * <button class="btn btn-action-primary btn-card-width">Save Changes</button>
+ * <button class="btn btn-action-danger btn-workflow-destructive">Delete Account</button>
+ * <button class="btn btn-action-success btn-workflow-confirm">Confirm</button>
+ * <a class="btn btn-nav-secondary" href="/back">Cancel</a>
+ * <button class="btn btn-action-danger btn-icon"><i class="fas fa-trash"></i> Delete</button>
+ */
+
+/* Base button improvements */
+.btn {
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn:focus {
+  outline: 2px solid var(--btn-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Action Buttons - For data modification (save, create, submit, etc.) */
+.btn-action-primary {
+  background: linear-gradient(135deg, var(--btn-primary) 0%, var(--btn-primary-hover) 100%);
+  border-color: var(--btn-primary);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+}
+
+.btn-action-primary:hover {
+  background: linear-gradient(135deg, var(--btn-primary-hover) 0%, var(--btn-primary-active) 100%);
+  border-color: var(--btn-primary-hover);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-action-primary:active {
+  background: var(--btn-primary-active);
+  border-color: var(--btn-primary-active);
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+}
+
+.btn-action-primary:disabled,
+.btn-action-primary.disabled {
+  background: var(--btn-secondary);
+  border-color: var(--btn-secondary);
+  color: white;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-action-success {
+  background: linear-gradient(135deg, var(--btn-success) 0%, var(--btn-success-hover) 100%);
+  border-color: var(--btn-success);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2);
+}
+
+.btn-action-success:hover {
+  background: linear-gradient(135deg, var(--btn-success-hover) 0%, var(--btn-success-active) 100%);
+  border-color: var(--btn-success-hover);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+.btn-action-success:active {
+  background: var(--btn-success-active);
+  border-color: var(--btn-success-active);
+  transform: translateY(0);
+}
+
+.btn-action-success:disabled,
+.btn-action-success.disabled {
+  background: var(--btn-secondary);
+  border-color: var(--btn-secondary);
+  color: white;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.btn-action-danger {
+  background: linear-gradient(135deg, var(--btn-danger) 0%, #b91c1c 100%);
+  border-color: var(--btn-danger);
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+  position: relative;
+}
+
+.btn-action-danger::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.btn-action-danger:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  border-color: var(--btn-danger-hover);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action-danger:hover::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 60%);
+}
+
+.btn-action-danger:active {
+  background: var(--btn-danger-active);
+  border-color: var(--btn-danger-active);
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.btn-action-danger:disabled,
+.btn-action-danger.disabled {
+  background: var(--btn-secondary);
+  border-color: var(--btn-secondary);
+  color: white;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.btn-action-warning {
+  background: linear-gradient(135deg, var(--btn-warning) 0%, var(--btn-warning-hover) 100%);
+  border-color: var(--btn-warning);
+  color: #212529;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+.btn-action-warning:hover {
+  background: linear-gradient(135deg, var(--btn-warning-hover) 0%, var(--btn-warning-active) 100%);
+  border-color: var(--btn-warning-hover);
+  color: #212529;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.btn-action-warning:active {
+  background: var(--btn-warning-active);
+  border-color: var(--btn-warning-active);
+  transform: translateY(0);
+}
+
+.btn-action-warning:disabled,
+.btn-action-warning.disabled {
+  background: var(--btn-secondary);
+  border-color: var(--btn-secondary);
+  color: white;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Navigation Buttons - For moving around (back, cancel, navigate, etc.) */
+.btn-nav-secondary {
+  background-color: #f1f3f5;
+  border: 2px solid #cfd4da;
+  color: #495057;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-nav-secondary:hover {
+  background-color: #e9ecef;
+  border-color: #b7c0c9;
+  color: #343a40;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-nav-secondary:active {
+  background-color: #dee2e6;
+  border-color: #adb5bd;
+  transform: translateY(0);
+}
+
+.btn-nav-secondary:focus {
+  background-color: #f1f3f5;
+  border-color: #adb5bd;
+  box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.btn-nav-secondary.disabled,
+.btn-nav-secondary:disabled {
+  background-color: #f1f3f5;
+  border-color: #9aa3ad;
+  color: #5b636a;
+  opacity: 1;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn-nav-secondary.disabled:hover,
+.btn-nav-secondary.disabled:focus,
+.btn-nav-secondary:disabled:hover,
+.btn-nav-secondary:disabled:focus {
+  background-color: #f1f3f5;
+  border-color: #9aa3ad;
+  color: #5b636a;
+  box-shadow: none;
+  transform: none;
+}
+
+.btn-nav-primary {
+  background-color: transparent;
+  border: 2px solid var(--btn-primary);
+  color: var(--btn-primary);
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-nav-primary:hover {
+  background: linear-gradient(135deg, var(--btn-primary) 0%, var(--btn-primary-hover) 100%);
+  border-color: var(--btn-primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-nav-primary:active {
+  background: var(--btn-primary-active);
+  border-color: var(--btn-primary-active);
+  transform: translateY(0);
+}
+
+.btn-nav-primary:focus {
+  border-color: var(--btn-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* ===== Workflow-Specific Button Enhancements ===== */
+
+/* Destructive workflow buttons - extra prominent for dangerous actions */
+.btn-workflow-destructive {
+  position: relative;
+  animation: pulse-subtle 2s infinite;
+}
+
+.btn-workflow-destructive::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, rgba(220, 53, 69, 0.3), transparent);
+  border-radius: inherit;
+  z-index: -1;
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Confirmation workflow buttons - keep consistent with other happy-path buttons */
+.btn-workflow-confirm {
+  /* Minimal rule to keep linter happy; visual styles come from utility classes like btn and btn-action-success */
+  pointer-events: auto;
+}
+
+/* Happy path workflow buttons - welcoming and positive */
+.btn-workflow-happy {
+  position: relative;
+}
+
+.btn-workflow-happy::after {
+  content: '🎉';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%) scale(0.7);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.btn-workflow-happy:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Critical workflow buttons - for high-impact actions */
+.btn-workflow-critical {
+  border-width: 3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* Safe workflow buttons - for low-risk actions */
+.btn-workflow-safe {
+  border-radius: 50px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.btn-workflow-safe:hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  color: #495057;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Icon Button Variants */
+.btn-icon-only {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+.btn-icon-only i,
+.btn-icon-only .fas,
+.btn-icon-only .far,
+.btn-icon-only .fab {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Mobile-friendly sizes - expand to card width */
+.btn-card-width {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+@media (min-width: 576px) {
+  .btn-card-width {
+    width: auto;
+    min-width: 120px;
+  }
+}
+
+/* Button groups for consistent spacing */
+.btn-group-card {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* RSVP button row (Play Plans): wraps cleanly on narrow screens */
+.fhpb-rsvp-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.fhpb-rsvp-group > .btn {
+  flex: 1 1 5.5rem;
+  min-width: 5.5rem;
+}
+
+@media (min-width: 576px) {
+  .btn-group-card {
+    display: flex;
+    justify-content: center;
+    width: auto;
+  }
+}
+
+/* Small buttons for inline actions */
+.btn-inline {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  min-height: 32px;
+}
+
+/* ===== Standardized Back Button System ===== */
+.back-button-container {
+  position: sticky;
+  top: calc(var(--navbar-height, 3.5rem) + 0.75rem);
+  z-index: var(--z-navigation);
+  background: rgba(248, 249, 250, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-light);
+  padding: 0.75rem 0;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.back-button-standard {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius);
+  transition: all 0.15s ease-in-out;
+}
+
+.back-button-standard i {
+  font-size: 0.875rem;
+}
+
+.back-button-breadcrumb {
+  font-size: 0.875rem;
+  color: var(--btn-secondary);
+  font-weight: 500;
+}
+
+/* Hide back button container on small screens if needed */
+@media (max-width: 576px) {
+  .back-button-breadcrumb {
+    display: none;
+  }
+}
+
+/* ===== Responsive Layout System ===== */
+.navbar {
+  margin-bottom: 20px;
+}
+
+.card-stack-col {
+  flex: 0 1 auto;
+  width: 100%;
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 992px) {
+  .card-stack-col {
+    max-width: 40rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .card-stack-col {
+    max-width: 42rem;
+  }
+}
+
+@media (min-width: 1400px) {
+  .card-stack-col {
+    max-width: 44rem;
+  }
+}
+
+@media (min-width: 1800px) {
+  .card-stack-col {
+    max-width: 46rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .card-stack-col.card-stack-col-desktop-fluid {
+    max-width: none;
+  }
+}
+
+/* ===== Ladder Bands ===== */
+/* Removed band backgrounds for player rows to avoid confusion with current user highlight */
+/* Division headers will use the blue background from .ladder-band-header */
+/* Current user row will use yellow highlight from .current-user-row */
+
+/* Keep these commented out in case you want to re-enable subtle band colors later
+.ladder-standing-row.ladder-band-1:not(.ladder-band-header):not(.current-user-row) {
+  background: rgba(13, 110, 253, 0.08);
+}
+
+.ladder-standing-row.ladder-band-2:not(.ladder-band-header):not(.current-user-row) {
+  background: rgba(25, 135, 84, 0.08);
+}
+
+.ladder-standing-row.ladder-band-3:not(.ladder-band-header):not(.current-user-row) {
+  background: rgba(255, 193, 7, 0.12);
+}
+
+.ladder-standing-row.ladder-band-4:not(.ladder-band-header):not(.current-user-row) {
+  background: rgba(220, 53, 69, 0.08);
+}
+
+.ladder-standing-row.ladder-band-5:not(.ladder-band-header):not(.current-user-row) {
+  background: rgba(108, 117, 125, 0.08);
+}
+*/

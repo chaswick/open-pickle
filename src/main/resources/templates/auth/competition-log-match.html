@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Global Competition Match Log</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-page">
+        <div class="app-page-header">
+            <div>
+                <h1 class="app-page-title">Global Competition Match Log</h1>
+                <p class="app-page-subtitle">Pick an active session, then log into the current global competition season.</p>
+            </div>
+        </div>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/competition}">
+                Back
+            </a>
+        </div>
+
+        <div class="alert alert-info" th:if="${competitionUnavailable}">
+            Competition season is unavailable right now.
+        </div>
+
+        <div th:replace="~{components/ladderSelector :: ladderSelector}"></div>
+
+        <div class="alert alert-secondary"
+             th:if="${!competitionUnavailable and (selectorMemberships == null or #lists.isEmpty(selectorMemberships))}">
+            You do not have any active sessions yet. Use Start Playing to start a session or join one from an invite link first.
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight" th:if="${!competitionUnavailable and selectedSessionTitle != null}">
+            <div class="card-header card-header-title text-center">Selected Session</div>
+            <div class="card-body text-center">
+                <div class="fw-semibold mb-1" th:text="${selectedSessionTitle}">Session</div>
+                <div class="small text-muted" th:if="${seasonName != null and seasonName != ''}">
+                    Counts toward <span th:text="${seasonName}">Season</span>
+                </div>
+                <div class="small text-muted" th:if="${seasonDateRange != null and seasonDateRange != ''}" th:text="${seasonDateRange}"></div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Log Match</div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    Only players from the selected session appear in the global competition logging flow.
+                </p>
+                <div class="d-grid gap-2">
+                    <a class="btn btn-action-primary btn-lg"
+                       th:if="${!competitionUnavailable and ladderId != null and seasonId != null}"
+                       th:href="@{/groups/{ladderId}(ladderId=${ladderId})}">
+                        Open Voice Logger
+                    </a>
+                    <a class="btn btn-action-primary btn-lg disabled"
+                       th:unless="${!competitionUnavailable and ladderId != null and seasonId != null}"
+                       href="#"
+                       aria-disabled="true">
+                        Open Voice Logger
+                    </a>
+
+                    <a class="btn btn-action-success btn-lg"
+                       th:if="${!competitionUnavailable and ladderId != null and seasonId != null}"
+                       th:href="@{/log-match(ladderId=${ladderId},seasonId=${seasonId},competition=true,returnTo=${returnToPath})}">
+                        Log Match
+                    </a>
+                    <a class="btn btn-action-success btn-lg disabled"
+                       th:unless="${!competitionUnavailable and ladderId != null and seasonId != null}"
+                       href="#"
+                       aria-disabled="true">
+                        Log Match
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/authenticated}">
+
+<head>
+  <title layout:fragment="title">Create Group</title>
+</head>
+
+<body>
+  <div layout:fragment="content" class="app-page">
+    <div class="card-stack-col d-flex flex-column gap-3">
+      <div class="app-page-header">
+        <div>
+          <h1 class="app-page-title"
+              th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start Match Session' : (${tournamentModePreset} ? 'Create Tournament' : 'Create Group')">
+            Create Group
+          </h1>
+          <p class="app-page-subtitle"
+             th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Create a temporary roster-sharing session that logs into the competition season.' : (${tournamentModePreset} ? 'Create a tournament-ready group with manual seasons and admin-run round robins.' : 'Set up a new group, season mode, and invite settings.')">
+            Set up a new group, season mode, and invite settings.
+          </p>
+        </div>
+      </div>
+
+      <div class="app-page-back">
+        <a class="btn btn-nav-secondary btn-lg w-100"
+           th:href="${returnToPath != null} ? @{${returnToPath}} : @{/groups}">Back</a>
+      </div>
+
+      
+      <form method="post" action="/groups" th:action="@{/groups}" id="createLadderForm" class="text-start">
+          <input type="hidden" name="returnTo" th:if="${returnToPath != null}" th:value="${returnToPath}">
+          <input type="hidden" name="type" th:value="${selectedLadderType != null ? selectedLadderType.name() : 'STANDARD'}">
+          <input type="hidden" name="tournamentMode" value="true" th:if="${tournamentModePreset}">
+          <div class="alert alert-warning"
+               th:if="${selectedLadderType != null and selectedLadderType.name() == 'SESSION' and !competitionSeasonAvailable}">
+            Competition season is unavailable right now, so new match sessions cannot be started yet.
+          </div>
+
+          <div class="card mb-3">
+            <div class="card-header card-header-title text-center"
+                 th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Session details' : (${tournamentModePreset} ? 'Tournament details' : 'Group details')">
+              Group details
+            </div>
+            <div class="card-body">
+              
+              <div class="mb-3">
+                <label class="form-label"
+                       th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Session Name' : (${tournamentModePreset} ? 'Tournament Name' : 'Group Name')">
+                  Group Name
+                </label>
+                <input type="text" class="form-control" name="title"
+                       th:attr="maxlength=${groupTitleMaxLength}"
+                       th:placeholder="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'e.g. Saturday Open Play' : (${tournamentModePreset} ? 'e.g. Spring Club Championship' : 'e.g. Wednesday Night Crewe')"
+                       required>
+              </div>
+
+              <div class="rounded-3 border bg-light p-3 mb-3"
+                   th:if="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'}">
+                <h6 class="fw-semibold mb-2">How sessions work</h6>
+                <p class="mb-2 text-muted">
+                  Sessions reuse the normal invite link and QR join flow, but they do not create their own seasons or standings.
+                </p>
+                <p class="mb-0 text-muted">
+                  Players who join this session become the roster you can choose from on the match logger, and logged matches count toward the active competition season.
+                </p>
+              </div>
+
+              <th:block th:if="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'}">
+                <input type="hidden" name="mode" value="MANUAL">
+                <input type="hidden" name="securityLevel" value="STANDARD">
+                <input type="hidden" name="seasonStart"
+                       th:value="${param.seasonStart != null ? param.seasonStart : #temporals.format(defaultSeasonStart, 'yyyy-MM-dd')}">
+              </th:block>
+
+              <th:block th:if="${tournamentModePreset and (selectedLadderType == null or selectedLadderType.name() != 'SESSION')}">
+                <input type="hidden" name="mode" value="MANUAL">
+                <input type="hidden" name="securityLevel" value="STANDARD">
+                <input type="hidden" name="seasonStart"
+                       th:value="${param.seasonStart != null ? param.seasonStart : #temporals.format(defaultSeasonStart, 'yyyy-MM-dd')}">
+                <div class="rounded-3 border bg-light p-3 mb-3">
+                  <h6 class="fw-semibold mb-2">Tournament defaults</h6>
+                  <p class="mb-2 text-muted">
+                    Tournament groups are created with manual start/stop seasons, standard opponent confirmation, and an immediate season start.
+                  </p>
+                  <p class="mb-0 text-muted">
+                    Tournament mode also requires season matches to line up with an active round-robin matchup, and only group admins can start or manage round robins.
+                  </p>
+                </div>
+              </th:block>
+
+              
+              <div class="mb-3" th:if="${(selectedLadderType == null or selectedLadderType.name() != 'SESSION') and !tournamentModePreset}">
+                <label class="form-label">Season Mode</label>
+                <div class="d-flex flex-wrap gap-2">
+                  <select class="form-select w-auto" name="mode" id="modeSelect" required>
+                    <option value="ROLLING" selected>Rolling (auto)</option>
+                    <option value="MANUAL">Manual (start/stop)</option>
+                  </select>
+                </div>
+
+                
+                <div id="rollingCadence" class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                  <span>Every</span>
+                  <input type="number" min="1" th:attr="max=${maxRollingEveryCount}" class="form-control w-auto" name="rollingEveryCount" value="6" required>
+                  <select class="form-select w-auto" name="rollingEveryUnit" required>
+                    <option value="WEEKS" selected>Weeks</option>
+                    <option value="MONTHS">Months</option>
+                  </select>
+                </div>
+                <div id="manualHint" class="form-text text-muted mt-2 d-none">
+                  Manual mode still starts the first season immediately. After that, admins use the Start Season and End Season controls whenever they want to switch seasons.
+                </div>
+                <div class="form-text">
+                  Rolling automatically ends and starts a new season on the chosen cadence. Manual lets admins start/end seasons anytime.
+                </div>
+              </div>
+
+              
+              <div class="mb-3" th:if="${(selectedLadderType == null or selectedLadderType.name() != 'SESSION') and !tournamentModePreset}">
+                <label class="form-label">Start date</label>
+                <input type="date" class="form-control" name="seasonStart" required
+                       th:value="${param.seasonStart != null ? param.seasonStart : #temporals.format(defaultSeasonStart, 'yyyy-MM-dd')}">
+                <div class="form-text">
+                  Rolling groups start immediately using the current UTC time. Manual mode still lets admins end and start seasons on demand.
+                </div>
+              </div>
+
+              
+              <div class="mb-3" th:if="${(selectedLadderType == null or selectedLadderType.name() != 'SESSION') and !tournamentModePreset}">
+                <label class="form-label">Match Confirmation</label>
+                <select class="form-select" name="securityLevel" id="securityLevelSelect" required>
+                  <option value="STANDARD" selected>Standard (opponent confirms)</option>
+                  <option value="SELF_CONFIRM">Casual (self-confirm)</option>
+                </select>
+                <div class="form-text">
+                  Standard mode requires opponents to confirm matches. Casual mode lets match loggers immediately confirm their own entries, ideal for trusted groups.
+                </div>
+
+                <div id="guestOnlyPersonalMatchBlock" class="form-check mt-2 d-none">
+                  <input class="form-check-input" type="checkbox"
+                         id="allowGuestOnlyPersonalMatches"
+                         name="allowGuestOnlyPersonalMatches">
+                  <label class="form-check-label" for="allowGuestOnlyPersonalMatches">
+                    Allow personal record matches when all opponents are guests
+                  </label>
+                  <div class="form-text">
+                    Only applies in Casual mode. These matches can be confirmed and count for trophies, but never affect standings. Ideal if you want to track your personal activity.
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3" th:if="${storyModeFeatureEnabled and !tournamentModePreset and (selectedLadderType == null or selectedLadderType.name() != 'SESSION')}">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox"
+                         id="storyModeDefaultEnabled"
+                         name="storyModeDefaultEnabled">
+                  <label class="form-check-label" for="storyModeDefaultEnabled">
+                    Enable Story Mode for this season
+                  </label>
+                  <div class="form-text">
+                    Replaces the normal standings table with a playful Pat-the-Pickler journey while keeping normal match logging underneath.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-action-primary btn-card-width" type="submit"
+                    th:disabled="${selectedLadderType != null and selectedLadderType.name() == 'SESSION' and !competitionSeasonAvailable}"
+                    th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start Match Session' : (${tournamentModePreset} ? 'Create Tournament' : 'Create Group')">
+              Create Group
+            </button>
+            <a class="btn btn-nav-secondary btn-card-width" href="/" th:href="@{/home}" th:if="${!tournamentModePreset}">Cancel</a>
+          </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <script layout:fragment="scripts">
+    // Show/hide cadence controls based on mode
+    const modeSelect = document.getElementById('modeSelect');
+    const cadenceBlock = document.getElementById('rollingCadence');
+    const manualHint = document.getElementById('manualHint');
+    const securitySelect = document.getElementById('securityLevelSelect');
+    const guestOnlyPersonalMatchBlock = document.getElementById('guestOnlyPersonalMatchBlock');
+    const guestOnlyPersonalMatchInput = document.getElementById('allowGuestOnlyPersonalMatches');
+    function syncCadence() {
+      const isRolling = modeSelect.value === 'ROLLING';
+      cadenceBlock.classList.toggle('d-none', !isRolling);
+      cadenceBlock.classList.toggle('d-flex', isRolling);
+      // Toggle required attrs when hidden to avoid HTML5 validation traps
+      cadenceBlock.querySelectorAll('input, select').forEach(el => {
+        el.required = isRolling;
+      });
+      if (manualHint) {
+        manualHint.classList.toggle('d-none', isRolling);
+      }
+    }
+    function syncGuestOnlyPersonalRecord() {
+      if (!securitySelect || !guestOnlyPersonalMatchBlock || !guestOnlyPersonalMatchInput) {
+        return;
+      }
+      const selfConfirm = securitySelect.value === 'SELF_CONFIRM';
+      guestOnlyPersonalMatchBlock.classList.toggle('d-none', !selfConfirm);
+      guestOnlyPersonalMatchInput.disabled = !selfConfirm;
+      if (!selfConfirm) {
+        guestOnlyPersonalMatchInput.checked = false;
+      }
+    }
+    if (modeSelect && cadenceBlock) {
+      modeSelect.addEventListener('change', syncCadence);
+      syncCadence();
+    }
+    if (securitySelect) {
+      securitySelect.addEventListener('change', syncGuestOnlyPersonalRecord);
+      syncGuestOnlyPersonalRecord();
+    }
+  </script>
+</body>
+</html>
+

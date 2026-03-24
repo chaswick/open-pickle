@@ -1,0 +1,38 @@
+<th:block th:fragment="ladderSelector">
+  <div th:with="memberships=${selectorMemberships != null ? selectorMemberships : myMemberships},
+                title=${selectorTitle != null ? selectorTitle : 'Group'},
+                emptyMessage=${selectorEmptyMessage != null ? selectorEmptyMessage : 'You''re not in any groups yet. Join or create a group to get started.'},
+                singleMessage=${selectorSingleMessage != null ? selectorSingleMessage : 'You''re only in one group.'}">
+  <div class="card mb-3 shadow card-spotlight" th:if="${memberships != null and #lists.isEmpty(memberships) == false}">
+    <div class="card-header card-header-title text-center" th:text="${title}">Group</div>
+    <div class="card-body">
+      <form method="get">
+        <input type="hidden" name="competition" value="true" th:if="${competitionLogMode}" />
+        <div class="d-flex flex-column flex-md-row align-items-md-center gap-3">
+          <div class="flex-grow-1">
+            <label for="ladderSelect" class="form-label text-uppercase small text-muted visually-hidden" th:text="${title}">Group</label>
+            <select id="ladderSelect" name="ladderId" class="form-select" onchange="this.form.submit()"
+              th:disabled="${#lists.size(memberships) == 1}">
+              <option th:each="m : ${memberships}" th:value="${m.ladderConfig.id}"
+                th:text="${m.ladderConfig.title}"
+                th:selected="${ladderId != null and ladderId == m.ladderConfig.id}">
+              </option>
+            </select>
+            <div class="form-text" th:if="${#lists.size(memberships) == 1}">
+              <span th:text="${singleMessage}">You're only in one group.</span>
+            </div>
+          </div>
+          <div class="app-ladder-meta" th:if="${seasonName != null and seasonName != ''}">
+            <div class="text-uppercase small text-muted">Season</div>
+            <div class="fw-semibold" th:text="${seasonName}">Season Name</div>
+            <div class="small text-muted" th:text="${seasonDateRange}"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="alert alert-info" th:if="${(myMemberships == null or #lists.isEmpty(myMemberships)) and (memberships == null or #lists.isEmpty(memberships))}">
+    <span th:text="${emptyMessage}">You're not in any groups yet. Join or create a group to get started.</span>
+  </div>
+  </div>
+</th:block>

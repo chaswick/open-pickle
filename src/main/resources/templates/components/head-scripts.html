@@ -1,0 +1,20 @@
+
+<th:block th:fragment="core-scripts">
+    
+    <script src="/js/bootstrap.bundle.min.js" th:src="@{/js/bootstrap.bundle.min.js}"></script>
+    
+    
+    <script src="/js/app.js" th:src="@{/js/app.js(v=${assetVersion})}"></script>
+</th:block>
+
+
+<th:block th:fragment="pwa-scripts">
+    
+    <script src="/js/pwa.js" th:src="@{/js/pwa.js(v=${assetVersion})}"></script>
+</th:block>
+
+
+<th:block th:fragment="component-scripts">
+    
+    <script src="/js/components.js" th:src="@{/js/components.js(v=${assetVersion})}"></script>
+</th:block>

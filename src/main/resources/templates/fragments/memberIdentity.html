@@ -1,0 +1,8 @@
+<div th:fragment="memberIdentity(publicCode)"
+     th:if="${publicCode != null and !#strings.isEmpty(publicCode)}"
+     class="identity-code">
+  <span>Member ID</span>
+  <span class="identity-code-value font-monospace"
+        th:text="${publicCode}"
+        th:title="${'Member ID ' + publicCode}">PB-sage-ace-247</span>
+</div>

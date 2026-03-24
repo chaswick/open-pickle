@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<div th:fragment="matchDashboard"
+     id="matchDashboardContainer"
+     data-match-dashboard-auto-refresh="true"
+     data-refresh-interval-ms="60000">
+  
+  <div class="">
+    
+    <div th:if="${links != null && #lists.isEmpty(links) == false}">
+      <div id="matchDashboardList" class="d-flex flex-column">
+     <div th:each="lnk : ${links}" th:data-match-id="${lnk.match.id}" class="match-dashboard-card card mb-1 position-relative"
+       th:with="isParticipant=${loggedInUser != null and (loggedInUser.id == lnk.match.a1?.id or loggedInUser.id == lnk.match.a2?.id or loggedInUser.id == lnk.match.b1?.id or loggedInUser.id == lnk.match.b2?.id)}"
+       th:classappend="${isParticipant and ((loggedInUser.id == lnk.match.a1?.id or loggedInUser.id == lnk.match.a2?.id) and lnk.match.scoreA > lnk.match.scoreB or (loggedInUser.id == lnk.match.b1?.id or loggedInUser.id == lnk.match.b2?.id) and lnk.match.scoreB > lnk.match.scoreA) ? 'bg-success bg-opacity-10' : (isParticipant ? 'bg-danger bg-opacity-10' : '')}">
+          <div class="card-body p-2">
+            <div th:insert="~{fragments/matchRow :: matchRow(match=${lnk.match}, confirmable=${confirmableMatchIds != null and confirmableMatchIds.contains(lnk.match.id)}, editable=${editableByMatchId != null and editableByMatchId[lnk.match.id] != null ? editableByMatchId[lnk.match.id] : lnk.match.isEditableBy(loggedInUser)}, showTime=true, title=${lnk.headline != null and !lnk.headline.isBlank() ? lnk.headline : ('Match #' + lnk.match.id)}, showScore=true, showState=true, showAdminControls=false, a1Name=null, a2Name=null, b1Name=null, b2Name=null, confirmer=${confirmerByMatchId != null ? confirmerByMatchId[lnk.match.id] : null}, removeOnConfirm=${true})}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+    <div id="confirmationCompleteMessage" class="mt-2"
+         th:classappend="${links != null && #lists.isEmpty(links) == false} ? ' d-none' : null">
+      <div class="d-flex align-items-center justify-content-center gap-2 small text-muted p-1">
+        <i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i>
+        <span class="fw-semibold text-success">You are all caught up!</span>
+        <a href="#" class="link-primary small ms-2" onclick="return refreshMatchDashboard()" aria-label="Refresh dashboard for latest activity">
+          <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  
+  
+</div>
+
+</html>

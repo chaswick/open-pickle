@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en" class="h-100"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/public}">
+
+<head>
+    <title layout:fragment="title">Free Global Pickleball Competition | Open-Pickle</title>
+
+    <th:block layout:fragment="styles">
+        <meta name="description" content="Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private groups, round robins, and season trophies.">
+        <link rel="preload" as="image" href="/images/landing/competitionSnapshot.png" th:href="@{/images/landing/competitionSnapshot.png}">
+    </th:block>
+</head>
+
+<body>
+    <div layout:fragment="content">
+        <section class="landing-shell">
+            <div class="container">
+                <div class="app-hero">
+                    <div class="app-hero-card landing-hero-card">
+                        <div class="row align-items-start g-4 g-xl-5">
+                            <div class="col-lg-7">
+                                <div class="landing-brand-block">
+                                    <div class="landing-brand-inline">
+                                        <div class="landing-brand-core">
+                                            <div class="landing-logo-mark">
+                                                <img src="/images/landing/picklebuddies_logo.png"
+                                                     th:src="@{/images/landing/picklebuddies_logo.png}"
+                                                     alt="Open-Pickle logo"
+                                                     width="1024"
+                                                     height="1024"
+                                                     loading="eager"
+                                                     decoding="async">
+                                            </div>
+                                            <div class="landing-brand-text">
+                                                <p class="landing-wordmark">Open-Pickle</p>
+                                                <p class="landing-kicker">Community-driven Pickleball</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <h1 class="landing-title">Free Global Pickleball Competition</h1>
+                                <p class="landing-copy">Compete globally in a seasonal pickleball competition where your rating resets. Open-Pickle automates the standings, keeps match logging easy, and supports private groups, round robins, trophies to track your finishes, and more.</p>
+                                <div class="landing-proof-mark landing-proof-mark-cta">
+                                    <img src="/images/landing/notamoneygrab.png"
+                                         th:src="@{/images/landing/notamoneygrab.png}"
+                                         alt="Badge reading Not a money grab, community run, volunteer based, run on donations, totally free"
+                                         width="768"
+                                         height="768"
+                                         decoding="async"
+                                         fetchpriority="low">
+                                </div>
+                                <div class="landing-cta-row">
+                                    <a th:href="@{/register}" class="btn btn-action-success btn-lg">Register free</a>
+                                    <a th:href="@{/login}" class="btn btn-action-primary btn-lg">Sign in</a>
+                                </div>
+                                <ul class="landing-checklist">
+                                    <li>Free to join and play.</li>
+                                    <li>Short seasons with rating resets.</li>
+                                    <li>Automated standings after every confirmed match.</li>
+                                    <li>One click to get started in the global competition.</li>
+                                    <li>Private groups and round robins for your regular crew.</li>
+                                    <li>Earn season trophies and rating bands based on your performance.</li>
+                                    <li>Community-supported, not paywalled.</li>
+                                    <li>Built with direct community feedback from active players.</li>
+                                    <li>And you help decide what to work on next!</li>
+                                </ul>
+                                <div class="landing-voices-inline" id="testimonial-strip" aria-live="polite">
+                                    <p class="landing-voices-label">Player voices</p>
+                                    <blockquote class="landing-voices-quote" data-testimonial-quote>&ldquo;I finally found a competition that feels built for our neighborhood crew.&rdquo;</blockquote>
+                                    <p class="landing-voices-author" data-testimonial-author>&mdash; Jordan</p>
+                                    <ul class="d-none" data-testimonial-source>
+                                        <li data-quote="I finally found a competition that feels built for our neighborhood crew." data-author="Jordan"></li>
+                                        <li data-quote="The seasonal reset keeps me motivated without the pressure of a DUPR ranking." data-author="Charlie"></li>
+                                        <li data-quote="I like how it tells me how to climb faster." data-author="Ashly"></li>
+                                        <li data-quote="Love it!" data-author="Dave"></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <figure class="landing-snapshot-wrap landing-snapshot-hero">
+                                    <div class="landing-snapshot-frame">
+                                        <img src="/images/landing/competitionSnapshot.png"
+                                             th:src="@{/images/landing/competitionSnapshot.png}"
+                                             alt="Open-Pickle standings view showing player rankings and tournament movement"
+                                             width="379"
+                                             height="850"
+                                             loading="eager"
+                                             decoding="async"
+                                             fetchpriority="high">
+                                    </div>
+                                    <figcaption class="landing-snapshot-caption">Live standings after every confirmed match, with movement you can feel all season long.</figcaption>
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="landing-section">
+            <div class="container">
+                <div class="landing-section-header">
+                    <p class="landing-section-kicker">Why use it</p>
+                    <h2 class="landing-section-title">This is not trying to replace Elo or DUPR.</h2>
+                    <p class="landing-section-copy">Those systems are built to estimate long-term player skill. This is built to measure something different: <strong>who is performing best over a defined stretch of time against the people they actually play.</strong></p>
+                </div>
+                <div class="landing-benefit-grid">
+                    <article class="landing-benefit-card">
+                        <div class="landing-benefit-tag">One season, two ways to compete</div>
+                        <p>Track your place on the global leaderboard and your standing against the players you actually play. So even if the overall top spot is far away, your season still has real stakes.</p>
+                    </article>
+                    <article class="landing-benefit-card">
+                        <div class="landing-benefit-tag">Season trophies and ratings bands</div>
+                        <p>Earn trophies at the end of the season based on how you did against the players you actually competed with, as well as over all.</p>
+                        <button type="button" class="btn btn-outline-dark d-block w-auto mx-auto" data-bs-toggle="modal" data-bs-target="#achievementsModal">Preview trophies</button>
+                    </article>
+                    <article class="landing-benefit-card">
+                        <div class="landing-benefit-tag">Measures performance</div>
+                        <p>Built around real play patterns, it tells you how well you are playing right now, not from a cherry-picked set of matches.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="landing-bottom-cta">
+            <div class="container">
+                <div class="landing-bottom-panel">
+                    <h2>Ready to start a new season?</h2>
+                    <p>Create an account, invite your players, and run global competition, private groups, and round robins with standings that stay current automatically.</p>
+                    <div class="landing-bottom-actions">
+                        <a th:href="@{/register}" class="btn btn-light btn-lg">Register free</a>
+                        <a th:href="@{/login}" class="btn btn-action-primary btn-lg">Sign in</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div th:replace="~{fragments/achievementsModal :: achievementsModal}"></div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var testimonialStrip = document.getElementById('testimonial-strip');
+                if (!testimonialStrip) {
+                    return;
+                }
+
+                var sourceList = testimonialStrip.querySelector('[data-testimonial-source]');
+                if (!sourceList) {
+                    return;
+                }
+
+                var entries = Array.prototype.slice.call(sourceList.querySelectorAll('li[data-quote][data-author]'));
+                if (entries.length === 0) {
+                    return;
+                }
+
+                var targetQuote = testimonialStrip.querySelector('[data-testimonial-quote]');
+                var targetAuthor = testimonialStrip.querySelector('[data-testimonial-author]');
+                if (!targetQuote || !targetAuthor) {
+                    return;
+                }
+
+                var currentIndex = 0;
+                var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                function renderTestimonial(index) {
+                    var entry = entries[index];
+                    targetQuote.textContent = entry.getAttribute('data-quote');
+                    targetAuthor.textContent = '\u2014 ' + entry.getAttribute('data-author');
+                }
+
+                function updateTestimonial(withTransition) {
+                    if (!withTransition) {
+                        renderTestimonial(currentIndex);
+                        currentIndex = (currentIndex + 1) % entries.length;
+                        return;
+                    }
+
+                    testimonialStrip.classList.add('is-transitioning');
+                    window.setTimeout(function () {
+                        renderTestimonial(currentIndex);
+                        testimonialStrip.classList.remove('is-transitioning');
+                        currentIndex = (currentIndex + 1) % entries.length;
+                    }, 160);
+                }
+
+                updateTestimonial(false);
+
+                window.setInterval(function () {
+                    updateTestimonial(!prefersReducedMotion);
+                }, 5000);
+            });
+        </script>
+    </th:block>
+</body>
+</html>

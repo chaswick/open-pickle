@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layouts/authenticated}">
+<head>
+    <title layout:fragment="title">Round-Robins</title>
+</head>
+<body>
+<div layout:fragment="content" class="app-page">
+    <div class="app-page-header">
+        <div>
+            <h1 class="app-page-title">Round-Robins</h1>
+            <p class="app-page-subtitle">Start a new round-robin or review previous ones for this group.</p>
+        </div>
+    </div>
+    <div class="app-page-back">
+        <a class="btn btn-nav-secondary btn-lg w-100"
+           th:href="${roundRobinBackPath != null ? roundRobinBackPath : '/private-groups'}">
+            Back
+        </a>
+    </div>
+    <div class="container">
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Round-Robins</div>
+            <div class="card-body">
+                <div class="alert alert-warning text-start"
+                     th:if="${roundRobinAdminOnly}">
+                    Tournament mode requires group admins to start and manage round-robins. Matches logged for this season must match an active round-robin pairing.
+                </div>
+                <div class="mb-3 d-flex justify-content-center gap-2 flex-wrap">
+                    <a class="btn btn-action-primary"
+                       th:if="${ladderId != null and canStartRoundRobin}"
+                        th:href="@{/round-robin(ladderId=${ladderId})}">
+                        Start Round-Robin
+                    </a>
+                    <a class="btn btn-action-primary disabled"
+                       th:if="${ladderId == null or !canStartRoundRobin}"
+                       href="#"
+                       aria-disabled="true">
+                        Start Round-Robin
+                    </a>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(roundRobins) and !#lists.isEmpty(seasonStandings)}" class="mb-3">
+                    <div th:replace="~{fragments/roundrobinStandings :: standingsTable(${seasonStandings}, 'Cumulative Standings')}"></div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(roundRobins)}">
+                    <p class="text-muted"
+                       th:text="${isSessionLadder} ? 'No round-robins started from this session yet.' : 'No round-robins found for the selected group/season.'">
+                        No round-robins found for the selected group/season.
+                    </p>
+                </div>
+
+                <div th:if="${!#lists.isEmpty(roundRobins)}">
+                    <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                        <tr>
+                            <th>Created</th>
+                            <th>Round</th>
+                            <th class="text-end">Players</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="rr : ${roundRobins}">
+                            <td>
+                                <a th:href="@{/round-robin/view/{id}(id=${rr.id})}" th:text="${@fhpbTime.pattern(rr.createdAt, (#authentication != null ? #authentication.principal : null), 'EEE, MMMM d yyyy')}"></a>
+                            </td>
+                            <td>
+                                <span th:text="${displayRounds[rr.id]}"></span>
+                                <span>/</span>
+                                <span th:text="${maxRounds[rr.id]}"></span>
+                            </td>
+                            <td class="text-end small" th:text="${playerCounts[rr.id]}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                    <nav th:if="${totalPages != null and totalPages > 1}" aria-label="Round robin pages">
+                        <ul class="pagination pagination-sm">
+                            <li class="page-item" th:classappend="${pageNumber == 0} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="${isSessionLadder}
+                                        ? @{/round-robin/list(ladderId=${ladderId},page=${pageNumber-1},size=${pageSize})}
+                                        : @{/round-robin/list(ladderId=${ladderId},seasonId=${seasonId},page=${pageNumber-1},size=${pageSize})}">Previous</a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages-1)}" th:classappend="${i == pageNumber} ? 'active'">
+                                <a class="page-link" th:text="${i + 1}"
+                                   th:href="${isSessionLadder}
+                                        ? @{/round-robin/list(ladderId=${ladderId},page=${i},size=${pageSize})}
+                                        : @{/round-robin/list(ladderId=${ladderId},seasonId=${seasonId},page=${i},size=${pageSize})}"></a>
+                            </li>
+                            <li class="page-item" th:classappend="${pageNumber + 1 >= totalPages} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="${isSessionLadder}
+                                        ? @{/round-robin/list(ladderId=${ladderId},page=${pageNumber+1},size=${pageSize})}
+                                        : @{/round-robin/list(ladderId=${ladderId},seasonId=${seasonId},page=${pageNumber+1},size=${pageSize})}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title"
+           th:text="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? 'Log Matches' : 'Start Playing'">
+        Start Playing
+    </title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-home">
+        <section class="app-hero">
+            <div class="app-hero-card">
+                <h1 class="app-hero-title"
+                    th:text="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? 'Log Matches' : 'Start Playing'">
+                    Start Playing
+                </h1>
+                <p class="app-hero-subtitle"
+                   th:text="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? (${canCreateCompetitionSession ? 'Choose a session to open, start a new one, or join from an invite link.' : 'Choose a session to open, or join from an invite link.'}) : 'Choose how you want to get into the global competition: start a session or join one from an invite link.'">
+                    Choose how you want to get into the global competition.
+                </p>
+            </div>
+        </section>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">Back</a>
+        </div>
+
+        <div class="alert alert-info" th:if="${competitionUnavailable}">
+            Competition season is unavailable right now, so new sessions cannot be started.
+        </div>
+
+        <section class="app-action-grid">
+            <a class="app-action-tile app-action-standings"
+               th:if="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)}"
+               th:each="membership : ${sessionMemberships}"
+               th:href="@{/groups/{id}(id=${membership.ladderConfig.id})}"
+               th:with="sessionConfig=${membership.ladderConfig},
+                        owned=${loggedInUser != null and sessionConfig != null and loggedInUser.id == sessionConfig.ownerUserId},
+                        suggested=${activeCompetitionSessionId != null and sessionConfig != null and activeCompetitionSessionId == sessionConfig.id}">
+                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                <div>
+                    <span class="app-action-callout app-action-callout-top" th:if="${suggested}">Suggested</span>
+                    <div class="app-action-title" th:text="${sessionConfig != null ? sessionConfig.title : 'Session'}">Session</div>
+                    <div class="app-action-subtitle"
+                         th:text="${owned ? 'You own this session. Open it to invite players, manage the roster, and log competition matches.' : 'You joined this session. Open it to jump back into that roster and log competition matches.'}">
+                        Open this match session.
+                    </div>
+                </div>
+            </a>
+
+            <form method="post" th:action="@{/groups/start-session}" class="m-0"
+                  th:if="${!competitionUnavailable and canCreateCompetitionSession}">
+                <input type="hidden" name="returnTo" value="/competition/sessions">
+                <button type="submit"
+                        class="app-action-tile app-action-groups w-100 text-start border-0">
+                    <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
+                    <div>
+                        <div class="app-action-title">Start a Session</div>
+                        <div class="app-action-subtitle">Start your own temporary session for the players and court you have today.</div>
+                    </div>
+                </button>
+            </form>
+
+            <button type="button"
+                    class="app-action-tile app-action-help w-100 text-start border-0"
+                    th:if="${!competitionUnavailable}"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#joinSessionHelpCollapse"
+                    aria-expanded="false"
+                    aria-controls="joinSessionHelpCollapse">
+                <div class="app-action-icon"><i class="bi bi-phone" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Join a Session</div>
+                    <div class="app-action-subtitle">Use the invite link or QR code that the session owner sent you.</div>
+                </div>
+            </button>
+        </section>
+
+        <div class="collapse mt-4" id="joinSessionHelpCollapse" th:if="${!competitionUnavailable}">
+            <div class="card shadow card-spotlight">
+                <div class="card-header card-header-title text-center">Join a Session</div>
+                <div class="card-body text-center">
+                    <p class="mb-2">Open the join link that the session owner sent you, or use your phone camera to scan the session QR code.</p>
+                    <p class="text-muted mb-0">Session joins happen from the invite link or QR code, not from a searchable list inside Open-Pickle.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

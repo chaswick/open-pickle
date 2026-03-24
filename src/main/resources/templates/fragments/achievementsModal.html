@@ -1,0 +1,49 @@
+<div class="modal fade" id="achievementsModal" tabindex="-1" aria-labelledby="achievementsModalLabel" aria-hidden="true" th:fragment="achievementsModal">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="text-center modal-title fs-4" id="achievementsModalLabel">Season achievements preview</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center text-muted small">Here are just a few trophies you may unlock as you climb the standings:</p>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="text-center h-100 d-flex flex-column align-items-center">
+                            <div class="mb-3">
+                                <img src="/images/landing/trophies/breaking-a-sweat-common.png" th:src="@{/images/landing/trophies/breaking-a-sweat-common.png}" alt="Breaking a Sweat" class="img-fluid rounded-3 shadow-sm" style="max-width: 140px;">
+                            </div>
+                            <h3 class="h5 mb-1">Breaking a Sweat</h3>
+                            <span class="badge bg-success text-white mb-2">Common</span>
+                            <p class="small text-muted mb-0">Play 3 matches in a single season.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center h-100 d-flex flex-column align-items-center">
+                            <div class="mb-3">
+                                <img src="/images/landing/trophies/lucky-seven-rare.png" th:src="@{/images/landing/trophies/lucky-seven-rare.png}" alt="Lucky Seven" class="img-fluid rounded-3 shadow-sm" style="max-width: 140px;">
+                            </div>
+                            <h3 class="h5 mb-1">Lucky Seven</h3>
+                            <span class="badge bg-primary text-white mb-2">Rare</span>
+                            <p class="small text-muted mb-0">Win 7 matches in a row within a single season.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center h-100 d-flex flex-column align-items-center">
+                            <div class="mb-3">
+                                <img src="/images/landing/trophies/season-champion-legendary-static.png" th:src="@{/images/landing/trophies/season-champion-legendary-static.png}" alt="Season Champion" class="img-fluid rounded-3 shadow-sm" style="max-width: 140px;">
+                            </div>
+                            <h3 class="h5 mb-1">Season Champion</h3>
+                            <span class="badge bg-warning text-dark mb-2">Legendary</span>
+                            <p class="small text-muted mb-0">Finish #1 overall in the season.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex flex-column flex-sm-row gap-2">
+                <a th:href="@{/register}" class="btn btn-action-success hero-cta-btn w-100 text-white btn-workflow-happy">Register to play a season and earn trophies</a>
+                <button type="button" class="btn btn-outline-dark hero-cta-btn w-100" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

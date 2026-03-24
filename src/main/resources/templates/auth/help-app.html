@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Help</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-page">
+        <div class="app-page-header">
+            <div>
+                <h1 class="app-page-title">Help</h1>
+                <p class="app-page-subtitle">Global competition, sessions, private groups, standings, and logging explained in one place.</p>
+            </div>
+        </div>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100"
+               th:href="@{/home}">Back</a>
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Help</div>
+            <div class="card-body">
+                <div th:replace="~{fragments/helpContent :: helpContent}"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

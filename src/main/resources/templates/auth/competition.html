@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Global Competition</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-home">
+        <section class="app-hero">
+            <div class="app-hero-card">
+                <h1 class="app-hero-title">Open-Pickle Global Competition</h1>
+                <div class="app-hero-subtitle" th:if="${!competitionUnavailable}">
+                    <div class="fw-semibold" th:text="${seasonName}">Season</div>
+                    <div th:text="${seasonDateRange}">Date Range</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">
+                Back
+            </a>
+        </div>
+
+        <div class="alert alert-info" th:if="${competitionUnavailable}">
+            Competition season is unavailable right now.
+        </div>
+
+        <th:block th:if="${!competitionUnavailable}">
+            <div class="card mt-4 mb-4 shadow card-spotlight" id="competition-standings">
+                <div class="card-header card-header-title text-center">Standings</div>
+                <div class="card-body">
+                    <div th:if="${storyMode != null and storyMode.enabled}">
+                        <div th:replace="~{components/storyModeStandings :: storyModeStandings}"></div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 justify-content-center mb-3"
+                         th:if="${storyMode == null or !storyMode.enabled}">
+                        <a class="btn btn-outline-contrast"
+                           th:classappend="${competitionStandingsView == 'all'} ? ' active'"
+                           th:href="@{/competition(view='all',standingsPage=0,standingsSize=${standingsPageSize})}">
+                            Show Complete Standings
+                        </a>
+                        <a class="btn btn-outline-contrast"
+                           th:classappend="${competitionStandingsView == 'played'} ? ' active' : (${!hasPlayedAgainstOpponents} ? ' disabled' : '')"
+                           th:href="${hasPlayedAgainstOpponents} ? @{/competition(view='played',standingsPage=0,standingsSize=${standingsPageSize})} : '#'"
+                           th:attr="aria-disabled=${!hasPlayedAgainstOpponents}">
+                            Show Only People I Have Played
+                        </a>
+                        <a class="btn btn-outline-contrast"
+                           th:classappend="${ladderDisplay == null or #lists.isEmpty(ladderDisplay)} ? ' disabled' : ''"
+                           th:href="${ladderDisplay != null and !#lists.isEmpty(ladderDisplay)} ? @{/competition(view=${competitionStandingsView},findMe=true,standingsSize=${standingsPageSize})} : '#'"
+                           th:attr="aria-disabled=${ladderDisplay == null or #lists.isEmpty(ladderDisplay)}">
+                            Find Me
+                        </a>
+                    </div>
+
+                    <div th:if="${(storyMode == null or !storyMode.enabled) and ladderDisplay != null and !#lists.isEmpty(ladderDisplay)}"
+                         th:replace="~{fragments/standingsList :: standingsList(
+                            ladderDisplay=${ladderDisplay},
+                            currentUserId=${currentUserId},
+                            listId='competitionStandingsList',
+                            listClass='competition-standings-list',
+                            showCompetitionFeatures=true,
+                            reportedCompetitionUserIds=${reportedCompetitionUserIds},
+                            playedAgainstUserIds=${playedAgainstUserIds},
+                            showFilteredEmptyState=true,
+                            filteredEmptyId='competitionFilteredEmpty',
+                            filteredEmptyMessage='No played-against opponents are visible for this filter yet.'
+                         )}"></div>
+
+                    <div class="mt-3"
+                         th:if="${(storyMode == null or !storyMode.enabled) and ladderDisplay != null and !#lists.isEmpty(ladderDisplay) and standingsTotalPages != null and standingsTotalPages > 1}">
+                        <div class="small text-muted text-center mb-2">
+                            Page <span th:text="${standingsPage + 1}">1</span> of <span th:text="${standingsTotalPages}">1</span>
+                        </div>
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            <li class="page-item" th:classappend="${standingsPage == 0} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/competition(view=${competitionStandingsView},standingsPage=${standingsPage - 1},standingsSize=${standingsPageSize})}">
+                                    Previous
+                                </a>
+                            </li>
+                            <li class="page-item" th:if="${standingsShowFirstPage}" th:classappend="${standingsPage == 0} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/competition(view=${competitionStandingsView},standingsPage=0,standingsSize=${standingsPageSize})}">1</a>
+                            </li>
+                            <li class="page-item" th:if="${standingsJumpBackPage != null}">
+                                <a class="page-link"
+                                   th:href="@{/competition(view=${competitionStandingsView},standingsPage=${standingsJumpBackPage},standingsSize=${standingsPageSize})}">-5</a>
+                            </li>
+                            <li class="page-item disabled" th:if="${standingsShowLeadingEllipsis}">
+                                <span class="page-link">&hellip;</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="i : ${standingsPageNumbers}"
+                                th:classappend="${i == standingsPage} ? 'active'">
+                                <a class="page-link"
+                                   th:text="${i + 1}"
+                                   th:href="@{/competition(view=${competitionStandingsView},standingsPage=${i},standingsSize=${standingsPageSize})}">1</a>
+                            </li>
+                            <li class="page-item disabled" th:if="${standingsShowTrailingEllipsis}">
+                                <span class="page-link">&hellip;</span>
+                            </li>
+                            <li class="page-item" th:if="${standingsJumpForwardPage != null}">
+                                <a class="page-link"
+                                   th:href="@{/competition(view=${competitionStandingsView},standingsPage=${standingsJumpForwardPage},standingsSize=${standingsPageSize})}">+5</a>
+                            </li>
+                            <li class="page-item" th:if="${standingsShowLastPage}" th:classappend="${standingsPage == standingsTotalPages - 1} ? 'active'">
+                                <a class="page-link"
+                                   th:text="${standingsTotalPages}"
+                                   th:href="@{/competition(view=${competitionStandingsView},standingsPage=${standingsTotalPages - 1},standingsSize=${standingsPageSize})}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${standingsPage + 1 >= standingsTotalPages} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/competition(view=${competitionStandingsView},standingsPage=${standingsPage + 1},standingsSize=${standingsPageSize})}">
+                                    Next
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="text-center text-muted"
+                        th:if="${(storyMode == null or !storyMode.enabled) and (ladderDisplay == null or #lists.isEmpty(ladderDisplay))}">
+                        Competition data will appear here once matches are logged.
+                    </div>
+
+                    <div class="d-flex justify-content-center mt-4" th:if="${competitionSeasonId != null}">
+                        <a class="btn btn-nav-primary"
+                           th:href="@{/seasons/{seasonId}/matches/recent(seasonId=${competitionSeasonId})}">
+                            Show Recent Matches
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+    </div>
+</body>
+
+<script layout:fragment="scripts" th:inline="javascript">
+    (function () {
+        const meRow = document.getElementById('competition-row-me');
+        const findMeActive = /*[[${competitionFindMeActive}]]*/ false;
+        if (!meRow || !findMeActive) {
+            return;
+        }
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const navbar = document.querySelector('.navbar.fixed-top');
+        const navbarOffset = navbar ? navbar.getBoundingClientRect().height : 0;
+
+        window.requestAnimationFrame(function () {
+            const targetTop = Math.max(0, meRow.getBoundingClientRect().top + window.scrollY - navbarOffset - 16);
+            window.scrollTo({
+                top: targetTop,
+                behavior: prefersReducedMotion ? 'auto' : 'smooth'
+            });
+            meRow.classList.add('border-warning', 'border-3');
+            window.setTimeout(function () {
+                meRow.classList.remove('border-warning', 'border-3');
+            }, 1500);
+        });
+    })();
+</script>
+
+</html>

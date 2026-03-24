@@ -1,0 +1,1181 @@
+package com.w3llspring.fhpb.web.controller.competition;
+
+import com.w3llspring.fhpb.web.db.LadderConfigRepository;
+import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
+import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
+import com.w3llspring.fhpb.web.db.UserDisplayNameAuditRepository;
+import com.w3llspring.fhpb.web.db.UserRepository;
+import com.w3llspring.fhpb.web.model.LadderConfig;
+import com.w3llspring.fhpb.web.model.LadderMembership;
+import com.w3llspring.fhpb.web.model.LadderSeason;
+import com.w3llspring.fhpb.web.model.LadderSecurity;
+import com.w3llspring.fhpb.web.model.User;
+import com.w3llspring.fhpb.web.model.UserDisplayNameAudit;
+import com.w3llspring.fhpb.web.service.CompetitionDisplayNameModerationService;
+import com.w3llspring.fhpb.web.service.CompetitionSeasonService;
+import com.w3llspring.fhpb.web.service.InviteChangeCooldownException;
+import com.w3llspring.fhpb.web.service.LadderConfigService;
+import com.w3llspring.fhpb.web.service.LadderImprovementAdvisor;
+import com.w3llspring.fhpb.web.service.MatchDashboardService;
+import com.w3llspring.fhpb.web.service.SeasonCarryOverService;
+import com.w3llspring.fhpb.web.service.SeasonTransitionService;
+import com.w3llspring.fhpb.web.service.StoryModeService;
+import com.w3llspring.fhpb.web.service.competition.GroupAdministrationOperations;
+import com.w3llspring.fhpb.web.service.competition.GroupAdministrationService;
+import com.w3llspring.fhpb.web.service.competition.GroupCreationService;
+import com.w3llspring.fhpb.web.service.dashboard.MatchDashboardViewService;
+import com.w3llspring.fhpb.web.service.matchentry.MatchEntryContextService;
+import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
+import com.w3llspring.fhpb.web.service.standings.SeasonStandingsViewService;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
+import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+@Controller
+@RequestMapping("/groups")
+public class LadderConfigController {
+  private static final Pattern LEGACY_AUTO_SESSION_TITLE =
+      Pattern.compile("^(.+ Session) - [A-Z][a-z]{2} \\d{1,2}, \\d{1,2}:\\d{2} [AP]M$");
+
+  private final GroupAdministrationOperations groupAdministration;
+  private final GroupCreationService groupCreationService;
+  private final LadderConfigRepository configs;
+  private final LadderSeasonRepository seasons;
+  private final UserRepository userRepo;
+  private final UserDisplayNameAuditRepository userDisplayNameAuditRepository;
+  private final LadderMembershipRepository membershipRepo;
+  private final StoryModeService storyModeService;
+  private final int defaultMaxMembers;
+
+  @Value("${fhpb.bootstrap.admin.email:}")
+  private String siteWideAdminEmail = "";
+
+  private CompetitionSeasonService competitionSeasonService;
+  private SeasonTransitionService transitionSvc;
+  private MatchDashboardService matchDashboardService;
+  private MatchDashboardViewService matchDashboardViewService;
+  private LadderImprovementAdvisor improvementAdvisor;
+  private MatchEntryContextService matchEntryContextService;
+  private RoundRobinService roundRobinService;
+  private SeasonStandingsViewService seasonStandingsViewService;
+  private CompetitionDisplayNameModerationService competitionDisplayNameModerationService;
+
+  @Autowired
+  public LadderConfigController(
+      UserRepository userRepo,
+      UserDisplayNameAuditRepository userDisplayNameAuditRepository,
+      GroupAdministrationService groupAdministration,
+      GroupCreationService groupCreationService,
+      LadderConfigRepository configs,
+      LadderSeasonRepository seasons,
+      LadderMembershipRepository membershipRepo,
+      StoryModeService storyModeService,
+      CompetitionSeasonService competitionSeasonService,
+      SeasonTransitionService transitionSvc,
+      MatchDashboardService matchDashboardService,
+      MatchDashboardViewService matchDashboardViewService,
+      LadderImprovementAdvisor improvementAdvisor,
+      MatchEntryContextService matchEntryContextService,
+      RoundRobinService roundRobinService,
+      SeasonStandingsViewService seasonStandingsViewService,
+      CompetitionDisplayNameModerationService competitionDisplayNameModerationService,
+      @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
+    this(
+        userRepo,
+        userDisplayNameAuditRepository,
+        (GroupAdministrationOperations) groupAdministration,
+        groupCreationService,
+        configs,
+        seasons,
+        membershipRepo,
+        storyModeService,
+        defaultMaxMembers,
+        competitionSeasonService,
+        transitionSvc,
+        matchDashboardService,
+        matchDashboardViewService,
+        improvementAdvisor,
+        matchEntryContextService,
+        roundRobinService,
+        seasonStandingsViewService,
+        competitionDisplayNameModerationService);
+  }
+
+  public LadderConfigController(
+      UserRepository userRepo,
+      UserDisplayNameAuditRepository userDisplayNameAuditRepository,
+      LadderConfigService service,
+      GroupAdministrationService groupAdministration,
+      GroupCreationService groupCreationService,
+      LadderConfigRepository configs,
+      LadderSeasonRepository seasons,
+      LadderMembershipRepository membershipRepo,
+      StoryModeService storyModeService,
+      @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
+    this(
+        userRepo,
+        userDisplayNameAuditRepository,
+        (GroupAdministrationOperations) groupAdministration,
+        groupCreationService,
+        configs,
+        seasons,
+        membershipRepo,
+        storyModeService,
+        defaultMaxMembers,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  public LadderConfigController(
+      UserRepository userRepo,
+      UserDisplayNameAuditRepository userDisplayNameAuditRepository,
+      LadderConfigService service,
+      GroupAdministrationOperations groupAdministration,
+      LadderConfigRepository configs,
+      LadderSeasonRepository seasons,
+      LadderMembershipRepository membershipRepo,
+      StoryModeService storyModeService,
+      @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
+    this(
+        userRepo,
+        userDisplayNameAuditRepository,
+        groupAdministration,
+        new GroupCreationService(service, configs, seasons, storyModeService),
+        configs,
+        seasons,
+        membershipRepo,
+        storyModeService,
+        defaultMaxMembers,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  public LadderConfigController(
+      UserRepository userRepo,
+      UserDisplayNameAuditRepository userDisplayNameAuditRepository,
+      LadderConfigService service,
+      GroupAdministrationOperations groupAdministration,
+      LadderConfigRepository configs,
+      LadderSeasonRepository seasons,
+      LadderMembershipRepository membershipRepo,
+      SeasonTransitionService transitionSvc,
+      SeasonCarryOverService seasonCarryOverService,
+      RoundRobinService roundRobinService,
+      StoryModeService storyModeService,
+      @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
+    this(
+        userRepo,
+        userDisplayNameAuditRepository,
+        groupAdministration,
+        new GroupCreationService(service, configs, seasons, storyModeService),
+        configs,
+        seasons,
+        membershipRepo,
+        storyModeService,
+        defaultMaxMembers,
+        null,
+        transitionSvc,
+        null,
+        null,
+        null,
+        null,
+        roundRobinService,
+        null,
+        null);
+  }
+
+  private LadderConfigController(
+      UserRepository userRepo,
+      UserDisplayNameAuditRepository userDisplayNameAuditRepository,
+      GroupAdministrationOperations groupAdministration,
+      GroupCreationService groupCreationService,
+      LadderConfigRepository configs,
+      LadderSeasonRepository seasons,
+      LadderMembershipRepository membershipRepo,
+      StoryModeService storyModeService,
+      int defaultMaxMembers,
+      CompetitionSeasonService competitionSeasonService,
+      SeasonTransitionService transitionSvc,
+      MatchDashboardService matchDashboardService,
+      MatchDashboardViewService matchDashboardViewService,
+      LadderImprovementAdvisor improvementAdvisor,
+      MatchEntryContextService matchEntryContextService,
+      RoundRobinService roundRobinService,
+      SeasonStandingsViewService seasonStandingsViewService,
+      CompetitionDisplayNameModerationService competitionDisplayNameModerationService) {
+    this.groupAdministration = groupAdministration;
+    this.groupCreationService = groupCreationService;
+    this.configs = configs;
+    this.seasons = seasons;
+    this.userRepo = userRepo;
+    this.userDisplayNameAuditRepository = userDisplayNameAuditRepository;
+    this.membershipRepo = membershipRepo;
+    this.storyModeService = storyModeService;
+    this.defaultMaxMembers = defaultMaxMembers;
+    this.competitionSeasonService = competitionSeasonService;
+    this.transitionSvc = transitionSvc;
+    this.matchDashboardService = matchDashboardService;
+    this.matchDashboardViewService = matchDashboardViewService;
+    this.improvementAdvisor = improvementAdvisor;
+    this.matchEntryContextService = matchEntryContextService;
+    this.roundRobinService = roundRobinService;
+    this.seasonStandingsViewService = seasonStandingsViewService;
+    this.competitionDisplayNameModerationService = competitionDisplayNameModerationService;
+  }
+
+  @GetMapping("/new")
+  public String newForm(
+      Model model,
+      Authentication auth,
+      @RequestParam(name = "returnTo", required = false) String returnTo,
+      @RequestParam(name = "type", required = false) LadderConfig.Type type,
+      @RequestParam(name = "tournamentMode", required = false, defaultValue = "false")
+          boolean tournamentMode) {
+    User currentUser = getCurrentUser(auth);
+    String navName = currentUser != null ? currentUser.getNickName() : null;
+    LadderConfig.Type requestedType =
+        type == LadderConfig.Type.SESSION ? LadderConfig.Type.SESSION : LadderConfig.Type.STANDARD;
+    boolean tournamentModePreset = requestedType != LadderConfig.Type.SESSION && tournamentMode;
+    model.addAttribute("userName", navName);
+    model.addAttribute("returnToPath", normalizeGroupReturnTo(returnTo));
+    model.addAttribute("defaultSeasonStart", LocalDate.now(ZoneOffset.UTC));
+    model.addAttribute("recurrenceOptions", new String[] {"ONE_OFF", "RECURRING_6W"});
+    model.addAttribute("maxRollingEveryCount", LadderConfig.MAX_ROLLING_EVERY_COUNT);
+    model.addAttribute("groupTitleMaxLength", LadderConfig.MAX_TITLE_LENGTH);
+    model.addAttribute("storyModeFeatureEnabled", storyModeFeatureEnabled());
+    model.addAttribute("selectedLadderType", requestedType);
+    model.addAttribute("tournamentModePreset", tournamentModePreset);
+    model.addAttribute(
+        "competitionSeasonAvailable",
+        competitionSeasonService != null
+            && competitionSeasonService.resolveActiveCompetitionSeason() != null);
+
+    return "auth/createLadderConfig";
+  }
+
+  public String newForm(Model model, Authentication auth) {
+    return newForm(model, auth, null, null, false);
+  }
+
+  @PostMapping("/start-session")
+  public String startSession(
+      Authentication auth,
+      @RequestParam(name = "returnTo", required = false) String returnTo,
+      RedirectAttributes ra) {
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null) {
+      return "redirect:/login";
+    }
+    LadderSeason competitionSeason =
+        competitionSeasonService != null
+            ? competitionSeasonService.resolveActiveCompetitionSeason()
+            : null;
+    GroupCreationService.GroupCreationOutcome outcome =
+        groupCreationService.createOrReuseSession(currentUser.getId(), null, competitionSeason);
+    if (!outcome.success()) {
+      ra.addFlashAttribute("toastMessage", outcome.toastMessage());
+      ra.addFlashAttribute("toastLevel", outcome.toastLevel());
+      return "redirect:" + normalizeSessionStartReturnTo(returnTo);
+    }
+    if (outcome.toastMessage() != null) {
+      ra.addFlashAttribute("toastMessage", outcome.toastMessage());
+      ra.addFlashAttribute("toastLevel", outcome.toastLevel());
+    }
+    return "redirect:/groups/" + outcome.configId();
+  }
+
+  @PostMapping
+  @Transactional
+  public String create(
+      Authentication auth,
+      @RequestParam(name = "type", required = false, defaultValue = "STANDARD")
+          LadderConfig.Type type,
+      @RequestParam(name = "returnTo", required = false) String returnTo,
+      @RequestParam(name = "tournamentMode", required = false, defaultValue = "false")
+          boolean tournamentMode,
+      @RequestParam String title,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate seasonStart,
+      // Old form sent seasonEnd; new form may omit it
+      @RequestParam(name = "seasonEnd", required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate seasonEnd,
+      // Old: recurrenceType (kept for compatibility)
+      @RequestParam(name = "recurrenceType", required = false) String recurrenceType,
+      // New: season mode and cadence
+      @RequestParam(name = "mode", required = false, defaultValue = "ROLLING")
+          LadderConfig.Mode mode,
+      @RequestParam(name = "rollingEveryCount", required = false) Integer rollingEveryCount,
+      @RequestParam(name = "rollingEveryUnit", required = false)
+          LadderConfig.CadenceUnit rollingEveryUnit,
+      @RequestParam(name = "seasonName", required = false) String seasonName,
+      @RequestParam(name = "securityLevel", required = false, defaultValue = "STANDARD")
+          LadderSecurity securityLevel,
+      @RequestParam(
+              name = "allowGuestOnlyPersonalMatches",
+              required = false,
+              defaultValue = "false")
+          boolean allowGuestOnlyPersonalMatches,
+      @RequestParam(name = "storyModeDefaultEnabled", required = false, defaultValue = "false")
+          boolean storyModeDefaultEnabled,
+      RedirectAttributes ra) {
+
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null) {
+      return "redirect:/login";
+    }
+    String normalizedReturnTo = normalizeGroupReturnTo(returnTo);
+
+    if (type == LadderConfig.Type.SESSION) {
+      LadderSeason competitionSeason =
+          competitionSeasonService != null
+              ? competitionSeasonService.resolveActiveCompetitionSeason()
+              : null;
+      GroupCreationService.GroupCreationOutcome sessionOutcome =
+          groupCreationService.createOrReuseSession(currentUser.getId(), title, competitionSeason);
+      if (!sessionOutcome.success()) {
+        ra.addFlashAttribute("toastMessage", sessionOutcome.toastMessage());
+        ra.addFlashAttribute("toastLevel", sessionOutcome.toastLevel());
+        return "redirect:/groups/new?type=SESSION";
+      }
+      if (sessionOutcome.toastMessage() != null) {
+        ra.addFlashAttribute("toastMessage", sessionOutcome.toastMessage());
+        ra.addFlashAttribute("toastLevel", sessionOutcome.toastLevel());
+      }
+      return "redirect:/groups/" + sessionOutcome.configId();
+    }
+    GroupCreationService.GroupCreationOutcome outcome =
+        groupCreationService.createGroup(
+            currentUser.getId(),
+            new GroupCreationService.GroupCreateRequest(
+                title,
+                seasonStart,
+                seasonEnd,
+                mode,
+                rollingEveryCount,
+                rollingEveryUnit,
+                seasonName,
+                securityLevel,
+                allowGuestOnlyPersonalMatches,
+                storyModeDefaultEnabled,
+                tournamentMode));
+    if (!outcome.success()) {
+      ra.addFlashAttribute("toastMessage", outcome.toastMessage());
+      ra.addFlashAttribute("toastLevel", outcome.toastLevel());
+      return redirectCreateForm(normalizedReturnTo, tournamentMode);
+    }
+    ra.addFlashAttribute("toastMessage", outcome.toastMessage());
+    ra.addFlashAttribute("toastLevel", outcome.toastLevel());
+    return "redirect:/groups/" + outcome.configId();
+  }
+
+  public String create(
+      Authentication auth,
+      String title,
+      LocalDate seasonStart,
+      LocalDate seasonEnd,
+      String recurrenceType,
+      LadderConfig.Mode mode,
+      Integer rollingEveryCount,
+      LadderConfig.CadenceUnit rollingEveryUnit,
+      String seasonName,
+      LadderSecurity securityLevel,
+      boolean allowGuestOnlyPersonalMatches,
+      boolean storyModeDefaultEnabled,
+      RedirectAttributes ra) {
+    return create(
+        auth,
+        LadderConfig.Type.STANDARD,
+        null,
+        false,
+        title,
+        seasonStart,
+        seasonEnd,
+        recurrenceType,
+        mode,
+        rollingEveryCount,
+        rollingEveryUnit,
+        seasonName,
+        securityLevel,
+        allowGuestOnlyPersonalMatches,
+        storyModeDefaultEnabled,
+        ra);
+  }
+
+  private String normalizeSessionStartReturnTo(String returnTo) {
+    if ("/home".equals(returnTo)) {
+      return "/home";
+    }
+    if ("/competition/sessions".equals(returnTo)) {
+      return "/competition/sessions";
+    }
+    return "/competition";
+  }
+
+  private String resolveSessionDisplayTitle(LadderConfig cfg) {
+    if (cfg == null || !cfg.isSessionType()) {
+      return cfg != null ? cfg.getTitle() : null;
+    }
+    String title = cfg.getTitle();
+    if (!StringUtils.hasText(title)) {
+      return "Session";
+    }
+    Matcher matcher = LEGACY_AUTO_SESSION_TITLE.matcher(title.trim());
+    return matcher.matches() ? matcher.group(1) : title;
+  }
+
+  @GetMapping("/{configId}")
+  public String show(
+      @PathVariable Long configId,
+      @RequestParam(name = "sort", required = false, defaultValue = "joined") String sort,
+      Model model,
+      Authentication auth,
+      jakarta.servlet.http.HttpServletRequest request) {
+
+    var cfg =
+        configs
+            .findById(configId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND); // hide existence
+    }
+    boolean currentUserIsSiteAdmin = isSiteWideAdmin(auth);
+    if (cfg.isCompetitionType() && !currentUserIsSiteAdmin) {
+      return "redirect:/competition";
+    }
+
+    if (!(cfg.isCompetitionType() && currentUserIsSiteAdmin)) {
+      try {
+        groupAdministration.requireActiveMember(configId, currentUser.getId());
+      } catch (SecurityException ex) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+      }
+    }
+
+    // === New: season flags for Thymeleaf ===
+    var activeSeasonOpt =
+        cfg.isSessionType() ? Optional.<LadderSeason>empty() : seasons.findActive(configId);
+    activeSeasonOpt.ifPresent(
+        s -> {
+          model.addAttribute("season", s);
+          model.addAttribute("seasonId", s.getId());
+        });
+    boolean hasActiveSeason = activeSeasonOpt.isPresent();
+    model.addAttribute("hasActiveSeason", hasActiveSeason);
+    model.addAttribute("isSessionLadder", cfg.isSessionType());
+    model.addAttribute("isCompetitionLadder", cfg.isCompetitionType());
+    model.addAttribute("sessionDisplayTitle", resolveSessionDisplayTitle(cfg));
+    LadderSeason targetSeason =
+        competitionSeasonService != null ? competitionSeasonService.resolveTargetSeason(cfg) : null;
+    model.addAttribute("targetSeason", targetSeason);
+    model.addAttribute(
+        "sessionTargetSeasonDateRange", targetSeason != null ? dateRange(targetSeason) : "");
+    model.addAttribute(
+        "sessionStandingsRecalculationPending",
+        targetSeason != null && targetSeason.isStandingsRecalcInProgress());
+    if (cfg.isSessionType() && matchDashboardService != null && matchDashboardViewService != null) {
+      matchDashboardViewService.applyToModel(
+          model, matchDashboardService.buildPendingForUserInSeason(currentUser, targetSeason));
+    }
+    if (cfg.isSessionType()) {
+      applySessionStandingPreview(model, currentUser, targetSeason);
+      List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionReportStandings =
+          roundRobinService != null ? roundRobinService.computeStandingsForSession(cfg) : List.of();
+      model.addAttribute(
+          "sessionReportStandings",
+          sessionReportStandings != null ? sessionReportStandings : List.of());
+      model.addAttribute(
+          "improvementAdvice",
+          improvementAdvisor != null
+              ? improvementAdvisor.buildAdvice(currentUser, cfg, targetSeason)
+              : null);
+    }
+
+    boolean currentUserIsAdmin =
+        currentUserIsSiteAdmin
+            || membershipRepo
+                .findByLadderConfigIdAndUserId(configId, currentUser.getId())
+                .filter(
+                    m ->
+                        m.getState() == LadderMembership.State.ACTIVE
+                            && m.getRole() == LadderMembership.Role.ADMIN)
+                .isPresent();
+    model.addAttribute("currentUserIsAdmin", currentUserIsAdmin);
+
+    List<UserDisplayNameAudit> recentDisplayNameChanges =
+        currentUserIsAdmin && !cfg.isSessionType()
+            ? userDisplayNameAuditRepository.findByLadderConfigIdOrderByChangedAtDesc(
+                configId, PageRequest.of(0, 12))
+            : List.of();
+    model.addAttribute("recentDisplayNameChanges", recentDisplayNameChanges);
+
+    // Transition guard (for manual Start/End buttons + countdown)
+    // Requires SeasonTransitionService to be injected into this controller.
+    var tw = transitionSvc.canCreateSeason(cfg);
+    model.addAttribute("transitionAllowed", tw.isAllowed());
+    model.addAttribute("countdownText", tw.isAllowed() ? "" : transitionSvc.formatCountdown(tw));
+
+    // Keep your existing attributes
+    model.addAttribute("ladder", cfg);
+    model.addAttribute("ladderId", cfg.getId()); // handy for th:hrefs
+    model.addAttribute("seasons", seasons.findByLadderConfigIdOrderByStartDateDesc(configId));
+
+    // Base list (already joinedAt ASC from repo)
+    var allActive =
+        membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            configId, LadderMembership.State.ACTIVE);
+    var members = allActive.stream().collect(Collectors.toList());
+
+    var bannedMembers =
+        membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            configId, LadderMembership.State.BANNED);
+
+    // Load users for display-name resolution
+    var userIds =
+        Stream.concat(members.stream(), bannedMembers.stream())
+            .map(LadderMembership::getUserId)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    recentDisplayNameChanges.stream()
+        .map(UserDisplayNameAudit::getUserId)
+        .filter(id -> id != null)
+        .forEach(userIds::add);
+    var users = userRepo.findAllById(userIds);
+    Map<Long, User> userById = users.stream().collect(Collectors.toMap(User::getId, u -> u));
+
+    // Sorting
+    if ("alpha".equalsIgnoreCase(sort)) {
+      Comparator<LadderMembership> byName =
+          Comparator.comparing(
+              m -> {
+                User u = userById.get(m.getUserId());
+                if (u == null) return "zzz_unknown"; // push unknown to bottom
+                String name = com.w3llspring.fhpb.web.util.UserPublicName.forUser(u);
+                return name == null ? "zzz_unknown" : name.toLowerCase();
+              });
+      members.sort(byName);
+    } else if ("joined_desc".equalsIgnoreCase(sort)) {
+      members.sort(Comparator.comparing(LadderMembership::getJoinedAt).reversed());
+    } // else default from repo: joined asc
+
+    model.addAttribute("members", members);
+    model.addAttribute("bannedMembers", bannedMembers);
+    model.addAttribute("userById", userById);
+    model.addAttribute("sort", sort);
+    if (cfg.isSessionType()) {
+      List<User> activeUsers =
+          members.stream()
+              .map(member -> userById.get(member.getUserId()))
+              .filter(Objects::nonNull)
+              .toList();
+      model.addAttribute(
+          "voiceLanguage",
+          matchEntryContextService != null
+              ? matchEntryContextService.determineVoiceLanguage(currentUser)
+              : "en-US");
+      model.addAttribute(
+          "voicePhraseHints",
+          matchEntryContextService != null
+              ? matchEntryContextService.buildVoicePhraseHintsFromUsers(currentUser, activeUsers)
+              : List.of());
+      model.addAttribute("voiceMaxAlternatives", Integer.valueOf(3));
+    }
+    int activeMemberCount = members.size();
+    model.addAttribute(
+        "memberSectionTitle",
+        cfg.isSessionType()
+            ? String.format("Session Members (%d/%d)", activeMemberCount, defaultMaxMembers)
+            : String.format("Members (%d/%d)", activeMemberCount, defaultMaxMembers));
+    model.addAttribute("maxRollingEveryCount", LadderConfig.MAX_ROLLING_EVERY_COUNT);
+    model.addAttribute("storyModeFeatureEnabled", storyModeFeatureEnabled());
+
+    model.addAttribute("currentUserId", currentUser.getId());
+    model.addAttribute("leaveConfirmMessage", buildLeaveConfirmMessage(cfg, currentUser.getId()));
+    model.addAttribute(
+        "returnToPath", ReturnToSanitizer.sanitize(ReturnToSanitizer.toAppRelativePath(request)));
+
+    model.addAttribute("pendingDeletion", cfg.isPendingDeletion());
+
+    model.addAttribute("ownerUserId", cfg.getOwnerUserId());
+
+    String inviteShareLink = null;
+    if (cfg.getInviteCode() != null && !cfg.getInviteCode().isBlank()) {
+      String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
+      String normalizedPath =
+          contextPath.endsWith("/")
+              ? contextPath.substring(0, contextPath.length() - 1)
+              : contextPath;
+      String basePath = normalizedPath + "/groups/join";
+
+      org.springframework.web.util.UriComponentsBuilder inviteBuilder =
+          org.springframework.web.util.UriComponentsBuilder.fromUriString(
+                  org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                      .fromRequestUri(request)
+                      .replacePath(basePath)
+                      .replaceQuery(null)
+                      .build()
+                      .toUriString())
+              .replaceQueryParam("inviteCode", cfg.getInviteCode());
+      if (cfg.isSessionType()) {
+        inviteBuilder.replaceQueryParam("autoJoin", "true");
+      }
+      inviteShareLink = inviteBuilder.build().toUriString();
+    }
+    model.addAttribute("ladderInviteLink", inviteShareLink);
+
+    return "auth/show";
+  }
+
+  private void applySessionStandingPreview(
+      Model model, User currentUser, LadderSeason targetSeason) {
+    if (model == null
+        || currentUser == null
+        || currentUser.getId() == null
+        || targetSeason == null
+        || seasonStandingsViewService == null) {
+      model.addAttribute("sessionStandingRow", null);
+      return;
+    }
+    SeasonStandingsViewService.SeasonStandingsView standingsView =
+        seasonStandingsViewService.load(targetSeason);
+    if (standingsView.standings().isEmpty()) {
+      model.addAttribute("sessionStandingRow", null);
+      return;
+    }
+    var currentRow = seasonStandingsViewService.findRowForUser(standingsView, currentUser.getId());
+    model.addAttribute("sessionStandingRow", currentRow);
+  }
+
+  @PostMapping("/{configId}/ban/{memberId}")
+  public String ban(
+      @PathVariable Long configId,
+      @PathVariable Long memberId,
+      Authentication auth,
+      RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    LadderConfig ladder =
+        configs
+            .findById(configId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    try {
+      groupAdministration.banMember(configId, currentUser.getId(), memberId);
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+    }
+    if (ladder.isSessionType()) {
+      redirect.addFlashAttribute("toastMessage", "Player removed from the session.");
+      redirect.addFlashAttribute("toastLevel", "light");
+      return "redirect:/groups/" + configId;
+    }
+    return "redirect:/groups/" + configId + "?banned=1";
+  }
+
+  @PostMapping("/{configId}/remove/{memberId}")
+  public String removeSessionMember(
+      @PathVariable Long configId,
+      @PathVariable Long memberId,
+      Authentication auth,
+      RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    LadderConfig ladder =
+        configs
+            .findById(configId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    if (!ladder.isSessionType()) {
+      redirect.addFlashAttribute("toastMessage", "Only match sessions support removing players.");
+      redirect.addFlashAttribute("toastLevel", "warning");
+      return "redirect:/groups/" + configId;
+    }
+    try {
+      groupAdministration.removeSessionMember(configId, currentUser.getId(), memberId);
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+    }
+    redirect.addFlashAttribute("toastMessage", "Player removed from the session.");
+    redirect.addFlashAttribute("toastLevel", "light");
+    return "redirect:/groups/" + configId;
+  }
+
+  @PostMapping("/{configId}/unban/{memberId}")
+  public String unban(
+      @PathVariable Long configId, @PathVariable Long memberId, Authentication auth) {
+    User currentUser = getCurrentUser(auth);
+    try {
+      groupAdministration.unbanMember(configId, currentUser.getId(), memberId);
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+    }
+    return "redirect:/groups/" + configId + "?unbanned=1";
+  }
+
+  @PostMapping("/{configId}/leave/{memberId}")
+  public String leave(
+      @PathVariable Long configId,
+      @PathVariable Long memberId,
+      Authentication auth,
+      RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null) {
+      return "redirect:/login";
+    }
+    LadderConfig ladder =
+        configs
+            .findById(configId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    try {
+      groupAdministration.leaveMember(configId, currentUser.getId(), memberId);
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+    }
+    if (ladder.isSessionType()) {
+      redirect.addFlashAttribute("toastMessage", "You left the session.");
+      redirect.addFlashAttribute("toastLevel", "light");
+      return "redirect:/home";
+    }
+
+    // Option A: flash attributes (preferred if your home page reads them)
+    redirect.addFlashAttribute("toastMessage", "You left the group.");
+    redirect.addFlashAttribute("toastLevel", "light"); // or "secondary"
+    return "redirect:/";
+  }
+
+  @PostMapping("/{configId}/regen-invite")
+  public String regenInvite(
+      @PathVariable Long configId, Authentication auth, RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null) {
+      return "redirect:/login";
+    }
+    try {
+      groupAdministration.regenInviteCode(configId, currentUser.getId());
+      redirect.addFlashAttribute("toastMessage", "Invite regenerated.");
+      redirect.addFlashAttribute("toastLevel", "light");
+      return "redirect:/groups/" + configId + "?inviteRegenerated=1";
+    } catch (InviteChangeCooldownException ex) {
+      redirect.addFlashAttribute("toastMessage", ex.getMessage());
+      redirect.addFlashAttribute("toastLevel", "warning");
+      return "redirect:/groups/" + configId;
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+    } catch (SecurityException ex) {
+      redirect.addFlashAttribute(
+          "toastMessage", "You’re not allowed to change invites for this ladder.");
+      redirect.addFlashAttribute("toastLevel", "danger");
+      return "redirect:/";
+    }
+  }
+
+  @PostMapping("/{configId}/disable-invite")
+  public String disableInvite(
+      @PathVariable Long configId, Authentication auth, RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null) {
+      return "redirect:/login";
+    }
+    try {
+      groupAdministration.disableInviteCode(configId, currentUser.getId());
+      redirect.addFlashAttribute("toastMessage", "Invite disabled.");
+      redirect.addFlashAttribute("toastLevel", "light");
+      return "redirect:/groups/" + configId + "?inviteDisabled=1";
+    } catch (InviteChangeCooldownException ex) {
+      redirect.addFlashAttribute("toastMessage", ex.getMessage());
+      redirect.addFlashAttribute("toastLevel", "warning");
+      return "redirect:/groups/" + configId;
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+    } catch (SecurityException ex) {
+      redirect.addFlashAttribute(
+          "toastMessage", "You’re not allowed to change invites for this ladder.");
+      redirect.addFlashAttribute("toastLevel", "danger");
+      return "redirect:/";
+    }
+  }
+
+  @GetMapping("/join")
+  public String joinForm(
+      @RequestParam(name = "inviteCode", required = false) String inviteCode,
+      @RequestParam(name = "returnTo", required = false) String returnTo,
+      @RequestParam(name = "autoJoin", required = false, defaultValue = "false") boolean autoJoin,
+      Authentication auth,
+      Model model) {
+    model.addAttribute("returnToPath", normalizeGroupReturnTo(returnTo));
+    if (inviteCode == null || inviteCode.isBlank()) {
+      return "auth/join";
+    }
+
+    String sanitizedInvite = inviteCode.trim();
+    model.addAttribute("prefillInviteCode", sanitizedInvite);
+
+    // Check membership cap before attempting to join
+    var cfgOpt = configs.findByInviteCode(sanitizedInvite.toUpperCase(java.util.Locale.ROOT));
+    if (cfgOpt.isEmpty()) {
+      applyJoinFeedback(model, invalidInviteFeedback());
+      return "auth/join";
+    }
+
+    var cfg = cfgOpt.get();
+    if (autoJoin && cfg.isSessionType()) {
+      User currentUser = getCurrentUser(auth);
+      if (currentUser != null && currentUser.getId() != null) {
+        try {
+          LadderConfig joinedConfig =
+              groupAdministration.joinByInvite(
+                  sanitizedInvite.toUpperCase(java.util.Locale.ROOT), currentUser.getId());
+          return joinRedirectFor(joinedConfig);
+        } catch (IllegalArgumentException ex) {
+          applyJoinFeedback(model, invalidInviteFeedback());
+          return "auth/join";
+        } catch (IllegalStateException ex) {
+          applyJoinFeedback(model, joinFailureFeedback(ex.getMessage()));
+          return "auth/join";
+        }
+      }
+    }
+    long activeCount =
+        membershipRepo
+            .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+                cfg.getId(), LadderMembership.State.ACTIVE)
+            .size();
+    if (cfg.getType() != LadderConfig.Type.COMPETITION && activeCount >= defaultMaxMembers) {
+      applyJoinFeedback(model, fullGroupFeedback());
+      return "auth/join";
+    }
+    return "auth/join";
+  }
+
+  @PostMapping("/join")
+  public String join(
+      @RequestParam String inviteCode,
+      @RequestParam(name = "returnTo", required = false) String returnTo,
+      Authentication auth,
+      RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    String normalizedReturnTo = normalizeGroupReturnTo(returnTo);
+    try {
+      // Pre-check capacity so we can show a friendly toast instead of attempting join
+      String code =
+          inviteCode == null ? null : inviteCode.trim().toUpperCase(java.util.Locale.ROOT);
+      var cfgOpt = configs.findByInviteCode(code);
+      if (cfgOpt.isPresent()) {
+        var cfg = cfgOpt.get();
+        long activeCount =
+            membershipRepo
+                .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+                    cfg.getId(), LadderMembership.State.ACTIVE)
+                .size();
+        if (cfg.getType() != LadderConfig.Type.COMPETITION && activeCount >= defaultMaxMembers) {
+          applyJoinFeedback(redirect, fullGroupFeedback(), inviteCode);
+          return redirectJoinForm(normalizedReturnTo);
+        }
+      }
+      var cfg =
+          groupAdministration.joinByInvite(inviteCode.trim().toUpperCase(), currentUser.getId());
+      return joinRedirectFor(cfg);
+    } catch (IllegalArgumentException e) {
+      // invalid invite code
+      applyJoinFeedback(redirect, invalidInviteFeedback(), inviteCode);
+      return redirectJoinForm(normalizedReturnTo);
+    } catch (IllegalStateException e) {
+      applyJoinFeedback(redirect, joinFailureFeedback(e.getMessage()), inviteCode);
+      return redirectJoinForm(normalizedReturnTo);
+    }
+  }
+
+  private String joinRedirectFor(LadderConfig cfg) {
+    if (cfg != null && cfg.isSessionType()) {
+      return "redirect:/groups/" + cfg.getId() + "?joined=1";
+    }
+    if (cfg != null && cfg.getId() != null) {
+      return "redirect:/private-groups/" + cfg.getId() + "?joined=1";
+    }
+    return "redirect:/private-groups";
+  }
+
+  private JoinFeedback invalidInviteFeedback() {
+    return new JoinFeedback("Invalid invite code.", "danger");
+  }
+
+  private JoinFeedback fullGroupFeedback() {
+    return new JoinFeedback("Sorry, that group is full.", "danger");
+  }
+
+  private JoinFeedback joinFailureFeedback(String message) {
+    if ("You are banned from this ladder".equals(message)) {
+      return new JoinFeedback(
+          "You are banned from this ladder. Please contact the ladder admin.", "danger");
+    }
+    if ("This match session has expired.".equals(message)) {
+      return new JoinFeedback("This match session has expired.", "warning");
+    }
+    if ("Sorry, that group is full.".equals(message)) {
+      return fullGroupFeedback();
+    }
+    return new JoinFeedback("Sorry, something went wrong. Please try again.", "danger");
+  }
+
+  private void applyJoinFeedback(Model model, JoinFeedback feedback) {
+    if (model == null || feedback == null) {
+      return;
+    }
+    model.addAttribute("toastMessage", feedback.message());
+    model.addAttribute("toastLevel", feedback.level());
+  }
+
+  private void applyJoinFeedback(
+      RedirectAttributes redirect, JoinFeedback feedback, String inviteCode) {
+    if (redirect == null || feedback == null) {
+      return;
+    }
+    redirect.addFlashAttribute("toastMessage", feedback.message());
+    redirect.addFlashAttribute("toastLevel", feedback.level());
+    redirect.addFlashAttribute("prefillInviteCode", inviteCode);
+  }
+
+  private User getCurrentUser(Authentication auth) {
+    return AuthenticatedUserSupport.currentUser(auth);
+  }
+
+  private String normalizeGroupReturnTo(String returnTo) {
+    if ("/private-groups".equals(returnTo)) {
+      return "/private-groups";
+    }
+    return null;
+  }
+
+  private String redirectCreateForm(String returnTo, boolean tournamentMode) {
+    StringBuilder redirect = new StringBuilder("redirect:/groups/new");
+    boolean first = true;
+    if (returnTo != null) {
+      redirect.append(first ? '?' : '&').append("returnTo=").append(returnTo);
+      first = false;
+    }
+    if (tournamentMode) {
+      redirect.append(first ? '?' : '&').append("tournamentMode=true");
+    }
+    return redirect.toString();
+  }
+
+  private String redirectJoinForm(String returnTo) {
+    if (returnTo != null) {
+      return "redirect:/groups/join?returnTo=" + returnTo;
+    }
+    return "redirect:/groups/join";
+  }
+
+  @PostMapping("/{configId}/restore")
+  public String restore(
+      @PathVariable Long configId, Authentication auth, RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null) return "redirect:/login";
+
+    try {
+      groupAdministration.restorePendingDeletion(configId, currentUser.getId());
+      redirect.addFlashAttribute("toastMessage", "Ladder restored.");
+      redirect.addFlashAttribute("toastLevel", "light");
+
+      // If user is still an active member, send to ladder; otherwise home.
+      try {
+        groupAdministration.requireActiveMember(configId, currentUser.getId());
+        return "redirect:/groups/" + configId;
+      } catch (SecurityException ignored) {
+        return "redirect:/";
+      }
+    } catch (SecurityException ex) {
+      redirect.addFlashAttribute("toastMessage", "You’re not allowed to restore this ladder.");
+      redirect.addFlashAttribute("toastLevel", "danger");
+      return "redirect:/";
+    }
+  }
+
+  @PostMapping("/{configId}/promote/{memberId}")
+  public String promote(
+      @PathVariable Long configId,
+      @PathVariable Long memberId,
+      Authentication auth,
+      RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    try {
+      groupAdministration.promoteToAdmin(configId, currentUser.getId(), memberId);
+      return "redirect:/groups/" + configId + "?promoted=1";
+    } catch (Exception e) {
+      redirect.addFlashAttribute(
+          "toastMessage", e.getMessage() != null ? e.getMessage() : "Unable to promote.");
+      redirect.addFlashAttribute("toastLevel", "danger");
+      return "redirect:/groups/" + configId;
+    }
+  }
+
+  @PostMapping("/{configId}/demote/{memberId}")
+  public String demote(
+      @PathVariable Long configId,
+      @PathVariable Long memberId,
+      Authentication auth,
+      RedirectAttributes redirect) {
+    User currentUser = getCurrentUser(auth);
+    try {
+      groupAdministration.demoteFromAdmin(configId, currentUser.getId(), memberId);
+      return "redirect:/groups/" + configId + "?demoted=1";
+    } catch (Exception e) {
+      redirect.addFlashAttribute(
+          "toastMessage", e.getMessage() != null ? e.getMessage() : "Unable to demote.");
+      redirect.addFlashAttribute("toastLevel", "danger");
+      return "redirect:/groups/" + configId;
+    }
+  }
+
+  private String defaultSeasonLabel(LocalDate startDate) {
+    if (startDate == null) {
+      return "Season";
+    }
+    return "Season • "
+        + startDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy"));
+  }
+
+  private String dateRange(LadderSeason season) {
+    if (season == null || season.getStartDate() == null) {
+      return "";
+    }
+    LocalDate start = season.getStartDate();
+    LocalDate end = season.getEndDate();
+    var formatter = java.time.format.DateTimeFormatter.ofPattern("MMM d, yyyy");
+    boolean placeholder = end != null && end.isAfter(start.plusYears(80));
+    String startText = start.format(formatter);
+    String endText;
+    if (placeholder) {
+      endText = "Present";
+    } else if (end != null) {
+      endText = end.format(formatter);
+    } else {
+      endText = "Present";
+    }
+    return startText + " - " + endText;
+  }
+
+  private boolean storyModeFeatureEnabled() {
+    return storyModeService == null || storyModeService.isFeatureEnabled();
+  }
+
+  private String buildLeaveConfirmMessage(LadderConfig ladder, Long currentUserId) {
+    boolean ownerViewing = ladder != null && Objects.equals(ladder.getOwnerUserId(), currentUserId);
+    if (ladder != null && ladder.isSessionType()) {
+      if (ownerViewing) {
+        return "Leave this session? It will stay active for current players until it expires.";
+      }
+      return "Leave this session? You can rejoin later with the current invite if it is still active.";
+    }
+    if (ownerViewing) {
+      return "You are the owner. Leaving will schedule this group for deletion. Continue?";
+    }
+    return "Leave this group? You will need the current invite code to rejoin.";
+  }
+
+  private record JoinFeedback(String message, String level) {}
+
+  @PostMapping("/{ladderId}/title")
+  @Transactional
+  public String updateTitle(
+      @PathVariable Long ladderId,
+      @RequestParam("title") String title,
+      Authentication auth,
+      RedirectAttributes ra) {
+
+    User currentUser = getCurrentUser(auth);
+    Long requesterUserId = currentUser != null ? currentUser.getId() : null;
+    try {
+      groupAdministration.updateTitle(ladderId, requesterUserId, title);
+    } catch (SecurityException ex) {
+      ra.addFlashAttribute("toastMessage", "Admin required to rename group.");
+      ra.addFlashAttribute("toastLevel", "danger");
+      return "redirect:/groups/" + ladderId;
+    } catch (IllegalStateException ex) {
+      ra.addFlashAttribute("toastMessage", ex.getMessage());
+      ra.addFlashAttribute("toastLevel", "warning");
+      return "redirect:/competition";
+    } catch (IllegalArgumentException ex) {
+      ra.addFlashAttribute("toastMessage", ex.getMessage());
+      ra.addFlashAttribute("toastLevel", "danger");
+      return "redirect:/groups/" + ladderId;
+    }
+
+    ra.addFlashAttribute("toastMessage", "Group name updated.");
+    ra.addFlashAttribute("toastLevel", "light");
+    return "redirect:/groups/" + ladderId;
+  }
+
+  private static class LadderListRow {
+    final Long id;
+    final String title;
+    final String role;
+
+    LadderListRow(Long id, String title, String role) {
+      this.id = id;
+      this.title = title;
+      this.role = role;
+    }
+
+    public Long getId() {
+      return id;
+    }
+
+    public String getTitle() {
+      return title;
+    }
+
+    public String getRole() {
+      return role;
+    }
+  }
+
+  private boolean isSiteWideAdmin(Authentication auth) {
+    User user = getCurrentUser(auth);
+    if (user == null) {
+      return false;
+    }
+    return normalizedEmail(user.getEmail()).equals(normalizedEmail(siteWideAdminEmail));
+  }
+
+  private String normalizedEmail(String email) {
+    return email == null ? "" : email.trim().toLowerCase(java.util.Locale.ROOT);
+  }
+}

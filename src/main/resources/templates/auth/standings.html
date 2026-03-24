@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Standings</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-page">
+        <div class="app-page-header">
+            <div>
+                <h1 class="app-page-title">Standings</h1>
+                <p class="app-page-subtitle"
+                   th:text="${storyMode != null and storyMode.enabled} ? 'Follow Pat-the-Pickler on the season map while your normal matches keep counting underneath.' : 'See ranks, momentum, and recent form.'">
+                    See ranks, momentum, and recent form.
+                </p>
+            </div>
+        </div>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100"
+               th:href="${ladderId != null} ? @{/private-groups/{ladderId}(ladderId=${ladderId},seasonId=${seasonId})} : @{/private-groups}">
+                Back
+            </a>
+        </div>
+
+        <div th:replace="~{components/ladderV2 :: ladderStandingsCard}"></div>
+
+        
+        <div id="climbFasterCardContainer">
+            <div th:replace="~{components/climbFasterCard :: climbFasterCard}"></div>
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Trophies</div>
+            <div class="card-body text-center">
+                <p class="text-muted mb-3">See your season achievements and badges.</p>
+                <a class="btn btn-nav-primary btn-lg" th:href="@{/trophies}">View Trophies</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,177 @@
+/*
+ * FHPB Component Styles
+ * Reusable component patterns and UI elements
+ */
+
+/* ===== Trophy Components ===== */
+.trophy-page-offset {
+  margin-top: -2rem;
+}
+
+.card-spotlight.trophy {
+  border: 2px solid var(--trophy-gold);
+  box-shadow: 0 4px 20px var(--trophy-shadow);
+}
+
+/* Shared status badges need darker backgrounds than the Bootswatch defaults */
+.badge.bg-success,
+.badge.text-bg-success {
+  background-color: var(--btn-success-active) !important;
+  color: #fff !important;
+}
+
+.badge.bg-secondary,
+.badge.text-bg-secondary {
+  background-color: #495057 !important;
+  color: #fff !important;
+}
+
+/* ===== Navigation & Buttons ===== */
+.back-button {
+  margin-bottom: 1rem;
+}
+
+.ladder-nav-arrows {
+  display: grid;
+  grid-template-columns: 3rem 1fr 3rem;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.ladder-nav-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bs-primary, #0d6efd);
+  color: #fff;
+  font-size: 1.5rem;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.ladder-nav-arrow:hover,
+.ladder-nav-arrow:focus {
+  background-color: var(--bs-primary-hover, #0b5ed7);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.ladder-nav-arrow.disabled,
+.ladder-nav-arrow.disabled:hover,
+.ladder-nav-arrow.disabled:focus {
+  pointer-events: none;
+  background-color: var(--bs-secondary, #6c757d);
+  color: rgba(255, 255, 255, 0.7);
+  transform: none;
+}
+
+.ladder-nav-arrow i {
+  line-height: 1;
+}
+
+.ladder-nav-arrow.ladder-nav-placeholder {
+  background: transparent;
+  color: transparent;
+  border: 2px solid transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.ladder-nav-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Form Components ===== */
+.form-card {
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+/* ===== Alert Components ===== */
+.alert-inline {
+  margin-bottom: 1rem;
+}
+
+/* ===== Modal & Overlay Components ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-modal);
+}
+
+/* ===== Loading States ===== */
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== Utility Classes ===== */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+.border-radius { border-radius: var(--border-radius); }
+.border-radius-lg { border-radius: var(--border-radius-lg); }
+
+/* ===== Mobile Performance Optimizations ===== */
+@media (max-width: 767px) {
+  .card-stack-col {
+    padding: 0 0.5rem;
+  }
+  
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Optimize touch targets for mobile */
+  .btn {
+    min-height: 44px;
+  }
+}
+
+
+/* Text color utility */
+.text-blue { color: #0d3b66 !important; }
+
+/* Member list name/info block - allows natural wrapping */
+.min-w-0 { min-width: 0; }
+
+/* Authenticated navbar greeting/link colors with accessible contrast on bg-light */
+.nav-greeting {
+  color: #334155;
+}
+
+.navbar-text.nav-greeting a.nav-user-link,
+.navbar-text a.nav-user-link,
+.nav-user-link {
+  color: #0b5cab;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.navbar-text.nav-greeting a.nav-user-link:hover,
+.navbar-text.nav-greeting a.nav-user-link:focus-visible,
+.navbar-text a.nav-user-link:hover,
+.navbar-text a.nav-user-link:focus-visible,
+.nav-user-link:hover,
+.nav-user-link:focus-visible {
+  color: #084b87;
+}

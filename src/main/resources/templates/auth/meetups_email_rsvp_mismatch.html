@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/authenticated}">
+
+<head>
+  <title layout:fragment="title">Wrong account</title>
+</head>
+
+<body>
+  <div layout:fragment="content">
+    <div class="row justify-content-center">
+      <div class="col-md-10 col-lg-7">
+        <div class="card">
+          <div class="card-body text-center">
+            <div class="mb-3">
+              <i class="fas fa-user-lock text-warning display-5" aria-hidden="true"></i>
+            </div>
+
+            <h1 class="h3 mb-2">That RSVP link is for a different account</h1>
+
+            <p class="text-muted mb-3">
+              You're currently signed in as <span class="fw-semibold" th:text="${userName ?: 'your account'}">your account</span>,
+              but the RSVP link you clicked was emailed to another user.
+            </p>
+
+            <p class="text-muted mb-4">
+              For safety, we don't allow RSVP links to be used from a different account (for example if the email was forwarded).
+            </p>
+
+            <div class="text-start mx-auto" style="max-width: 34rem;">
+              <div class="fw-semibold mb-2">To RSVP:</div>
+              <ol class="text-muted mb-4">
+                <li>Log out</li>
+                <li>Log in with the email address that received the RSVP email</li>
+                <li>Click the RSVP link again</li>
+              </ol>
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+              <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-nav-secondary">Logout</button>
+              </form>
+              <a th:href="@{/home}" class="btn btn-nav-primary">Go Home</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

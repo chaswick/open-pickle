@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<head>
+    <div th:replace="~{components/head-analytics :: google-analytics}"></div>
+    
+    <div th:replace="~{components/head-meta :: cache-control}"></div>
+    <div th:replace="~{components/head-meta :: basic-meta}"></div>
+    <div th:replace="~{components/head-meta :: theme-meta}"></div>
+    
+    <title layout:title-pattern="$CONTENT_TITLE | Open-Pickle">Open-Pickle</title>
+    
+    
+    <div th:replace="~{components/head-styles :: core-styles}"></div>
+    
+    
+    <div th:replace="~{components/head-icons :: favicons}"></div>
+    
+    
+    <div th:replace="~{components/head-external :: external-resources}"></div>
+    
+    
+    <th:block layout:fragment="styles"></th:block>
+</head>
+
+<body class="bg-image"
+      th:attr="data-pwa-install-eligible=${pwaInstallEligible}">
+    
+    <div th:replace="~{components/navigation}"></div>
+    
+    <main class="mt-3">
+        
+        <section class="jumbotron text-center p-3">
+            <div class="container py-0"></div>
+        </section>
+
+        <div class="container py-4" th:classappend="${extraContainerClasses}">
+            
+            <div th:replace="~{components/alerts :: global-alerts}"></div>
+            
+            
+            <div layout:fragment="content">
+                <p>Default content - this should be replaced by page content.</p>
+            </div>
+        </div>
+    </main>
+    
+    
+    <div th:replace="~{components/footer :: footer}"></div>
+    
+    
+    <div th:replace="~{components/head-scripts :: core-scripts}"></div>
+    <div th:replace="~{components/head-scripts :: pwa-scripts}"></div>
+    
+    
+    <div th:replace="~{components/confirm-modal :: confirmModal}"></div>
+    
+    <div th:replace="~{components/head-scripts :: component-scripts}"></div>
+    
+    <script src="/js/toasts.js" th:src="@{/js/toasts.js(v=${assetVersion})}"></script>
+    
+    
+    <div th:replace="~{components/alerts :: toast-script}"></div>
+    
+    <th:block layout:fragment="scripts"></th:block>
+</body>
+</html>

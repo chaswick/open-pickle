@@ -1,0 +1,2 @@
+ALTER TABLE users
+  ADD COLUMN app_ui_enabled BOOLEAN NOT NULL DEFAULT 0;

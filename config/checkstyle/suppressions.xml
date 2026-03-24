@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Puppy Crawl//DTD Suppressions Xpath Experimental 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2_xpath.dtd">
+<suppressions>
+    <!-- Keep this file intentionally permissive for now; we'll tighten rules later -->
+</suppressions>

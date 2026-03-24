@@ -1,0 +1,4 @@
+rootProject.name = 'openpickle'
+
+include 'trophy-generator-core'
+include 'trophy-generator-cli'

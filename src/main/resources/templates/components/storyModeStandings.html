@@ -1,0 +1,420 @@
+<div th:fragment="storyModeStandings">
+  <style>
+    .story-mode-shell {
+      --story-paper: linear-gradient(180deg, #fff7e8 0%, #f8ead2 100%);
+      --story-ink: #3f2e1b;
+      --story-accent: #d46a2e;
+      --story-accent-soft: rgba(212, 106, 46, 0.18);
+      --story-olive: #5f7143;
+      --story-sand: #e9d4ad;
+      --story-path: #b98c56;
+      --story-muted: #7a6752;
+      color: var(--story-ink);
+    }
+
+    .story-board {
+      background: var(--story-paper);
+      border: 1px solid rgba(63, 46, 27, 0.08);
+      border-radius: 1.5rem;
+      padding: 1.25rem;
+      box-shadow: 0 18px 42px rgba(63, 46, 27, 0.08);
+    }
+
+    .story-kicker {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.72rem;
+      color: var(--story-muted);
+      font-weight: 700;
+    }
+
+    .story-scene {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr);
+      align-items: stretch;
+    }
+
+    .story-scene-panel,
+    .story-summary-panel,
+    .story-task-card,
+    .story-goal-card {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(63, 46, 27, 0.08);
+      border-radius: 1.15rem;
+      padding: 1rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .story-scene-title {
+      margin: 0.25rem 0 0.5rem;
+      font-size: 1.55rem;
+      line-height: 1.1;
+    }
+
+    .story-scene-copy {
+      color: var(--story-muted);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .story-progress-shell,
+    .story-bar-shell {
+      background: rgba(63, 46, 27, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      height: 0.8rem;
+    }
+
+    .story-progress-bar,
+    .story-bar {
+      background: linear-gradient(90deg, #e59052 0%, #d46a2e 100%);
+      border-radius: inherit;
+      height: 100%;
+    }
+
+    .story-scene-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+
+    .story-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      background: var(--story-accent-soft);
+      color: var(--story-ink);
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .story-track {
+      position: relative;
+      display: grid;
+      gap: 0.9rem;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      margin-top: 1.25rem;
+    }
+
+    .story-track::before {
+      content: "";
+      position: absolute;
+      left: 4%;
+      right: 4%;
+      top: 2.2rem;
+      height: 0.45rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(185, 140, 86, 0.45) 0%, rgba(185, 140, 86, 0.85) 100%);
+      z-index: 0;
+    }
+
+    .story-stage-card {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding-top: 0.2rem;
+    }
+
+    .story-stage-badge {
+      width: 4.1rem;
+      height: 4.1rem;
+      border-radius: 1.2rem;
+      margin: 0 auto 0.65rem;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.88);
+      border: 2px solid rgba(63, 46, 27, 0.14);
+      font-size: 1.35rem;
+      box-shadow: 0 12px 24px rgba(63, 46, 27, 0.08);
+    }
+
+    .story-stage-card.is-complete .story-stage-badge {
+      background: linear-gradient(180deg, #f4d57f 0%, #e6b13d 100%);
+      border-color: rgba(95, 113, 67, 0.4);
+    }
+
+    .story-stage-card.is-current .story-stage-badge {
+      background: linear-gradient(180deg, #ffd8bf 0%, #e59052 100%);
+      border-color: rgba(212, 106, 46, 0.55);
+      transform: translateY(-0.18rem);
+    }
+
+    .story-stage-card.is-upcoming {
+      opacity: 0.7;
+    }
+
+    .story-stage-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--story-muted);
+      font-weight: 700;
+    }
+
+    .story-stage-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-top: 0.2rem;
+    }
+
+    .story-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      margin-top: 1.25rem;
+    }
+
+    .story-goal-list,
+    .story-summary-list {
+      display: grid;
+      gap: 0.8rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .story-goal-head,
+    .story-task-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .story-goal-name,
+    .story-task-name {
+      font-weight: 700;
+    }
+
+    .story-goal-value,
+    .story-task-value {
+      color: var(--story-muted);
+      font-size: 0.92rem;
+    }
+
+    .story-task-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 1rem;
+    }
+
+    .story-task-copy {
+      color: var(--story-muted);
+      line-height: 1.55;
+      min-height: 3.1rem;
+    }
+
+    .story-task-foot {
+      font-size: 0.88rem;
+      color: var(--story-muted);
+      margin-top: 0.65rem;
+    }
+
+    .story-raw {
+      margin-top: 1rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(63, 46, 27, 0.08);
+      padding: 0.9rem 1rem;
+    }
+
+    .story-raw summary {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .story-raw-list {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 0.9rem;
+    }
+
+    .story-raw-row {
+      display: grid;
+      grid-template-columns: 3rem minmax(0, 1fr) auto;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    @media (max-width: 991px) {
+      .story-scene,
+      .story-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .story-task-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .story-track {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .story-track::before {
+        display: none;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .story-board {
+        padding: 1rem;
+      }
+
+      .story-stage-badge {
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 1rem;
+      }
+
+      .story-track {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
+
+  <div class="story-mode-shell mt-3">
+    <div class="alert alert-warning border-0 shadow-sm mb-3" th:text="${storyMode.warning}"></div>
+
+    <div class="story-board">
+      <div class="story-scene">
+        <div class="story-scene-panel">
+          <div class="story-kicker">Meet Pat the Pickler</div>
+          <h3 class="story-scene-title" th:text="${storyMode.sceneTitle}">Pat is still on the couch</h3>
+          <p class="story-scene-copy" th:text="${storyMode.sceneBody}"></p>
+          <div class="story-scene-meta">
+            <span class="story-chip">
+              <i class="bi bi-sign-turn-right"></i>
+              <span th:text="${'Route: ' + storyMode.travelMode}">Route: Bike</span>
+            </span>
+            <span class="story-chip">
+              <i class="bi bi-emoji-sunglasses"></i>
+              <span th:text="${'Mood: ' + storyMode.mood}">Mood: a little chaotic</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="story-summary-panel">
+          <div class="story-kicker">Chapter Progress</div>
+          <div class="story-goal-head mt-2">
+            <div class="story-goal-name" th:text="${storyMode.progressLabel}">65% to the next chapter</div>
+            <div class="story-goal-value" th:text="${#numbers.formatDecimal(storyMode.progressPercent, 1, 0)} + '%'">65%</div>
+          </div>
+          <div class="story-progress-shell">
+            <div class="story-progress-bar" th:style="|width:${storyMode.progressPercent}%|"></div>
+          </div>
+          <p class="text-muted small mt-3 mb-0" th:text="${storyMode.summaryLine}">0 counted matches, 0 contributors, 0 total points.</p>
+        </div>
+      </div>
+
+      <div class="story-track">
+        <div th:each="stage : ${storyMode.stages}"
+             class="story-stage-card"
+             th:classappend="${stage.completed ? ' is-complete' : (stage.current ? ' is-current' : ' is-upcoming')}">
+          <div class="story-stage-badge">
+            <i class="bi" th:classappend="${stage.upcoming ? ' bi-question-lg' : ' ' + stage.iconClass}"></i>
+          </div>
+          <div class="story-stage-label" th:text="${'Chapter ' + stage.stageNumber}">Chapter 1</div>
+          <div class="story-stage-title" th:text="${stage.upcoming ? 'Hidden chapter' : stage.shortLabel}">Couch Shrine</div>
+        </div>
+      </div>
+
+      <div class="story-grid">
+        <div class="story-goal-card">
+          <div class="story-kicker">Group Goals</div>
+          <ul class="story-goal-list mt-3">
+            <li th:each="goal : ${storyMode.mainGoals}">
+              <div class="story-goal-head">
+                <div class="story-goal-name" th:text="${goal.label}">Counted matches</div>
+                <div class="story-goal-value" th:text="${goal.currentValue + ' / ' + goal.targetValue + ' ' + goal.unitLabel}">0 / 4 matches</div>
+              </div>
+              <div class="story-bar-shell">
+                <div class="story-bar" th:style="|width:${goal.progressPercent}%|"></div>
+              </div>
+              <div class="story-task-foot mt-1" th:text="${goal.progressText}">Added so far: 0 matches.</div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="story-goal-card">
+          <div class="story-kicker">Our Story So Far</div>
+          <ul class="story-summary-list mt-3">
+            <li th:each="line : ${storyMode.recapLines}" th:text="${line}"></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="story-task-grid">
+        <div th:each="task : ${storyMode.sideTasks}" class="story-task-card">
+          <div class="story-kicker">Side Task</div>
+          <div class="story-task-head mt-2">
+            <div class="story-task-name" th:text="${task.title}">Pat's Laundry</div>
+            <div class="story-task-value" th:text="${task.progressCount + ' / ' + task.targetCount}">0 / 6</div>
+          </div>
+          <p class="story-task-copy mb-3" th:text="${task.summary}"></p>
+          <div class="story-task-foot mb-2" th:text="${task.unlockCondition}">
+            Unlock when the group reaches the listed condition.
+          </div>
+          <div class="story-bar-shell">
+            <div class="story-bar" th:style="|width:${task.progressPercent}%|"></div>
+          </div>
+          <div class="story-task-foot" th:text="${task.statusText}">
+            0% toward the next trophy.
+          </div>
+          <div class="story-task-foot mt-1" th:if="${task.viewerContributionText != null}"
+               th:text="${task.viewerContributionText}">
+            You have added 0 so far.
+          </div>
+        </div>
+      </div>
+
+      <details class="story-raw">
+        <summary>View raw standings</summary>
+        <div class="story-raw-list" th:if="${ladderDisplay != null and !#lists.isEmpty(ladderDisplay)}">
+          <div class="story-raw-row" th:each="row : ${ladderDisplay}" th:if="${!row.showBandHeader}">
+            <div class="fw-semibold text-muted" th:text="${row.rank}">1</div>
+            <div class="text-truncate">
+              <div class="player-name-with-badges">
+                <span class="text-truncate player-name-label" th:text="${row.displayName}">Player Name</span>
+                <span class="name-badge-strip" th:if="${row.badgeViews != null and !#lists.isEmpty(row.badgeViews)}">
+                  <span th:each="badge : ${row.badgeViews}"
+                        class="name-badge-pill badge-detail-trigger"
+                        data-badge-detail-trigger
+                        aria-expanded="false"
+                        role="button"
+                        tabindex="0"
+                        th:title="${badge.title}"
+                        th:attr="aria-label=${!#strings.isEmpty(badge.unlockCondition) ? 'Unlock details for ' + badge.label + ': ' + badge.unlockCondition : 'Badge details for ' + badge.label}">
+                    <img class="name-badge-chip"
+                         th:src="${badge.imageUrl}"
+                         alt=""
+                         aria-hidden="true"
+                         loading="lazy" />
+                    <span class="name-badge-label"
+                          th:text="${badge.label}">Badge</span>
+                    <span class="badge-detail-overlay"
+                          data-badge-detail-overlay
+                          th:classappend="${#strings.isEmpty(badge.unlockCondition)} ? ' d-none'">
+                      <span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
+                      <span class="badge-detail-overlay-text"
+                            th:text="${badge.unlockCondition}">Unlock condition</span>
+                    </span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="text-muted" th:text="${1000 + row.points}">1000</div>
+          </div>
+        </div>
+        <div class="text-muted small mt-3" th:if="${ladderDisplay == null or #lists.isEmpty(ladderDisplay)}">
+          Standings will appear here once matches are logged.
+        </div>
+      </details>
+    </div>
+  </div>
+</div>

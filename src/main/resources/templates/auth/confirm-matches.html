@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">Confirm Matches</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-page">
+        <div class="app-page-header">
+            <div>
+                <h1 class="app-page-title">Confirm Matches</h1>
+                <p class="app-page-subtitle">Review pending results from your groups and the global competition.</p>
+            </div>
+        </div>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">Back</a>
+        </div>
+
+        <div class="card mb-4 shadow card-spotlight">
+            <div class="card-header card-header-title text-center">Player Dashboard</div>
+            <div class="card-body">
+                <div th:replace="~{components/matchDashboard :: matchDashboard}"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

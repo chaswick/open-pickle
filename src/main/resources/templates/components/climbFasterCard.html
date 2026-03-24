@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<body>
+    <th:block th:fragment="climbFasterCard">
+        <div class="card mb-4 shadow card-spotlight climb-faster-card" th:if="${improvementAdvice != null}">
+            <div class="card-header card-header-title card-collapse-header">
+                <button class="btn card-collapse-toggle collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#climbFasterCardCollapse"
+                        aria-expanded="false"
+                        aria-controls="climbFasterCardCollapse">
+                    <span class="card-collapse-spacer" aria-hidden="true"></span>
+                    <span class="card-collapse-title">Climb Faster</span>
+                    <i class="bi bi-chevron-down card-collapse-icon" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div id="climbFasterCardCollapse" class="collapse">
+            <div class="card-body">
+                <p class="climb-faster-summary mb-2" th:text="${improvementAdvice.quickSummary}"></p>
+                <details class="climb-faster-tips-toggle mt-3"
+                         th:if="${improvementAdvice.actionTips != null and !improvementAdvice.actionTips.isEmpty()}">
+                    <summary class="climb-faster-tips-summary">Tips for climbing faster</summary>
+                    <ul class="climb-faster-tips mt-2 mb-0">
+                        <li th:each="tip : ${improvementAdvice.actionTips}" th:text="${tip}"></li>
+                    </ul>
+                </details>
+                <div class="climb-faster-history mt-3"
+                     th:if="${improvementAdvice.recentChanges != null and !improvementAdvice.recentChanges.isEmpty()}">
+                    <p class="climb-faster-detail mb-2" th:if="${improvementAdvice.detailedSummary != null}"
+                       th:text="${improvementAdvice.detailedSummary}"></p>
+                    <div class="d-grid gap-2 climb-faster-changes">
+                        <details class="climb-faster-change" th:each="change : ${improvementAdvice.recentChanges}">
+                            <summary class="climb-faster-change-summary">
+                                <span th:if="${change.occurredAt != null}"
+                                      th:attr="data-utc-time=${change.occurredAt},data-time-format='relative-change'"
+                                      class="fhpb-relative-change-time climb-faster-change-time"></span>
+                                <span th:if="${change.occurredAt != null}"> &middot; </span>
+                                <span th:text="${change.summary}"></span>
+                            </summary>
+                            <ul class="climb-faster-change-steps mt-2 mb-0">
+                                <li th:each="step : ${change.explanationSteps}" th:text="${step}"></li>
+                            </ul>
+                        </details>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </th:block>
+</body>
+
+</html>
