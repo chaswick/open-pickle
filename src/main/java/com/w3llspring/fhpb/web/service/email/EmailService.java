@@ -31,7 +31,7 @@ public class EmailService {
 
     // Keep sender consistent and recognizable.
     try {
-      helper.setFrom(supportEmail, "PickleBuddies <no-reply>");
+      helper.setFrom(supportEmail, "Open-Pickle <no-reply>");
     } catch (java.io.UnsupportedEncodingException e) {
       helper.setFrom(supportEmail);
     }

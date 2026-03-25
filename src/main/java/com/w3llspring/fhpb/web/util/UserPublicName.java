@@ -4,7 +4,7 @@ import com.w3llspring.fhpb.web.model.User;
 
 public final class UserPublicName {
 
-  public static final String FALLBACK = "PickleBuddies User";
+  public static final String FALLBACK = "Open-Pickle User";
   public static final String GUEST = "Guest";
 
   private UserPublicName() {}

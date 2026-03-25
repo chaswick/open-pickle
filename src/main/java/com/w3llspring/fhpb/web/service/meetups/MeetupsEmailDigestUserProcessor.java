@@ -361,7 +361,7 @@ public class MeetupsEmailDigestUserProcessor {
 
     sb.append("<div style=\"background-color: #0d6efd; padding: 20px; text-align: center;\">");
     sb.append(
-        "<h1 style=\"margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;\">PickleBuddies Play Plans</h1>");
+      "<h1 style=\"margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;\">Open-Pickle Play Plans</h1>");
     sb.append("</div>");
 
     sb.append("<div style=\"padding: 30px 20px;\">");
@@ -414,7 +414,7 @@ public class MeetupsEmailDigestUserProcessor {
         .append(escape(unsubscribeLink))
         .append("\" style=\"color:#0d6efd; text-decoration:underline;\">unsubscribe</a></p>");
     sb.append(
-        "<p style=\"color: #6c757d; font-size: 12px; margin: 5px 0 0;\">(c) PickleBuddies</p>");
+      "<p style=\"color: #6c757d; font-size: 12px; margin: 5px 0 0;\">(c) Open-Pickle</p>");
     sb.append("</div>");
 
     sb.append("</div>");

@@ -145,7 +145,7 @@ public class PushNotificationService {
     List<UserPushSubscription> subs = subscriptions.findByUserId(userId);
     if (subs == null || subs.isEmpty()) return;
 
-    String title = "PickleBuddies";
+    String title = "Open-Pickle";
 
     String cleanedLadder = ladderTitle == null ? "" : ladderTitle.trim();
     String body;
@@ -197,7 +197,7 @@ public class PushNotificationService {
     List<UserPushSubscription> subs = subscriptions.findByUserId(userId);
     if (subs == null || subs.isEmpty()) return;
 
-    String title = "PickleBuddies";
+    String title = "Open-Pickle";
 
     String cleanedLadder = ladderTitle == null ? "" : ladderTitle.trim();
     String body;
@@ -250,7 +250,7 @@ public class PushNotificationService {
     if (subs == null || subs.isEmpty()) return;
 
     int count = rows == null ? 0 : rows.size();
-    String title = "PickleBuddies";
+    String title = "Open-Pickle";
     String body = count <= 1 ? "New Play Plan available." : (count + " new Play Plans available.");
 
     PushPayload payload = new PushPayload(title, body, "/play-plans", Instant.now());
