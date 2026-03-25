@@ -13,7 +13,7 @@ import com.w3llspring.fhpb.web.service.trophy.TrophyBadgeViewService;
 import com.w3llspring.fhpb.web.service.user.CourtNameService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class RoundRobinService {
 
   private static final Logger log = LoggerFactory.getLogger(RoundRobinService.class);
-  private static final ZoneId LADDER_ZONE = ZoneId.of("America/New_York");
 
   private final LadderMembershipRepository membershipRepo;
   private final UserRepository userRepo;
@@ -464,7 +463,7 @@ public class RoundRobinService {
     if (season == null) {
       return false;
     }
-    LocalDate today = LocalDate.now(LADDER_ZONE);
+    LocalDate today = LocalDate.now(ZoneOffset.UTC);
     LocalDate start = season.getStartDate();
     LocalDate end = season.getEndDate();
     if (start != null && today.isBefore(start)) {

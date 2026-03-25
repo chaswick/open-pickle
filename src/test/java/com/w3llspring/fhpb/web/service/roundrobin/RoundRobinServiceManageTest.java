@@ -10,6 +10,7 @@ import com.w3llspring.fhpb.web.model.*;
 import com.w3llspring.fhpb.web.service.user.CourtNameService;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class RoundRobinServiceManageTest {
+
+  private static final LocalDate TODAY_UTC = LocalDate.now(ZoneOffset.UTC);
 
   @Mock private LadderMembershipRepository membershipRepo;
   @Mock private UserRepository userRepo;
@@ -74,8 +77,8 @@ class RoundRobinServiceManageTest {
     config.setId(77L);
     season.setLadderConfig(config);
     season.setState(LadderSeason.State.ACTIVE);
-    season.setStartDate(LocalDate.now().plusDays(1));
-    season.setEndDate(LocalDate.now().plusDays(30));
+    season.setStartDate(TODAY_UTC.plusDays(1));
+    season.setEndDate(TODAY_UTC.plusDays(30));
 
     when(seasonRepo.findActive(77L)).thenReturn(Optional.of(season));
 
@@ -94,8 +97,8 @@ class RoundRobinServiceManageTest {
     config.setId(77L);
     season.setLadderConfig(config);
     season.setState(LadderSeason.State.ACTIVE);
-    season.setStartDate(LocalDate.now().minusDays(30));
-    season.setEndDate(LocalDate.now().minusDays(1));
+    season.setStartDate(TODAY_UTC.minusDays(30));
+    season.setEndDate(TODAY_UTC.minusDays(1));
 
     when(seasonRepo.findActive(77L)).thenReturn(Optional.of(season));
 
@@ -114,8 +117,8 @@ class RoundRobinServiceManageTest {
     config.setId(77L);
     season.setLadderConfig(config);
     season.setState(LadderSeason.State.ACTIVE);
-    season.setStartDate(LocalDate.now().minusDays(1));
-    season.setEndDate(LocalDate.now().plusDays(30));
+    season.setStartDate(TODAY_UTC.minusDays(1));
+    season.setEndDate(TODAY_UTC.plusDays(30));
 
     when(seasonRepo.findActive(77L)).thenReturn(Optional.of(season));
     when(rrRepo.findBySeasonAndSessionConfigIsNull(season)).thenReturn(List.of());
@@ -153,8 +156,8 @@ class RoundRobinServiceManageTest {
     competitionConfig.setType(LadderConfig.Type.COMPETITION);
     targetSeason.setLadderConfig(competitionConfig);
     targetSeason.setState(LadderSeason.State.ACTIVE);
-    targetSeason.setStartDate(LocalDate.now().minusDays(1));
-    targetSeason.setEndDate(LocalDate.now().plusDays(30));
+    targetSeason.setStartDate(TODAY_UTC.minusDays(1));
+    targetSeason.setEndDate(TODAY_UTC.plusDays(30));
     setId(targetSeason, 501L);
 
     when(ladderConfigRepo.findById(77L)).thenReturn(Optional.of(sessionConfig));
@@ -187,8 +190,8 @@ class RoundRobinServiceManageTest {
     config.setId(77L);
     season.setLadderConfig(config);
     season.setState(LadderSeason.State.ACTIVE);
-    season.setStartDate(LocalDate.now().minusDays(1));
-    season.setEndDate(LocalDate.now().plusDays(30));
+    season.setStartDate(TODAY_UTC.minusDays(1));
+    season.setEndDate(TODAY_UTC.plusDays(30));
 
     when(seasonRepo.findActive(77L)).thenReturn(Optional.of(season));
     when(rrRepo.findBySeasonAndSessionConfigIsNull(season)).thenReturn(List.of());
@@ -245,8 +248,8 @@ class RoundRobinServiceManageTest {
     config.setId(77L);
     season.setLadderConfig(config);
     season.setState(LadderSeason.State.ACTIVE);
-    season.setStartDate(LocalDate.now().minusDays(1));
-    season.setEndDate(LocalDate.now().plusDays(30));
+    season.setStartDate(TODAY_UTC.minusDays(1));
+    season.setEndDate(TODAY_UTC.plusDays(30));
 
     when(seasonRepo.findActive(77L)).thenReturn(Optional.of(season));
 
