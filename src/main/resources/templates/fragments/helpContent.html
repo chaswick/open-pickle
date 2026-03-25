@@ -14,7 +14,7 @@
           <ul>
             <li><strong>Recent performance, not abstract skill:</strong> It reflects how well you are playing right now, not just your underlying level over months or years.</li>
             <li><strong>Built around real play patterns:</strong> It compares results from your normal sessions, groups, and opponents.</li>
-            <li><strong>Bad-faith gaming is limited:</strong> Like any system, honest logging matters. But the system is designed to be resilient: you choose who you play, only confirmed results count, bogus logs can be disputed and held for review, repeated missed confirmations in Global Competition can trigger season warnings and lockout, and the standings model rewards broader recent variety.</li>
+            <li><strong>Bad-faith gaming is limited:</strong> Like any system, honest logging matters. But the system is designed to be resilient: you choose who you play, only confirmed results count, bogus provisional logs can be disputed, confirmed mistakes can be removed only if both teams agree, repeated missed confirmations in Global Competition can trigger season warnings and lockout, and the standings model rewards broader recent variety.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">Think of it as a season-long performance race, not a universal skill rating.</small></p>
         </div>
@@ -130,11 +130,34 @@
           <ul>
             <li><strong>Confirm:</strong> Accept the result as logged.</li>
             <li><strong>Edit:</strong> The side currently responsible for confirmation can edit a provisional match. Editing keeps the editor&rsquo;s side attested and makes every other unrepresented side review again.</li>
+            <li><strong>Dispute:</strong> Use this on a provisional match you should not confirm, such as a match you never played.</li>
             <li><strong>48-hour window:</strong> In Standard Mode, if the match is still unconfirmed after <strong>48 hours</strong>, it is <strong>nullified</strong> and will not count in standings.</li>
             <li><strong>No Cherry Picking:</strong> Selectively confirming only wins can trigger visible season warnings and eventually remove you from competition matches for the rest of that season.</li>
           </ul>
           <p><strong>Casual Mode:</strong> In trusted groups, match loggers can immediately confirm their own entries after reviewing for errors.</p>
           <p class="mb-0"><small class="text-muted">Admins can change the confirmation mode in Group Config.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="confirmedRemovalHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#confirmedRemovalHelp" aria-expanded="false" aria-controls="confirmedRemovalHelp">
+          Removing a Confirmed Match
+        </button>
+      </h2>
+      <div id="confirmedRemovalHelp" class="accordion-collapse collapse" aria-labelledby="confirmedRemovalHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p><strong>Confirmed-match removal</strong> is the cleanup path for results both teams already confirmed but later realize should not stay in the season.</p>
+          <ul>
+            <li><strong>When to use it:</strong> Duplicates, accidental confirmations, or a result both teams agree should be removed instead of edited.</li>
+            <li><strong>How it starts:</strong> Any participant on either team can request removal from the match row in recent/history views.</li>
+            <li><strong>How it finishes:</strong> One participant from the other team must approve within <strong>48 hours</strong>. Then the match is <strong>nullified</strong> and removed from standings and rating calculations.</li>
+            <li><strong>If the other team ignores it:</strong> The request expires and the match stays.</li>
+            <li><strong>How abuse is limited:</strong> Nobody can erase a confirmed loss alone. It is still team-based, but it requires agreement from both sides.</li>
+            <li><strong>History stays visible:</strong> Nullified matches can still appear in match history with a <strong>Nullified</strong> label so the cleanup is not hidden.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Use Edit for a provisional match that only needs correction. Use Dispute for a provisional match you should not confirm. Use confirmed-match removal only after both sides already confirmed and later agree it should come out.</small></p>
         </div>
       </div>
     </div>
@@ -191,7 +214,7 @@
           <p>The system encourages clean, honest match results:</p>
           <ul>
             <li><strong>Log the score</strong> and your opponents have 48 hours to <strong>confirm it</strong>.</li>
-            <li><strong>Confirm or dispute promptly:</strong> Only confirmed results count. If a logged match is wrong, update it. Your opponents will have the opportunity to confirm your changes. If a match is bogus, dispute it.</li>
+            <li><strong>Confirm or dispute promptly:</strong> Only confirmed results count. If a provisional match is wrong, update it. Your opponents will have the opportunity to confirm your changes. If a provisional match is bogus, dispute it. If a confirmed result should come out entirely, use confirmed-match removal and let the other team approve it.</li>
             <li><strong>Global Competition has season enforcement:</strong> Repeated missed confirmations can trigger visible warnings and eventually lock you out of competition matches until the next season. Logging multiple disputed matches may have the same consequence.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">Ratings are based on what happened on court. Fair-play warnings and lockouts are a separate system and currently apply to the public competition season, not private groups.</small></p>

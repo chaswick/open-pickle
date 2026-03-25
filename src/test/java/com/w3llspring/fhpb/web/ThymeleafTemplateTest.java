@@ -267,6 +267,18 @@ class ThymeleafTemplateTest {
     }
 
     @Test
+    void helpContentExplainsConfirmedMatchRemovalFlow() throws Exception {
+        String template = Files.readString(Path.of("src/main/resources/templates/fragments/helpContent.html"));
+
+        assertThat(template).contains("Removing a Confirmed Match");
+        assertThat(template).contains("Duplicates, accidental confirmations");
+        assertThat(template).contains("One participant from the other team must approve within <strong>48 hours</strong>");
+        assertThat(template).contains("Nobody can erase a confirmed loss alone.");
+        assertThat(template).contains("Nullified</strong> label");
+        assertThat(template).contains("Use confirmed-match removal only after both sides already confirmed");
+    }
+
+    @Test
     void loginTemplateDoesNotRenderInlineTermsAcceptancePrompt() throws Exception {
         String template = Files.readString(Path.of("src/main/resources/templates/public/login.html"));
 
