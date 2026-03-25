@@ -12,15 +12,19 @@ import com.w3llspring.fhpb.web.model.CustomUserDetails;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.PlayLocationService;
 import com.w3llspring.fhpb.web.service.user.DisplayNameModerationService;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.ui.ExtendedModelMap;
 
+@Execution(ExecutionMode.SAME_THREAD)
 class CheckInControllerTest {
 
   private StubPlayLocationService playLocationService;
@@ -31,6 +35,7 @@ class CheckInControllerTest {
     playLocationService = new StubPlayLocationService();
     controller = new CheckInController(playLocationService);
     ReflectionTestUtils.setField(controller, "checkInEnabled", true);
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
 
     User user = new User();
     user.setId(123L);
@@ -42,6 +47,7 @@ class CheckInControllerTest {
 
   @AfterEach
   void tearDown() {
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
     SecurityContextHolder.clearContext();
   }
 

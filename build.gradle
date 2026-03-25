@@ -115,10 +115,6 @@ tasks.withType(Test).configureEach {
 			'standardError'
 		]
 	}
-	filter {
-		// Exclude experimental Spanish interpreter tests for now
-		excludeTestsMatching 'com.w3llspring.fhpb.web.service.matchlog.SpanishSpokenMatchInterpreterTest'
-	}
 	// Show test results summary and report entries
 	afterTest { descriptor, result ->
 		// TestReporter entries appear in result properties but aren't shown by default

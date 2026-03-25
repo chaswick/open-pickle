@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class ThymeleafTemplateTests {
+class ThymeleafTemplateTest {
 
     @Autowired
     private TemplateEngine templateEngine;

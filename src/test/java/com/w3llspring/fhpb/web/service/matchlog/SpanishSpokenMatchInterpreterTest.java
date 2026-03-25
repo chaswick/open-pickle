@@ -186,8 +186,9 @@ class SpanishSpokenMatchInterpreterTest {
 
     SpokenMatchInterpretation result = interpreter.interpret(request);
 
-    assertThat(result.getScoreTeamA()).isEqualTo(11);
-    assertThat(result.getScoreTeamB()).isEqualTo(9);
+    // Team A is the losing side in this phrase, so score mapping should be 9-11.
+    assertThat(result.getScoreTeamA()).isEqualTo(9);
+    assertThat(result.getScoreTeamB()).isEqualTo(11);
     assertThat(result.getWinningTeamIndex()).isEqualTo(1);
 
     var team0 = result.getTeams().get(0).getPlayers();
@@ -195,10 +196,10 @@ class SpanishSpokenMatchInterpreterTest {
 
     assertThat(team0)
         .extracting(SpokenMatchInterpretation.PlayerResolution::getMatchedUserId)
-        .containsExactly(22L, 23L);
+        .containsExactly(20L, 21L);
     assertThat(team1)
         .extracting(SpokenMatchInterpretation.PlayerResolution::getMatchedUserId)
-        .containsExactly(20L, 21L);
+        .containsExactly(22L, 23L);
   }
 
   private User user(Long id, String nickname, String email) {

@@ -15,18 +15,23 @@ import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.competition.GroupAdministrationOperations;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 @ExtendWith(MockitoExtension.class)
+@Execution(ExecutionMode.SAME_THREAD)
 class LadderConfigControllerJoinTest {
 
   @Mock private LadderConfigRepository configs;
@@ -37,6 +42,7 @@ class LadderConfigControllerJoinTest {
 
   @BeforeEach
   void setUp() {
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
     controller =
         new LadderConfigController(
             null,

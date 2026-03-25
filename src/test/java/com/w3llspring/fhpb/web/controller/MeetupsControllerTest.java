@@ -13,12 +13,16 @@ import com.w3llspring.fhpb.web.model.CustomUserDetails;
 import com.w3llspring.fhpb.web.model.LadderMeetupRsvp;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.LadderMeetupService;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -26,6 +30,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+@Execution(ExecutionMode.SAME_THREAD)
 public class MeetupsControllerTest {
 
   private LadderMeetupService meetups;
@@ -34,6 +39,7 @@ public class MeetupsControllerTest {
   void setup() {
     meetups = mock(LadderMeetupService.class);
     MeetupsController controller = new MeetupsController(meetups);
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
 
     User user = new User();
     user.setId(123L);
@@ -41,6 +47,12 @@ public class MeetupsControllerTest {
     var auth =
         new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of());
     SecurityContextHolder.getContext().setAuthentication(auth);
+  }
+
+  @AfterEach
+  void tearDown() {
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
+    SecurityContextHolder.clearContext();
   }
 
   @Test

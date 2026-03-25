@@ -11,18 +11,24 @@ import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.CompetitionSeasonService;
 import com.w3llspring.fhpb.web.service.LadderConfigService;
 import com.w3llspring.fhpb.web.service.competition.GroupAdministrationOperations;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
+@Execution(ExecutionMode.SAME_THREAD)
 class LadderConfigControllerStartSessionTest {
 
   private LadderConfigController controller;
 
   @BeforeEach
   void setUp() {
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
     LadderConfigService service =
         new LadderConfigService(null, null, null, null, 10, null, null) {
           @Override

@@ -77,8 +77,10 @@ The local Docker stack uses:
 
 ## Running Tests
 
+Use the same command CI runs so local results match GitHub as closely as possible:
+
 ```bash
-./gradlew test
+./gradlew clean test --no-daemon
 ```
 
 Focused test slices are used heavily during refactors, but the full suite is expected to be green.
