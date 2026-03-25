@@ -30,6 +30,8 @@ public class GlobalModelAttributes {
   private final int defaultMaxOwnedLadders;
   private final String assetVersion;
   private final String publicBaseUrl;
+  private final BrandingProperties brandingProperties;
+  private final OperatorProperties operatorProperties;
   private final boolean checkInEnabled;
   private final long pwaInstallMinAccountAgeDays;
   private final boolean googleAnalyticsEnabled;
@@ -52,6 +54,8 @@ public class GlobalModelAttributes {
       @Value("${fhpb.ladder.max-per-user:3}") int defaultMaxOwnedLadders,
       @Value("${fhpb.assets.version:20260313a}") String assetVersion,
       @Value("${fhpb.public.base-url:}") String publicBaseUrl,
+      BrandingProperties brandingProperties,
+      OperatorProperties operatorProperties,
       @Value("${fhpb.features.check-in.enabled:true}") boolean checkInEnabled,
       @Value("${fhpb.pwa.install-helper.min-account-age-days:7}") long pwaInstallMinAccountAgeDays,
       @Value("${fhpb.analytics.enabled:false}") boolean googleAnalyticsEnabled,
@@ -71,6 +75,8 @@ public class GlobalModelAttributes {
     this.defaultMaxOwnedLadders = defaultMaxOwnedLadders;
     this.assetVersion = assetVersion;
     this.publicBaseUrl = publicBaseUrl;
+    this.brandingProperties = brandingProperties;
+    this.operatorProperties = operatorProperties;
     this.checkInEnabled = checkInEnabled;
     this.pwaInstallMinAccountAgeDays = pwaInstallMinAccountAgeDays;
     this.googleAnalyticsEnabled = googleAnalyticsEnabled;
@@ -110,6 +116,8 @@ public class GlobalModelAttributes {
         defaultMaxOwnedLadders,
         assetVersion,
         publicBaseUrl,
+        defaultBrandingProperties(),
+        defaultOperatorProperties(),
         checkInEnabled,
         pwaInstallMinAccountAgeDays,
         googleAnalyticsEnabled,
@@ -120,12 +128,24 @@ public class GlobalModelAttributes {
         competitionAutoModBlockThreshold);
   }
 
+  private static BrandingProperties defaultBrandingProperties() {
+    return new BrandingProperties();
+  }
+
+  private static OperatorProperties defaultOperatorProperties() {
+    OperatorProperties properties = new OperatorProperties();
+    properties.setPublicUrl("");
+    return properties;
+  }
+
   @ModelAttribute
   public void populateCommonAttributes(
       Model model, Authentication authentication, HttpServletRequest request) {
     model.addAttribute("ladderMaxMembers", ladderMaxMembers);
     model.addAttribute("defaultMaxOwnedLadders", defaultMaxOwnedLadders);
     model.addAttribute("assetVersion", assetVersion);
+    model.addAttribute("branding", brandingProperties);
+    model.addAttribute("operator", operatorProperties);
     model.addAttribute("publicMetadataBaseUrl", resolvePublicMetadataBaseUrl(request));
     model.addAttribute("checkInEnabled", checkInEnabled);
     model.addAttribute("googleAnalyticsEnabled", googleAnalyticsEnabled);
@@ -265,6 +285,10 @@ public class GlobalModelAttributes {
   }
 
   private String resolvePublicMetadataBaseUrl(HttpServletRequest request) {
+    String normalizedOperatorUrl = normalizePublicBaseUrl(operatorProperties.getPublicUrl());
+    if (!normalizedOperatorUrl.isEmpty()) {
+      return normalizedOperatorUrl;
+    }
     String normalizedConfigured = normalizePublicBaseUrl(publicBaseUrl);
     if (!normalizedConfigured.isEmpty()) {
       return normalizedConfigured;

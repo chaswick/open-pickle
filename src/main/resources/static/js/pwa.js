@@ -1,5 +1,5 @@
 /*
- * PWA + Push helper for Open-Pickle
+ * PWA + Push helper
  * - Registers service worker
  * - Shows "Install" prompt when supported
  * - Lets user enable Play Plan push notifications
@@ -21,6 +21,20 @@
   const INSTALL_BANNER_SNOOZE_DAYS = 14;
   const IOS_HINT_SNOOZE_DAYS = 2;
   const DEFAULT_PLAYPLANS_PUSH_HELP = 'Tip: Works best after installing the app to your home screen.';
+
+  function brandingConfig() {
+    return window.FHPB.Branding || {};
+  }
+
+  function appName() {
+    const configuredName = brandingConfig().appName;
+    return (typeof configuredName === 'string' && configuredName.trim()) ? configuredName.trim() : 'Open-Pickle';
+  }
+
+  function serviceWorkerPath() {
+    const configuredPath = brandingConfig().serviceWorkerPath;
+    return (typeof configuredPath === 'string' && configuredPath.trim()) ? configuredPath.trim() : '/sw.js';
+  }
 
   function nowMs() {
     return Date.now();
@@ -184,7 +198,7 @@
     if (!isSecure) return null;
 
     try {
-      return await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      return await navigator.serviceWorker.register(serviceWorkerPath(), { scope: '/' });
     } catch (e) {
       console.warn('[pwa] service worker registration failed', e);
       return null;
@@ -232,11 +246,11 @@
       const toastHtml = '' +
         '<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">' +
         '  <div class="toast-header">' +
-        '    <strong class="me-auto">Open-Pickle</strong>' +
+        '    <strong class="me-auto">' + appName() + '</strong>' +
         '    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>' +
         '  </div>' +
         '  <div class="toast-body">' +
-        '    Install the Open-Pickle app for faster access.' +
+        '    Install the ' + appName() + ' app for faster access.' +
         '    <div class="mt-2 pt-2 border-top d-flex gap-2">' +
         '      <button type="button" class="btn btn-primary btn-sm" id="fhpb-install-btn">Install</button>' +
         '      <button type="button" class="btn btn-outline-secondary btn-sm" id="fhpb-install-dismiss">Not now</button>' +
@@ -286,7 +300,7 @@
       const toastHtml = '' +
         '<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">' +
         '  <div class="toast-header">' +
-        '    <strong class="me-auto">Install Open-Pickle</strong>' +
+        '    <strong class="me-auto">Install ' + appName() + '</strong>' +
         '    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>' +
         '  </div>' +
         '  <div class="toast-body">' +

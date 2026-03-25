@@ -5,11 +5,12 @@
       layout:decorate="~{layouts/public}">
 
 <head>
-    <title layout:fragment="title">Free Global Pickleball Competition | Open-Pickle</title>
+    <title layout:fragment="title" th:text="${branding.landingPageTitle}">Free Global Pickleball Competition</title>
 
     <th:block layout:fragment="styles">
-        <meta name="description" content="Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private groups, round robins, and season trophies.">
-        <link rel="preload" as="image" href="/images/landing/competitionSnapshot.png" th:href="@{/images/landing/competitionSnapshot.png}">
+          <meta name="description" content="Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private groups, round robins, and season trophies."
+              th:content="${branding.landingMetaDescription}">
+        <link rel="preload" as="image" href="/images/landing/openPickleScreenshot.png" th:href="@{${branding.snapshotPath}}">
     </th:block>
 </head>
 
@@ -25,23 +26,24 @@
                                     <div class="landing-brand-inline">
                                         <div class="landing-brand-core">
                                             <div class="landing-logo-mark">
-                                                <img src="/images/landing/picklebuddies_logo.png"
-                                                     th:src="@{/images/landing/picklebuddies_logo.png}"
-                                                     alt="Open-Pickle logo"
+                                                   <img src="/images/landing/op_logo.png"
+                                                       th:src="@{${branding.landingLogoPath}}"
+                                                       alt="Open-Pickle logo"
+                                                       th:alt="${branding.landingLogoAlt}"
                                                      width="1024"
                                                      height="1024"
                                                      loading="eager"
                                                      decoding="async">
                                             </div>
                                             <div class="landing-brand-text">
-                                                <p class="landing-wordmark">Open-Pickle</p>
-                                                <p class="landing-kicker">Community-driven Pickleball</p>
+                                                <p class="landing-wordmark" th:text="${branding.appName}">Open-Pickle</p>
+                                                <p class="landing-kicker" th:text="${branding.landingKicker}">Community-driven Pickleball</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <h1 class="landing-title">Free Global Pickleball Competition</h1>
-                                <p class="landing-copy">Compete globally in a seasonal pickleball competition where your rating resets. Open-Pickle automates the standings, keeps match logging easy, and supports private groups, round robins, trophies to track your finishes, and more.</p>
+                                <h1 class="landing-title" th:text="${branding.landingPageTitle}">Free Global Pickleball Competition</h1>
+                                <p class="landing-copy" th:text="${branding.landingCopy}">Compete globally in a seasonal pickleball competition where your rating resets. Open-Pickle automates the standings, keeps match logging easy, and supports private groups, round robins, trophies to track your finishes, and more.</p>
                                 <div class="landing-proof-mark landing-proof-mark-cta">
                                     <img src="/images/landing/notamoneygrab.png"
                                          th:src="@{/images/landing/notamoneygrab.png}"
@@ -82,8 +84,8 @@
                             <div class="col-lg-5">
                                 <figure class="landing-snapshot-wrap landing-snapshot-hero">
                                     <div class="landing-snapshot-frame">
-                                        <img src="/images/landing/competitionSnapshot.png"
-                                             th:src="@{/images/landing/competitionSnapshot.png}"
+                                        <img src="/images/landing/openPickleScreenshot.png"
+                                            th:src="@{${branding.snapshotPath}}"
                                              alt="Open-Pickle standings view showing player rankings and tournament movement"
                                              width="379"
                                              height="850"

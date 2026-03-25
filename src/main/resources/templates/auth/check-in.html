@@ -117,12 +117,12 @@
             <div class="card-header card-header-title text-center">Court Flag</div>
             <div class="card-body">
                 <p class="text-muted small mb-3">
-                    Want people to know which court you are on? Print the Open-Pickle flag and set it out so other
+                    Want people to know which court you are on? Print the <span th:text="${branding.appName}">Open-Pickle</span> flag and set it out so other
                     players can spot you more easily.
                 </p>
                 <a class="btn btn-nav-secondary w-100"
-                   th:href="@{/images/picklebuddies_flag.png}"
-                   href="/images/picklebuddies_flag.png"
+                   th:href="@{${branding.checkInFlagPath}}"
+                         href="/images/openpickle_flag.png"
                    target="_blank"
                    rel="noopener">
                     Open Flag for Printing

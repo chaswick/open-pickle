@@ -24,17 +24,17 @@
 <th:block th:fragment="public-social-image"
           th:with="
               publicBase=${#strings.trim(publicMetadataBaseUrl)},
-              logoPath=${'/images/landing/picklebuddies_logo.png?v=' + assetVersion},
+              logoPath=${branding.socialImagePath + '?v=' + assetVersion},
               logoUrl=${#strings.isEmpty(publicBase) ? logoPath : publicBase + logoPath}">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Open-Pickle">
-    <meta property="og:image" content="/images/landing/picklebuddies_logo.png" th:content="${logoUrl}">
-    <meta property="og:image:secure_url" content="/images/landing/picklebuddies_logo.png" th:content="${logoUrl}">
+    <meta property="og:site_name" content="Open-Pickle" th:content="${branding.appName}">
+    <meta property="og:image" content="/images/landing/op_logo.png" th:content="${logoUrl}">
+    <meta property="og:image:secure_url" content="/images/landing/op_logo.png" th:content="${logoUrl}">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1024">
     <meta property="og:image:height" content="1024">
-    <meta property="og:image:alt" content="Open-Pickle logo">
+    <meta property="og:image:alt" content="Open-Pickle logo" th:content="${branding.socialImageAlt}">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:image" content="/images/landing/picklebuddies_logo.png" th:content="${logoUrl}">
-    <link rel="image_src" href="/images/landing/picklebuddies_logo.png" th:href="${logoUrl}">
+    <meta name="twitter:image" content="/images/landing/op_logo.png" th:content="${logoUrl}">
+    <link rel="image_src" href="/images/landing/op_logo.png" th:href="${logoUrl}">
 </th:block>

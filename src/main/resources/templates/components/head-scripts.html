@@ -1,5 +1,16 @@
+<th:block th:fragment="branding-bootstrap">
+    <script th:inline="javascript">
+        window.FHPB = window.FHPB || {};
+        window.FHPB.Branding = Object.assign({}, window.FHPB.Branding || {}, {
+            appName: [[${branding.appName}]],
+            serviceWorkerPath: [[@{/sw.js}]]
+        });
+    </script>
+</th:block>
+
 
 <th:block th:fragment="core-scripts">
+    <div th:replace="~{components/head-scripts :: branding-bootstrap}"></div>
     
     <script src="/js/bootstrap.bundle.min.js" th:src="@{/js/bootstrap.bundle.min.js}"></script>
     

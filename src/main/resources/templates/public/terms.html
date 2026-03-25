@@ -32,15 +32,15 @@
     <div layout:fragment="content">
         <main class="legal-content">
             <h1>Terms of Service</h1>
-            <p><strong>Last updated:</strong> March 19, 2026</p>
+            <p><strong>Last updated:</strong> <span th:text="${operator.termsLastUpdated}">March 19, 2026</span></p>
             <p><em>This public repo ships a placeholder terms template. Deployment operators should replace the domain, operator identity, contact information, and dispute-resolution details before launching a public service.</em></p>
 
             <h2>1. Overview</h2>
             <p>
-                Open-Pickle ("the Service," "we," "us," or "our") is community software that may be deployed at
-                <a href="https://your-domain.example">your-domain.example</a> to help users organize pickleball
+                <span th:text="${branding.appName}">Open-Pickle</span> ("the Service," "we," "us," or "our") is community software that may be deployed at
+                <a href="https://your-domain.example" th:href="${operator.publicUrl}" th:text="${operator.publicUrlDisplay}">your-domain.example</a> to help users organize pickleball
                 groups, standings, matches, and related activities.
-                For any public deployment, these Terms should identify the operator of that deployment.
+                For any public deployment, these Terms should identify <span th:text="${operator.name}">the operator of that deployment</span>.
                 By accessing or using the Service, you agree to these Terms of Service ("Terms").
             </p>
 
@@ -161,8 +161,8 @@
             <p><strong>Operator template notice:</strong> The governing law, venue, arbitration, and small-claims details for a public deployment should be reviewed and completed by that deployment's operator.</p>
 
             <p>
-                Before initiating any legal proceeding, you agree to first contact the operator of the deployment you are using at
-                <a href="mailto:support@example.invalid">support@example.invalid</a>
+                Before initiating any legal proceeding, you agree to first contact <span th:text="${operator.name}">the operator of the deployment you are using</span> at
+                <a href="mailto:support@example.invalid" th:href="${operator.supportEmailHref}" th:text="${operator.supportEmail}">support@example.invalid</a>
                 and attempt to resolve the dispute informally for at least 30 days.
             </p>
 
@@ -190,7 +190,7 @@
             <h2>19. Contact</h2>
             <p>
                 Questions about these Terms? Contact us at
-                <a href="mailto:support@example.invalid">support@example.invalid</a>
+                <a href="mailto:support@example.invalid" th:href="${operator.supportEmailHref}" th:text="${operator.supportEmail}">support@example.invalid</a>
             </p>
 
             <hr class="my-4">

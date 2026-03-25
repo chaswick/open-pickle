@@ -2,6 +2,8 @@ package com.w3llspring.fhpb.web;
 
 import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.LadderMembership;
+import com.w3llspring.fhpb.web.config.BrandingProperties;
+import com.w3llspring.fhpb.web.config.OperatorProperties;
 import com.w3llspring.fhpb.web.service.StoryModeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -336,7 +338,7 @@ class ThymeleafTemplateTests {
         assertThat(template).contains("landing-brand-text");
         assertThat(template).contains("landing-logo-mark");
         assertThat(template).contains("landing-proof-mark-cta");
-        assertThat(template).contains("picklebuddies_logo.png");
+        assertThat(template).contains("op_logo.png");
         assertThat(template).contains("width=\"1024\"");
         assertThat(template).contains("height=\"1024\"");
         assertThat(template).contains("notamoneygrab.png");
@@ -344,7 +346,7 @@ class ThymeleafTemplateTests {
         assertThat(template).contains("height=\"768\"");
         assertThat(template).contains("decoding=\"async\"");
         assertThat(template).contains("fetchpriority=\"low\"");
-        assertThat(template).contains("competitionSnapshot.png");
+        assertThat(template).contains("openPickleScreenshot.png");
         assertThat(template).contains("width=\"379\"");
         assertThat(template).contains("height=\"850\"");
         assertThat(template).contains("fetchpriority=\"high\"");
@@ -358,7 +360,7 @@ class ThymeleafTemplateTests {
         String metaTemplate = Files.readString(Path.of("src/main/resources/templates/components/head-meta.html"));
 
         assertThat(layoutTemplate).contains("components/head-meta :: public-social-image");
-        assertThat(metaTemplate).contains("picklebuddies_logo.png?v=");
+        assertThat(metaTemplate).contains("branding.socialImagePath + '?v=' + assetVersion");
         assertThat(metaTemplate).contains("property=\"og:image\"");
         assertThat(metaTemplate).contains("name=\"twitter:image\"");
         assertThat(metaTemplate).contains("rel=\"image_src\"");
@@ -367,15 +369,19 @@ class ThymeleafTemplateTests {
 
     @Test
     void publicLandingRendersAbsoluteLogoPreviewImageFromModelBaseUrl() {
+        BrandingProperties branding = new BrandingProperties();
+        OperatorProperties operator = new OperatorProperties();
         String result = renderWebTemplate("public/landing", Map.of(
                 "assetVersion", "test-build",
                 "publicMetadataBaseUrl", "https://open-pickle.example",
+            "branding", branding,
+            "operator", operator,
                 "_csrf", new DefaultCsrfToken("X-CSRF-TOKEN", "_csrf", "token"),
                 "googleAnalyticsEnabled", false,
                 "googleAnalyticsMeasurementId", "",
                 "googleAdsId", ""));
 
-        assertThat(result).contains("content=\"https://open-pickle.example/images/landing/picklebuddies_logo.png?v=test-build\"");
+        assertThat(result).contains("content=\"https://open-pickle.example/images/landing/op_logo.png?v=test-build\"");
         assertThat(result).contains("name=\"twitter:image\"");
         assertThat(result).contains("property=\"og:image\"");
     }

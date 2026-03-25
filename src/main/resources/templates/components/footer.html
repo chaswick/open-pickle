@@ -1,12 +1,22 @@
 <footer class="site-footer text-center mt-5 py-4 bg-light border-top" th:fragment="footer">
   <div class="container">
     <p class="mb-1">
-      <strong><a th:href="@{/}" class="site-footer-brand text-decoration-none">Open-Pickle</a></strong><br>
-      <small class="site-footer-meta">Open-source pickleball group and match tracker</small>
+      <strong><a th:href="@{/}" class="site-footer-brand text-decoration-none" th:text="${branding.appName}">Open-Pickle</a></strong><br>
+      <small class="site-footer-meta" th:text="${branding.footerTagline}">Open-source pickleball group and match tracker</small>
     </p>
     <p class="mb-2">
       <a href="/terms" class="site-footer-link text-decoration-none me-3">Terms of Service</a>
       <a href="/privacy" class="site-footer-link text-decoration-none">Privacy Policy</a>
+    </p>
+    <p class="mb-0" th:if="${operator.supportEmailConfigured or operator.hasDonationUrl()}">
+      <a th:if="${operator.supportEmailConfigured}"
+         th:href="${operator.supportEmailHref}"
+         class="site-footer-link text-decoration-none me-3">Support</a>
+      <a th:if="${operator.hasDonationUrl()}"
+         th:href="${operator.donationUrl}"
+         class="site-footer-link text-decoration-none"
+         target="_blank"
+         rel="noopener">Donate</a>
     </p>
   </div>
 </footer>

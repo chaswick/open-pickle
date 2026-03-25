@@ -3,9 +3,14 @@ package com.w3llspring.fhpb.web;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
+@EnableConfigurationProperties({
+  com.w3llspring.fhpb.web.config.BrandingProperties.class,
+  com.w3llspring.fhpb.web.config.OperatorProperties.class
+})
 @EnableJpaRepositories(basePackages = "com.w3llspring.fhpb.web.db")
 @EntityScan(basePackages = "com.w3llspring.fhpb.web.model")
 @org.springframework.scheduling.annotation.EnableScheduling
