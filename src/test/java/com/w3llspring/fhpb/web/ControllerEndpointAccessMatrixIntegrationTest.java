@@ -72,6 +72,8 @@ class ControllerEndpointAccessMatrixIntegrationTest {
           "/meetups/unsubscribe",
           "/terms",
           "/privacy",
+          "/site.webmanifest",
+          "/sw.js",
           "/apple-touch-icon-precomposed.png");
 
   private static final Set<String> LOGGED_IN_BAD_INPUT_SKIPS =
