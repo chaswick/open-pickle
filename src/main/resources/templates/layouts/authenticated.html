@@ -13,6 +13,7 @@
         <title layout:title-pattern="|$CONTENT_TITLE | ${branding.appName}|"
             th:text="${branding.appName}">Open-Pickle</title>
     
+    <div th:replace="~{components/head-meta :: js-ready-marker}"></div>
     
     <div th:replace="~{components/head-styles :: core-styles}"></div>
     

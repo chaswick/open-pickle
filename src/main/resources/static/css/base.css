@@ -112,6 +112,15 @@ p {
   background: transparent;
 }
 
+html.js .card[data-card-collapse-default="closed"]:not([data-card-collapse-upgraded="true"]) > .card-header {
+  border-bottom-width: 0;
+  border-radius: var(--border-radius-lg);
+}
+
+html.js .card[data-card-collapse-default="closed"]:not([data-card-collapse-upgraded="true"]) > .card-body {
+  display: none;
+}
+
 .card-collapse-toggle {
   display: grid;
   grid-template-columns: 1.25rem 1fr 1.25rem;

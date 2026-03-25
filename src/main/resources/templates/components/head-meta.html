@@ -21,6 +21,13 @@
 </th:block>
 
 
+<th:block th:fragment="js-ready-marker">
+    <script>
+        document.documentElement.classList.add('js');
+    </script>
+</th:block>
+
+
 <th:block th:fragment="public-social-image"
           th:with="
               publicBase=${#strings.trim(publicMetadataBaseUrl)},
