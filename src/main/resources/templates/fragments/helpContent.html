@@ -3,8 +3,9 @@
 
     <div class="accordion-item">
       <h2 class="accordion-header" id="competitionWhyHeading">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#competitionWhyHelp" aria-expanded="true" aria-controls="competitionWhyHelp">
-          Why compete in the Open-Pickle Global Competition?
+        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#competitionWhyHelp" aria-expanded="true" aria-controls="competitionWhyHelp"
+          th:text="|Why compete in the ${branding.appName} Global Competition?|">
+          Why compete in the Global Competition?
         </button>
       </h2>
       <div id="competitionWhyHelp" class="accordion-collapse collapse show" aria-labelledby="competitionWhyHeading" data-bs-parent="#helpAccordion">
@@ -28,7 +29,7 @@
       </h2>
       <div id="groupsHelp" class="accordion-collapse collapse" aria-labelledby="groupsHeading" data-bs-parent="#helpAccordion">
         <div class="accordion-body">
-          <p class="mb-2"><strong>Groups</strong> are the basic container in Open-Pickle. </p>
+          <p class="mb-2"><strong>Groups</strong> are the basic container in <span th:text="${branding.appName}">the app</span>. </p>
           <ul>
             <li><strong>Global Competition:</strong> Start from Home &rarr; <strong>Start Playing</strong> to start your first session or join one from an invite link during the current 6-week season.</li>
             <li><strong>Sessions:</strong> A session is a <strong>temporary group</strong> for the people you are playing with right now.</li>
@@ -79,7 +80,7 @@
           <ul>
             <li><strong>You start it:</strong> We only ask for your location after you tap the <strong>Check In</strong> button.</li>
             <li><strong>Permission is explicit:</strong> Because Check In runs through the browser/PWA, your location is blocked until you allow it. We do not collect background location for Check In.</li>
-            <li><strong>PWA tip:</strong> Check In usually works best after installing Open-Pickle to your home screen and allowing location access there.</li>
+            <li><strong>PWA tip:</strong> Check In usually works best after installing <span th:text="${branding.appName}">the app</span> to your home screen and allowing location access there.</li>
             <li><strong>Known spots are fast:</strong> If you are at one of your saved locations, the app checks you in there right away.</li>
             <li><strong>Nearby names are flexible:</strong> If other players already use that same place with slightly different names, you can pick from suggestions or enter your own name.</li>
             <li><strong>It expires automatically:</strong> Each check-in stays active for <strong>3 hours</strong>, then clears on its own.</li>
@@ -219,17 +220,18 @@
 
     <div class="accordion-item">
       <h2 class="accordion-header" id="aiUseHeading">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aiUseHelp" aria-expanded="false" aria-controls="aiUseHelp">
-          AI Use in Open-Pickle
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aiUseHelp" aria-expanded="false" aria-controls="aiUseHelp"
+          th:text="|AI Use in ${branding.appName}|">
+          AI Use
         </button>
       </h2>
       <div id="aiUseHelp" class="accordion-collapse collapse" aria-labelledby="aiUseHeading" data-bs-parent="#helpAccordion">
         <div class="accordion-body">
-          <p>Open-Pickle uses AI in limited ways, with human oversight.</p>
+          <p><span th:text="${branding.appName}">The app</span> uses AI in limited ways, with human oversight.</p>
           <ul>
             <li><strong>Development support:</strong> AI is used to help develop parts of the codebase, but that work is reviewed and directed by an experienced web developer.</li>
             <li><strong>Trophy art:</strong> Some trophy artwork has been generated with AI. Donations help fund commissioned replacements by human artists over time.</li>
-            <li><strong>Not used on your app data:</strong> AI is not used to process your personal information, match data, check-ins, or other user-submitted data inside Open-Pickle.</li>
+            <li><strong>Not used on your app data:</strong> AI is not used to process your personal information, match data, check-ins, or other user-submitted data inside <span th:text="${branding.appName}">the app</span>.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">The goal is to use AI as a supervised creation tool to improve development speed and quality.</small></p>
         </div>

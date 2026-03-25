@@ -2,6 +2,8 @@ package com.w3llspring.fhpb.web.service.meetups;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.w3llspring.fhpb.web.config.BrandingProperties;
+import com.w3llspring.fhpb.web.config.OperatorProperties;
 import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMeetupSlotRepository;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
@@ -235,7 +237,7 @@ class MeetupsEmailDigestServiceIntegrationTest {
     private volatile boolean blockFirstSend;
 
     RecordingEmailService() {
-      super(null);
+      super(null, new OperatorProperties(), new BrandingProperties());
     }
 
     void reset() {

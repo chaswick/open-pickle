@@ -1,8 +1,9 @@
 package com.w3llspring.fhpb.web.service.email;
 
+import com.w3llspring.fhpb.web.config.BrandingProperties;
+import com.w3llspring.fhpb.web.config.OperatorProperties;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -11,12 +12,14 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
   private final JavaMailSender mailSender;
+  private final String supportEmail;
+  private final String appName;
 
-  @Value("${support.email}")
-  private String supportEmail;
-
-  public EmailService(JavaMailSender mailSender) {
+  public EmailService(
+      JavaMailSender mailSender, OperatorProperties operatorProperties, BrandingProperties brandingProperties) {
     this.mailSender = mailSender;
+    this.supportEmail = operatorProperties.getSupportEmail();
+    this.appName = brandingProperties.getAppName();
   }
 
   public void sendHtml(String to, String subject, String html) throws MessagingException {
@@ -31,7 +34,7 @@ public class EmailService {
 
     // Keep sender consistent and recognizable.
     try {
-      helper.setFrom(supportEmail, "Open-Pickle <no-reply>");
+      helper.setFrom(supportEmail, appName + " <no-reply>");
     } catch (java.io.UnsupportedEncodingException e) {
       helper.setFrom(supportEmail);
     }

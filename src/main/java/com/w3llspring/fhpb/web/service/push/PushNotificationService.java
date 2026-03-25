@@ -1,6 +1,7 @@
 package com.w3llspring.fhpb.web.service.push;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.w3llspring.fhpb.web.config.BrandingProperties;
 import com.w3llspring.fhpb.web.db.UserPushSubscriptionRepository;
 import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.model.User;
@@ -41,6 +42,7 @@ public class PushNotificationService {
   private final String vapidPrivateKey;
   private final String vapidSubject;
   private final int ttlSeconds;
+  private final String appName;
 
   private volatile PushService pushService;
 
@@ -60,6 +62,7 @@ public class PushNotificationService {
       UserRepository userRepo,
       ObjectMapper objectMapper,
       PushEndpointValidator pushEndpointValidator,
+      BrandingProperties brandingProperties,
       @Value("${fhpb.push.enabled:false}") boolean enabled,
       @Value("${fhpb.push.vapid.public-key:}") String vapidPublicKey,
       @Value("${fhpb.push.vapid.private-key:}") String vapidPrivateKey,
@@ -75,6 +78,7 @@ public class PushNotificationService {
     this.vapidSubject =
         vapidSubject == null ? "mailto:support@example.invalid" : vapidSubject.trim();
     this.ttlSeconds = Math.max(60, ttlSeconds);
+    this.appName = brandingProperties.getAppName();
   }
 
   private ZoneId resolveUserZone(Long userId) {
@@ -145,7 +149,7 @@ public class PushNotificationService {
     List<UserPushSubscription> subs = subscriptions.findByUserId(userId);
     if (subs == null || subs.isEmpty()) return;
 
-    String title = "Open-Pickle";
+    String title = appName;
 
     String cleanedLadder = ladderTitle == null ? "" : ladderTitle.trim();
     String body;
@@ -197,7 +201,7 @@ public class PushNotificationService {
     List<UserPushSubscription> subs = subscriptions.findByUserId(userId);
     if (subs == null || subs.isEmpty()) return;
 
-    String title = "Open-Pickle";
+    String title = appName;
 
     String cleanedLadder = ladderTitle == null ? "" : ladderTitle.trim();
     String body;
@@ -250,7 +254,7 @@ public class PushNotificationService {
     if (subs == null || subs.isEmpty()) return;
 
     int count = rows == null ? 0 : rows.size();
-    String title = "Open-Pickle";
+    String title = appName;
     String body = count <= 1 ? "New Play Plan available." : (count + " new Play Plans available.");
 
     PushPayload payload = new PushPayload(title, body, "/play-plans", Instant.now());

@@ -36,7 +36,7 @@
                     <span th:text="${checkInExpiryLabel}">3 hours</span>.
                 </p>
                 <p class="form-text mt-n1 mb-3">
-                    Tip: Check In works best after installing Open-Pickle to your home screen and allowing location
+                    Tip: Check In works best after installing <span th:text="${branding.appName}">the app</span> to your home screen and allowing location
                     access for the app.
                 </p>
                 <p class="text-muted small mb-3" th:if="${checkInPage.activeCheckIn != null}">
@@ -117,7 +117,7 @@
             <div class="card-header card-header-title text-center">Court Flag</div>
             <div class="card-body">
                 <p class="text-muted small mb-3">
-                    Want people to know which court you are on? Print the <span th:text="${branding.appName}">Open-Pickle</span> flag and set it out so other
+                    Want people to know which court you are on? Print the <span th:text="${branding.appName}">app</span> flag and set it out so other
                     players can spot you more easily.
                 </p>
                 <a class="btn btn-nav-secondary w-100"

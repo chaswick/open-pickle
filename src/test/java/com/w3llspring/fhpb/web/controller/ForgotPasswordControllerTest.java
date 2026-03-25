@@ -2,6 +2,8 @@ package com.w3llspring.fhpb.web.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.w3llspring.fhpb.web.config.BrandingProperties;
+import com.w3llspring.fhpb.web.config.OperatorProperties;
 import com.w3llspring.fhpb.web.controller.site.ForgotPasswordController;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.auth.ForgotPasswordAbuseGuard;
@@ -183,7 +185,7 @@ class ForgotPasswordControllerTest {
     private String lastHtml;
 
     private StubEmailService() {
-      super(null);
+      super(null, new OperatorProperties(), new BrandingProperties());
     }
 
     @Override

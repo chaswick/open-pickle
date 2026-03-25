@@ -1,5 +1,7 @@
 package com.w3llspring.fhpb.web.service.meetups;
 
+import com.w3llspring.fhpb.web.config.BrandingProperties;
+import com.w3llspring.fhpb.web.config.OperatorProperties;
 import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMeetupRsvpRepository;
 import com.w3llspring.fhpb.web.db.LadderMeetupSlotRepository;
@@ -30,7 +32,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,9 +60,9 @@ public class MeetupsEmailDigestUserProcessor {
   private final MeetupsEmailConfig config;
   private final MeetupsEmailLinkSigner linkSigner;
   private final String supportEmail;
+  private final String appName;
 
-  @Value("${fhpb.public.base-url:}")
-  private String publicBaseUrl;
+  private final String publicBaseUrl;
 
   public MeetupsEmailDigestUserProcessor(
       UserRepository userRepo,
@@ -72,7 +73,10 @@ public class MeetupsEmailDigestUserProcessor {
       EmailService emailService,
       MeetupsEmailConfig config,
       MeetupsEmailLinkSigner linkSigner,
-      @Value("${support.email:support@example.invalid}") String supportEmail) {
+        OperatorProperties operatorProperties,
+        BrandingProperties brandingProperties,
+        @org.springframework.beans.factory.annotation.Value("${fhpb.public.base-url:}")
+          String publicBaseUrl) {
     this.clock = Clock.systemUTC();
     this.userRepo = userRepo;
     this.membershipRepo = membershipRepo;
@@ -82,10 +86,9 @@ public class MeetupsEmailDigestUserProcessor {
     this.emailService = emailService;
     this.config = config;
     this.linkSigner = linkSigner;
-    this.supportEmail =
-        supportEmail == null || supportEmail.isBlank()
-            ? "support@example.invalid"
-            : supportEmail.trim();
+    this.supportEmail = operatorProperties.getSupportEmail();
+    this.appName = brandingProperties.getAppName();
+    this.publicBaseUrl = publicBaseUrl == null ? "" : publicBaseUrl;
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -361,7 +364,9 @@ public class MeetupsEmailDigestUserProcessor {
 
     sb.append("<div style=\"background-color: #0d6efd; padding: 20px; text-align: center;\">");
     sb.append(
-      "<h1 style=\"margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;\">Open-Pickle Play Plans</h1>");
+      "<h1 style=\"margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;\">"
+        + escape(appName)
+        + " Play Plans</h1>");
     sb.append("</div>");
 
     sb.append("<div style=\"padding: 30px 20px;\">");
@@ -414,7 +419,9 @@ public class MeetupsEmailDigestUserProcessor {
         .append(escape(unsubscribeLink))
         .append("\" style=\"color:#0d6efd; text-decoration:underline;\">unsubscribe</a></p>");
     sb.append(
-      "<p style=\"color: #6c757d; font-size: 12px; margin: 5px 0 0;\">(c) Open-Pickle</p>");
+      "<p style=\"color: #6c757d; font-size: 12px; margin: 5px 0 0;\">(c) "
+        + escape(appName)
+        + "</p>");
     sb.append("</div>");
 
     sb.append("</div>");

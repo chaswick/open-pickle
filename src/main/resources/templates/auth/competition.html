@@ -10,7 +10,7 @@
     <div layout:fragment="content" class="app-home">
         <section class="app-hero">
             <div class="app-hero-card">
-                <h1 class="app-hero-title">Open-Pickle Global Competition</h1>
+                <h1 class="app-hero-title" th:text="|${branding.appName} Global Competition|">Global Competition</h1>
                 <div class="app-hero-subtitle" th:if="${!competitionUnavailable}">
                     <div class="fw-semibold" th:text="${seasonName}">Season</div>
                     <div th:text="${seasonDateRange}">Date Range</div>

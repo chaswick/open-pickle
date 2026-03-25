@@ -248,7 +248,7 @@
               <p class="text-muted mb-0" th:if="${isSessionLadder}">
                 Matches logged from this session count toward the
                 <span class="fw-semibold text-body"
-                      th:text="${targetSeason != null and targetSeason.ladderConfig != null ? targetSeason.ladderConfig.title : 'global competition'}">Open-Pickle Global Competition</span>
+                    th:text="${targetSeason != null and targetSeason.ladderConfig != null ? targetSeason.ladderConfig.title : branding.appName + ' Global Competition'}">Global Competition</span>
                 <span class="fw-semibold text-body"
                       th:text="${targetSeason != null ? targetSeason.name : 'current season'}">Season</span>
                 <span class="text-body"

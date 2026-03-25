@@ -4,10 +4,19 @@ import com.w3llspring.fhpb.web.model.User;
 
 public final class UserPublicName {
 
-  public static final String FALLBACK = "Open-Pickle User";
+  private static final String DEFAULT_FALLBACK = "Open-Pickle User";
+  public static volatile String FALLBACK = DEFAULT_FALLBACK;
   public static final String GUEST = "Guest";
 
   private UserPublicName() {}
+
+  public static void configureFallbackFromAppName(String appName) {
+    if (appName == null || appName.isBlank()) {
+      FALLBACK = DEFAULT_FALLBACK;
+      return;
+    }
+    FALLBACK = appName.trim() + " User";
+  }
 
   public static String forUser(User user) {
     if (user == null) {

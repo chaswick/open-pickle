@@ -3,7 +3,7 @@
 <head>
     <div th:replace="~{components/head-analytics :: google-analytics}"></div>
     <div th:replace="~{components/head-external :: fonts}"></div>
-    <title>Unsubscribe | Open-Pickle</title>
+    <title th:text="|Unsubscribe | ${branding.appName}|">Unsubscribe</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: Roboto, "Helvetica Neue", "Segoe UI", Arial, sans-serif; background-color: #f4f4f4; padding: 20px; text-align: center; }
@@ -17,7 +17,7 @@
     <div class="container">
         <div th:if="${success}">
             <h1>Unsubscribed</h1>
-            <p>You have been successfully removed from Open-Pickle Play Plans emails.</p>
+            <p>You have been successfully removed from <span th:text="${branding.appName}">the app</span> Play Plans emails.</p>
             <p><a href="/">Return to Home</a></p>
         </div>
         <div th:unless="${success}">
