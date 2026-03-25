@@ -25,6 +25,19 @@ Open-Pickle is intended to push in a different direction:
 
 Open sourcing the code does not prevent hosted services, donations, or paid support. The goal is to make the project's incentives legible and keep the platform available to the community even if the hosted service evolves over time.
 
+## AI Usage
+
+AI has been used extensively during development of this project with experienced web developer oversight.  This includes ChatGPT, Codex, and GitHub Copilot.
+
+That does not mean AI output is treated as authoritative. Project changes still require human oversight and manual verification. In practice, that means:
+
+- AI-assisted changes are expected to be reviewed critically rather than accepted blindly
+- tests should cover the behavior being changed, and good focused or full-suite validation matters
+- design quality, architecture, and integration with the existing codebase take priority over fast code generation
+- maintainers are responsible for making sure generated code is correct, coherent, and production-appropriate before it is kept
+
+The standard for code in this repo is not whether AI produced part of it. The standard is whether the result is well-designed, well-integrated, tested appropriately, and manually verified.
+
 ## Repository Layout
 
 - [`src/main/java`](./src/main/java): main web application
