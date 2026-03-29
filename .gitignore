@@ -1,5 +1,6 @@
 ### Build outputs
 .gradle/
+.gradle-local/
 build/
 out/
 bin/
@@ -54,4 +55,3 @@ tmp_*.html
 tmp_*.json
 beta_audit_*/
 *.tmp
-
