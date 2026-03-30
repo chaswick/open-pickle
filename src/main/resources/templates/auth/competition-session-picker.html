@@ -3,29 +3,22 @@
     layout:decorate="~{layouts/authenticated}">
 
 <head>
-    <title layout:fragment="title"
-           th:text="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? 'Log Matches' : 'Start Playing'">
-        Start Playing
-    </title>
+    <title layout:fragment="title">Global Competition</title>
 </head>
 
 <body>
     <div layout:fragment="content" class="app-home">
         <section class="app-hero">
             <div class="app-hero-card">
-                <h1 class="app-hero-title"
-                    th:text="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? 'Log Matches' : 'Start Playing'">
-                    Start Playing
-                </h1>
-                <p class="app-hero-subtitle"
-                   th:text="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? (${canCreateCompetitionSession ? 'Choose a session to open, start a new one, or join nearby or from a shared code.' : 'Choose a session to open, or join nearby or from a shared code.'}) : 'Choose how you want to get into the global competition: start a session or join one nearby or from a shared code.'">
-                    Choose how you want to get into the global competition.
+                <h1 class="app-hero-title">Global Competition</h1>
+                <p class="app-hero-subtitle">
+                    Start a session, join one, open the standings, or jump back into a session you already use.
                 </p>
             </div>
         </section>
 
         <div class="app-page-back">
-            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">Back</a>
+            <a class="btn btn-nav-secondary btn-lg w-100" href="/home">Back</a>
         </div>
 
         <div class="alert alert-info" th:if="${competitionUnavailable}">
@@ -33,6 +26,39 @@
         </div>
 
         <section class="app-action-grid">
+            <form method="post" th:action="@{/groups/start-session}" class="m-0"
+                  data-session-start-form="true"
+                  data-session-start-storage-key="fhpb.session-start-confirmed"
+                  th:if="${!competitionUnavailable}">
+                <input type="hidden" name="returnTo" value="/competition/sessions">
+                <button type="submit"
+                        class="app-action-tile app-action-groups w-100 text-start border-0">
+                    <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
+                    <div>
+                        <div class="app-action-title">Start Session</div>
+                        <div class="app-action-subtitle">Start your own temporary session for the players and court you have today.</div>
+                    </div>
+                </button>
+            </form>
+
+            <a class="app-action-tile app-action-help"
+               th:href="@{/groups/join(returnTo='/competition/sessions')}"
+               th:if="${!competitionUnavailable}">
+                <div class="app-action-icon"><i class="bi bi-phone" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Join Session</div>
+                    <div class="app-action-subtitle">Find nearby sessions with your current location, or enter the shared code. The owner will approve your request.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-standings" th:href="@{/competition}">
+                <div class="app-action-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">View Standings</div>
+                    <div class="app-action-subtitle">Open the current global competition standings.</div>
+                </div>
+            </a>
+
             <a class="app-action-tile app-action-standings"
                th:if="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)}"
                th:each="membership : ${sessionMemberships}"
@@ -48,31 +74,6 @@
                          th:text="${owned ? 'You own this session. Open it to invite players, manage the roster, and log competition matches.' : 'You joined this session. Open it to jump back into that roster and log competition matches.'}">
                         Open this match session.
                     </div>
-                </div>
-            </a>
-
-            <form method="post" th:action="@{/groups/start-session}" class="m-0"
-                  data-session-start-form="true"
-                  data-session-start-storage-key="fhpb.session-start-confirmed"
-                  th:if="${!competitionUnavailable and canCreateCompetitionSession}">
-                <input type="hidden" name="returnTo" value="/competition/sessions">
-                <button type="submit"
-                        class="app-action-tile app-action-groups w-100 text-start border-0">
-                    <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="app-action-title">Start a Session</div>
-                        <div class="app-action-subtitle">Start your own temporary session for the players and court you have today.</div>
-                    </div>
-                </button>
-            </form>
-
-            <a class="app-action-tile app-action-help"
-               th:if="${!competitionUnavailable}"
-               th:href="@{/groups/join(returnTo='/competition/sessions')}">
-                <div class="app-action-icon"><i class="bi bi-phone" aria-hidden="true"></i></div>
-                <div>
-                    <div class="app-action-title">Join a Session</div>
-                    <div class="app-action-subtitle">Find nearby sessions with your current location, or enter the shared code. The owner will approve your request.</div>
                 </div>
             </a>
         </section>

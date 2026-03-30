@@ -8,7 +8,7 @@
 
 <body>
     <div layout:fragment="content" class="app-home">
-        
+
         <div th:if="${message != null}" class="alert alert-success text-center" role="alert">
             [[${message}]]
         </div>
@@ -19,138 +19,245 @@
         <section class="app-hero">
             <div class="app-hero-card">
                 <h1 class="app-hero-title">Let's Pickle!</h1>
-                <p class="app-hero-subtitle"
-                   th:text="${showCompetitionSessionChooser or activeCompetitionSessionId != null} ? 'Choose log matches to open a session, then record results in the global competition.' : 'Choose start playing to start a session or join one from a shared code.'">
-                    Choose start playing to start a session or join one from a shared code.
+                <p class="app-hero-subtitle">
+                    Pick one of the four main areas below to jump into competition play, private groups, your account, or help.
                 </p>
             </div>
         </section>
 
+        <div class="app-home-tour"
+             th:if="${showHomeIntro}"
+             hidden
+             data-home-intro-root="true"
+             data-home-intro-storage-key="fhpb.home-intro.completed"
+             th:attr="data-home-intro-complete-url=@{/home/intro-complete}">
+            <div class="app-home-tour-backdrop"></div>
+            <div class="app-home-tour-dialog" role="dialog" aria-modal="true" aria-label="New user tour">
+                <div class="app-home-tour-card">
+                    <div class="app-home-tour-progress">
+                        <div class="app-home-tour-kicker">Quick Tour</div>
+                        <div class="app-home-tour-counter" data-home-intro-counter>1 of 5</div>
+                    </div>
+
+                    <section class="app-home-tour-step is-active" data-home-intro-step aria-hidden="false">
+                        <h2 class="app-home-tour-title">
+                            Welcome to <span th:text="${branding.appName}">PicklBuddies</span>
+                        </h2>
+                        <p class="app-home-tour-copy">
+                            Congratulations, you have set up your <span th:text="${branding.appName}">PicklBuddies</span> account.
+                        </p>
+                        <p class="app-home-tour-copy">
+                            There is nothing left to do until you are ready to head to the courts and play.
+                        </p>
+                    </section>
+
+                    <section class="app-home-tour-step" data-home-intro-step aria-hidden="true">
+                        <h2 class="app-home-tour-title">When It Is Time To Play</h2>
+                        <p class="app-home-tour-copy">
+                            Only one member of your group needs to create a session.
+                        </p>
+                        <p class="app-home-tour-copy">
+                            Everyone else can join that same session, then you can play your pickleball games.
+                        </p>
+                    </section>
+
+                    <section class="app-home-tour-step" data-home-intro-step aria-hidden="true">
+                        <h2 class="app-home-tour-title">One Player Logs The Result</h2>
+                        <p class="app-home-tour-copy">
+                            After a match is finished, one player from that match should log the result in the session.
+                        </p>
+                        <p class="app-home-tour-copy">
+                            You do not need every player to enter the score. One entry is enough.
+                        </p>
+                    </section>
+
+                    <section class="app-home-tour-step" data-home-intro-step aria-hidden="true">
+                        <h2 class="app-home-tour-title">The Other Team Confirms It</h2>
+                        <p class="app-home-tour-copy">
+                            Once the match is logged, one player from the opposing team confirms it from the match dashboard.
+                        </p>
+                        <p class="app-home-tour-copy">
+                            You can confirm matches right away or wait until the end of the session. Either way works.
+                        </p>
+                    </section>
+
+                    <section class="app-home-tour-step" data-home-intro-step aria-hidden="true">
+                        <h2 class="app-home-tour-title">That Is The Whole PicklBuddies Flow</h2>
+                        <p class="app-home-tour-copy">
+                            Join a session or private group, play some pickleball, one player logs the result, and one player on the opposing team confirms it.
+                        </p>
+                        <p class="app-home-tour-copy">
+                            After that, check the standings and keep an eye on your stats and trophies under User Account.
+                        </p>
+                    </section>
+
+                    <div class="app-home-tour-footer">
+                        <div class="app-home-tour-dots" aria-hidden="true">
+                            <span class="app-home-tour-dot is-active" data-home-intro-dot></span>
+                            <span class="app-home-tour-dot" data-home-intro-dot></span>
+                            <span class="app-home-tour-dot" data-home-intro-dot></span>
+                            <span class="app-home-tour-dot" data-home-intro-dot></span>
+                            <span class="app-home-tour-dot" data-home-intro-dot></span>
+                        </div>
+                        <div class="app-home-tour-actions">
+                            <button type="button" class="btn btn-nav-secondary d-none" data-home-intro-back>Back</button>
+                            <button type="button" class="btn btn-action-primary" data-home-intro-next>Next</button>
+                            <button type="button" class="btn btn-action-primary d-none" data-home-intro-finish>Got it</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <section class="app-action-grid">
             <a class="app-action-tile app-action-standings"
-               th:if="${showCompetitionSessionChooser}"
                th:href="@{/competition/sessions}"
                th:classappend="${showStartHereCallout} ? ' app-action-start-here' : ''">
-                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
                 <div>
-                    <span class="app-action-callout app-action-callout-top"
-                          th:if="${showStartHereCallout}">Start here</span>
-                    <div class="app-action-title">Log Matches</div>
-                    <div class="app-action-subtitle"
-                         th:text="${activeCompetitionSessionCount != null and activeCompetitionSessionCount > 1 ? 'Choose which session to open, then log competition matches.' : 'Open your session hub and log competition matches.'}">
-                    </div>
+                    <span class="app-action-callout app-action-callout-top" th:if="${showStartHereCallout}">Start here</span>
+                    <div class="app-action-title">Global Competition</div>
+                    <div class="app-action-subtitle">Start or join a session, view standings, confirm matches, and check in.</div>
                 </div>
             </a>
 
-            <a class="app-action-tile app-action-standings"
-               th:classappend="${showStartHereCallout} ? ' app-action-start-here' : ''"
-               th:if="${!showCompetitionSessionChooser and activeCompetitionSessionId != null}"
-               th:href="@{/competition/sessions}">
-                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
-                <div>
-                    <span class="app-action-callout app-action-callout-top"
-                          th:if="${showStartHereCallout}">Start here</span>
-                    <div class="app-action-title">Log Matches</div>
-                    <div class="app-action-subtitle"
-                         th:text="${activeCompetitionSessionTitle != null ? 'Open ' + activeCompetitionSessionTitle + ' to log matches.' : 'Open your active global competition session to log matches.'}">
-                    </div>
-                </div>
-            </a>
-            <a class="app-action-tile app-action-standings"
-               th:classappend="${showStartHereCallout} ? ' app-action-start-here' : ''"
-               th:if="${!showCompetitionSessionChooser and activeCompetitionSessionId == null}"
-               th:href="@{/competition/sessions}">
-                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
-                <div>
-                    <span class="app-action-callout app-action-callout-top"
-                          th:if="${showStartHereCallout}">Start here</span>
-                    <div class="app-action-title">Start Playing</div>
-                    <div class="app-action-subtitle">Start a session or join one from a shared code.</div>
-                </div>
-            </a>
-
-            <a class="app-action-tile app-action-plans" th:href="@{/confirm-matches}">
-                <div class="app-action-icon"><i class="bi bi-check2-square" aria-hidden="true"></i></div>
-                <div>
-                    <div class="app-action-title">Confirm Matches</div>
-                    <div class="app-action-subtitle">Review pending match confirmations.</div>
-                </div>
-            </a>
-
-            <a class="app-action-tile app-action-log" th:href="@{/competition}">
-                <div class="app-action-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></div>
-                <div>
-                    <div class="app-action-title">View Standings</div>
-                    <div class="app-action-subtitle">Open the current global competition standings.</div>
-                </div>
-            </a>
-
-            <a class="app-action-tile app-action-checkin"
-               th:if="${checkInEnabled}"
-               th:href="@{/check-in(autostart=true)}">
-                <div class="app-action-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></div>
-                <div>
-                    <div class="app-action-title">Check In</div>
-                    <div class="app-action-subtitle">Share where you're playing and if anyone else is there.</div>
-                </div>
-            </a>
-
-            <a class="app-action-tile app-action-groups"
-               th:href="@{/private-groups}">
+            <a class="app-action-tile app-action-groups" th:href="@{/private-groups}">
                 <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
                 <div>
                     <div class="app-action-title">Private Groups</div>
-                    <div class="app-action-subtitle"
-                         th:text="${#lists.isEmpty(myMemberships)} ? 'Create or join a long-running group when you want something more organized.' : 'Choose a group, then stay scoped to it while you play.'">
-                    </div>
+                    <div class="app-action-subtitle">Open your groups, create a new group, or join one with an invite code.</div>
                 </div>
             </a>
 
-            <a class="app-action-tile app-action-account" th:href="@{/account}">
-                <div class="app-action-icon"><i class="bi bi-gear" aria-hidden="true"></i></div>
+            <a class="app-action-tile app-action-account" th:href="@{/account-menu}">
+                <div class="app-action-icon"><i class="bi bi-person-gear" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Account Settings</div>
-                    <div class="app-action-subtitle">Names, preferences, and history.</div>
+                    <div class="app-action-title">User Account</div>
+                    <div class="app-action-subtitle">Account settings, trophies, stats, and sign-out in one place.</div>
                 </div>
             </a>
-
-            <a class="app-action-tile app-action-help"
-               th:href="@{/help}">
+            
+            <a class="app-action-tile app-action-help" th:href="@{/help}">
                 <div class="app-action-icon"><i class="bi bi-question-circle" aria-hidden="true"></i></div>
                 <div>
                     <div class="app-action-title">Help</div>
-                    <div class="app-action-subtitle">All the infos.</div>
+                    <div class="app-action-subtitle">Walkthroughs for competition, sessions, private groups, standings, and logging.</div>
                 </div>
             </a>
-
-            <a class="app-action-tile app-action-trophies" th:href="@{/trophies}">
-                <div class="app-action-icon"><i class="bi bi-award" aria-hidden="true"></i></div>
-                <div>
-                    <div class="app-action-title">Trophies</div>
-                    <div class="app-action-subtitle">See seasonal achievements and badges.</div>
-                </div>
-            </a>
-
-            <a class="app-action-tile app-action-stats" th:href="@{/stats}">
-                <div class="app-action-icon"><i class="bi bi-graph-up" aria-hidden="true"></i></div>
-                <div>
-                    <div class="app-action-title">Stats</div>
-                    <div class="app-action-subtitle">Track your activity, match history, and community snapshot.</div>
-                </div>
-            </a>
-
-            <form method="post" th:action="@{/logout}" class="m-0">
-                <button type="submit" class="app-action-tile app-action-logout w-100 text-start border-0">
-                    <div class="app-action-icon"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></div>
-                    <div>
-                        <div class="app-action-title">Logout</div>
-                        <div class="app-action-subtitle">Sign out of <span th:text="${branding.appName}">the app</span> on this device.</div>
-                    </div>
-                </button>
-            </form>
         </section>
 
     </div>
+
+    <th:block layout:fragment="scripts">
+        <script>
+            (() => {
+                const root = document.querySelector('[data-home-intro-root="true"]');
+                if (!root) return;
+
+                const completeUrl = root.getAttribute('data-home-intro-complete-url');
+                const storageKey =
+                    root.getAttribute('data-home-intro-storage-key') || 'fhpb.home-intro.completed';
+                const steps = Array.from(root.querySelectorAll('[data-home-intro-step]'));
+                const dots = Array.from(root.querySelectorAll('[data-home-intro-dot]'));
+                const counter = root.querySelector('[data-home-intro-counter]');
+                const backButton = root.querySelector('[data-home-intro-back]');
+                const nextButton = root.querySelector('[data-home-intro-next]');
+                const finishButton = root.querySelector('[data-home-intro-finish]');
+                let activeIndex = 0;
+
+                const setStoredComplete = function () {
+                    try {
+                        window.sessionStorage.setItem(storageKey, '1');
+                    } catch (error) {
+                        // Ignore storage issues and continue with the server-side clear.
+                    }
+                };
+
+                const isStoredComplete = function () {
+                    try {
+                        return window.sessionStorage.getItem(storageKey) === '1';
+                    } catch (error) {
+                        return false;
+                    }
+                };
+
+                const hideTour = function () {
+                    root.setAttribute('hidden', 'hidden');
+                    document.body.classList.remove('app-home-tour-open');
+                };
+
+                const showTour = function () {
+                    root.removeAttribute('hidden');
+                    document.body.classList.add('app-home-tour-open');
+                };
+
+                const clearServerFlag = function () {
+                    if (!completeUrl || !window.fetch) {
+                        hideTour();
+                        return;
+                    }
+
+                    const headers =
+                        window.FHPB && window.FHPB.Csrf && typeof window.FHPB.Csrf.headers === 'function'
+                            ? window.FHPB.Csrf.headers()
+                            : {};
+                    window.fetch(completeUrl, {
+                        method: 'POST',
+                        headers: headers
+                    }).then(function () {
+                        hideTour();
+                    }).catch(function () {
+                        hideTour();
+                    });
+                };
+
+                const renderStep = function () {
+                    const lastIndex = steps.length - 1;
+
+                    steps.forEach(function (step, index) {
+                        const isActive = index === activeIndex;
+                        step.classList.toggle('is-active', isActive);
+                        step.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                    });
+
+                    dots.forEach(function (dot, index) {
+                        dot.classList.toggle('is-active', index === activeIndex);
+                    });
+
+                    if (counter) {
+                        counter.textContent = (activeIndex + 1) + ' of ' + steps.length;
+                    }
+
+                    backButton.classList.toggle('d-none', activeIndex === 0);
+                    nextButton.classList.toggle('d-none', activeIndex === lastIndex);
+                    finishButton.classList.toggle('d-none', activeIndex !== lastIndex);
+                };
+
+                if (isStoredComplete()) {
+                    clearServerFlag();
+                    return;
+                }
+
+                showTour();
+                renderStep();
+
+                backButton.addEventListener('click', function () {
+                    activeIndex = Math.max(0, activeIndex - 1);
+                    renderStep();
+                });
+
+                nextButton.addEventListener('click', function () {
+                    activeIndex = Math.min(steps.length - 1, activeIndex + 1);
+                    renderStep();
+                });
+
+                finishButton.addEventListener('click', function () {
+                    setStoredComplete();
+                    clearServerFlag();
+                });
+            })();
+        </script>
+    </th:block>
 </body>
 
 </html>

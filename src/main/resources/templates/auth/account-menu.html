@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/authenticated}">
+
+<head>
+    <title layout:fragment="title">User Account</title>
+</head>
+
+<body>
+    <div layout:fragment="content" class="app-home">
+        <section class="app-hero">
+            <div class="app-hero-card">
+                <h1 class="app-hero-title">User Account</h1>
+                <p class="app-hero-subtitle">
+                    Open your settings, trophies, stats, or sign out from one place.
+                </p>
+            </div>
+        </section>
+
+        <div class="app-page-back">
+            <a class="btn btn-nav-secondary btn-lg w-100" href="/home">Back</a>
+        </div>
+
+        <section class="app-action-grid">
+            <a class="app-action-tile app-action-account" th:href="@{/account}">
+                <div class="app-action-icon"><i class="bi bi-gear" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Account Settings</div>
+                    <div class="app-action-subtitle">Names, preferences, profile badges, and account history.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-trophies" th:href="@{/trophies}">
+                <div class="app-action-icon"><i class="bi bi-award" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Trophies</div>
+                    <div class="app-action-subtitle">Browse seasonal achievements, collectibles, and badge unlocks.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-stats" th:href="@{/stats}">
+                <div class="app-action-icon"><i class="bi bi-graph-up" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Stats</div>
+                    <div class="app-action-subtitle">See your activity, results, and the wider community snapshot.</div>
+                </div>
+            </a>
+
+            <form method="post" th:action="@{/logout}" class="m-0">
+                <button type="submit" class="app-action-tile app-action-logout w-100 text-start border-0">
+                    <div class="app-action-icon"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></div>
+                    <div>
+                        <div class="app-action-title">Logout</div>
+                        <div class="app-action-subtitle">Sign out of <span th:text="${branding.appName}">the app</span> on this device.</div>
+                    </div>
+                </button>
+            </form>
+        </section>
+    </div>
+</body>
+
+</html>

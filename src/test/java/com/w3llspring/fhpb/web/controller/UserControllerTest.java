@@ -1,21 +1,37 @@
 package com.w3llspring.fhpb.web.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.w3llspring.fhpb.web.controller.account.UserController;
+import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.model.CustomUserDetails;
 import com.w3llspring.fhpb.web.model.Trophy;
 import com.w3llspring.fhpb.web.model.User;
+import com.w3llspring.fhpb.web.service.GlobalLadderBootstrapService;
+import com.w3llspring.fhpb.web.service.auth.PasswordPolicyService;
+import com.w3llspring.fhpb.web.service.auth.RegistrationAbuseGuard;
+import com.w3llspring.fhpb.web.service.auth.RegistrationFormTokenService;
+import com.w3llspring.fhpb.web.service.user.DisplayNameModerationService;
 import com.w3llspring.fhpb.web.service.user.UserAccountSettingsService;
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.ui.ExtendedModelMap;
+import org.springframework.validation.BeanPropertyBindingResult;
 
 class UserControllerTest {
 
@@ -66,6 +82,73 @@ class UserControllerTest {
     assertThat(model.get("message")).isEqualTo("Invalid email or password");
     assertThat(model.get("returnTo")).isEqualTo("/stats");
     assertThat(model.containsAttribute("requireTermsAck")).isFalse();
+  }
+
+  @Test
+  void processRegisterRedirectsHomeAfterSuccessfulSignup() {
+    UserRepository userRepository = mock(UserRepository.class);
+    RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
+    GlobalLadderBootstrapService globalLadderBootstrapService = mock(GlobalLadderBootstrapService.class);
+    AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
+
+    RegistrationFormTokenService registrationFormTokenService =
+        new RegistrationFormTokenService("test-secret", "", 360);
+    PasswordPolicyService passwordPolicyService = new PasswordPolicyService();
+    DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
+
+    ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
+    ReflectionTestUtils.setField(
+        controller, "registrationFormTokenService", registrationFormTokenService);
+    ReflectionTestUtils.setField(controller, "passwordPolicyService", passwordPolicyService);
+    ReflectionTestUtils.setField(
+        controller, "displayNameModerationService", displayNameModerationService);
+    ReflectionTestUtils.setField(
+        controller, "globalLadderBootstrapService", globalLadderBootstrapService);
+    ReflectionTestUtils.setField(controller, "authenticationManager", authenticationManager);
+    ReflectionTestUtils.setField(controller, "defaultMaxOwnedLadders", 10);
+
+    when(registrationAbuseGuard.resolveClientIp(any())).thenReturn("127.0.0.1");
+    when(registrationAbuseGuard.evaluate(eq("127.0.0.1"), isNull(), anyLong()))
+        .thenReturn(RegistrationAbuseGuard.Decision.allow());
+    when(userRepository.findByEmail("new@example.com")).thenReturn(null);
+    when(userRepository.findByNickName(any())).thenReturn(null);
+    when(userRepository.saveAndFlush(any(User.class)))
+        .thenAnswer(
+            invocation -> {
+              User saved = invocation.getArgument(0);
+              saved.setId(77L);
+              return saved;
+            });
+    when(authenticationManager.authenticate(any()))
+        .thenReturn(
+            new UsernamePasswordAuthenticationToken(
+                "new@example.com", "ValidPass1", List.of()));
+
+    User user = new User();
+    user.setEmail("new@example.com");
+    user.setPassword("ValidPass1");
+    user.setCourtNamesInput("Center Court");
+    user.setAcceptTerms(true);
+
+    BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(user, "user");
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("POST", "/register");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    String viewName =
+        controller.processRegister(
+            user,
+            bindingResult,
+            model,
+            "ValidPass1",
+            null,
+            registrationFormTokenService.issueToken(),
+            request,
+            response);
+
+    assertThat(viewName).isEqualTo("redirect:/home");
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   private static class RecordingUserAccountSettingsService extends UserAccountSettingsService {

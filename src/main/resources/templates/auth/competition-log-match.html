@@ -29,7 +29,7 @@
 
         <div class="alert alert-secondary"
              th:if="${!competitionUnavailable and (selectorMemberships == null or #lists.isEmpty(selectorMemberships))}">
-            You do not have any active sessions yet. Use Start Playing to start a session or join one from a shared code first.
+            You do not have any active sessions yet. Use Global Competition to start a session or join one from a shared code first.
         </div>
 
         <div class="card mb-4 shadow card-spotlight" th:if="${!competitionUnavailable and selectedSessionTitle != null}">

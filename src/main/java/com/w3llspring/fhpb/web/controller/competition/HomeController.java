@@ -26,6 +26,7 @@ import com.w3llspring.fhpb.web.service.dashboard.MatchDashboardViewService;
 import com.w3llspring.fhpb.web.service.matchentry.MatchEntryContextService;
 import com.w3llspring.fhpb.web.service.standings.SeasonStandingsViewService;
 import com.w3llspring.fhpb.web.service.standings.StandingsPageService;
+import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.session.LadderPageState;
 import com.w3llspring.fhpb.web.session.UserSessionState;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
@@ -42,11 +43,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -83,6 +86,7 @@ public class HomeController {
   private final SeasonStandingsViewService seasonStandingsViewService;
   private final MatchDashboardViewService matchDashboardViewService;
   private final MatchEntryContextService matchEntryContextService;
+  private final UserOnboardingService userOnboardingService;
   private CompetitionSeasonService competitionSeasonService;
   private MatchDashboardService matchDashboardService;
   private CompetitionDisplayNameModerationService competitionDisplayNameModerationService;
@@ -114,6 +118,7 @@ public class HomeController {
       SeasonStandingsViewService seasonStandingsViewService,
       MatchDashboardViewService matchDashboardViewService,
       MatchEntryContextService matchEntryContextService,
+      UserOnboardingService userOnboardingService,
       CompetitionSeasonService competitionSeasonService,
       MatchDashboardService matchDashboardService,
       CompetitionDisplayNameModerationService competitionDisplayNameModerationService) {
@@ -136,6 +141,7 @@ public class HomeController {
     this.seasonStandingsViewService = seasonStandingsViewService;
     this.matchDashboardViewService = matchDashboardViewService;
     this.matchEntryContextService = matchEntryContextService;
+    this.userOnboardingService = userOnboardingService;
     this.competitionSeasonService = competitionSeasonService;
     this.matchDashboardService = matchDashboardService;
     this.competitionDisplayNameModerationService = competitionDisplayNameModerationService;
@@ -160,7 +166,8 @@ public class HomeController {
       StandingsPageService standingsPageService,
       SeasonStandingsViewService seasonStandingsViewService,
       MatchDashboardViewService matchDashboardViewService,
-      MatchEntryContextService matchEntryContextService) {
+      MatchEntryContextService matchEntryContextService,
+      UserOnboardingService userOnboardingService) {
     this(
         posRepo,
         linkRepo,
@@ -181,6 +188,7 @@ public class HomeController {
         seasonStandingsViewService,
         matchDashboardViewService,
         matchEntryContextService,
+        userOnboardingService,
         null,
         null,
         null);
@@ -235,12 +243,26 @@ public class HomeController {
         membershipRepo.findByUserIdAndState(currentUser.getId(), LadderMembership.State.ACTIVE);
     CompetitionSessionService.CompetitionSessionSummary competitionSessions =
         competitionSessionService.summarizeSessions(myMemberships, currentUser.getId(), null);
+    LadderSeason activeCompetitionSeason =
+        competitionSeasonService != null
+            ? competitionSeasonService.resolveActiveCompetitionSeason()
+            : null;
+    List<LadderMembership> privateGroupMemberships =
+        homeSelectionService.selectorMemberships(myMemberships, null);
+    Long selectedPrivateGroupId = UserSessionState.resolveSelectedGroupId(request, null);
+    boolean showHomeIntro =
+        currentUser.getId() != null
+            && userOnboardingService.shouldShow(currentUser.getId(), UserOnboardingService.HOME_TOUR_V1);
 
     model.addAttribute("myMemberships", myMemberships);
+    model.addAttribute("competitionSessionMemberships", competitionSessions.sessionMemberships());
+    model.addAttribute("privateGroupMemberships", privateGroupMemberships);
+    model.addAttribute("selectedPrivateGroupId", selectedPrivateGroupId);
     boolean showStartHereCallout =
         (myMemberships == null || myMemberships.isEmpty())
             && !membershipRepo.existsByUserId(currentUser.getId());
     model.addAttribute("showStartHereCallout", showStartHereCallout);
+    model.addAttribute("showHomeIntro", showHomeIntro);
     model.addAttribute(
         "activeCompetitionSessionId",
         competitionSessions.selectedSessionMembership() != null
@@ -256,6 +278,9 @@ public class HomeController {
     model.addAttribute(
         "activeCompetitionSessionCount", competitionSessions.sessionMemberships().size());
     model.addAttribute("showCompetitionSessionChooser", competitionSessions.showSessionChooser());
+    model.addAttribute(
+        "canCreateCompetitionSession", !competitionSessions.hasOwnedCompetitionSession());
+    model.addAttribute("competitionUnavailable", activeCompetitionSeason == null);
     clearSeasonSnapshot(homeState);
 
     String resolvedToast = null;
@@ -712,6 +737,30 @@ public class HomeController {
 
     model.addAttribute("userName", currentUser.getNickName());
     return "auth/help-app";
+  }
+
+  @PostMapping("/home/intro-complete")
+  @ResponseBody
+  public ResponseEntity<Void> completeHomeIntro() {
+    User currentUser = resolveCurrentUser();
+    if (currentUser == null || currentUser.getId() == null) {
+      return ResponseEntity.status(401).build();
+    }
+
+    userOnboardingService.markCompleted(currentUser.getId(), UserOnboardingService.HOME_TOUR_V1);
+    return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/account-menu")
+  public String accountMenu(Model model) {
+    User currentUser = resolveCurrentUser();
+    if (currentUser == null) {
+      return "redirect:/login";
+    }
+
+    model.addAttribute("userName", currentUser.getNickName());
+    model.addAttribute("showLadderSelection", Boolean.FALSE);
+    return "auth/account-menu";
   }
 
   private String renderSelectedGroupSummaryPage(

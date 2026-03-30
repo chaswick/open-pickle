@@ -651,9 +651,13 @@ class ThymeleafTemplateTest {
     }
 
     @Test
-    void privateGroupPickerIncludesCreateTournamentShortcut() throws Exception {
+    void privateGroupPickerIncludesCreateAndTournamentShortcuts() throws Exception {
         String template = Files.readString(Path.of("src/main/resources/templates/auth/private-group-picker.html"));
 
+        assertThat(template).contains("Create a Group");
+        assertThat(template).contains("Join a Group");
+        assertThat(template).contains("th:href=\"@{/groups/new(returnTo='/private-groups')}\"");
+        assertThat(template).contains("th:href=\"@{/groups/join(returnTo='/private-groups')}\"");
         assertThat(template).contains("Create Tournament");
         assertThat(template).contains("th:href=\"@{/groups/new(returnTo='/private-groups',tournamentMode=true)}\"");
     }
@@ -680,63 +684,62 @@ class ThymeleafTemplateTest {
     }
 
     @Test
-    void homeAndNavigationTemplatesUseStartPlayingUntilSessionExistsThenShowLogMatches() throws Exception {
+    void homeAndNavigationTemplatesUseFourAreaLauncherAndDedicatedHubPages() throws Exception {
         String homeTemplate = Files.readString(Path.of("src/main/resources/templates/auth/home.html"));
         String navigationTemplate = Files.readString(Path.of("src/main/resources/templates/components/navigation.html"));
         String sessionPickerTemplate = Files.readString(Path.of("src/main/resources/templates/auth/competition-session-picker.html"));
+        String accountMenuTemplate = Files.readString(Path.of("src/main/resources/templates/auth/account-menu.html"));
 
-        String homeChooserAction = extractTemplateSection(
-                homeTemplate,
-                "th:if=\"${showCompetitionSessionChooser}\"",
-                "</a>");
-        String homeActiveSessionAction = extractTemplateSection(
-                homeTemplate,
-                "th:if=\"${!showCompetitionSessionChooser and activeCompetitionSessionId != null}\"",
-                "</a>");
-        String homeStartAction = extractTemplateSection(
-                homeTemplate,
-                "th:if=\"${!showCompetitionSessionChooser and activeCompetitionSessionId == null}\"",
-                "</a>");
-        String navChooserAction = extractTemplateSection(
-                navigationTemplate,
-                "th:if=\"${showCompetitionSessionChooser}\"",
-                "</a>");
-        String navActiveSessionAction = extractTemplateSection(
-                navigationTemplate,
-                "th:if=\"${!showCompetitionSessionChooser and activeCompetitionSessionId != null}\"",
-                "</a>");
-        String navStartAction = extractTemplateSection(
-                navigationTemplate,
-                "th:if=\"${!showCompetitionSessionChooser and activeCompetitionSessionId == null}\"",
-                "</a>");
+        assertThat(homeTemplate).contains("Global Competition");
+        assertThat(homeTemplate).contains("th:if=\"${showHomeIntro}\"");
+        assertThat(homeTemplate).contains("data-home-intro-root=\"true\"");
+        assertThat(homeTemplate).contains("data-home-intro-complete-url");
+        assertThat(homeTemplate).contains("Quick Tour");
+        assertThat(homeTemplate).contains("Congratulations, you have set up your");
+        assertThat(homeTemplate).contains("Only one member of your group needs to create a session.");
+        assertThat(homeTemplate).contains("one player from the opposing team confirms it from the match dashboard");
+        assertThat(homeTemplate).contains("That Is The Whole PicklBuddies Flow");
+        assertThat(homeTemplate).contains("data-home-intro-next");
+        assertThat(homeTemplate).contains("data-home-intro-finish");
+        assertThat(homeTemplate).contains("th:href=\"@{/competition/sessions}\"");
+        assertThat(homeTemplate).contains("th:href=\"@{/private-groups}\"");
+        assertThat(homeTemplate).contains("th:href=\"@{/account-menu}\"");
+        assertThat(homeTemplate).contains("th:href=\"@{/help}\"");
+        assertThat(homeTemplate).contains("window.sessionStorage.setItem(storageKey, '1');");
+        assertThat(homeTemplate).contains("window.fetch(completeUrl");
+        assertThat(homeTemplate).contains("window.FHPB.Csrf.headers()");
+        assertThat(homeTemplate).doesNotContain("Choose Your Area");
+        assertThat(homeTemplate).doesNotContain("id=\"global-competition\"");
+        assertThat(homeTemplate).doesNotContain("app-home-intro-card");
 
-        assertThat(homeTemplate).contains("Choose log matches to open a session, then record results in the global competition.");
-        assertThat(homeTemplate).contains("Choose start playing to start a session or join one from a shared code.");
-        assertThat(homeChooserAction).contains("Log Matches");
-        assertThat(homeChooserAction).contains("@{/competition/sessions}");
-        assertThat(homeActiveSessionAction).contains("Log Matches");
-        assertThat(homeActiveSessionAction).contains("@{/competition/sessions}");
-        assertThat(homeStartAction).contains("Start Playing");
-        assertThat(homeStartAction).contains("@{/competition/sessions}");
-        assertThat(navChooserAction).contains("Log Matches");
-        assertThat(navChooserAction).contains("@{/competition/sessions}");
-        assertThat(navActiveSessionAction).contains("Log Matches");
-        assertThat(navActiveSessionAction).contains("@{/competition/sessions}");
-        assertThat(navStartAction).contains("Start Playing");
-        assertThat(navStartAction).contains("@{/competition/sessions}");
-        assertThat(sessionPickerTemplate).contains("th:text=\"${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? 'Log Matches' : 'Start Playing'\"");
+        assertThat(navigationTemplate).contains("href=\"/competition/sessions\"");
+        assertThat(navigationTemplate).contains("href=\"/private-groups\"");
+        assertThat(navigationTemplate).contains("href=\"/account-menu\"");
+        assertThat(navigationTemplate).contains("Global Competition");
+        assertThat(navigationTemplate).contains("Private Groups");
+        assertThat(navigationTemplate).contains("User Account");
+        assertThat(navigationTemplate).contains("@{/help}");
+
+        assertThat(sessionPickerTemplate).contains("Global Competition");
         assertThat(sessionPickerTemplate).contains("class=\"app-action-grid\"");
-        assertThat(sessionPickerTemplate).contains("Start a Session");
-        assertThat(sessionPickerTemplate).contains("Join a Session");
+        assertThat(sessionPickerTemplate).contains("Start Session");
+        assertThat(sessionPickerTemplate).contains("Join Session");
+        assertThat(sessionPickerTemplate).contains("View Standings");
         assertThat(sessionPickerTemplate).contains("@{/groups/join(returnTo='/competition/sessions')}");
         assertThat(sessionPickerTemplate).contains("data-session-start-form=\"true\"");
         assertThat(sessionPickerTemplate).contains("data-session-start-storage-key=\"fhpb.session-start-confirmed\"");
         assertThat(sessionPickerTemplate).contains("Only one person in your play group needs to start a session.");
         assertThat(sessionPickerTemplate).contains("window.localStorage.getItem(storageKey) === '1'");
-        assertThat(sessionPickerTemplate).contains("join nearby or from a shared code");
         assertThat(sessionPickerTemplate).contains("Find nearby sessions with your current location");
         assertThat(sessionPickerTemplate).contains("The owner will approve your request.");
-        assertThat(sessionPickerTemplate).doesNotContain("No Active Sessions Yet");
+        assertThat(sessionPickerTemplate).contains("href=\"/home\"");
+
+        assertThat(accountMenuTemplate).contains("User Account");
+        assertThat(accountMenuTemplate).contains("href=\"/home\"");
+        assertThat(accountMenuTemplate).contains("Account Settings");
+        assertThat(accountMenuTemplate).contains("Trophies");
+        assertThat(accountMenuTemplate).contains("Stats");
+        assertThat(accountMenuTemplate).contains("Logout");
     }
 
     @Test

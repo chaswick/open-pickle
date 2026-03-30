@@ -11,20 +11,23 @@
         <section class="app-hero">
             <div class="app-hero-card">
                 <h1 class="app-hero-title">Private Groups</h1>
-                <p class="app-hero-subtitle">Create or choose a group to get started.</p>
+                <p class="app-hero-subtitle">Choose one of your groups, create a new one, or join from an invite code.</p>
             </div>
         </section>
 
         <div class="app-page-back">
-            <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/home}">Back</a>
+            <a class="btn btn-nav-secondary btn-lg w-100" href="/home">Back</a>
         </div>
 
         <section class="app-action-grid" th:if="${privateGroupMemberships != null and !#lists.isEmpty(privateGroupMemberships)}">
             <a class="app-action-tile app-action-groups"
                th:each="membership : ${privateGroupMemberships}"
-               th:href="@{/private-groups/{ladderId}(ladderId=${membership.ladderConfig.id})}">
+               th:href="@{/private-groups/{ladderId}(ladderId=${membership.ladderConfig.id})}"
+               th:with="isRecent=${selectedPrivateGroupId != null and membership.ladderConfig != null and selectedPrivateGroupId == membership.ladderConfig.id}"
+               th:classappend="${isRecent} ? ' app-action-start-here' : ''">
                 <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
                 <div>
+                    <span class="app-action-callout app-action-callout-top" th:if="${isRecent}">Recent</span>
                     <div class="app-action-title" th:text="${membership.ladderConfig.title}">Group Name</div>
                     <div class="app-action-subtitle"
                          th:text="${membership.role != null ? membership.role + ' member. Open plans, logging, standings, and round robins.' : 'Open plans, logging, standings, and round robins.'}">
@@ -33,19 +36,25 @@
                 </div>
             </a>
 
-            <a class="app-action-tile app-action-help"
-               th:classappend="${#lists.isEmpty(privateGroupMemberships)} ? ' app-action-start-here' : ''"
-               th:href="@{/groups(returnTo='/private-groups')}">
+            <a class="app-action-tile app-action-groups"
+               th:href="@{/groups/new(returnTo='/private-groups')}">
                 <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
                 <div>
-                    <span class="app-action-callout app-action-callout-top"
-                          th:if="${privateGroupMemberships == null or #lists.isEmpty(privateGroupMemberships)}">Start here</span>
-                    <div class="app-action-title">Create or Join Group</div>
-                    <div class="app-action-subtitle">Make a new private group or use an invite to join one.</div>
+                    <div class="app-action-title">Create a Group</div>
+                    <div class="app-action-subtitle">Set up a new group, season mode, and invite settings.</div>
                 </div>
             </a>
 
             <a class="app-action-tile app-action-help"
+               th:href="@{/groups/join(returnTo='/private-groups')}">
+                <div class="app-action-icon"><i class="bi bi-person-plus" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Join a Group</div>
+                    <div class="app-action-subtitle">Use an invite code from a group admin to join an existing group.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-standings"
                th:href="@{/groups/new(returnTo='/private-groups',tournamentMode=true)}">
                 <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
                 <div>
@@ -59,9 +68,10 @@
              th:if="${privateGroupMemberships == null or #lists.isEmpty(privateGroupMemberships)}">
             <div class="card-header card-header-title text-center">No Private Groups Yet</div>
             <div class="card-body text-center">
-                <p class="text-muted mb-3">Create a group or join one by invite to unlock private play plans, standings, and round robins.</p>
+                <p class="text-muted mb-3">Create a group, join one by invite code, or start a tournament-ready private setup.</p>
                 <div class="d-grid gap-2 col-sm-8 mx-auto">
-                    <a class="btn btn-action-primary btn-lg" th:href="@{/groups(returnTo='/private-groups')}">Create or Join Group</a>
+                    <a class="btn btn-action-primary btn-lg" th:href="@{/groups/new(returnTo='/private-groups')}">Create a Group</a>
+                    <a class="btn btn-nav-secondary btn-lg" th:href="@{/groups/join(returnTo='/private-groups')}">Join a Group</a>
                     <a class="btn btn-nav-secondary btn-lg" th:href="@{/groups/new(returnTo='/private-groups',tournamentMode=true)}">Create Tournament</a>
                 </div>
             </div>

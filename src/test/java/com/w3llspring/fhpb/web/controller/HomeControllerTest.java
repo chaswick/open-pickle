@@ -2,6 +2,7 @@ package com.w3llspring.fhpb.web.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.w3llspring.fhpb.web.controller.competition.HomeController;
@@ -23,6 +24,7 @@ import com.w3llspring.fhpb.web.service.scoring.LadderScoringAlgorithms;
 import com.w3llspring.fhpb.web.service.scoring.MarginCurveV1LadderScoringAlgorithm;
 import com.w3llspring.fhpb.web.service.standings.SeasonStandingsViewService;
 import com.w3llspring.fhpb.web.service.standings.StandingsPageService;
+import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.service.user.CourtNameService;
 import com.w3llspring.fhpb.web.session.LadderPageState;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
@@ -66,6 +68,7 @@ class HomeControllerTest {
   @Mock private LadderMembershipRepository membershipRepo;
 
   @Mock private LadderConfigRepository ladderConfigRepo;
+  @Mock private UserOnboardingMarkerRepository userOnboardingMarkerRepository;
 
   @Mock private MatchConfirmationService matchConfirmationService;
   private RecordingCompetitionDisplayNameModerationService competitionDisplayNameModerationService;
@@ -102,7 +105,8 @@ class HomeControllerTest {
                 ladderService,
                 Optional.ofNullable(competitionDisplayNameModerationService)),
             new MatchDashboardViewService(),
-            new MatchEntryContextService(courtNameService()));
+            new MatchEntryContextService(courtNameService()),
+            new UserOnboardingService(userOnboardingMarkerRepository));
     ReflectionTestUtils.setField(created, "competitionSeasonService", competitionSeasonService);
     ReflectionTestUtils.setField(
         created,
@@ -134,6 +138,7 @@ class HomeControllerTest {
 
   @BeforeEach
   void setUp() {
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
     activeCompetitionSeason = null;
     ladderService =
         new com.w3llspring.fhpb.web.service.LadderV2Service(
@@ -449,6 +454,25 @@ class HomeControllerTest {
   }
 
   @Test
+  void accountMenuShowsUserAccountHub() {
+    User user = new User();
+    user.setId(123L);
+    user.setNickName("Tester");
+    org.springframework.security.core.Authentication auth =
+        new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of());
+    org.springframework.security.core.context.SecurityContextHolder.getContext()
+        .setAuthentication(auth);
+
+    ExtendedModelMap model = new ExtendedModelMap();
+
+    String view = controller.accountMenu(model);
+
+    assertThat(view).isEqualTo("auth/account-menu");
+    assertThat(model.get("userName")).isEqualTo("Tester");
+    assertThat(model.get("showLadderSelection")).isEqualTo(false);
+  }
+
+  @Test
   void homeHidesStartHereCalloutAfterAnyMembershipHistoryEvenWithoutActiveMemberships() {
     User user = new User();
     user.setId(123L);
@@ -461,6 +485,9 @@ class HomeControllerTest {
     when(membershipRepo.findByUserIdAndState(123L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of());
     when(membershipRepo.existsByUserId(123L)).thenReturn(true);
+    when(userOnboardingMarkerRepository.existsByUserIdAndMarkerKey(
+            123L, UserOnboardingService.HOME_TOUR_V1))
+        .thenReturn(true);
 
     MockHttpServletRequest request = new MockHttpServletRequest("GET", "/home");
     LadderPageState homeState = new LadderPageState();
@@ -470,6 +497,63 @@ class HomeControllerTest {
 
     assertThat(view).isEqualTo("auth/home");
     assertThat(model.get("showStartHereCallout")).isEqualTo(false);
+    assertThat(model.get("showHomeIntro")).isEqualTo(false);
+  }
+
+  @Test
+  void homeShowsIntroWhenPersistentMarkerHasNotBeenCompleted() {
+    User user = new User();
+    user.setId(123L);
+    user.setNickName("Tester");
+    org.springframework.security.core.Authentication auth =
+        new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of());
+    org.springframework.security.core.context.SecurityContextHolder.getContext()
+        .setAuthentication(auth);
+
+    when(membershipRepo.findByUserIdAndState(123L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of());
+    when(membershipRepo.existsByUserId(123L)).thenReturn(false);
+    when(userOnboardingMarkerRepository.existsByUserIdAndMarkerKey(
+            123L, UserOnboardingService.HOME_TOUR_V1))
+        .thenReturn(false);
+
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/home");
+    LadderPageState homeState = new LadderPageState();
+    ExtendedModelMap model = new ExtendedModelMap();
+
+    String view = controller.home(null, null, null, null, null, homeState, request, model);
+
+    assertThat(view).isEqualTo("auth/home");
+    assertThat(model.get("showHomeIntro")).isEqualTo(true);
+  }
+
+  @Test
+  void completeHomeIntroMarksPersistentCompletion() {
+    User user = new User();
+    user.setId(123L);
+    user.setNickName("Tester");
+    org.springframework.security.core.Authentication auth =
+        new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of());
+    org.springframework.security.core.context.SecurityContextHolder.getContext()
+        .setAuthentication(auth);
+
+    when(userOnboardingMarkerRepository.existsByUserIdAndMarkerKey(
+            123L, UserOnboardingService.HOME_TOUR_V1))
+        .thenReturn(false);
+    when(userOnboardingMarkerRepository.saveAndFlush(any(UserOnboardingMarker.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    org.springframework.http.ResponseEntity<Void> response = controller.completeHomeIntro();
+
+    assertThat(response.getStatusCode().value()).isEqualTo(204);
+    verify(userOnboardingMarkerRepository)
+        .saveAndFlush(
+            argThat(
+                marker ->
+                    marker != null
+                        && marker.getUserId().equals(123L)
+                        && UserOnboardingService.HOME_TOUR_V1.equals(marker.getMarkerKey())
+                        && marker.getCompletedAt() != null));
   }
 
   @Test
