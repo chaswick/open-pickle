@@ -286,6 +286,51 @@ public class PushNotificationService {
     }
   }
 
+  public void sendRoundRobinReady(Long userId, Long ladderId, String ladderTitle, int roundNumber) {
+    if (userId == null || ladderId == null) return;
+
+    PushService ps = getOrInitPushService();
+    if (ps == null) return;
+
+    List<UserPushSubscription> subs = subscriptions.findByUserId(userId);
+    if (subs == null || subs.isEmpty()) return;
+
+    String title = appName;
+    String cleanedLadder = ladderTitle == null ? "" : ladderTitle.trim();
+    String body =
+        cleanedLadder.isBlank()
+            ? "A round-robin pairing is ready."
+            : "Round " + Math.max(1, roundNumber) + " is ready in " + cleanedLadder + ".";
+
+    PushPayload payload = new PushPayload(title, body, "/groups/" + ladderId, Instant.now());
+
+    byte[] payloadBytes;
+    try {
+      payloadBytes = objectMapper.writeValueAsString(payload).getBytes(StandardCharsets.UTF_8);
+    } catch (Exception ex) {
+      log.warn("[push] payload serialize failed userId={}", userId, ex);
+      return;
+    }
+
+    for (UserPushSubscription sub : subs) {
+      if (sub == null) continue;
+      if (!isAllowedSubscription(sub)) continue;
+      try {
+        Notification notification =
+            new Notification(
+                sub.getEndpoint(), sub.getP256dh(), sub.getAuth(), payloadBytes, ttlSeconds);
+        var response = ps.send(notification);
+        int status =
+            response.getStatusLine() != null ? response.getStatusLine().getStatusCode() : 0;
+        if (status == 404 || status == 410) {
+          subscriptions.deleteById(sub.getId());
+        }
+      } catch (Exception ex) {
+        log.debug("[push] send failed userId={} subId={}", userId, sub.getId(), ex);
+      }
+    }
+  }
+
   public record PushPayload(String title, String body, String url, Instant sentAt) {}
 
   private boolean isAllowedSubscription(UserPushSubscription sub) {

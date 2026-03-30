@@ -495,6 +495,11 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("competition: true");
         assertThat(sessionTemplate).contains("th:href=\"@{/round-robin/list(ladderId=${ladder.id})}\"");
         assertThat(sessionTemplate).contains("Start a Round Robin");
+        assertThat(sessionTemplate).contains("th:if=\"${sessionRoundRobinTask != null}\"");
+        assertThat(sessionTemplate).contains("Quick Log Round Robin Match");
+        assertThat(sessionTemplate).contains("Open Round Robin");
+        assertThat(sessionTemplate).contains("Only the session starter can start a round robin from here.");
+        assertThat(sessionTemplate).contains("th:if=\"${canStartSessionRoundRobin}\"");
         assertThat(sessionTemplate).contains("id=\"sessionStandingContainer\"");
         assertThat(sessionTemplate).contains("session-standing-momentum");
         assertThat(sessionTemplate).doesNotContain("th:href=\"@{/competition}\"");

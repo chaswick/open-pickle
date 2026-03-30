@@ -255,62 +255,129 @@
         };
         /*]]>*/
       </script>
-      <p class="small text-muted mb-1">
-        Tip: remind players they have 2 days to confirm logged matches for competition credit.
-        They can review pending items from
-        <a th:href="@{/confirm-matches}">Confirm Matches</a>.
-      </p>
-      <div class="position-relative">
-        <div class="d-flex justify-content-center align-items-center gap-2">
-          <button th:if="${targetSeason != null}"
-                  id="logMatchVoiceBtn"
-                  type="button"
-                  class="btn btn-action-success btn-lg d-flex align-items-center justify-content-center p-3"
-                  aria-pressed="false"
-                  aria-label="Log Match by Voice"
-                  style="position:relative;">
-            <i class="bi bi-mic fs-4" aria-hidden="true"></i>
-            <span id="logMatchVoiceBtnLabel" class="visually-hidden">Log Match</span>
-            <span id="logMatchVoiceSpinner" class="ms-2 d-none" aria-hidden="true">
-              <span class="spinner-border spinner-border-sm text-warning"></span>
-            </span>
-          </button>
-          <a class="btn btn-action-success btn-card-width disabled"
-             th:unless="${targetSeason != null}"
-             href="#"
-             aria-disabled="true">
-            Voice Log
-          </a>
+      <div th:if="${sessionRoundRobinTask != null}" class="card border-warning-subtle bg-warning-subtle bg-opacity-25 mb-3">
+        <div class="card-body text-center">
+          <div class="small text-uppercase text-muted fw-semibold mb-2">Your Round Robin</div>
+          <div class="fw-semibold">
+            Round <span th:text="${sessionRoundRobinTask.currentRound}">1</span>
+            <span th:if="${sessionRoundRobinTask.maxRound != null}">of <span th:text="${sessionRoundRobinTask.maxRound}">3</span></span>
+          </div>
 
-          <a class="btn btn-action-primary btn-card-width"
-             th:if="${targetSeason != null}"
-             title="Log Match (Classic)"
-             th:href="@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}"
-             aria-label="Log Match (Classic)">
-            Log Match
-          </a>
-          <a class="btn btn-action-primary btn-card-width disabled"
-             th:unless="${targetSeason != null}"
-             href="#"
-             aria-disabled="true">
-            Log Match
-          </a>
-        </div>
-        <div th:if="${targetSeason != null}"
-             id="logMatchVoiceCaption"
-             class="text-center mt-2 mb-2 text-muted d-none"
-             aria-live="polite"
-             data-default-caption='Say something like, "Pam and I beat Ryan and Amy 11-8"'>
-          Say something like, "Pam and I beat Ryan and Amy 11-8"
+          <div th:if="${sessionRoundRobinTask.bye}" class="small text-muted mt-2">
+            You have a bye this round. Wait here for the next round to open.
+          </div>
+
+          <div th:if="${!sessionRoundRobinTask.bye}" class="d-flex flex-column text-center small mt-2">
+            <span th:text="${sessionRoundRobinTask.a1Name != null ? sessionRoundRobinTask.a1Name : ''}">Player A1</span>
+            <span th:text="${sessionRoundRobinTask.a2Name != null ? sessionRoundRobinTask.a2Name : ''}">Player A2</span>
+            <span class="fw-bold">vs</span>
+            <span th:text="${sessionRoundRobinTask.b1Name != null ? sessionRoundRobinTask.b1Name : ''}">Player B1</span>
+            <span th:text="${sessionRoundRobinTask.b2Name != null ? sessionRoundRobinTask.b2Name : ''}">Player B2</span>
+          </div>
+
+          <div th:if="${sessionRoundRobinTask.readyToLog}" class="small text-muted mt-2">
+            Log this pairing next. Other session matches are paused until your round-robin task is done.
+          </div>
+          <div th:if="${sessionRoundRobinTask.canConfirm}" class="small text-muted mt-2">
+            Your result is logged. Confirm it here so the round can keep moving.
+          </div>
+          <div th:if="${sessionRoundRobinTask.waitingOnOpponentConfirmation}" class="small text-muted mt-2">
+            Your result is logged. Waiting on the other team to confirm before the round can move on.
+          </div>
+          <div th:if="${sessionRoundRobinTask.confirmed and !sessionRoundRobinTask.bye}" class="small text-muted mt-2">
+            Your result is confirmed. Stay on this card until the next round opens.
+          </div>
+
+          <div th:if="${sessionRoundRobinTask.readyToLog}" class="mt-3">
+            <a class="btn btn-action-primary btn-card-width"
+               th:href="@{/log-match(ladderId=${ladder.id},seasonId=${targetSeason.id},a1=${sessionRoundRobinTask.quickLogA1},a2=${sessionRoundRobinTask.quickLogA2},b1=${sessionRoundRobinTask.quickLogB1},b2=${sessionRoundRobinTask.quickLogB2},returnTo=${'/groups/' + ladder.id},returnToRoundRobinId=${sessionRoundRobinTask.roundRobinId},returnToRoundRobinEntryId=${sessionRoundRobinTask.entryId},returnToRoundRobinRound=${sessionRoundRobinTask.currentRound})}">
+              Quick Log Round Robin Match
+            </a>
+          </div>
+
+          <div th:if="${sessionRoundRobinTask.canConfirm}" class="mt-3 d-flex justify-content-center"
+               data-skip-confirm-fragment-refresh="true"
+               th:insert="~{fragments/matchRow :: matchRow_confirmation(match=${sessionRoundRobinTask.match}, pendingForCurrentUser=${true}, waitingOnOpponent=${false}, deletable=${false})}">
+          </div>
+
+          <div class="mt-3">
+            <a class="btn btn-nav-secondary btn-card-width"
+               th:href="@{/round-robin/view/{id}(id=${sessionRoundRobinTask.roundRobinId},round=${sessionRoundRobinTask.currentRound})}">
+              Open Round Robin
+            </a>
+          </div>
+          <div class="small text-muted mt-2">
+            Confirm matches when prompted. Other session match logging stays locked until this round-robin step is complete.
+          </div>
         </div>
       </div>
-      <div class="pt-2 border-top mt-2 text-center">
-        <a class="btn btn-action-primary btn-card-width"
-           th:href="@{/round-robin/list(ladderId=${ladder.id})}">
-          Start a Round Robin
-        </a>
-        <div class="small text-muted mt-2">
-          Round robins are an optional way to mix up your games during the session.
+
+      <div th:if="${sessionRoundRobinTask == null}">
+        <p class="small text-muted mb-1">
+          Tip: remind players they have 2 days to confirm logged matches for competition credit.
+          They can review pending items from
+          <a th:href="@{/confirm-matches}">Confirm Matches</a>.
+        </p>
+        <div class="position-relative">
+          <div class="d-flex justify-content-center align-items-center gap-2">
+            <button th:if="${targetSeason != null}"
+                    id="logMatchVoiceBtn"
+                    type="button"
+                    class="btn btn-action-success btn-lg d-flex align-items-center justify-content-center p-3"
+                    aria-pressed="false"
+                    aria-label="Log Match by Voice"
+                    style="position:relative;">
+              <i class="bi bi-mic fs-4" aria-hidden="true"></i>
+              <span id="logMatchVoiceBtnLabel" class="visually-hidden">Log Match</span>
+              <span id="logMatchVoiceSpinner" class="ms-2 d-none" aria-hidden="true">
+                <span class="spinner-border spinner-border-sm text-warning"></span>
+              </span>
+            </button>
+            <a class="btn btn-action-success btn-card-width disabled"
+               th:unless="${targetSeason != null}"
+               href="#"
+               aria-disabled="true">
+              Voice Log
+            </a>
+
+            <a class="btn btn-action-primary btn-card-width"
+               th:if="${targetSeason != null}"
+               title="Log Match (Classic)"
+               th:href="@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}"
+               aria-label="Log Match (Classic)">
+              Log Match
+            </a>
+            <a class="btn btn-action-primary btn-card-width disabled"
+               th:unless="${targetSeason != null}"
+               href="#"
+               aria-disabled="true">
+              Log Match
+            </a>
+          </div>
+          <div th:if="${targetSeason != null}"
+               id="logMatchVoiceCaption"
+               class="text-center mt-2 mb-2 text-muted d-none"
+               aria-live="polite"
+               data-default-caption='Say something like, "Pam and I beat Ryan and Amy 11-8"'>
+            Say something like, "Pam and I beat Ryan and Amy 11-8"
+          </div>
+        </div>
+        <div class="pt-2 border-top mt-2 text-center">
+          <a class="btn btn-action-primary btn-card-width"
+             th:if="${canStartSessionRoundRobin}"
+             th:href="@{/round-robin/list(ladderId=${ladder.id})}">
+            Start a Round Robin
+          </a>
+          <a class="btn btn-action-primary btn-card-width disabled"
+             th:unless="${canStartSessionRoundRobin}"
+             href="#"
+             aria-disabled="true">
+            Start a Round Robin
+          </a>
+          <div class="small text-muted mt-2"
+               th:text="${canStartSessionRoundRobin} ? 'Round robins are an optional way to mix up your games during the session.' : 'Only the session starter can start a round robin from here.'">
+            Round robins are an optional way to mix up your games during the session.
+          </div>
         </div>
       </div>
       <div class="pt-2 border-top mt-2">

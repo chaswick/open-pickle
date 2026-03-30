@@ -2701,6 +2701,174 @@ class MatchLogControllerAdminEditTest {
     assertThat(trophyEvaluatedMatch).isNotNull();
   }
 
+  @Test
+  void form_redirectsToSessionWhenActiveRoundRobinMatchAlreadyLogged() {
+    User currentUser = user(50L, "logger@test.local", false);
+    User partner = user(60L, "partner@test.local", false);
+    User opponent = user(70L, "opponent@test.local", false);
+    Authentication auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    Model model = new ExtendedModelMap();
+
+    LadderConfig session = new LadderConfig();
+    session.setId(901L);
+    session.setType(LadderConfig.Type.SESSION);
+    session.setOwnerUserId(99L);
+    session.setTargetSeasonId(801L);
+    session.setExpiresAt(Instant.now().plusSeconds(3600));
+
+    LadderSeason season = new LadderSeason();
+    setId(season, 801L);
+    season.setLadderConfig(new LadderConfig());
+    season.getLadderConfig().setId(1L);
+    season.getLadderConfig().setType(LadderConfig.Type.COMPETITION);
+    season.setState(LadderSeason.State.ACTIVE);
+    season.setStartDate(LocalDate.now().minusDays(3));
+    season.setEndDate(LocalDate.now().plusDays(3));
+
+    Match loggedMatch = new Match();
+    setId(loggedMatch, 555L);
+    loggedMatch.setState(MatchState.PROVISIONAL);
+
+    RoundRobinEntry entry = new RoundRobinEntry();
+    entry.setA1(currentUser);
+    entry.setA2(partner);
+    entry.setB1(opponent);
+    entry.setMatchId(555L);
+
+    com.w3llspring.fhpb.web.model.RoundRobin rr = new com.w3llspring.fhpb.web.model.RoundRobin();
+    setId(rr, 777L);
+    rr.setSessionConfig(session);
+    rr.setSeason(season);
+    entry.setRoundRobin(rr);
+
+    when(ladderConfigRepository.findById(901L)).thenReturn(Optional.of(session));
+    when(seasonRepo.findById(801L)).thenReturn(Optional.of(season));
+    when(membershipRepo.findByLadderConfigIdAndUserId(901L, 50L))
+        .thenReturn(Optional.of(membership(901L, 50L, LadderMembership.State.ACTIVE)));
+
+    RoundRobinService roundRobinService =
+        new RoundRobinService(null, null, null, null, null, null, null) {
+          @Override
+          public Optional<ActiveSessionAssignment> findActiveSessionAssignment(
+              LadderConfig sessionConfig, Long userId) {
+            return Optional.of(new ActiveSessionAssignment(rr, entry, loggedMatch, 1, 3));
+          }
+        };
+    ReflectionTestUtils.setField(controller, "roundRobinService", roundRobinService);
+    ReflectionTestUtils.setField(
+        matchStateTransitionService, "roundRobinService", roundRobinService);
+
+    String view = controller.form(model, auth, request, 801L, 901L, null, false, null, null, null, null, null, null, null);
+
+    assertThat(view)
+        .isEqualTo(
+            "redirect:/groups/901?toastMessage=Your%20round-robin%20match%20is%20already%20logged.%20Confirm%20it%20from%20the%20session%20card%20before%20logging%20anything%20else.");
+  }
+
+  @Test
+  void submit_rejectsSessionRoundRobinMismatchAndShowsAssignedPairing() {
+    User currentUser = user(50L, "logger@test.local", false);
+    User partner = user(60L, "partner@test.local", false);
+    User opponentOne = user(70L, "opponent1@test.local", false);
+    User opponentTwo = user(80L, "opponent2@test.local", false);
+    User differentOpponent = user(90L, "other@test.local", false);
+    Authentication auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    MockHttpServletRequest request = new MockHttpServletRequest();
+    Model model = new ExtendedModelMap();
+
+    LadderConfig session = new LadderConfig();
+    session.setId(902L);
+    session.setType(LadderConfig.Type.SESSION);
+    session.setOwnerUserId(99L);
+    session.setTargetSeasonId(802L);
+    session.setExpiresAt(Instant.now().plusSeconds(3600));
+
+    LadderConfig competition = new LadderConfig();
+    competition.setId(2L);
+    competition.setType(LadderConfig.Type.COMPETITION);
+    competition.setSecurityLevel(LadderSecurity.STANDARD);
+
+    LadderSeason season = new LadderSeason();
+    setId(season, 802L);
+    season.setLadderConfig(competition);
+    season.setState(LadderSeason.State.ACTIVE);
+    season.setStartDate(LocalDate.now().minusDays(3));
+    season.setEndDate(LocalDate.now().plusDays(3));
+
+    RoundRobinEntry entry = new RoundRobinEntry();
+    entry.setA1(partner);
+    entry.setA2(opponentOne);
+    entry.setB1(currentUser);
+    entry.setB2(opponentTwo);
+
+    com.w3llspring.fhpb.web.model.RoundRobin rr = new com.w3llspring.fhpb.web.model.RoundRobin();
+    setId(rr, 778L);
+    rr.setSessionConfig(session);
+    rr.setSeason(season);
+    entry.setRoundRobin(rr);
+    setId(entry, 333L);
+
+    when(ladderConfigRepository.findById(902L)).thenReturn(Optional.of(session));
+    when(seasonRepo.findById(802L)).thenReturn(Optional.of(season));
+    when(membershipRepo.findByLadderConfigIdAndUserId(902L, 50L))
+        .thenReturn(Optional.of(membership(902L, 50L, LadderMembership.State.ACTIVE)));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            902L, LadderMembership.State.ACTIVE))
+        .thenReturn(
+            List.of(
+                membership(902L, 50L, LadderMembership.State.ACTIVE),
+                membership(902L, 60L, LadderMembership.State.ACTIVE),
+                membership(902L, 70L, LadderMembership.State.ACTIVE),
+                membership(902L, 80L, LadderMembership.State.ACTIVE),
+                membership(902L, 90L, LadderMembership.State.ACTIVE)));
+    when(userRepo.findAllById(any())).thenReturn(List.of(currentUser, partner, opponentOne, opponentTwo, differentOpponent));
+    when(userRepo.findById(90L)).thenReturn(Optional.of(differentOpponent));
+
+    RoundRobinService roundRobinService =
+        new RoundRobinService(null, null, null, null, null, null, null) {
+          @Override
+          public Optional<ActiveSessionAssignment> findActiveSessionAssignment(
+              LadderConfig sessionConfig, Long userId) {
+            return Optional.of(new ActiveSessionAssignment(rr, entry, null, 1, 3));
+          }
+        };
+    ReflectionTestUtils.setField(controller, "roundRobinService", roundRobinService);
+    ReflectionTestUtils.setField(
+        matchStateTransitionService, "roundRobinService", roundRobinService);
+
+    String view =
+        controller.submit(
+            model,
+            auth,
+            request,
+            "50",
+            "",
+            "90",
+            "",
+            11,
+            7,
+            Optional.empty(),
+            802L,
+            902L,
+            false,
+            null,
+            null,
+            null,
+            null);
+
+    assertThat(view).isEqualTo("auth/logMatch");
+    assertThat(model.asMap().get("toastMessage"))
+        .isEqualTo("You’re in an active round robin. Use the assigned pairing shown here.");
+    assertThat(model.asMap().get("selectedA1")).isEqualTo(50L);
+    assertThat(model.asMap().get("selectedB1Id")).isEqualTo(60L);
+    assertThat(model.asMap().get("returnToRoundRobinEntryId")).isEqualTo(333L);
+  }
+
   private static User user(Long id, String email, boolean admin) {
     User user = new User();
     user.setId(id);

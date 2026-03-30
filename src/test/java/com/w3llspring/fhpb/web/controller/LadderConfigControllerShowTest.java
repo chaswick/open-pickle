@@ -40,6 +40,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -92,6 +93,12 @@ class LadderConfigControllerShowTest {
           public List<com.w3llspring.fhpb.web.model.RoundRobinStanding> computeStandingsForSession(
               LadderConfig sessionConfig) {
             return sessionReportStandings;
+          }
+
+          @Override
+          public Optional<ActiveSessionAssignment> findActiveSessionAssignment(
+              LadderConfig sessionConfig, Long userId) {
+            return Optional.empty();
           }
         };
     controller =
@@ -402,6 +409,8 @@ class LadderConfigControllerShowTest {
     assertThat(model.get("improvementAdvice")).isEqualTo(improvementAdvice);
     assertThat(model.get("sessionDisplayTitle")).isEqualTo("Saturday Open Session");
     assertThat(model.get("returnToPath")).isEqualTo("/groups/42");
+    assertThat(model.get("canStartSessionRoundRobin")).isEqualTo(Boolean.TRUE);
+    assertThat(model.get("sessionRoundRobinTask")).isNull();
     assertThat(model.get("canRestore")).isNull();
     assertThat(model.get("activeAdminCount")).isNull();
     assertThat(model.get("voiceLanguage")).isEqualTo("en-US");
@@ -411,6 +420,139 @@ class LadderConfigControllerShowTest {
     assertThat(model.get("courtNameByUser")).isEqualTo(java.util.Map.of(7L, "Center Court"));
     assertThat((String) model.get("ladderInviteLink")).contains("inviteCode=DINK-7");
     assertThat((String) model.get("ladderInviteLink")).contains("autoJoin=true");
+  }
+
+  @Test
+  void show_sessionPopulatesActiveRoundRobinTask() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    User partner = new User();
+    partner.setId(8L);
+    partner.setNickName("Partner");
+
+    User opponentOne = new User();
+    opponentOne.setId(9L);
+    opponentOne.setNickName("OpponentOne");
+
+    User opponentTwo = new User();
+    opponentTwo.setId(10L);
+    opponentTwo.setNickName("OpponentTwo");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Saturday Open Session");
+    cfg.setOwnerUserId(7L);
+    cfg.setType(LadderConfig.Type.SESSION);
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.ADMIN);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    LadderSeason targetSeason = new LadderSeason();
+    ReflectionTestUtils.setField(targetSeason, "id", 55L);
+    targetSeason.setLadderConfig(cfg);
+
+    com.w3llspring.fhpb.web.model.RoundRobin rr = new com.w3llspring.fhpb.web.model.RoundRobin();
+    ReflectionTestUtils.setField(rr, "id", 88L);
+    rr.setSessionConfig(cfg);
+    rr.setSeason(targetSeason);
+
+    com.w3llspring.fhpb.web.model.RoundRobinEntry entry =
+        new com.w3llspring.fhpb.web.model.RoundRobinEntry();
+    ReflectionTestUtils.setField(entry, "id", 66L);
+    entry.setRoundRobin(rr);
+    entry.setRoundNumber(1);
+    entry.setA1(partner);
+    entry.setA2(opponentOne);
+    entry.setB1(currentUser);
+    entry.setB2(opponentTwo);
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
+        .thenReturn(Optional.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser, partner, opponentOne, opponentTwo));
+
+    CompetitionSeasonService competitionSeasonService =
+        new CompetitionSeasonService(null, null, null) {
+          @Override
+          public LadderSeason resolveTargetSeason(LadderConfig ladderConfig) {
+            return targetSeason;
+          }
+        };
+    MatchDashboardService dashboardService =
+        new MatchDashboardService(null, null, null, null, null) {
+          @Override
+          public DashboardModel buildPendingForUserInSeason(User viewer, LadderSeason season) {
+            return new DashboardModel(
+                List.of(),
+                new MatchRowModel(
+                    java.util.Set.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of()));
+          }
+        };
+    RoundRobinService roundRobinServiceStub =
+        new RoundRobinService(null, null, null, null, null, null, null) {
+          @Override
+          public List<com.w3llspring.fhpb.web.model.RoundRobinStanding> computeStandingsForSession(
+              LadderConfig sessionConfig) {
+            return List.of();
+          }
+
+          @Override
+          public Optional<ActiveSessionAssignment> findActiveSessionAssignment(
+              LadderConfig sessionConfig, Long userId) {
+            return Optional.of(new ActiveSessionAssignment(rr, entry, null, 1, 3));
+          }
+
+          @Override
+          public Map<Long, String> buildDisplayNameMap(
+              java.util.Collection<Long> userIds, Long ladderConfigId) {
+            return Map.of(7L, "Tester", 8L, "Partner", 9L, "OpponentOne", 10L, "OpponentTwo");
+          }
+        };
+
+    ReflectionTestUtils.setField(controller, "competitionSeasonService", competitionSeasonService);
+    ReflectionTestUtils.setField(controller, "matchDashboardService", dashboardService);
+    ReflectionTestUtils.setField(
+        controller, "matchDashboardViewService", new MatchDashboardViewService());
+    ReflectionTestUtils.setField(controller, "roundRobinService", roundRobinServiceStub);
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> task = (Map<String, Object>) model.get("sessionRoundRobinTask");
+    assertThat(task).isNotNull();
+    assertThat(task.get("roundRobinId")).isEqualTo(88L);
+    assertThat(task.get("entryId")).isEqualTo(66L);
+    assertThat(task.get("readyToLog")).isEqualTo(Boolean.TRUE);
+    assertThat(task.get("quickLogA1")).isEqualTo(7L);
+    assertThat(task.get("quickLogB1")).isEqualTo(8L);
   }
 
   @Test

@@ -35,8 +35,8 @@
             <div class="card-header card-header-title text-center">Start Round-Robin</div>
             <div class="card-body">
                 <div class="alert alert-warning text-start"
-                     th:if="${roundRobinAdminOnly}">
-                    Tournament mode only allows group admins to start and manage round-robins. Logged matches for this season must map to an active matchup here.
+                     th:if="${roundRobinStartRestrictionMessage != null}">
+                    <span th:text="${roundRobinStartRestrictionMessage}">Only the session starter can start round-robins from this session.</span>
                 </div>
                 <form method="post" th:action="@{/round-robin/start}">
                     <input type="hidden" name="ladderId" th:value="${ladderId}" />

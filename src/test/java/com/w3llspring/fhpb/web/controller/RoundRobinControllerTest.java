@@ -685,7 +685,8 @@ class RoundRobinControllerTest {
 
     assertThat(view).isEqualTo("redirect:/round-robin/list?ladderId=42&seasonId=77");
     assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
-        .isEqualTo("Tournament mode only allows group admins to start round-robins.");
+        .isEqualTo(
+            "Tournament mode requires group admins to start and manage round-robins. Matches logged for this season must match an active round-robin pairing.");
   }
 
   @Test
@@ -741,6 +742,129 @@ class RoundRobinControllerTest {
     when(ladderConfigRepository.findById(42L)).thenReturn(Optional.of(tournament));
     when(ladderMembershipRepository.findByLadderConfigIdAndUserId(42L, 1L))
         .thenReturn(Optional.of(membership));
+
+    String view =
+        controller.start(
+            42L,
+            null,
+            List.of(1L, 2L, 3L, 4L),
+            5,
+            "ROTATING_PARTNERS",
+            "",
+            new MockHttpServletRequest(),
+            new ExtendedModelMap(),
+            new RedirectAttributesModelMap(),
+            principal);
+
+    assertThat(view).isEqualTo("redirect:/round-robin/view/55");
+  }
+
+  @Test
+  void startRejectsSessionMemberWhoIsNotSessionOwner() {
+    User member = user(1L, "member");
+    User owner = user(9L, "owner");
+    User partner = user(2L, "partner");
+    User opponentOne = user(3L, "opponentOne");
+    User opponentTwo = user(4L, "opponentTwo");
+    CustomUserDetails principal = new CustomUserDetails(member);
+
+    LadderConfig session = new LadderConfig();
+    session.setId(42L);
+    session.setType(LadderConfig.Type.SESSION);
+    session.setOwnerUserId(owner.getId());
+
+    LadderSeason season = new LadderSeason();
+    ReflectionTestUtils.setField(season, "id", 77L);
+
+    RoundRobinController controller =
+        new RoundRobinController(
+            new RoundRobinService(null, null, null, null, null, null, null) {
+              @Override
+              public List<User> listMembersForLadder(Long ladderConfigId) {
+                return List.of(member, partner, opponentOne, opponentTwo);
+              }
+
+              @Override
+              public LadderSeason findSeasonForLadder(Long ladderConfigId) {
+                return season;
+              }
+            },
+            stubAccessService(null, false),
+            ladderMembershipRepository,
+            matchConfirmationService);
+    ReflectionTestUtils.setField(controller, "ladderConfigRepository", ladderConfigRepository);
+
+    when(ladderConfigRepository.findById(42L)).thenReturn(Optional.of(session));
+
+    RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+    String view =
+        controller.start(
+            42L,
+            null,
+            List.of(1L, 2L, 3L, 4L),
+            5,
+            "ROTATING_PARTNERS",
+            "",
+            new MockHttpServletRequest(),
+            new ExtendedModelMap(),
+            redirectAttributes,
+            principal);
+
+    assertThat(view).isEqualTo("redirect:/round-robin/list?ladderId=42");
+    assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
+        .isEqualTo("Only the session starter can start round-robins from this session.");
+  }
+
+  @Test
+  void startAllowsSessionOwner() {
+    User owner = user(1L, "owner");
+    User partner = user(2L, "partner");
+    User opponentOne = user(3L, "opponentOne");
+    User opponentTwo = user(4L, "opponentTwo");
+    CustomUserDetails principal = new CustomUserDetails(owner);
+
+    LadderConfig session = new LadderConfig();
+    session.setId(42L);
+    session.setType(LadderConfig.Type.SESSION);
+    session.setOwnerUserId(owner.getId());
+
+    LadderSeason season = new LadderSeason();
+    ReflectionTestUtils.setField(season, "id", 77L);
+
+    RoundRobin created = new RoundRobin();
+    ReflectionTestUtils.setField(created, "id", 55L);
+
+    RoundRobinController controller =
+        new RoundRobinController(
+            new RoundRobinService(null, null, null, null, null, null, null) {
+              @Override
+              public List<User> listMembersForLadder(Long ladderConfigId) {
+                return List.of(owner, partner, opponentOne, opponentTwo);
+              }
+
+              @Override
+              public LadderSeason findSeasonForLadder(Long ladderConfigId) {
+                return season;
+              }
+
+              @Override
+              public RoundRobin createAndStart(
+                  Long ladderConfigId,
+                  String name,
+                  List<Long> participantIds,
+                  int rounds,
+                  Long createdById,
+                  RoundRobin.Format format,
+                  List<List<Long>> fixedTeams) {
+                return created;
+              }
+            },
+            stubAccessService(null, false),
+            ladderMembershipRepository,
+            matchConfirmationService);
+    ReflectionTestUtils.setField(controller, "ladderConfigRepository", ladderConfigRepository);
+
+    when(ladderConfigRepository.findById(42L)).thenReturn(Optional.of(session));
 
     String view =
         controller.start(

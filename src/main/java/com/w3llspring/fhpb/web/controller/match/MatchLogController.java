@@ -380,6 +380,26 @@ public class MatchLogController {
       UserSessionState.storeSelectedGroupId(request, ladderId);
     }
 
+    RoundRobinService.ActiveSessionAssignment activeSessionRoundRobin =
+        resolveActiveSessionRoundRobinAssignment(context, currentUser);
+    if (activeSessionRoundRobin != null) {
+      returnToRoundRobinId = activeSessionRoundRobin.roundRobin().getId();
+      returnToRoundRobinEntryId = activeSessionRoundRobin.entry().getId();
+      returnToRoundRobinRound = activeSessionRoundRobin.currentRound();
+      if (activeSessionRoundRobin.entry().isBye() || activeSessionRoundRobin.match() != null) {
+        return redirectToSessionRoundRobinTask(
+            context, sessionRoundRobinLockedMessage(activeSessionRoundRobin));
+      }
+      RoundRobinSelection lockedSelection =
+          sessionRoundRobinSelection(activeSessionRoundRobin.entry(), currentUser.getId());
+      prefillA1 = lockedSelection.a1();
+      prefillA2 = lockedSelection.a2();
+      prefillB1 = lockedSelection.b1();
+      prefillB2 = lockedSelection.b2();
+      model.addAttribute("toastMessage", "Use this assigned round-robin pairing next.");
+      model.addAttribute("toastLevel", "info");
+    }
+
     Set<Long> eligibleMemberIds = context.getEligibleMemberIds();
     final List<User> all;
     if (eligibleMemberIds == null) {
@@ -769,6 +789,51 @@ public class MatchLogController {
     boolean resolvedB1Guest = isGuest(teamB1);
     boolean resolvedB2Guest = isGuest(teamB2);
 
+    RoundRobinService.ActiveSessionAssignment activeSessionRoundRobin =
+        resolveActiveSessionRoundRobinAssignment(context, currentUser);
+    if (activeSessionRoundRobin != null) {
+      returnToRoundRobinId = activeSessionRoundRobin.roundRobin().getId();
+      returnToRoundRobinEntryId = activeSessionRoundRobin.entry().getId();
+      returnToRoundRobinRound = activeSessionRoundRobin.currentRound();
+      if (activeSessionRoundRobin.entry().isBye() || activeSessionRoundRobin.match() != null) {
+        return redirectToSessionRoundRobinTask(
+            context, sessionRoundRobinLockedMessage(activeSessionRoundRobin));
+      }
+      if (!matchesRoundRobinAssignment(
+          activeSessionRoundRobin.entry(), effectiveA1, resolvedA2, resolvedB1, resolvedB2)) {
+        RoundRobinSelection lockedSelection =
+            sessionRoundRobinSelection(activeSessionRoundRobin.entry(), currentUser.getId());
+        formInternal(
+            model,
+            auth,
+            request,
+            resolvedSeasonId,
+            ladderId,
+            null,
+            competitionMode,
+            lockedSelection.a1(),
+            lockedSelection.a2(),
+            lockedSelection.b1(),
+            lockedSelection.b2(),
+            returnTo,
+            returnToRoundRobinId,
+            returnToRoundRobinEntryId,
+            returnToRoundRobinRound);
+        reapplySelections(
+            model,
+            lockedSelection.a1(),
+            lockedSelection.a2(),
+            lockedSelection.b1(),
+            lockedSelection.b2(),
+            scoreA,
+            scoreB);
+        model.addAttribute(
+            "toastMessage", "You’re in an active round robin. Use the assigned pairing shown here.");
+        model.addAttribute("toastLevel", "warning");
+        return "auth/logMatch";
+      }
+    }
+
     if (hasSamePlayerOnBothTeams(
         effectiveA1, effectiveA1Guest,
         resolvedA2, resolvedA2Guest,
@@ -1134,6 +1199,121 @@ public class MatchLogController {
   private MatchLogRoutingService routingService() {
     return new MatchLogRoutingService();
   }
+
+  private RoundRobinService.ActiveSessionAssignment resolveActiveSessionRoundRobinAssignment(
+      ResolvedMatchLogContext context, User currentUser) {
+    if (roundRobinService == null
+        || context == null
+        || !context.isSession()
+        || context.getSessionConfig() == null
+        || currentUser == null
+        || currentUser.getId() == null) {
+      return null;
+    }
+    return roundRobinService
+        .findActiveSessionAssignment(context.getSessionConfig(), currentUser.getId())
+        .orElse(null);
+  }
+
+  private String redirectToSessionRoundRobinTask(
+      ResolvedMatchLogContext context, String toastMessage) {
+    Long ladderId = context != null ? context.getSelectionLadderId() : null;
+    if (ladderId == null) {
+      return "redirect:/home";
+    }
+    String path =
+        org.springframework.web.util.UriComponentsBuilder.fromPath("/groups/{ladderId}")
+            .queryParam("toastMessage", toastMessage)
+            .buildAndExpand(ladderId)
+            .encode()
+            .toUriString();
+    return "redirect:" + path;
+  }
+
+  private String sessionRoundRobinLockedMessage(
+      RoundRobinService.ActiveSessionAssignment activeSessionRoundRobin) {
+    if (activeSessionRoundRobin == null || activeSessionRoundRobin.entry() == null) {
+      return "Finish your active round-robin task from the session page first.";
+    }
+    if (activeSessionRoundRobin.entry().isBye()) {
+      return "You have a bye in the active round robin. Wait for the next round to open.";
+    }
+    if (activeSessionRoundRobin.match() != null
+        && activeSessionRoundRobin.match().getState() == MatchState.CONFIRMED) {
+      return "Your round-robin match is already complete. Wait for the next round to open.";
+    }
+    return "Your round-robin match is already logged. Confirm it from the session card before logging anything else.";
+  }
+
+  private RoundRobinSelection sessionRoundRobinSelection(RoundRobinEntry entry, Long currentUserId) {
+    if (entry == null) {
+      return new RoundRobinSelection(null, null, null, null);
+    }
+    User orderedA1 = entry.getA1();
+    User orderedA2 = entry.getA2();
+    User orderedB1 = entry.getB1();
+    User orderedB2 = entry.getB2();
+    if (currentUserId != null) {
+      if (sameUser(entry.getA1(), currentUserId)) {
+        orderedA1 = entry.getA1();
+        orderedA2 = entry.getA2();
+        orderedB1 = entry.getB1();
+        orderedB2 = entry.getB2();
+      } else if (sameUser(entry.getA2(), currentUserId)) {
+        orderedA1 = entry.getA2();
+        orderedA2 = entry.getA1();
+        orderedB1 = entry.getB1();
+        orderedB2 = entry.getB2();
+      } else if (sameUser(entry.getB1(), currentUserId)) {
+        orderedA1 = entry.getB1();
+        orderedA2 = entry.getB2();
+        orderedB1 = entry.getA1();
+        orderedB2 = entry.getA2();
+      } else if (sameUser(entry.getB2(), currentUserId)) {
+        orderedA1 = entry.getB2();
+        orderedA2 = entry.getB1();
+        orderedB1 = entry.getA1();
+        orderedB2 = entry.getA2();
+      }
+    }
+    return new RoundRobinSelection(
+        userParamValue(orderedA1), userParamValue(orderedA2), userParamValue(orderedB1), userParamValue(orderedB2));
+  }
+
+  private String userParamValue(User user) {
+    return user != null && user.getId() != null ? String.valueOf(user.getId()) : null;
+  }
+
+  private boolean sameUser(User user, Long userId) {
+    return user != null && user.getId() != null && user.getId().equals(userId);
+  }
+
+  private boolean matchesRoundRobinAssignment(
+      RoundRobinEntry entry, User a1, User a2, User b1, User b2) {
+    if (entry == null) {
+      return false;
+    }
+    return teamsMatchUnordered(teamIds(entry.getA1(), entry.getA2()), teamIds(entry.getB1(), entry.getB2()), teamIds(a1, a2), teamIds(b1, b2));
+  }
+
+  private boolean teamsMatchUnordered(
+      Set<Long> entryTeamA, Set<Long> entryTeamB, Set<Long> submittedTeamA, Set<Long> submittedTeamB) {
+    return (entryTeamA.equals(submittedTeamA) && entryTeamB.equals(submittedTeamB))
+        || (entryTeamA.equals(submittedTeamB) && entryTeamB.equals(submittedTeamA));
+  }
+
+  private Set<Long> teamIds(User first, User second) {
+    Set<Long> ids = new HashSet<>();
+    if (first != null && first.getId() != null) {
+      ids.add(first.getId());
+    }
+    if (second != null && second.getId() != null) {
+      ids.add(second.getId());
+    }
+    return ids;
+  }
+
+  private record RoundRobinSelection(String a1, String a2, String b1, String b2) {}
 
   private void reapplySelections(
       Model model,

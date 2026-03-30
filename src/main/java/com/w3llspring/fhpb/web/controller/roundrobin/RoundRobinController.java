@@ -19,6 +19,7 @@ import com.w3llspring.fhpb.web.model.RoundRobinStanding;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.LadderAccessService;
 import com.w3llspring.fhpb.web.service.MatchConfirmationService;
+import com.w3llspring.fhpb.web.service.push.PushNotificationService;
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinModificationException;
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import com.w3llspring.fhpb.web.session.UserSessionState;
@@ -46,6 +47,7 @@ public class RoundRobinController {
   private final LadderAccessService ladderAccessService;
   private final LadderMembershipRepository ladderMembershipRepository;
   private final MatchConfirmationService matchConfirmationService;
+  private final PushNotificationService pushNotificationService;
   private LadderConfigRepository ladderConfigRepository;
 
   @Autowired
@@ -54,12 +56,29 @@ public class RoundRobinController {
       LadderAccessService ladderAccessService,
       LadderMembershipRepository ladderMembershipRepository,
       MatchConfirmationService matchConfirmationService,
-      LadderConfigRepository ladderConfigRepository) {
+      LadderConfigRepository ladderConfigRepository,
+      PushNotificationService pushNotificationService) {
     this.roundRobinService = roundRobinService;
     this.ladderAccessService = ladderAccessService;
     this.ladderMembershipRepository = ladderMembershipRepository;
     this.matchConfirmationService = matchConfirmationService;
     this.ladderConfigRepository = ladderConfigRepository;
+    this.pushNotificationService = pushNotificationService;
+  }
+
+  public RoundRobinController(
+      RoundRobinService roundRobinService,
+      LadderAccessService ladderAccessService,
+      LadderMembershipRepository ladderMembershipRepository,
+      MatchConfirmationService matchConfirmationService,
+      LadderConfigRepository ladderConfigRepository) {
+    this(
+        roundRobinService,
+        ladderAccessService,
+        ladderMembershipRepository,
+        matchConfirmationService,
+        ladderConfigRepository,
+        null);
   }
 
   public RoundRobinController(
@@ -72,6 +91,7 @@ public class RoundRobinController {
         ladderAccessService,
         ladderMembershipRepository,
         matchConfirmationService,
+        null,
         null);
   }
 
@@ -197,7 +217,7 @@ public class RoundRobinController {
     }
     if (!canStartRoundRobin(selectedLadder, actor)) {
       redirectAttributes.addFlashAttribute(
-          "toastMessage", "Tournament mode only allows group admins to start round-robins.");
+          "toastMessage", roundRobinStartRestrictionMessage(selectedLadder));
       redirectAttributes.addFlashAttribute("toastLevel", "warning");
       return buildRoundRobinListRedirect(
           ladderId,
@@ -286,6 +306,7 @@ public class RoundRobinController {
       // fragment
       redirectAttributes.addFlashAttribute("toastMessage", "Round-robin started successfully.");
       redirectAttributes.addFlashAttribute("toastLevel", "success");
+      notifySessionRoundRobinParticipants(rr);
       return "redirect:/round-robin/view/" + rr.getId();
     } catch (RoundRobinModificationException ex) {
       showStartError(model, ex.getMessage());
@@ -670,6 +691,8 @@ public class RoundRobinController {
     model.addAttribute("canStartRoundRobin", canStartRoundRobin);
     model.addAttribute(
         "roundRobinAdminOnly", selectedLadder != null && selectedLadder.isTournamentMode());
+    model.addAttribute(
+        "roundRobinStartRestrictionMessage", roundRobinStartRestrictionMessage(selectedLadder));
     java.util.Map<Long, Integer> maxRounds = new java.util.HashMap<>();
     java.util.Map<Long, Integer> playerCounts = new java.util.HashMap<>();
     java.util.Map<Long, Integer> displayRounds = new java.util.HashMap<>();
@@ -725,6 +748,8 @@ public class RoundRobinController {
           "toastMessage",
           "Cannot advance round: not all matches confirmed or invalid round-robin.");
       redirectAttributes.addFlashAttribute("toastLevel", "warning");
+    } else {
+      notifySessionRoundRobinParticipants(roundRobinService.getRoundRobin(id));
     }
     return "redirect:/round-robin/view/" + id;
   }
@@ -1018,10 +1043,36 @@ public class RoundRobinController {
   }
 
   private boolean canStartRoundRobin(LadderConfig ladderConfig, User user) {
+    if (ladderConfig != null && ladderConfig.isSessionType()) {
+      return canStartSessionRoundRobin(ladderConfig, user);
+    }
     if (ladderConfig == null || !ladderConfig.isTournamentMode()) {
       return true;
     }
     return isActiveAdmin(ladderConfig, user);
+  }
+
+  private boolean canStartSessionRoundRobin(LadderConfig ladderConfig, User user) {
+    if (ladderConfig == null || !ladderConfig.isSessionType()) {
+      return true;
+    }
+    if (user == null || user.getId() == null) {
+      return false;
+    }
+    return user.isAdmin() || Objects.equals(ladderConfig.getOwnerUserId(), user.getId());
+  }
+
+  private String roundRobinStartRestrictionMessage(LadderConfig ladderConfig) {
+    if (ladderConfig == null) {
+      return null;
+    }
+    if (ladderConfig.isSessionType()) {
+      return "Only the session starter can start round-robins from this session.";
+    }
+    if (ladderConfig.isTournamentMode()) {
+      return "Tournament mode requires group admins to start and manage round-robins. Matches logged for this season must match an active round-robin pairing.";
+    }
+    return null;
   }
 
   private boolean isActiveAdmin(LadderConfig ladderConfig, User user) {
@@ -1254,6 +1305,8 @@ public class RoundRobinController {
     model.addAttribute("canStartRoundRobin", canStartRoundRobin(ladderConfig, actor));
     model.addAttribute(
         "roundRobinAdminOnly", ladderConfig != null && ladderConfig.isTournamentMode());
+    model.addAttribute(
+        "roundRobinStartRestrictionMessage", roundRobinStartRestrictionMessage(ladderConfig));
     model.addAttribute("displayNames", displayNames);
     model.addAttribute("courtNames", courtNames);
     model.addAttribute("members", safeMembers);
@@ -1385,6 +1438,46 @@ public class RoundRobinController {
       return "/private-groups/" + ladderId + "?seasonId=" + seasonId;
     }
     return "/private-groups/" + ladderId;
+  }
+
+  private void notifySessionRoundRobinParticipants(RoundRobin rr) {
+    if (pushNotificationService == null
+        || rr == null
+        || rr.getId() == null
+        || rr.getSessionConfig() == null
+        || rr.getSessionConfig().getId() == null) {
+      return;
+    }
+    int currentRound = roundRobinService.resolveCurrentRound(rr);
+    int maxRound = roundRobinService.getMaxRound(rr.getId());
+    if (maxRound <= 0 || currentRound > maxRound) {
+      return;
+    }
+
+    List<RoundRobinEntry> entries = roundRobinService.getEntriesForRound(rr.getId(), currentRound);
+    if (entries == null || entries.isEmpty()) {
+      return;
+    }
+
+    java.util.LinkedHashSet<Long> participantIds = new java.util.LinkedHashSet<>();
+    for (RoundRobinEntry entry : entries) {
+      collectNotificationUserId(entry != null ? entry.getA1() : null, participantIds);
+      collectNotificationUserId(entry != null ? entry.getA2() : null, participantIds);
+      collectNotificationUserId(entry != null ? entry.getB1() : null, participantIds);
+      collectNotificationUserId(entry != null ? entry.getB2() : null, participantIds);
+    }
+
+    for (Long participantId : participantIds) {
+      pushNotificationService.sendRoundRobinReady(
+          participantId, rr.getSessionConfig().getId(), rr.getSessionConfig().getTitle(), currentRound);
+    }
+  }
+
+  private void collectNotificationUserId(User user, java.util.Set<Long> participantIds) {
+    if (participantIds == null || user == null || user.getId() == null) {
+      return;
+    }
+    participantIds.add(user.getId());
   }
 
   private String seasonDateRange(LadderSeason season) {

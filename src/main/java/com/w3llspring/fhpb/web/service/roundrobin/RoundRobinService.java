@@ -144,6 +144,56 @@ public class RoundRobinService {
     return users;
   }
 
+  public Optional<ActiveSessionAssignment> findActiveSessionAssignment(
+      LadderConfig sessionConfig, Long userId) {
+    if (sessionConfig == null
+        || !sessionConfig.isSessionType()
+        || sessionConfig.getId() == null
+        || userId == null) {
+      return Optional.empty();
+    }
+
+    List<RoundRobin> roundRobins = new ArrayList<>(rrRepo.findBySessionConfig(sessionConfig));
+    roundRobins.sort(
+        java.util.Comparator.comparing(
+                RoundRobin::getCreatedAt,
+                java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()))
+            .reversed());
+
+    for (RoundRobin rr : roundRobins) {
+      if (rr == null || rr.getId() == null) {
+        continue;
+      }
+      int currentRound = resolveCurrentRound(rr);
+      int maxRound = getMaxRound(rr.getId());
+      if (maxRound <= 0 || currentRound > maxRound) {
+        continue;
+      }
+
+      List<RoundRobinEntry> entries = rrEntryRepo.findByRoundRobinAndRoundNumberWithUsers(rr, currentRound);
+      if (entries == null || entries.isEmpty()) {
+        continue;
+      }
+
+      List<Long> matchIds =
+          entries.stream()
+              .map(RoundRobinEntry::getMatchId)
+              .filter(java.util.Objects::nonNull)
+              .toList();
+      java.util.Map<Long, Match> matchMap = loadMatchesWithParticipants(matchIds);
+
+      for (RoundRobinEntry entry : entries) {
+        if (!entryContainsUser(entry, userId)) {
+          continue;
+        }
+        Match match = resolveMatchForEntry(rr, entry, matchMap, true);
+        return Optional.of(new ActiveSessionAssignment(rr, entry, match, currentRound, maxRound));
+      }
+    }
+
+    return Optional.empty();
+  }
+
   /** Find the active or most recent season for a ladder. Returns null if none found. */
   public LadderSeason findSeasonForLadder(Long ladderConfigId) {
     if (ladderConfigId == null) return null;
@@ -1099,6 +1149,20 @@ public class RoundRobinService {
       linkEntryToMatch(entry, found.getId());
     }
     return found;
+  }
+
+  private boolean entryContainsUser(RoundRobinEntry entry, Long userId) {
+    if (entry == null || userId == null) {
+      return false;
+    }
+    return sameUser(entry.getA1(), userId)
+        || sameUser(entry.getA2(), userId)
+        || sameUser(entry.getB1(), userId)
+        || sameUser(entry.getB2(), userId);
+  }
+
+  private boolean sameUser(User user, Long userId) {
+    return user != null && user.getId() != null && user.getId().equals(userId);
   }
 
   public List<RoundRobinEntry> getEntriesForRound(Long rrId, int roundNumber) {
@@ -2133,6 +2197,9 @@ public class RoundRobinService {
       this.displayNames = displayNames;
     }
   }
+
+  public record ActiveSessionAssignment(
+      RoundRobin roundRobin, RoundRobinEntry entry, Match match, int currentRound, int maxRound) {}
 
   public java.util.Map<Long, String> buildDisplayNameMap(
       java.util.Collection<Long> userIds, LadderSeason season) {

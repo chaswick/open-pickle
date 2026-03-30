@@ -22,8 +22,8 @@
             <div class="card-header card-header-title text-center">Round-Robins</div>
             <div class="card-body">
                 <div class="alert alert-warning text-start"
-                     th:if="${roundRobinAdminOnly}">
-                    Tournament mode requires group admins to start and manage round-robins. Matches logged for this season must match an active round-robin pairing.
+                     th:if="${roundRobinStartRestrictionMessage != null}">
+                    <span th:text="${roundRobinStartRestrictionMessage}">Only the session starter can start round-robins from this session.</span>
                 </div>
                 <div class="mb-3 d-flex justify-content-center gap-2 flex-wrap">
                     <a class="btn btn-action-primary"

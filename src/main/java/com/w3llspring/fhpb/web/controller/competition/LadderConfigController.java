@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -533,11 +534,21 @@ public class LadderConfigController {
     model.addAttribute(
         "sessionStandingsRecalculationPending",
         targetSeason != null && targetSeason.isStandingsRecalcInProgress());
+    MatchDashboardService.DashboardModel sessionDashboard =
+        matchDashboardViewService != null ? matchDashboardViewService.emptyDashboard() : null;
     if (cfg.isSessionType() && matchDashboardService != null && matchDashboardViewService != null) {
-      matchDashboardViewService.applyToModel(
-          model, matchDashboardService.buildPendingForUserInSeason(currentUser, targetSeason));
+      sessionDashboard = matchDashboardService.buildPendingForUserInSeason(currentUser, targetSeason);
+      matchDashboardViewService.applyToModel(model, sessionDashboard);
     }
     if (cfg.isSessionType()) {
+      applySessionRoundRobinTask(
+          model,
+          cfg,
+          currentUser,
+          sessionDashboard != null
+              ? sessionDashboard.matchRowModel().getConfirmableMatchIds()
+              : Set.of());
+      model.addAttribute("canStartSessionRoundRobin", canStartSessionRoundRobin(cfg, currentUser));
       applySessionStandingPreview(model, currentUser, targetSeason);
       List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionReportStandings =
           roundRobinService != null ? roundRobinService.computeStandingsForSession(cfg) : List.of();
@@ -732,6 +743,135 @@ public class LadderConfigController {
     }
     var currentRow = seasonStandingsViewService.findRowForUser(standingsView, currentUser.getId());
     model.addAttribute("sessionStandingRow", currentRow);
+  }
+
+  private boolean canStartSessionRoundRobin(LadderConfig ladder, User currentUser) {
+    if (ladder == null || !ladder.isSessionType()) {
+      return false;
+    }
+    if (currentUser == null || currentUser.getId() == null) {
+      return false;
+    }
+    return currentUser.isAdmin() || Objects.equals(ladder.getOwnerUserId(), currentUser.getId());
+  }
+
+  private void applySessionRoundRobinTask(
+      Model model, LadderConfig sessionConfig, User currentUser, java.util.Set<Long> confirmableMatchIds) {
+    model.addAttribute("sessionRoundRobinTask", null);
+    if (model == null
+        || sessionConfig == null
+        || !sessionConfig.isSessionType()
+        || currentUser == null
+        || currentUser.getId() == null
+        || roundRobinService == null) {
+      return;
+    }
+
+    var assignment =
+        roundRobinService.findActiveSessionAssignment(sessionConfig, currentUser.getId()).orElse(null);
+    if (assignment == null || assignment.entry() == null || assignment.roundRobin() == null) {
+      return;
+    }
+
+    java.util.LinkedHashSet<Long> userIds = new java.util.LinkedHashSet<>();
+    collectSessionRoundRobinUserId(assignment.entry().getA1(), userIds);
+    collectSessionRoundRobinUserId(assignment.entry().getA2(), userIds);
+    collectSessionRoundRobinUserId(assignment.entry().getB1(), userIds);
+    collectSessionRoundRobinUserId(assignment.entry().getB2(), userIds);
+    Map<Long, String> displayNames = roundRobinService.buildDisplayNameMap(userIds, sessionConfig.getId());
+
+    java.util.LinkedHashMap<String, Object> task = new java.util.LinkedHashMap<>();
+    task.put("roundRobinId", assignment.roundRobin().getId());
+    task.put("currentRound", assignment.currentRound());
+    task.put("maxRound", assignment.maxRound());
+    task.put("entryId", assignment.entry().getId());
+    task.put("bye", assignment.entry().isBye());
+    task.put("match", assignment.match());
+    task.put("matchId", assignment.match() != null ? assignment.match().getId() : null);
+    task.put("confirmed", assignment.match() != null && assignment.match().getState() == com.w3llspring.fhpb.web.model.MatchState.CONFIRMED);
+    task.put("a1Name", sessionRoundRobinName(assignment.entry().getA1(), displayNames));
+    task.put("a2Name", sessionRoundRobinName(assignment.entry().getA2(), displayNames));
+    task.put("b1Name", sessionRoundRobinName(assignment.entry().getB1(), displayNames));
+    task.put("b2Name", sessionRoundRobinName(assignment.entry().getB2(), displayNames));
+
+    boolean canConfirm =
+        assignment.match() != null
+            && assignment.match().getId() != null
+            && confirmableMatchIds != null
+            && confirmableMatchIds.contains(assignment.match().getId());
+    task.put("canConfirm", canConfirm);
+    task.put(
+        "waitingOnOpponentConfirmation",
+        assignment.match() != null
+            && assignment.match().getState() != com.w3llspring.fhpb.web.model.MatchState.CONFIRMED
+            && !canConfirm);
+    task.put(
+        "readyToLog", !assignment.entry().isBye() && assignment.match() == null);
+
+    Long currentUserId = currentUser.getId();
+    task.put("quickLogA1", sessionRoundRobinQuickLogValue(currentUserId, assignment.entry(), "a1"));
+    task.put("quickLogA2", sessionRoundRobinQuickLogValue(currentUserId, assignment.entry(), "a2"));
+    task.put("quickLogB1", sessionRoundRobinQuickLogValue(currentUserId, assignment.entry(), "b1"));
+    task.put("quickLogB2", sessionRoundRobinQuickLogValue(currentUserId, assignment.entry(), "b2"));
+    model.addAttribute("sessionRoundRobinTask", task);
+  }
+
+  private void collectSessionRoundRobinUserId(User user, java.util.Set<Long> userIds) {
+    if (userIds == null || user == null || user.getId() == null) {
+      return;
+    }
+    userIds.add(user.getId());
+  }
+
+  private String sessionRoundRobinName(User user, Map<Long, String> displayNames) {
+    if (user == null || user.getId() == null) {
+      return null;
+    }
+    return displayNames.get(user.getId());
+  }
+
+  private Long sessionRoundRobinQuickLogValue(Long currentUserId, com.w3llspring.fhpb.web.model.RoundRobinEntry entry, String slot) {
+    if (entry == null) {
+      return null;
+    }
+    User orderedA1 = entry.getA1();
+    User orderedA2 = entry.getA2();
+    User orderedB1 = entry.getB1();
+    User orderedB2 = entry.getB2();
+    if (currentUserId != null) {
+      if (sameSessionRoundRobinUser(entry.getA1(), currentUserId)) {
+        orderedA1 = entry.getA1();
+        orderedA2 = entry.getA2();
+        orderedB1 = entry.getB1();
+        orderedB2 = entry.getB2();
+      } else if (sameSessionRoundRobinUser(entry.getA2(), currentUserId)) {
+        orderedA1 = entry.getA2();
+        orderedA2 = entry.getA1();
+        orderedB1 = entry.getB1();
+        orderedB2 = entry.getB2();
+      } else if (sameSessionRoundRobinUser(entry.getB1(), currentUserId)) {
+        orderedA1 = entry.getB1();
+        orderedA2 = entry.getB2();
+        orderedB1 = entry.getA1();
+        orderedB2 = entry.getA2();
+      } else if (sameSessionRoundRobinUser(entry.getB2(), currentUserId)) {
+        orderedA1 = entry.getB2();
+        orderedA2 = entry.getB1();
+        orderedB1 = entry.getA1();
+        orderedB2 = entry.getA2();
+      }
+    }
+    return switch (slot) {
+      case "a1" -> orderedA1 != null ? orderedA1.getId() : null;
+      case "a2" -> orderedA2 != null ? orderedA2.getId() : null;
+      case "b1" -> orderedB1 != null ? orderedB1.getId() : null;
+      case "b2" -> orderedB2 != null ? orderedB2.getId() : null;
+      default -> null;
+    };
+  }
+
+  private boolean sameSessionRoundRobinUser(User user, Long userId) {
+    return user != null && user.getId() != null && user.getId().equals(userId);
   }
 
   @PostMapping("/{configId}/ban/{memberId}")
