@@ -354,13 +354,13 @@ class LadderConfigControllerShowTest {
     ReflectionTestUtils.setField(
         controller,
         "matchEntryContextService",
-        new MatchEntryContextService(
-            new CourtNameService() {
-              @Override
-              public java.util.Map<Long, Set<String>> gatherCourtNamesForUsers(
-                  java.util.Collection<Long> userIds, Long ladderId) {
-                return java.util.Map.of();
-              }
+            new MatchEntryContextService(
+                new CourtNameService() {
+                  @Override
+                  public java.util.Map<Long, Set<String>> gatherCourtNamesForUsers(
+                      java.util.Collection<Long> userIds, Long ladderId) {
+                return java.util.Map.of(7L, Set.of("Center Court"));
+                  }
 
               @Override
               public Set<String> gatherCourtNamesForUser(long userId, Long ladderConfigId) {
@@ -408,6 +408,7 @@ class LadderConfigControllerShowTest {
     assertThat(model.get("voiceMaxAlternatives")).isEqualTo(Integer.valueOf(3));
     assertThat((List<String>) model.get("voicePhraseHints"))
         .contains("Tester", "I beat", "We beat");
+    assertThat(model.get("courtNameByUser")).isEqualTo(java.util.Map.of(7L, "Center Court"));
     assertThat((String) model.get("ladderInviteLink")).contains("inviteCode=DINK-7");
     assertThat((String) model.get("ladderInviteLink")).contains("autoJoin=true");
   }
@@ -455,6 +456,53 @@ class LadderConfigControllerShowTest {
 
     assertThat(view).isEqualTo("auth/show");
     assertThat(model.get("sessionDisplayTitle")).isEqualTo("Tester's Session");
+  }
+
+  @Test
+  void show_sessionOwnerUsesEndSessionCopy() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Saturday Open Session");
+    cfg.setOwnerUserId(7L);
+    cfg.setType(LadderConfig.Type.SESSION);
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.ADMIN);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
+        .thenReturn(Optional.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser));
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    assertThat(model.get("leaveConfirmMessage"))
+        .isEqualTo("End this session? Everyone will be removed immediately.");
+    assertThat(model.get("leaveActionLabel")).isEqualTo("End Session");
   }
 
   @Test

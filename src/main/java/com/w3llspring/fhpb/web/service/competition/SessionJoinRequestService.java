@@ -8,6 +8,7 @@ import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.SessionJoinRequest;
 import com.w3llspring.fhpb.web.model.User;
+import com.w3llspring.fhpb.web.service.matchentry.MatchEntryContextService;
 import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
 import com.w3llspring.fhpb.web.util.UserPublicName;
 import java.time.Duration;
@@ -17,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,9 @@ public class SessionJoinRequestService {
       String requesterPublicCode,
       Instant requestedAt,
       Instant expiresAt) {}
+
+  public record ActiveSessionMemberView(
+      Long membershipId, Long userId, String displayName, String courtName) {}
 
   public record RequestStatusView(
       Long id,
@@ -66,24 +71,45 @@ public class SessionJoinRequestService {
   private final SessionJoinRequestRepository requests;
   private final UserRepository userRepo;
   private final GroupAdministrationService groupAdministration;
+  private final MatchEntryContextService matchEntryContextService;
   private final long joinRequestTtlSeconds;
 
   @Value("${fhpb.sessions.invite-active-seconds:1800}")
   private long sessionInviteActiveSeconds = 1800L;
 
+  @Autowired
   public SessionJoinRequestService(
       LadderConfigRepository configs,
       LadderMembershipRepository memberships,
       SessionJoinRequestRepository requests,
       UserRepository userRepo,
       GroupAdministrationService groupAdministration,
+      MatchEntryContextService matchEntryContextService,
       @Value("${fhpb.sessions.join-request-ttl-seconds:300}") long joinRequestTtlSeconds) {
     this.configs = configs;
     this.memberships = memberships;
     this.requests = requests;
     this.userRepo = userRepo;
     this.groupAdministration = groupAdministration;
+    this.matchEntryContextService = matchEntryContextService;
     this.joinRequestTtlSeconds = joinRequestTtlSeconds;
+  }
+
+  SessionJoinRequestService(
+      LadderConfigRepository configs,
+      LadderMembershipRepository memberships,
+      SessionJoinRequestRepository requests,
+      UserRepository userRepo,
+      GroupAdministrationService groupAdministration,
+      long joinRequestTtlSeconds) {
+    this(
+        configs,
+        memberships,
+        requests,
+        userRepo,
+        groupAdministration,
+        null,
+        joinRequestTtlSeconds);
   }
 
   @Transactional
@@ -180,6 +206,45 @@ public class SessionJoinRequestService {
                   request.getRequestedAt(),
                   request.getExpiresAt());
             })
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<ActiveSessionMemberView> listActiveMembers(Long sessionId, Long viewerUserId) {
+    LadderConfig session = findSession(sessionId);
+    groupAdministration.requireActiveMember(session.getId(), viewerUserId);
+    List<LadderMembership> activeMembers =
+        memberships.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            sessionId, LadderMembership.State.ACTIVE);
+    if (activeMembers == null || activeMembers.isEmpty()) {
+      return List.of();
+    }
+    List<Long> userIds =
+        activeMembers.stream()
+            .map(LadderMembership::getUserId)
+            .filter(Objects::nonNull)
+            .distinct()
+            .toList();
+    if (userIds.isEmpty()) {
+      return List.of();
+    }
+    List<User> users = userRepo.findAllById(userIds);
+    Map<Long, User> usersById =
+        (users != null ? users : List.<User>of()).stream()
+            .collect(Collectors.toMap(User::getId, user -> user));
+    Map<Long, String> courtNameByUser =
+        matchEntryContextService != null
+            ? matchEntryContextService.buildCourtNameByUserIds(userIds, sessionId)
+            : Map.of();
+    Map<Long, String> safeCourtNameByUser = courtNameByUser != null ? courtNameByUser : Map.of();
+    return activeMembers.stream()
+        .map(
+            member ->
+                new ActiveSessionMemberView(
+                    member.getId(),
+                    member.getUserId(),
+                    displayNameFor(usersById.get(member.getUserId())),
+                    safeCourtNameByUser.get(member.getUserId())))
         .toList();
   }
 
@@ -320,6 +385,13 @@ public class SessionJoinRequestService {
       return "This join request already expired.";
     }
     return "Join request is still pending.";
+  }
+
+  private String displayNameFor(User user) {
+    if (user == null || user.getNickName() == null || user.getNickName().isBlank()) {
+      return "missing name";
+    }
+    return user.getNickName().trim();
   }
 
   private SessionJoinRequest expireIfNeeded(SessionJoinRequest request, Instant now) {

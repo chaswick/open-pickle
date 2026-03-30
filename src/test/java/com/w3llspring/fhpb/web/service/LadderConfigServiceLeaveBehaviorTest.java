@@ -18,6 +18,7 @@ import com.w3llspring.fhpb.web.model.LadderSeason;
 import com.w3llspring.fhpb.web.model.LadderSecurity;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.competition.GroupAdministrationService;
+import com.w3llspring.fhpb.web.service.competition.SessionLifecycleService;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -42,6 +43,7 @@ class LadderConfigServiceLeaveBehaviorTest {
 
   private LadderConfigService service;
   private GroupAdministrationService groupAdministrationService;
+  private SessionLifecycleService sessionLifecycleService;
 
   @BeforeEach
   void setUp() {
@@ -63,9 +65,17 @@ class LadderConfigServiceLeaveBehaviorTest {
             10,
             userRepo,
             seasonNameGenerator);
+    sessionLifecycleService = new SessionLifecycleService(configRepo, membershipRepo);
     groupAdministrationService =
         new GroupAdministrationService(
-            configRepo, membershipRepo, inviteGenerator, userRepo, 20, 30L, "admin@test.com");
+            configRepo,
+            membershipRepo,
+            inviteGenerator,
+            userRepo,
+            sessionLifecycleService,
+            20,
+            30L,
+            "admin@test.com");
   }
 
   @Test
@@ -156,15 +166,19 @@ class LadderConfigServiceLeaveBehaviorTest {
   }
 
   @Test
-  void sessionOwnerLeavingDoesNotMarkPendingDeletion() {
+  void sessionOwnerLeavingArchivesSessionUsingCleanupBehavior() {
     Long configId = 14L;
     Long ownerId = 501L;
     Long membershipId = 801L;
+    Long otherMembershipId = 802L;
+    Long otherUserId = 777L;
 
     LadderConfig cfg = new LadderConfig();
     cfg.setId(configId);
     cfg.setOwnerUserId(ownerId);
     cfg.setType(LadderConfig.Type.SESSION);
+    cfg.setInviteCode("MINT-COURT-42");
+    cfg.setStatus(LadderConfig.Status.ACTIVE);
 
     LadderMembership ownerMembership = new LadderMembership();
     ownerMembership.setId(membershipId);
@@ -173,15 +187,31 @@ class LadderConfigServiceLeaveBehaviorTest {
     ownerMembership.setRole(LadderMembership.Role.ADMIN);
     ownerMembership.setState(LadderMembership.State.ACTIVE);
 
+    LadderMembership otherMembership = new LadderMembership();
+    otherMembership.setId(otherMembershipId);
+    otherMembership.setLadderConfig(cfg);
+    otherMembership.setUserId(otherUserId);
+    otherMembership.setRole(LadderMembership.Role.MEMBER);
+    otherMembership.setState(LadderMembership.State.ACTIVE);
+
     when(membershipRepo.findById(membershipId)).thenReturn(Optional.of(ownerMembership));
+    when(configRepo.lockById(configId)).thenReturn(cfg);
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            configId, LadderMembership.State.ACTIVE))
+        .thenReturn(java.util.List.of(ownerMembership, otherMembership));
 
     groupAdministrationService.leaveMember(configId, ownerId, membershipId);
 
     verify(membershipRepo).save(ownerMembership);
-    verify(configRepo, never()).save(cfg);
+    verify(membershipRepo).save(otherMembership);
+    verify(configRepo).save(cfg);
     assertThat(ownerMembership.getState()).isEqualTo(LadderMembership.State.LEFT);
     assertThat(ownerMembership.getLeftAt()).isNotNull();
+    assertThat(otherMembership.getState()).isEqualTo(LadderMembership.State.LEFT);
+    assertThat(otherMembership.getLeftAt()).isNotNull();
     assertThat(cfg.isPendingDeletion()).isFalse();
+    assertThat(cfg.getStatus()).isEqualTo(LadderConfig.Status.ARCHIVED);
+    assertThat(cfg.getInviteCode()).isNull();
   }
 
   @Test

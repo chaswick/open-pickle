@@ -291,9 +291,15 @@
                     ? sessionDisplayTitle + ' - ' + @fhpbTime.pattern(ladder.createdAt, authPrincipal, sessionDateTimePattern)
                     : sessionDisplayTitle)
                 : ladder.title}">Group</h1>
-        <p class="app-page-subtitle"
-           th:text="${isSessionLadder ? 'Temporary match session for quick global competition play.' : 'Invite players, manage members, and adjust group settings.'}">
-          Invite players, manage members, and adjust group settings.
+        <p class="app-page-subtitle">
+          <span th:text="${isSessionLadder ? 'Temporary match session for quick global competition play.' : 'Invite players, manage members, and adjust group settings.'}">
+            Invite players, manage members, and adjust group settings.
+          </span>
+          <span th:if="${isSessionLadder and ladder.expiresAt != null}">
+            <span> Session expires at </span>
+            <span th:text="${@fhpbTime.pattern(ladder.expiresAt, authPrincipal, sessionDateTimePattern)}">Saturday, Mar 15, 2:00 PM</span>
+            <span>.</span>
+          </span>
         </p>
       </div>
     </div>
@@ -302,10 +308,12 @@
          th:href="${isSessionLadder} ? @{/home} : (${isCompetitionLadder} ? @{/competition} : @{/private-groups/{ladderId}(ladderId=${ladder.id},seasonId=${season != null ? season.id : null})})">Back</a>
     </div>
     <div class="card-stack-col card-stack-col-desktop-fluid pb-5 text-start">
-      <div th:if="${isSessionLadder}"
-           th:replace="~{fragments/show/sessionBody :: sessionBody}"></div>
-      <div th:unless="${isSessionLadder}"
-           th:replace="~{fragments/show/groupBody :: groupBody}"></div>
+      <th:block th:if="${isSessionLadder}">
+        <div th:replace="~{fragments/show/sessionBody :: sessionBody}"></div>
+      </th:block>
+      <th:block th:unless="${isSessionLadder}">
+        <div th:replace="~{fragments/show/groupBody :: groupBody}"></div>
+      </th:block>
     </div>
     </th:block>
   </main>
@@ -326,6 +334,14 @@
           return window.FHPB.Csrf.headers(baseHeaders || {});
         }
         return baseHeaders || {};
+      }
+
+      function fetchJson(url, options) {
+        return fetch(url, options).then(function (response) {
+          return response.json().catch(function () { return {}; }).then(function (payload) {
+            return { ok: response.ok, payload: payload };
+          });
+        });
       }
 
       (function () {
@@ -412,6 +428,127 @@
       });
 
       (function () {
+        const panel = document.getElementById('sessionMembersPanel');
+        if (!panel) return;
+
+        const sessionId = panel.getAttribute('data-session-id');
+        const list = panel.querySelector('[data-members-list]');
+        const emptyState = panel.querySelector('[data-members-empty-state]');
+        const title = panel.querySelector('[data-member-section-title]');
+        if (!sessionId || !list || !emptyState || !title) return;
+
+        const currentUserId = Number(panel.getAttribute('data-current-user-id'));
+        const ownerUserId = Number(panel.getAttribute('data-owner-user-id'));
+        const currentUserIsAdmin = panel.getAttribute('data-current-user-is-admin') === 'true';
+        const leaveConfirmMessage = panel.getAttribute('data-leave-confirm-message') || 'Leave this session?';
+        const leaveActionLabel = panel.getAttribute('data-leave-action-label') || 'Leave Session';
+
+        const updateEmptyState = function () {
+          const hasItems = list.children.length > 0;
+          list.classList.toggle('d-none', !hasItems);
+          emptyState.classList.toggle('d-none', hasItems);
+        };
+
+        const applyConfirmMessage = function (form, message) {
+          if (!form || !message) return;
+          form.setAttribute('onsubmit', 'return handleConfirmForm(this, ' + JSON.stringify(message) + ');');
+        };
+
+        const buildActionButton = function (label, className) {
+          const button = document.createElement('button');
+          button.type = 'submit';
+          button.className = className;
+          button.textContent = label;
+          return button;
+        };
+
+        const buildItem = function (member) {
+          const item = document.createElement('li');
+          item.className = 'list-group-item';
+
+          const row = document.createElement('div');
+          row.className = 'd-flex flex-wrap align-items-start justify-content-between w-100 gap-2';
+
+          const info = document.createElement('div');
+          info.className = 'd-flex flex-column align-items-start gap-1 flex-grow-1 min-w-0';
+
+          const nameRow = document.createElement('div');
+          nameRow.className = 'd-flex flex-wrap align-items-center gap-2';
+
+          const name = document.createElement('strong');
+          name.textContent = member.displayName || 'missing name';
+          nameRow.appendChild(name);
+
+          if (member.courtName) {
+            const court = document.createElement('span');
+            court.className = 'text-muted';
+            court.textContent = ' - ' + member.courtName;
+            nameRow.appendChild(court);
+          }
+
+          info.appendChild(nameRow);
+
+          const actions = document.createElement('div');
+          actions.className = 'd-flex flex-wrap gap-2 flex-shrink-0 justify-content-end align-self-center';
+
+          if (currentUserIsAdmin && member.userId !== currentUserId && member.userId !== ownerUserId) {
+            const removeForm = document.createElement('form');
+            removeForm.method = 'post';
+            removeForm.className = 'm-0';
+            removeForm.action = '/groups/' + sessionId + '/remove/' + member.membershipId;
+            applyConfirmMessage(
+              removeForm,
+              'Remove this player from the session? They can rejoin later with the invite if there is space.');
+            removeForm.appendChild(buildActionButton('Remove', 'btn btn-action-danger btn-inline'));
+            actions.appendChild(removeForm);
+          }
+
+          if (member.userId === currentUserId) {
+            const leaveForm = document.createElement('form');
+            leaveForm.method = 'post';
+            leaveForm.className = 'm-0';
+            leaveForm.action = '/groups/' + sessionId + '/leave/' + member.membershipId;
+            applyConfirmMessage(leaveForm, leaveConfirmMessage);
+            leaveForm.appendChild(buildActionButton(leaveActionLabel, 'btn btn-action-danger btn-inline'));
+            actions.appendChild(leaveForm);
+          }
+
+          row.appendChild(info);
+          row.appendChild(actions);
+          item.appendChild(row);
+          return item;
+        };
+
+        const renderMembers = function (payload) {
+          while (list.firstChild) {
+            list.removeChild(list.firstChild);
+          }
+          if (payload && payload.memberSectionTitle) {
+            title.textContent = payload.memberSectionTitle;
+          }
+          ((payload && payload.members) || []).forEach(function (member) {
+            list.appendChild(buildItem(member));
+          });
+          updateEmptyState();
+        };
+
+        function loadMembers() {
+          return fetchJson('/api/sessions/' + sessionId + '/members', {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+          }).then(function (result) {
+            if (!result.ok) return result;
+            renderMembers(result.payload);
+            return result;
+          }).catch(function () {});
+        }
+
+        window.FHPB = window.FHPB || {};
+        window.FHPB.SessionMembers = window.FHPB.SessionMembers || {};
+        window.FHPB.SessionMembers.refresh = loadMembers;
+      })();
+
+      (function () {
         const panel = document.getElementById('sessionJoinRequestsPanel');
         if (!panel) return;
 
@@ -438,14 +575,6 @@
           const hasItems = list.children.length > 0;
           list.classList.toggle('d-none', !hasItems);
           emptyState.classList.toggle('d-none', hasItems);
-        };
-
-        const fetchJson = function (url, options) {
-          return fetch(url, options).then(function (response) {
-            return response.json().catch(function () { return {}; }).then(function (payload) {
-              return { ok: response.ok, payload: payload };
-            });
-          });
         };
 
         const buildItem = function (request) {
@@ -525,6 +654,12 @@
                 if (result.payload && result.payload.status === 'PENDING') {
                   statusEl.textContent = result.payload.message || 'Request is still pending.';
                   return;
+                }
+                if (result.payload && result.payload.status === 'APPROVED'
+                    && window.FHPB
+                    && window.FHPB.SessionMembers
+                    && typeof window.FHPB.SessionMembers.refresh === 'function') {
+                  window.FHPB.SessionMembers.refresh();
                 }
                 loadRequests();
               }).catch(function () {

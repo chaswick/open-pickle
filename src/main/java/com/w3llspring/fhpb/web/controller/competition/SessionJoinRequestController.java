@@ -4,6 +4,8 @@ import com.w3llspring.fhpb.web.model.SessionJoinRequest;
 import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,9 +21,18 @@ import org.springframework.web.server.ResponseStatusException;
 public class SessionJoinRequestController {
 
   private final SessionJoinRequestService sessionJoinRequests;
+  private final int defaultMaxMembers;
 
-  public SessionJoinRequestController(SessionJoinRequestService sessionJoinRequests) {
+  @Autowired
+  public SessionJoinRequestController(
+      SessionJoinRequestService sessionJoinRequests,
+      @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
     this.sessionJoinRequests = sessionJoinRequests;
+    this.defaultMaxMembers = defaultMaxMembers;
+  }
+
+  SessionJoinRequestController(SessionJoinRequestService sessionJoinRequests) {
+    this(sessionJoinRequests, 20);
   }
 
   public record PendingJoinRequestResponse(
@@ -45,6 +56,12 @@ public class SessionJoinRequestController {
 
   public record JoinRequestReviewResponse(String status, String message) {}
 
+  public record SessionMemberResponse(
+      Long membershipId, Long userId, String displayName, String courtName) {}
+
+  public record SessionMembersResponse(
+      String memberSectionTitle, int memberCount, java.util.List<SessionMemberResponse> members) {}
+
   @GetMapping("/api/sessions/{sessionId}/join-requests")
   public List<PendingJoinRequestResponse> pending(
       @PathVariable("sessionId") Long sessionId, Authentication auth) {
@@ -62,6 +79,32 @@ public class SessionJoinRequestController {
                       request.requestedAt(),
                       request.expiresAt()))
           .toList();
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+    } catch (SecurityException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @GetMapping("/api/sessions/{sessionId}/members")
+  public SessionMembersResponse members(
+      @PathVariable("sessionId") Long sessionId, Authentication auth) {
+    Long userId = requireCurrentUserId(auth);
+    try {
+      List<SessionJoinRequestService.ActiveSessionMemberView> activeMembers =
+          sessionJoinRequests.listActiveMembers(sessionId, userId);
+      return new SessionMembersResponse(
+          String.format("Session Members (%d/%d)", activeMembers.size(), defaultMaxMembers),
+          activeMembers.size(),
+          activeMembers.stream()
+              .map(
+                  member ->
+                      new SessionMemberResponse(
+                          member.membershipId(),
+                          member.userId(),
+                          member.displayName(),
+                          member.courtName()))
+              .toList());
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
     } catch (SecurityException ex) {

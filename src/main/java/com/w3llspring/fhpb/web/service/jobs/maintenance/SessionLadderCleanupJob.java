@@ -1,10 +1,9 @@
 package com.w3llspring.fhpb.web.service.jobs.maintenance;
 
 import com.w3llspring.fhpb.web.db.LadderConfigRepository;
-import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.logging.BackgroundJobLogContext;
 import com.w3llspring.fhpb.web.model.LadderConfig;
-import com.w3llspring.fhpb.web.model.LadderMembership;
+import com.w3llspring.fhpb.web.service.competition.SessionLifecycleService;
 import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
@@ -19,13 +18,13 @@ public class SessionLadderCleanupJob {
   private static final Logger log = LoggerFactory.getLogger(SessionLadderCleanupJob.class);
 
   private final LadderConfigRepository ladderConfigRepository;
-  private final LadderMembershipRepository ladderMembershipRepository;
+  private final SessionLifecycleService sessionLifecycleService;
 
   public SessionLadderCleanupJob(
       LadderConfigRepository ladderConfigRepository,
-      LadderMembershipRepository ladderMembershipRepository) {
+      SessionLifecycleService sessionLifecycleService) {
     this.ladderConfigRepository = ladderConfigRepository;
-    this.ladderMembershipRepository = ladderMembershipRepository;
+    this.sessionLifecycleService = sessionLifecycleService;
   }
 
   @Scheduled(cron = "${fhpb.session.cleanup.cron:0 */30 * * * *}")
@@ -44,19 +43,9 @@ public class SessionLadderCleanupJob {
         if (session == null || session.getId() == null) {
           continue;
         }
-        session.setStatus(LadderConfig.Status.ARCHIVED);
-        session.setInviteCode(null);
-        ladderConfigRepository.save(session);
-
-        List<LadderMembership> activeMembers =
-            ladderMembershipRepository.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
-                session.getId(), LadderMembership.State.ACTIVE);
-        for (LadderMembership membership : activeMembers) {
-          membership.setState(LadderMembership.State.LEFT);
-          membership.setLeftAt(now);
-          ladderMembershipRepository.save(membership);
+        if (sessionLifecycleService.archiveSession(session.getId(), now)) {
+          log.info("Archived expired match session {}", session.getId());
         }
-        log.info("Archived expired match session {}", session.getId());
       }
     }
   }

@@ -15,7 +15,11 @@ import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.SessionJoinRequest;
+import com.w3llspring.fhpb.web.model.User;
+import com.w3llspring.fhpb.web.service.matchentry.MatchEntryContextService;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +35,7 @@ class SessionJoinRequestServiceTest {
   @Mock private SessionJoinRequestRepository requests;
   @Mock private UserRepository userRepo;
   @Mock private GroupAdministrationService groupAdministration;
+  @Mock private MatchEntryContextService matchEntryContextService;
 
   private SessionJoinRequestService service;
 
@@ -38,7 +43,13 @@ class SessionJoinRequestServiceTest {
   void setUp() {
     service =
         new SessionJoinRequestService(
-            configs, memberships, requests, userRepo, groupAdministration, 300L);
+            configs,
+            memberships,
+            requests,
+            userRepo,
+            groupAdministration,
+            matchEntryContextService,
+            300L);
   }
 
   @Test
@@ -191,6 +202,51 @@ class SessionJoinRequestServiceTest {
     assertThat(outcome.status()).isEqualTo(SessionJoinRequest.Status.PENDING);
     assertThat(outcome.message()).contains("Session is full right now");
     assertThat(request.getStatus()).isEqualTo(SessionJoinRequest.Status.PENDING);
+  }
+
+  @Test
+  void listActiveMembers_returnsRosterWithCourtNamesForActiveViewer() {
+    LadderConfig session = session(42L, "DINK-7");
+
+    LadderMembership viewerMembership = new LadderMembership();
+    viewerMembership.setId(101L);
+    viewerMembership.setLadderConfig(session);
+    viewerMembership.setUserId(7L);
+    viewerMembership.setState(LadderMembership.State.ACTIVE);
+    viewerMembership.setJoinedAt(Instant.now().minusSeconds(120));
+
+    LadderMembership requesterMembership = new LadderMembership();
+    requesterMembership.setId(102L);
+    requesterMembership.setLadderConfig(session);
+    requesterMembership.setUserId(8L);
+    requesterMembership.setState(LadderMembership.State.ACTIVE);
+    requesterMembership.setJoinedAt(Instant.now().minusSeconds(60));
+
+    User viewer = new User();
+    viewer.setId(7L);
+    viewer.setNickName("Host");
+
+    User requester = new User();
+    requester.setId(8L);
+    requester.setNickName("Partner");
+
+    when(configs.findById(42L)).thenReturn(Optional.of(session));
+    when(memberships.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(viewerMembership, requesterMembership));
+    when(userRepo.findAllById(List.of(7L, 8L))).thenReturn(List.of(viewer, requester));
+    when(matchEntryContextService.buildCourtNameByUserIds(List.of(7L, 8L), 42L))
+        .thenReturn(Map.of(8L, "Center Court"));
+
+    List<SessionJoinRequestService.ActiveSessionMemberView> members =
+        service.listActiveMembers(42L, 7L);
+
+    assertThat(members)
+        .containsExactly(
+            new SessionJoinRequestService.ActiveSessionMemberView(101L, 7L, "Host", null),
+            new SessionJoinRequestService.ActiveSessionMemberView(
+                102L, 8L, "Partner", "Center Court"));
+    verify(groupAdministration).requireActiveMember(42L, 7L);
   }
 
   private LadderConfig session(Long id, String inviteCode) {

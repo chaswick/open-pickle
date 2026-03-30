@@ -27,6 +27,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   private final LadderMembershipRepository memberships;
   private final LadderInviteGenerator generator;
   private final UserRepository userRepo;
+  private final SessionLifecycleService sessionLifecycleService;
   private final int defaultMaxMembers;
   private final long inviteChangeCooldownSeconds;
   private final String siteWideAdminEmail;
@@ -36,6 +37,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
       LadderMembershipRepository memberships,
       LadderInviteGenerator generator,
       UserRepository userRepo,
+      SessionLifecycleService sessionLifecycleService,
       @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers,
       @Value("${fhpb.invites.change-cooldown-seconds:30}") long inviteChangeCooldownSeconds,
       @Value("${fhpb.bootstrap.admin.email:}") String siteWideAdminEmail) {
@@ -43,6 +45,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
     this.memberships = memberships;
     this.generator = generator;
     this.userRepo = userRepo;
+    this.sessionLifecycleService = sessionLifecycleService;
     this.defaultMaxMembers = defaultMaxMembers;
     this.inviteChangeCooldownSeconds = inviteChangeCooldownSeconds;
     this.siteWideAdminEmail = siteWideAdminEmail;
@@ -176,6 +179,13 @@ public class GroupAdministrationService implements GroupAdministrationOperations
     }
     boolean ownerLeaving =
         Objects.equals(membership.getLadderConfig().getOwnerUserId(), requesterUserId);
+
+    if (ownerLeaving
+        && membership.getLadderConfig().isSessionType()
+        && membership.getState() != LadderMembership.State.LEFT) {
+      sessionLifecycleService.archiveSession(configId, Instant.now());
+      return;
+    }
 
     if (membership.getState() != LadderMembership.State.LEFT) {
       membership.setState(LadderMembership.State.LEFT);

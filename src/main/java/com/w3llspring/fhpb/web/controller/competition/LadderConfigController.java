@@ -626,6 +626,13 @@ public class LadderConfigController {
     model.addAttribute("bannedMembers", bannedMembers);
     model.addAttribute("userById", userById);
     model.addAttribute("sort", sort);
+    model.addAttribute(
+        "courtNameByUser",
+        cfg.isSessionType() && matchEntryContextService != null
+            ? matchEntryContextService.buildCourtNameByUserIds(
+                members.stream().map(LadderMembership::getUserId).filter(Objects::nonNull).toList(),
+                cfg.getId())
+            : Map.of());
     if (cfg.isSessionType()) {
       List<User> activeUsers =
           members.stream()
@@ -655,6 +662,7 @@ public class LadderConfigController {
 
     model.addAttribute("currentUserId", currentUser.getId());
     model.addAttribute("leaveConfirmMessage", buildLeaveConfirmMessage(cfg, currentUser.getId()));
+    model.addAttribute("leaveActionLabel", buildLeaveActionLabel(cfg, currentUser.getId()));
     model.addAttribute(
         "returnToPath", ReturnToSanitizer.sanitize(ReturnToSanitizer.toAppRelativePath(request)));
 
@@ -808,7 +816,8 @@ public class LadderConfigController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
     }
     if (ladder.isSessionType()) {
-      redirect.addFlashAttribute("toastMessage", "You left the session.");
+      boolean ownerLeaving = Objects.equals(ladder.getOwnerUserId(), currentUser.getId());
+      redirect.addFlashAttribute("toastMessage", ownerLeaving ? "Session ended." : "You left the session.");
       redirect.addFlashAttribute("toastLevel", "light");
       return "redirect:/home";
     }
@@ -1292,7 +1301,7 @@ public class LadderConfigController {
     boolean ownerViewing = ladder != null && Objects.equals(ladder.getOwnerUserId(), currentUserId);
     if (ladder != null && ladder.isSessionType()) {
       if (ownerViewing) {
-        return "Leave this session? It will stay active for current players until it expires.";
+        return "End this session? Everyone will be removed immediately.";
       }
       return "Leave this session? You can rejoin later with the current invite if it is still active.";
     }
@@ -1300,6 +1309,14 @@ public class LadderConfigController {
       return "You are the owner. Leaving will schedule this group for deletion. Continue?";
     }
     return "Leave this group? You will need the current invite code to rejoin.";
+  }
+
+  private String buildLeaveActionLabel(LadderConfig ladder, Long currentUserId) {
+    boolean ownerViewing = ladder != null && Objects.equals(ladder.getOwnerUserId(), currentUserId);
+    if (ladder != null && ladder.isSessionType()) {
+      return ownerViewing ? "End Session" : "Leave Session";
+    }
+    return "Leave Group";
   }
 
   private record JoinFeedback(String message, String level) {}

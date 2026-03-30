@@ -3,6 +3,7 @@ package com.w3llspring.fhpb.web;
 import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.LadderSecurity;
+import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.config.BrandingProperties;
 import com.w3llspring.fhpb.web.config.OperatorProperties;
 import com.w3llspring.fhpb.web.service.StoryModeService;
@@ -19,6 +20,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
+import java.time.Instant;
 import java.lang.reflect.Constructor;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -167,6 +169,7 @@ class ThymeleafTemplateTest {
         ladder.setTitle("Saturday Open");
         ladder.setType(LadderConfig.Type.SESSION);
         ladder.setInviteCode("DINK-7");
+        ladder.setCreatedAt(null);
 
         Map<String, Object> variables = new HashMap<>();
         variables.put("ladder", ladder);
@@ -175,6 +178,7 @@ class ThymeleafTemplateTest {
         variables.put("ladderInviteLink", "https://example.test/groups/join?inviteCode=DINK-7");
         variables.put("checkInEnabled", false);
         variables.put("pendingSessionJoinRequests", List.of());
+        variables.put("authPrincipal", null);
         variables.put("sessionDateTimePattern", "EEEE, MMM d, h:mm a");
         variables.put("sessionStandingRow", null);
         variables.put("sessionStandingsRecalculationPending", false);
@@ -185,16 +189,58 @@ class ThymeleafTemplateTest {
         variables.put("currentUserId", 7L);
         variables.put("ownerUserId", 7L);
         variables.put("userById", Map.of());
+        variables.put("courtNameByUser", Map.of());
         variables.put("leaveConfirmMessage", "Leave this session?");
         variables.put("links", List.of());
         variables.put("improvementAdvice", null);
 
         String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
-        assertThat(result).contains("Session Info");
+        assertThat(result).contains("Invite Buddies");
+        assertThat(result).contains("Who's Here");
         assertThat(result).contains("Choose how you want to share this session");
-        assertThat(result).contains("Session Report Card");
         assertThat(result).contains("No players have joined this session yet.");
+        assertThat(result).doesNotContain("Actions");
+        assertThat(result).doesNotContain("Session Report Card");
+    }
+
+    @Test
+    void sessionShowFragmentHidesInviteCardWhenSharingIsInactive() {
+        LadderConfig ladder = new LadderConfig();
+        ladder.setId(42L);
+        ladder.setTitle("Saturday Open");
+        ladder.setType(LadderConfig.Type.SESSION);
+        ladder.setInviteCode("DINK-7");
+        ladder.setExpiresAt(Instant.parse("2026-03-30T18:00:00Z"));
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("ladder", ladder);
+        variables.put("currentUserIsAdmin", true);
+        variables.put("inviteActive", false);
+        variables.put("ladderInviteLink", "https://example.test/groups/join?inviteCode=DINK-7");
+        variables.put("checkInEnabled", false);
+        variables.put("pendingSessionJoinRequests", List.of());
+        variables.put("authPrincipal", null);
+        variables.put("sessionDateTimePattern", "EEEE, MMM d, h:mm a");
+        variables.put("sessionStandingRow", null);
+        variables.put("sessionStandingsRecalculationPending", false);
+        variables.put("sessionReportStandings", List.of());
+        variables.put("memberSectionTitle", "Members");
+        variables.put("members", List.of());
+        variables.put("sort", "joined");
+        variables.put("currentUserId", 7L);
+        variables.put("ownerUserId", 7L);
+        variables.put("userById", Map.of());
+        variables.put("courtNameByUser", Map.of());
+        variables.put("leaveConfirmMessage", "Leave this session?");
+        variables.put("links", List.of());
+        variables.put("improvementAdvice", null);
+
+        String result = renderWebTemplate("fragments/show/sessionBody", variables);
+
+        assertThat(result).doesNotContain("Invite Buddies");
+        assertThat(result).doesNotContain("Choose how you want to share this session");
+        assertThat(result).contains("Who's Here");
     }
 
     @Test
@@ -236,6 +282,160 @@ class ThymeleafTemplateTest {
     }
 
     @Test
+    void showPageRendersOnlySessionBodyForSessions() {
+        LadderConfig ladder = new LadderConfig();
+        ladder.setId(42L);
+        ladder.setTitle("Saturday Open");
+        ladder.setType(LadderConfig.Type.SESSION);
+        ladder.setInviteCode("DINK-7");
+
+        Map<String, Object> variables = authenticatedShowLayoutVariables();
+        variables.put("ladder", ladder);
+        variables.put("isSessionLadder", true);
+        variables.put("isCompetitionLadder", false);
+        variables.put("sessionDisplayTitle", null);
+        variables.put("season", null);
+        variables.put("authPrincipal", null);
+        variables.put("sessionDateTimePattern", "EEEE, MMM d, h:mm a");
+        variables.put("currentUserIsAdmin", true);
+        variables.put("inviteActive", true);
+        variables.put("ladderInviteLink", "https://example.test/groups/join?inviteCode=DINK-7");
+        variables.put("checkInEnabled", false);
+        variables.put("pendingSessionJoinRequests", List.of());
+        variables.put("sessionStandingRow", null);
+        variables.put("sessionStandingsRecalculationPending", false);
+        variables.put("sessionReportStandings", List.of());
+        variables.put("memberSectionTitle", "Session Members (1/20)");
+        variables.put("members", List.of());
+        variables.put("sort", "joined");
+        variables.put("currentUserId", 7L);
+        variables.put("ownerUserId", 7L);
+        variables.put("userById", Map.of());
+        variables.put("courtNameByUser", Map.of());
+        variables.put("leaveConfirmMessage", "Leave this session?");
+        variables.put("links", List.of());
+        variables.put("improvementAdvice", null);
+
+        String result = renderWebTemplate("auth/show", variables);
+
+        assertThat(result).contains("Invite Buddies");
+        assertThat(result).contains("Who's Here");
+        assertThat(result).contains("Temporary match session for quick global competition play.");
+        assertThat(result).doesNotContain("Group Config");
+        assertThat(result).doesNotContain("Banned Members");
+    }
+
+    @Test
+    void showPageRendersOnlyGroupBodyForRegularGroups() {
+        LadderConfig ladder = new LadderConfig();
+        ladder.setId(77L);
+        ladder.setTitle("Neighborhood Group");
+        ladder.setType(LadderConfig.Type.STANDARD);
+        ladder.setMode(LadderConfig.Mode.ROLLING);
+        ladder.setRollingEveryUnit(LadderConfig.CadenceUnit.WEEKS);
+        ladder.setSecurityLevel(LadderSecurity.STANDARD);
+
+        Map<String, Object> variables = authenticatedShowLayoutVariables();
+        variables.put("ladder", ladder);
+        variables.put("isSessionLadder", false);
+        variables.put("isCompetitionLadder", false);
+        variables.put("season", null);
+        variables.put("currentUserIsAdmin", true);
+        variables.put("inviteActive", false);
+        variables.put("transitionAllowed", true);
+        variables.put("hasActiveSeason", false);
+        variables.put("maxRollingEveryCount", LadderConfig.MAX_ROLLING_EVERY_COUNT);
+        variables.put("storyModeFeatureEnabled", false);
+        variables.put("memberSectionTitle", "Members (1/20)");
+        variables.put("members", List.of());
+        variables.put("sort", "joined");
+        variables.put("userById", Map.of());
+        variables.put("leaveConfirmMessage", "Leave this group?");
+        variables.put("recentDisplayNameChanges", List.of());
+        variables.put("bannedMembers", List.of());
+        variables.put("currentUserId", 7L);
+        variables.put("ownerUserId", 7L);
+
+        String result = renderWebTemplate("auth/show", variables);
+
+        assertThat(result).contains("Invite Code");
+        assertThat(result).contains("Group Config");
+        assertThat(result).doesNotContain("Invite Buddies");
+        assertThat(result).doesNotContain("Who's Here");
+        assertThat(result).doesNotContain("Session expires at");
+    }
+
+    @Test
+    void sessionShowFragmentRevealsGameplayCardsAfterPlayersJoinAndMatchesExist() {
+        LadderConfig ladder = new LadderConfig();
+        ladder.setId(42L);
+        ladder.setTitle("Saturday Open");
+        ladder.setType(LadderConfig.Type.SESSION);
+        ladder.setInviteCode("DINK-7");
+
+        User currentUser = new User();
+        currentUser.setId(7L);
+        currentUser.setNickName("Tester");
+
+        User otherUser = new User();
+        otherUser.setId(8L);
+        otherUser.setNickName("Partner");
+
+        LadderMembership currentMembership = new LadderMembership();
+        currentMembership.setId(101L);
+        currentMembership.setUserId(7L);
+        currentMembership.setRole(LadderMembership.Role.ADMIN);
+        currentMembership.setState(LadderMembership.State.ACTIVE);
+        currentMembership.setJoinedAt(Instant.now().minusSeconds(120));
+
+        LadderMembership otherMembership = new LadderMembership();
+        otherMembership.setId(102L);
+        otherMembership.setUserId(8L);
+        otherMembership.setRole(LadderMembership.Role.MEMBER);
+        otherMembership.setState(LadderMembership.State.ACTIVE);
+        otherMembership.setJoinedAt(Instant.now().minusSeconds(60));
+
+        com.w3llspring.fhpb.web.model.RoundRobinStanding standing =
+                new com.w3llspring.fhpb.web.model.RoundRobinStanding(7L, "Tester");
+        standing.incWins();
+        standing.addPointsFor(11);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("ladder", ladder);
+        variables.put("currentUserIsAdmin", true);
+        variables.put("inviteActive", true);
+        variables.put("ladderInviteLink", "https://example.test/groups/join?inviteCode=DINK-7");
+        variables.put("checkInEnabled", false);
+        variables.put("pendingSessionJoinRequests", List.of());
+        variables.put("authPrincipal", null);
+        variables.put("sessionDateTimePattern", "EEEE, MMM d, h:mm a");
+        variables.put("sessionStandingRow", null);
+        variables.put("sessionStandingsRecalculationPending", false);
+        variables.put("sessionReportStandings", List.of(standing));
+        variables.put("memberSectionTitle", "Session Members (2/20)");
+        variables.put("members", List.of(currentMembership, otherMembership));
+        variables.put("sort", "joined");
+        variables.put("currentUserId", 7L);
+        variables.put("ownerUserId", 7L);
+        variables.put("userById", Map.of(7L, currentUser, 8L, otherUser));
+        variables.put("courtNameByUser", Map.of(7L, "North Courts", 8L, "Center Court"));
+        variables.put("leaveConfirmMessage", "End this session? Everyone will be removed immediately.");
+        variables.put("leaveActionLabel", "End Session");
+        variables.put("links", List.of());
+        variables.put("improvementAdvice", null);
+
+        String result = renderWebTemplate("fragments/show/sessionBody", variables);
+
+        assertThat(result).contains("Actions");
+        assertThat(result).contains("Session Report Card");
+        assertThat(result).contains("Partner");
+        assertThat(result).contains("Center Court");
+        assertThat(result).contains("End Session");
+        assertThat(result).contains("data-members-empty-state");
+        assertThat(result).contains("text-center  d-none");
+    }
+
+    @Test
     void sessionShowTemplateIncludesShareMethodChooserAndShortCodeControls() throws Exception {
         String shellTemplate = Files.readString(Path.of("src/main/resources/templates/auth/show.html"));
         String sessionTemplate = Files.readString(Path.of("src/main/resources/templates/fragments/show/sessionBody.html"));
@@ -243,6 +443,10 @@ class ThymeleafTemplateTest {
         assertThat(shellTemplate).contains("fragments/show/sessionBody :: sessionBody");
         assertThat(shellTemplate).contains("fragments/show/groupBody :: groupBody");
         assertThat(shellTemplate).contains("/js/session-nearby-share.js");
+        assertThat(shellTemplate).contains("Session expires at");
+        assertThat(shellTemplate).contains("window.FHPB.SessionMembers = window.FHPB.SessionMembers || {}");
+        assertThat(shellTemplate).contains("window.FHPB.SessionMembers.refresh = loadMembers;");
+        assertThat(shellTemplate).contains("window.FHPB.SessionMembers.refresh();");
         assertThat(shellTemplate).doesNotContain("fetch('/groups/' + cfg + '/regen-invite'");
 
         assertThat(sessionTemplate).contains("Choose how you want to share this session");
@@ -259,11 +463,24 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("Refresh Nearby Court");
         assertThat(sessionTemplate).contains("sessionInviteActiveUntil");
         assertThat(sessionTemplate).contains("Code auto-disables");
-        assertThat(sessionTemplate).contains("/disable-invite");
-        assertThat(sessionTemplate).contains("/regen-invite");
-        assertThat(sessionTemplate).contains("Turn Sharing Off");
-        assertThat(sessionTemplate).contains("Turn Sharing Back On");
-        assertThat(sessionTemplate).contains("Players who ask to join this session inside Open-Pickle appear here.");
+        assertThat(sessionTemplate).contains("Invite Buddies");
+        assertThat(sessionTemplate).contains("courtNameByUser");
+        assertThat(sessionTemplate).contains("Who's Here");
+        assertThat(sessionTemplate).contains("id=\"sessionMembersPanel\"");
+        assertThat(sessionTemplate).contains("data-members-list");
+        assertThat(sessionTemplate).contains("data-members-empty-state");
+        assertThat(sessionTemplate).contains("data-member-section-title");
+        assertThat(sessionTemplate).contains("Players who ask to join this session appear here.");
+        assertThat(sessionTemplate).contains("th:if=\"${members != null and #lists.size(members) > 1}\"");
+        assertThat(sessionTemplate).contains("th:if=\"${sessionReportStandings != null and !#lists.isEmpty(sessionReportStandings)}\"");
+        assertThat(sessionTemplate).doesNotContain("/disable-invite");
+        assertThat(sessionTemplate).doesNotContain("/regen-invite");
+        assertThat(sessionTemplate).doesNotContain("Turn Sharing Off");
+        assertThat(sessionTemplate).doesNotContain("Turn Sharing Back On");
+        assertThat(sessionTemplate).doesNotContain("id=\"members\"");
+        assertThat(sessionTemplate).doesNotContain("Sort members");
+        assertThat(sessionTemplate).doesNotContain("Session expires at");
+        assertThat(sessionTemplate).doesNotContain("Session sharing is off right now.");
     }
 
     @Test
@@ -290,6 +507,8 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("th:href=\"@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}\"");
         assertThat(sessionTemplate).doesNotContain("th:href=\"@{/voice-match-log");
         assertThat(sessionTemplate).contains("th:href=\"@{/confirm-matches}\"");
+        assertThat(sessionTemplate).doesNotContain("climbFasterCardContainer");
+        assertThat(sessionTemplate).doesNotContain("components/climbFasterCard");
         assertThat(sessionTemplate).doesNotContain("Disputed Match Review");
         assertThat(sessionTemplate).doesNotContain("/matches/{matchId}/reopen");
         assertThat(sessionTemplate).doesNotContain("th:href=\"@{/log-match(editMatchId=${match.id}, seasonId=${seasonId}, ladderId=${ladder.id}, returnTo=${returnToPath})}\"");
@@ -811,5 +1030,21 @@ class ThymeleafTemplateTest {
         int end = endMarker == null ? template.length() : template.indexOf(endMarker, start);
         assertThat(end).isGreaterThanOrEqualTo(0);
         return template.substring(start, end);
+    }
+
+    private Map<String, Object> authenticatedShowLayoutVariables() {
+        BrandingProperties branding = new BrandingProperties();
+        OperatorProperties operator = new OperatorProperties();
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("branding", branding);
+        variables.put("operator", operator);
+        variables.put("assetVersion", "test-build");
+        variables.put("_csrf", new DefaultCsrfToken("X-CSRF-TOKEN", "_csrf", "token"));
+        variables.put("googleAnalyticsEnabled", false);
+        variables.put("googleAnalyticsMeasurementId", "");
+        variables.put("googleAdsId", "");
+        variables.put("pwaInstallEligible", false);
+        return variables;
     }
 }
