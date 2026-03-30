@@ -52,6 +52,8 @@
             </a>
 
             <form method="post" th:action="@{/groups/start-session}" class="m-0"
+                  data-session-start-form="true"
+                  data-session-start-storage-key="fhpb.session-start-confirmed"
                   th:if="${!competitionUnavailable and canCreateCompetitionSession}">
                 <input type="hidden" name="returnTo" value="/competition/sessions">
                 <button type="submit"
@@ -75,6 +77,48 @@
             </a>
         </section>
     </div>
+
+    <script th:inline="javascript">
+        (() => {
+            const form = document.querySelector('[data-session-start-form="true"]');
+            if (!form) return;
+
+            const storageKey =
+                form.getAttribute('data-session-start-storage-key') || 'fhpb.session-start-confirmed';
+            const confirmMessage =
+                'Only one person in your play group needs to start a session. Everyone else can join it. Are you sure you want to create a session?';
+
+            const hasConfirmedBefore = function () {
+                try {
+                    return window.localStorage.getItem(storageKey) === '1';
+                } catch (error) {
+                    return false;
+                }
+            };
+
+            const rememberConfirmation = function () {
+                try {
+                    window.localStorage.setItem(storageKey, '1');
+                } catch (error) {
+                    // Ignore storage failures and continue with the submit.
+                }
+            };
+
+            form.addEventListener('submit', function (event) {
+                if (hasConfirmedBefore()) {
+                    return;
+                }
+
+                event.preventDefault();
+                if (!window.confirm(confirmMessage)) {
+                    return;
+                }
+
+                rememberConfirmation();
+                form.submit();
+            });
+        })();
+    </script>
 </body>
 
 </html>

@@ -724,6 +724,10 @@ class ThymeleafTemplateTest {
         assertThat(sessionPickerTemplate).contains("Start a Session");
         assertThat(sessionPickerTemplate).contains("Join a Session");
         assertThat(sessionPickerTemplate).contains("@{/groups/join(returnTo='/competition/sessions')}");
+        assertThat(sessionPickerTemplate).contains("data-session-start-form=\"true\"");
+        assertThat(sessionPickerTemplate).contains("data-session-start-storage-key=\"fhpb.session-start-confirmed\"");
+        assertThat(sessionPickerTemplate).contains("Only one person in your play group needs to start a session.");
+        assertThat(sessionPickerTemplate).contains("window.localStorage.getItem(storageKey) === '1'");
         assertThat(sessionPickerTemplate).contains("join nearby or from a shared code");
         assertThat(sessionPickerTemplate).contains("Find nearby sessions with your current location");
         assertThat(sessionPickerTemplate).contains("The owner will approve your request.");

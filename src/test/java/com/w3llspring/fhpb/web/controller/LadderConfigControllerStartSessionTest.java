@@ -254,4 +254,63 @@ class LadderConfigControllerStartSessionTest {
     assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
         .isEqualTo("Competition season is unavailable. Try again after it has been created.");
   }
+
+  @Test
+  void startSession_showsDailySessionCreateCapMessage() {
+    LadderConfigService failingService =
+        new LadderConfigService(null, null, null, null, 10, null, null) {
+          @Override
+          public LadderConfig findReusableSessionConfig(Long userId) {
+            return null;
+          }
+
+          @Override
+          public LadderConfig createSessionConfig(
+              Long ownerUserId, String title, LadderSeason targetSeason) {
+            throw new IllegalStateException(
+                "You can start at most 10 sessions in 24 hours. Please try again later.");
+          }
+        };
+
+    controller =
+        new LadderConfigController(
+            null,
+            null,
+            failingService,
+            mock(GroupAdministrationOperations.class),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            20);
+
+    CompetitionSeasonService competitionSeasonService =
+        new CompetitionSeasonService(null, null, null) {
+          @Override
+          public LadderSeason resolveActiveCompetitionSeason() {
+            LadderSeason season = new LadderSeason();
+            org.springframework.test.util.ReflectionTestUtils.setField(season, "id", 77L);
+            return season;
+          }
+        };
+    org.springframework.test.util.ReflectionTestUtils.setField(
+        controller, "competitionSeasonService", competitionSeasonService);
+
+    User user = new User();
+    user.setId(5L);
+    user.setNickName("Tester");
+    var auth =
+        new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of());
+
+    RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+
+    String view = controller.startSession(auth, "/competition/sessions", redirectAttributes);
+
+    assertThat(view).isEqualTo("redirect:/competition/sessions");
+    assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
+        .isEqualTo("You can start at most 10 sessions in 24 hours. Please try again later.");
+  }
 }

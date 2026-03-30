@@ -480,6 +480,29 @@ class LadderConfigServiceLeaveBehaviorTest {
   }
 
   @Test
+  void createSessionConfig_rejectsWhenUserHasCreatedTooManySessionsInLast24Hours() {
+    LadderSeason competitionSeason = new LadderSeason();
+    org.springframework.test.util.ReflectionTestUtils.setField(competitionSeason, "id", 77L);
+
+    when(configRepo.countByOwnerUserIdAndTypeAndStatusAndExpiresAtAfter(
+            any(Long.class),
+            any(LadderConfig.Type.class),
+            any(LadderConfig.Status.class),
+            any(Instant.class)))
+        .thenReturn(0L);
+    when(configRepo.countByOwnerUserIdAndTypeAndCreatedAtAfter(
+            any(Long.class), any(LadderConfig.Type.class), any(Instant.class)))
+        .thenReturn(10L);
+
+    assertThatThrownBy(() -> service.createSessionConfig(42L, "Saturday Session", competitionSeason))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("You can start at most 10 sessions in 24 hours");
+
+    verify(configRepo, never()).save(any(LadderConfig.class));
+    verify(membershipRepo, never()).save(any(LadderMembership.class));
+  }
+
+  @Test
   void regenInviteCode_rejectsWhenInviteCooldownIsActive() {
     Long configId = 16L;
     Long requesterId = 601L;

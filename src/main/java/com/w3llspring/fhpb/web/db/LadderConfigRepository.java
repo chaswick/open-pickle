@@ -40,6 +40,9 @@ public interface LadderConfigRepository extends JpaRepository<LadderConfig, Long
   long countByOwnerUserIdAndTypeAndStatusAndExpiresAtAfter(
       Long ownerUserId, LadderConfig.Type type, LadderConfig.Status status, Instant cutoff);
 
+  long countByOwnerUserIdAndTypeAndCreatedAtAfter(
+      Long ownerUserId, LadderConfig.Type type, Instant cutoff);
+
   Optional<LadderConfig> findFirstByOwnerUserIdAndTypeOrderByIdAsc(
       Long ownerUserId, LadderConfig.Type type);
 

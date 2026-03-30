@@ -44,6 +44,9 @@ public class LadderConfigService {
   @Value("${fhpb.session.default-hours:48}")
   private int defaultSessionLifetimeHours = 48;
 
+  @Value("${fhpb.session.max-created-per-day:10}")
+  private int maxSessionsCreatedPerDay = 10;
+
   public LadderConfigService(
       LadderConfigRepository configs,
       LadderSeasonRepository seasons,
@@ -271,6 +274,7 @@ public class LadderConfigService {
     }
 
     Instant now = Instant.now();
+    enforceSessionCreateDailyCap(ownerUserId, now);
     LadderConfig cfg = new LadderConfig();
     cfg.setOwnerUserId(ownerUserId);
     cfg.setTitle(resolveSessionTitle(ownerUserId, title));
@@ -292,6 +296,25 @@ public class LadderConfigService {
     ownerMembership.setState(LadderMembership.State.ACTIVE);
     memberships.save(ownerMembership);
     return savedCfg;
+  }
+
+  private void enforceSessionCreateDailyCap(Long ownerUserId, Instant now) {
+    int allowed = Math.max(0, maxSessionsCreatedPerDay);
+    if (ownerUserId == null || now == null || allowed <= 0) {
+      return;
+    }
+    Instant windowStart = now.minusSeconds(24L * 60L * 60L);
+    long recentCreates =
+        configs.countByOwnerUserIdAndTypeAndCreatedAtAfter(
+            ownerUserId, LadderConfig.Type.SESSION, windowStart);
+    if (recentCreates < allowed) {
+      return;
+    }
+    throw new IllegalStateException(
+        "You can start at most "
+            + allowed
+            + (allowed == 1 ? " session" : " sessions")
+            + " in 24 hours. Please try again later.");
   }
 
   private String resolveSessionTitle(Long ownerUserId, String requestedTitle) {
