@@ -31,6 +31,7 @@ import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
+import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -83,6 +84,9 @@ public class LadderConfigController {
 
   @Value("${fhpb.sessions.invite-active-seconds:1800}")
   private long sessionInviteActiveSeconds = 1800L;
+
+  @Value("${fhpb.public.base-url:}")
+  private String publicBaseUrl = "";
 
   private CompetitionSeasonService competitionSeasonService;
   private SeasonTransitionService transitionSvc;
@@ -668,22 +672,30 @@ public class LadderConfigController {
 
     String inviteShareLink = null;
     if (inviteActive) {
-      String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
-      String normalizedPath =
-          contextPath.endsWith("/")
-              ? contextPath.substring(0, contextPath.length() - 1)
-              : contextPath;
-      String basePath = normalizedPath + "/groups/join";
-
-      org.springframework.web.util.UriComponentsBuilder inviteBuilder =
-          org.springframework.web.util.UriComponentsBuilder.fromUriString(
-                  org.springframework.web.servlet.support.ServletUriComponentsBuilder
-                      .fromRequestUri(request)
-                      .replacePath(basePath)
-                      .replaceQuery(null)
-                      .build()
-                      .toUriString())
-              .replaceQueryParam("inviteCode", cfg.getInviteCode());
+      String normalizedConfiguredBaseUrl = normalizeConfiguredPublicBaseUrl(publicBaseUrl);
+      org.springframework.web.util.UriComponentsBuilder inviteBuilder;
+      if (StringUtils.hasText(normalizedConfiguredBaseUrl)) {
+        inviteBuilder =
+            org.springframework.web.util.UriComponentsBuilder.fromUriString(
+                    normalizedConfiguredBaseUrl)
+                .path("/groups/join");
+      } else {
+        String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
+        String normalizedPath =
+            contextPath.endsWith("/")
+                ? contextPath.substring(0, contextPath.length() - 1)
+                : contextPath;
+        String basePath = normalizedPath + "/groups/join";
+        inviteBuilder =
+            org.springframework.web.util.UriComponentsBuilder.fromUriString(
+                    org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                        .fromRequestUri(request)
+                        .replacePath(basePath)
+                        .replaceQuery(null)
+                        .build()
+                        .toUriString());
+      }
+      inviteBuilder.replaceQueryParam("inviteCode", cfg.getInviteCode());
       if (cfg.isSessionType()) {
         inviteBuilder.replaceQueryParam("autoJoin", "true");
       }
@@ -1143,6 +1155,29 @@ public class LadderConfigController {
 
   private String normalizeInviteCodeForLookup(String inviteCode) {
     return SessionInviteCodeSupport.normalizeForLookup(inviteCode);
+  }
+
+  private String normalizeConfiguredPublicBaseUrl(String configured) {
+    if (!StringUtils.hasText(configured)) {
+      return null;
+    }
+    try {
+      URI uri = URI.create(configured.trim());
+      String scheme = uri.getScheme();
+      if (!StringUtils.hasText(scheme)
+          || !StringUtils.hasText(uri.getHost())
+          || uri.getRawQuery() != null
+          || uri.getRawFragment() != null
+          || (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme))) {
+        return null;
+      }
+      String normalized = configured.trim();
+      return normalized.endsWith("/")
+          ? normalized.substring(0, normalized.length() - 1)
+          : normalized;
+    } catch (Exception ex) {
+      return null;
+    }
   }
 
   private boolean hasActiveInvite(LadderConfig cfg) {

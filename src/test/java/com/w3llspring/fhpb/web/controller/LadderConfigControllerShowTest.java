@@ -173,6 +173,61 @@ class LadderConfigControllerShowTest {
   }
 
   @Test
+  void show_sessionInviteLinkPrefersConfiguredPublicBaseUrl() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Saturday Open Session");
+    cfg.setOwnerUserId(7L);
+    cfg.setType(LadderConfig.Type.SESSION);
+    cfg.setInviteCode("DINK-7");
+    cfg.setLastInviteChangeAt(Instant.now());
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.ADMIN);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
+        .thenReturn(Optional.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser));
+    ReflectionTestUtils.setField(controller, "publicBaseUrl", "https://play.openpickle.test/app");
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+    request.setScheme("http");
+    request.setServerName("internal.openpickle.test");
+    request.setServerPort(8080);
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    assertThat((String) model.get("ladderInviteLink"))
+        .startsWith("https://play.openpickle.test/app/groups/join?");
+    assertThat((String) model.get("ladderInviteLink")).contains("inviteCode=DINK-7");
+    assertThat((String) model.get("ladderInviteLink")).contains("autoJoin=true");
+    assertThat((String) model.get("ladderInviteLink")).doesNotContain("internal.openpickle.test");
+  }
+
+  @Test
   void show_sessionPopulatesDashboardAttributes() {
     User currentUser = new User();
     currentUser.setId(7L);
