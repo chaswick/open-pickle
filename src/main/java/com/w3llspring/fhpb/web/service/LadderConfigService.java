@@ -85,7 +85,7 @@ public class LadderConfigService {
     LadderConfig cfg = new LadderConfig();
     cfg.setOwnerUserId(ownerUserId);
     cfg.setTitle(InputValidation.requireGroupTitle(title));
-    cfg.setInviteCode(uniqueInvite());
+    cfg.setInviteCode(uniqueInvite(false));
     cfg.setMode(mode);
     int cadenceCount =
         Math.max(1, rollingEveryCount != null ? rollingEveryCount : cfg.getRollingEveryCount());
@@ -270,17 +270,19 @@ public class LadderConfigService {
               allowedSessionsPerUser()));
     }
 
+    Instant now = Instant.now();
     LadderConfig cfg = new LadderConfig();
     cfg.setOwnerUserId(ownerUserId);
     cfg.setTitle(resolveSessionTitle(ownerUserId, title));
-    cfg.setInviteCode(uniqueInvite());
+    cfg.setInviteCode(uniqueInvite(true));
+    cfg.setLastInviteChangeAt(now);
     cfg.setType(LadderConfig.Type.SESSION);
     cfg.setMode(LadderConfig.Mode.MANUAL);
     cfg.setSecurityLevel(LadderSecurity.STANDARD);
     cfg.setAllowGuestOnlyPersonalMatches(false);
     cfg.setStoryModeDefaultEnabled(false);
     cfg.setTargetSeasonId(targetSeason.getId());
-    cfg.setExpiresAt(Instant.now().plusSeconds(Math.max(1, defaultSessionLifetimeHours) * 3600L));
+    cfg.setExpiresAt(now.plusSeconds(Math.max(1, defaultSessionLifetimeHours) * 3600L));
     LadderConfig savedCfg = configs.save(cfg);
 
     LadderMembership ownerMembership = new LadderMembership();
@@ -359,8 +361,12 @@ public class LadderConfigService {
   }
 
   private String uniqueInvite() {
+    return uniqueInvite(false);
+  }
+
+  private String uniqueInvite(boolean sessionCode) {
     for (int i = 0; i < MAX_INVITE_GENERATION_ATTEMPTS; i++) {
-      String code = generator.generate();
+      String code = sessionCode ? generator.generateSessionCode() : generator.generate();
       code = code == null ? null : code.toUpperCase(java.util.Locale.ROOT);
       if (code != null && configs.findByInviteCode(code).isEmpty()) {
         return code;

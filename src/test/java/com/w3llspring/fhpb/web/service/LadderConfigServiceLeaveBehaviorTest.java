@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -302,7 +303,7 @@ class LadderConfigServiceLeaveBehaviorTest {
     LocalDate requestedFutureStart = LocalDate.now(ZoneOffset.UTC).plusDays(2);
 
     when(configRepo.countByOwnerUserIdAndTypeNot(42L, LadderConfig.Type.SESSION)).thenReturn(0L);
-    when(configRepo.findByInviteCode("TEST-INVITE")).thenReturn(Optional.empty());
+    when(configRepo.findByInviteCode(any(String.class))).thenReturn(Optional.empty());
     when(configRepo.save(any(LadderConfig.class)))
         .thenAnswer(
             invocation -> {
@@ -348,7 +349,7 @@ class LadderConfigServiceLeaveBehaviorTest {
     LocalDate requestedFutureEnd = requestedFutureStart.plusWeeks(8);
 
     when(configRepo.countByOwnerUserIdAndTypeNot(42L, LadderConfig.Type.SESSION)).thenReturn(0L);
-    when(configRepo.findByInviteCode("TEST-INVITE")).thenReturn(Optional.empty());
+    when(configRepo.findByInviteCode(any(String.class))).thenReturn(Optional.empty());
     when(configRepo.save(any(LadderConfig.class)))
         .thenAnswer(
             invocation -> {
@@ -399,7 +400,7 @@ class LadderConfigServiceLeaveBehaviorTest {
             any(LadderConfig.Status.class),
             any(Instant.class)))
         .thenReturn(0L);
-    when(configRepo.findByInviteCode("TEST-INVITE")).thenReturn(Optional.empty());
+    when(configRepo.findByInviteCode(any(String.class))).thenReturn(Optional.empty());
     when(configRepo.save(any(LadderConfig.class)))
         .thenAnswer(
             invocation -> {
@@ -434,7 +435,7 @@ class LadderConfigServiceLeaveBehaviorTest {
             any(LadderConfig.Status.class),
             any(Instant.class)))
         .thenReturn(0L);
-    when(configRepo.findByInviteCode("TEST-INVITE")).thenReturn(Optional.empty());
+    when(configRepo.findByInviteCode(any(String.class))).thenReturn(Optional.empty());
     when(configRepo.save(any(LadderConfig.class)))
         .thenAnswer(
             invocation -> {
@@ -506,8 +507,38 @@ class LadderConfigServiceLeaveBehaviorTest {
   }
 
   @Test
-  void demoteFromAdmin_rejectsRemovingLastActiveAdmin() {
+  void regenInviteCode_allowsImmediateReenableAfterManualDisable() {
     Long configId = 18L;
+    Long requesterId = 702L;
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(configId);
+    cfg.setOwnerUserId(requesterId);
+    cfg.setInviteCode("LIVE-INVITE");
+    cfg.setLastInviteChangeAt(Instant.now().minusSeconds(60));
+
+    LadderMembership requesterMembership = new LadderMembership();
+    requesterMembership.setId(903L);
+    requesterMembership.setLadderConfig(cfg);
+    requesterMembership.setUserId(requesterId);
+    requesterMembership.setRole(LadderMembership.Role.ADMIN);
+    requesterMembership.setState(LadderMembership.State.ACTIVE);
+
+    when(configRepo.lockById(configId)).thenReturn(cfg);
+    when(membershipRepo.findByLadderConfigIdAndUserId(configId, requesterId))
+        .thenReturn(Optional.of(requesterMembership));
+    when(configRepo.findByInviteCode("TEST-INVITE")).thenReturn(Optional.empty());
+
+    groupAdministrationService.disableInviteCode(configId, requesterId);
+    groupAdministrationService.regenInviteCode(configId, requesterId);
+
+    assertThat(cfg.getInviteCode()).isEqualTo("TEST-INVITE");
+    verify(configRepo, times(2)).save(cfg);
+  }
+
+  @Test
+  void demoteFromAdmin_rejectsRemovingLastActiveAdmin() {
+    Long configId = 19L;
     Long requesterId = 801L;
     Long targetMembershipId = 903L;
 

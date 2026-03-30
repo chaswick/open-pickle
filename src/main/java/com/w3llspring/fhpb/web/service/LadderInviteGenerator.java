@@ -1,5 +1,6 @@
 package com.w3llspring.fhpb.web.service;
 
+import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
 import java.security.SecureRandom;
 import org.springframework.stereotype.Component;
 
@@ -25,5 +26,9 @@ public class LadderInviteGenerator {
       invite[i] = ALPHABET[random.nextInt(ALPHABET.length)];
     }
     return new String(invite);
+  }
+
+  public String generateSessionCode() {
+    return SessionInviteCodeSupport.generateCode(random);
   }
 }

@@ -27,8 +27,11 @@ import com.w3llspring.fhpb.web.service.dashboard.MatchDashboardViewService;
 import com.w3llspring.fhpb.web.service.matchentry.MatchEntryContextService;
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import com.w3llspring.fhpb.web.service.standings.SeasonStandingsViewService;
+import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
+import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Comparator;
@@ -78,6 +81,9 @@ public class LadderConfigController {
   @Value("${fhpb.bootstrap.admin.email:}")
   private String siteWideAdminEmail = "";
 
+  @Value("${fhpb.sessions.invite-active-seconds:1800}")
+  private long sessionInviteActiveSeconds = 1800L;
+
   private CompetitionSeasonService competitionSeasonService;
   private SeasonTransitionService transitionSvc;
   private MatchDashboardService matchDashboardService;
@@ -87,6 +93,7 @@ public class LadderConfigController {
   private RoundRobinService roundRobinService;
   private SeasonStandingsViewService seasonStandingsViewService;
   private CompetitionDisplayNameModerationService competitionDisplayNameModerationService;
+  private final SessionJoinRequestService sessionJoinRequestService;
 
   @Autowired
   public LadderConfigController(
@@ -107,6 +114,7 @@ public class LadderConfigController {
       RoundRobinService roundRobinService,
       SeasonStandingsViewService seasonStandingsViewService,
       CompetitionDisplayNameModerationService competitionDisplayNameModerationService,
+      SessionJoinRequestService sessionJoinRequestService,
       @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
     this(
         userRepo,
@@ -126,7 +134,8 @@ public class LadderConfigController {
         matchEntryContextService,
         roundRobinService,
         seasonStandingsViewService,
-        competitionDisplayNameModerationService);
+        competitionDisplayNameModerationService,
+        sessionJoinRequestService);
   }
 
   public LadderConfigController(
@@ -150,6 +159,7 @@ public class LadderConfigController {
         membershipRepo,
         storyModeService,
         defaultMaxMembers,
+        null,
         null,
         null,
         null,
@@ -181,6 +191,7 @@ public class LadderConfigController {
         membershipRepo,
         storyModeService,
         defaultMaxMembers,
+        null,
         null,
         null,
         null,
@@ -223,6 +234,7 @@ public class LadderConfigController {
         null,
         roundRobinService,
         null,
+        null,
         null);
   }
 
@@ -244,7 +256,8 @@ public class LadderConfigController {
       MatchEntryContextService matchEntryContextService,
       RoundRobinService roundRobinService,
       SeasonStandingsViewService seasonStandingsViewService,
-      CompetitionDisplayNameModerationService competitionDisplayNameModerationService) {
+      CompetitionDisplayNameModerationService competitionDisplayNameModerationService,
+      SessionJoinRequestService sessionJoinRequestService) {
     this.groupAdministration = groupAdministration;
     this.groupCreationService = groupCreationService;
     this.configs = configs;
@@ -263,6 +276,7 @@ public class LadderConfigController {
     this.roundRobinService = roundRobinService;
     this.seasonStandingsViewService = seasonStandingsViewService;
     this.competitionDisplayNameModerationService = competitionDisplayNameModerationService;
+    this.sessionJoinRequestService = sessionJoinRequestService;
   }
 
   @GetMapping("/new")
@@ -543,6 +557,11 @@ public class LadderConfigController {
                             && m.getRole() == LadderMembership.Role.ADMIN)
                 .isPresent();
     model.addAttribute("currentUserIsAdmin", currentUserIsAdmin);
+    model.addAttribute(
+        "pendingSessionJoinRequests",
+        cfg.isSessionType() && currentUserIsAdmin && sessionJoinRequestService != null
+            ? sessionJoinRequestService.listPendingForAdmin(configId, currentUser.getId())
+            : List.of());
 
     List<UserDisplayNameAudit> recentDisplayNameChanges =
         currentUserIsAdmin && !cfg.isSessionType()
@@ -639,8 +658,16 @@ public class LadderConfigController {
 
     model.addAttribute("ownerUserId", cfg.getOwnerUserId());
 
+    boolean inviteActive = hasActiveInvite(cfg);
+    Instant sessionInviteActiveUntil =
+        cfg.isSessionType()
+            ? SessionInviteCodeSupport.activeUntil(cfg.getLastInviteChangeAt(), sessionInviteActiveSeconds)
+            : null;
+    model.addAttribute("inviteActive", Boolean.valueOf(inviteActive));
+    model.addAttribute("sessionInviteActiveUntil", sessionInviteActiveUntil);
+
     String inviteShareLink = null;
-    if (cfg.getInviteCode() != null && !cfg.getInviteCode().isBlank()) {
+    if (inviteActive) {
       String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
       String normalizedPath =
           contextPath.endsWith("/")
@@ -839,29 +866,50 @@ public class LadderConfigController {
       @RequestParam(name = "autoJoin", required = false, defaultValue = "false") boolean autoJoin,
       Authentication auth,
       Model model) {
-    model.addAttribute("returnToPath", normalizeGroupReturnTo(returnTo));
-    if (inviteCode == null || inviteCode.isBlank()) {
+    String normalizedReturnTo = normalizeGroupReturnTo(returnTo);
+    model.addAttribute("returnToPath", normalizedReturnTo);
+    model.addAttribute("sessionJoinContext", "/competition/sessions".equals(normalizedReturnTo));
+    model.addAttribute("sessionApprovalMode", Boolean.FALSE);
+    model.addAttribute("inviteTargetTitle", null);
+    String flashedInviteCode = asString(model.asMap().get("prefillInviteCode"));
+    populateSessionInvitePickerModel(
+        model,
+        inviteCode != null
+            ? normalizeInviteCodeForLookup(inviteCode)
+            : normalizeInviteCodeForLookup(flashedInviteCode));
+    String effectiveInviteCode =
+        inviteCode != null && !inviteCode.isBlank()
+            ? inviteCode
+            : flashedInviteCode;
+    if (effectiveInviteCode == null || effectiveInviteCode.isBlank()) {
       return "auth/join";
     }
 
-    String sanitizedInvite = inviteCode.trim();
-    model.addAttribute("prefillInviteCode", sanitizedInvite);
+    String sanitizedInvite = normalizeInviteCodeForLookup(effectiveInviteCode);
+    model.addAttribute("prefillInviteCode", effectiveInviteCode.trim());
+    populateSessionInvitePickerModel(model, sanitizedInvite);
+    if (sanitizedInvite == null || sanitizedInvite.isBlank()) {
+      applyJoinFeedback(model, invalidInviteFeedback());
+      return "auth/join";
+    }
 
     // Check membership cap before attempting to join
-    var cfgOpt = configs.findByInviteCode(sanitizedInvite.toUpperCase(java.util.Locale.ROOT));
+    var cfgOpt = configs.findByInviteCode(sanitizedInvite);
     if (cfgOpt.isEmpty()) {
       applyJoinFeedback(model, invalidInviteFeedback());
       return "auth/join";
     }
 
     var cfg = cfgOpt.get();
+    model.addAttribute("sessionApprovalMode", cfg.isSessionType() && !autoJoin);
+    model.addAttribute(
+        "inviteTargetTitle", cfg.isSessionType() ? resolveSessionDisplayTitle(cfg) : cfg.getTitle());
     if (autoJoin && cfg.isSessionType()) {
       User currentUser = getCurrentUser(auth);
       if (currentUser != null && currentUser.getId() != null) {
         try {
           LadderConfig joinedConfig =
-              groupAdministration.joinByInvite(
-                  sanitizedInvite.toUpperCase(java.util.Locale.ROOT), currentUser.getId());
+              groupAdministration.joinByInvite(sanitizedInvite, currentUser.getId());
           return joinRedirectFor(joinedConfig);
         } catch (IllegalArgumentException ex) {
           applyJoinFeedback(model, invalidInviteFeedback());
@@ -877,7 +925,8 @@ public class LadderConfigController {
             .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
                 cfg.getId(), LadderMembership.State.ACTIVE)
             .size();
-    if (cfg.getType() != LadderConfig.Type.COMPETITION && activeCount >= defaultMaxMembers) {
+    if ((cfg.getType() == LadderConfig.Type.STANDARD || (cfg.isSessionType() && autoJoin))
+        && activeCount >= defaultMaxMembers) {
       applyJoinFeedback(model, fullGroupFeedback());
       return "auth/join";
     }
@@ -886,39 +935,100 @@ public class LadderConfigController {
 
   @PostMapping("/join")
   public String join(
-      @RequestParam String inviteCode,
+      @RequestParam(name = "inviteCode", required = false) String inviteCode,
+      @RequestParam(name = "inviteCodeWordOne", required = false) String inviteCodeWordOne,
+      @RequestParam(name = "inviteCodeWordTwo", required = false) String inviteCodeWordTwo,
+      @RequestParam(name = "inviteCodeNumber", required = false) String inviteCodeNumber,
       @RequestParam(name = "returnTo", required = false) String returnTo,
       Authentication auth,
       RedirectAttributes redirect) {
     User currentUser = getCurrentUser(auth);
+    if (currentUser == null) {
+      return "redirect:/login";
+    }
     String normalizedReturnTo = normalizeGroupReturnTo(returnTo);
     try {
-      // Pre-check capacity so we can show a friendly toast instead of attempting join
       String code =
-          inviteCode == null ? null : inviteCode.trim().toUpperCase(java.util.Locale.ROOT);
+          normalizeInviteCodeForLookup(
+              resolveSubmittedInviteCode(
+                  inviteCode, inviteCodeWordOne, inviteCodeWordTwo, inviteCodeNumber));
+      if (code == null || code.isBlank()) {
+        applyJoinFeedback(redirect, invalidInviteFeedback(), inviteCode);
+        return redirectJoinForm(normalizedReturnTo);
+      }
       var cfgOpt = configs.findByInviteCode(code);
       if (cfgOpt.isPresent()) {
         var cfg = cfgOpt.get();
+        if (cfg.isSessionType() && sessionJoinRequestService != null) {
+          SessionJoinRequestService.SubmissionOutcome outcome =
+              sessionJoinRequestService.submitByInvite(code, currentUser.getId());
+          if (outcome.state() == SessionJoinRequestService.SubmissionState.ALREADY_MEMBER) {
+            return "redirect:/groups/" + outcome.sessionId() + "?joined=1";
+          }
+          return "redirect:/groups/join-requests/" + outcome.requestId();
+        }
         long activeCount =
             membershipRepo
                 .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
                     cfg.getId(), LadderMembership.State.ACTIVE)
                 .size();
-        if (cfg.getType() != LadderConfig.Type.COMPETITION && activeCount >= defaultMaxMembers) {
+        if (cfg.getType() == LadderConfig.Type.STANDARD && activeCount >= defaultMaxMembers) {
           applyJoinFeedback(redirect, fullGroupFeedback(), inviteCode);
           return redirectJoinForm(normalizedReturnTo);
         }
       }
-      var cfg =
-          groupAdministration.joinByInvite(inviteCode.trim().toUpperCase(), currentUser.getId());
+      var cfg = groupAdministration.joinByInvite(code, currentUser.getId());
       return joinRedirectFor(cfg);
     } catch (IllegalArgumentException e) {
       // invalid invite code
-      applyJoinFeedback(redirect, invalidInviteFeedback(), inviteCode);
+      applyJoinFeedback(
+          redirect,
+          invalidInviteFeedback(),
+          normalizeInviteCodeForLookup(
+              resolveSubmittedInviteCode(
+                  inviteCode, inviteCodeWordOne, inviteCodeWordTwo, inviteCodeNumber)));
       return redirectJoinForm(normalizedReturnTo);
     } catch (IllegalStateException e) {
-      applyJoinFeedback(redirect, joinFailureFeedback(e.getMessage()), inviteCode);
+      applyJoinFeedback(
+          redirect,
+          joinFailureFeedback(e.getMessage()),
+          normalizeInviteCodeForLookup(
+              resolveSubmittedInviteCode(
+                  inviteCode, inviteCodeWordOne, inviteCodeWordTwo, inviteCodeNumber)));
       return redirectJoinForm(normalizedReturnTo);
+    }
+  }
+
+  public String join(
+      String inviteCode,
+      String returnTo,
+      Authentication auth,
+      RedirectAttributes redirect) {
+    return join(inviteCode, null, null, null, returnTo, auth, redirect);
+  }
+
+  @GetMapping("/join-requests/{requestId}")
+  public String joinRequestStatusPage(
+      @PathVariable("requestId") Long requestId, Authentication auth, Model model) {
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null) {
+      return "redirect:/login";
+    }
+    if (sessionJoinRequestService == null) {
+      return "redirect:/competition/sessions";
+    }
+    try {
+      SessionJoinRequestService.RequestStatusView status =
+          sessionJoinRequestService.getStatusForRequester(requestId, currentUser.getId());
+      if (status.redirectUrl() != null) {
+        return "redirect:" + status.redirectUrl();
+      }
+      model.addAttribute("joinRequestStatus", status);
+      return "auth/session-join-request";
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+    } catch (SecurityException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
   }
 
@@ -944,6 +1054,9 @@ public class LadderConfigController {
     if ("You are banned from this ladder".equals(message)) {
       return new JoinFeedback(
           "You are banned from this ladder. Please contact the ladder admin.", "danger");
+    }
+    if ("That invite is no longer active.".equals(message)) {
+      return new JoinFeedback("That session code is no longer active. Ask the host to re-enable it.", "warning");
     }
     if ("This match session has expired.".equals(message)) {
       return new JoinFeedback("This match session has expired.", "warning");
@@ -980,6 +1093,9 @@ public class LadderConfigController {
     if ("/private-groups".equals(returnTo)) {
       return "/private-groups";
     }
+    if ("/competition/sessions".equals(returnTo)) {
+      return "/competition/sessions";
+    }
     return null;
   }
 
@@ -1001,6 +1117,47 @@ public class LadderConfigController {
       return "redirect:/groups/join?returnTo=" + returnTo;
     }
     return "redirect:/groups/join";
+  }
+
+  private void populateSessionInvitePickerModel(Model model, String inviteCode) {
+    if (model == null) {
+      return;
+    }
+    model.addAttribute("inviteCodeWordOneOptions", SessionInviteCodeSupport.WORD_ONE_OPTIONS);
+    model.addAttribute("inviteCodeWordTwoOptions", SessionInviteCodeSupport.WORD_TWO_OPTIONS);
+    model.addAttribute("inviteCodeNumberOptions", SessionInviteCodeSupport.NUMBER_OPTIONS);
+    SessionInviteCodeSupport.Parts parts = SessionInviteCodeSupport.split(inviteCode);
+    model.addAttribute("prefillInviteCodeWordOne", parts != null ? parts.wordOne() : null);
+    model.addAttribute("prefillInviteCodeWordTwo", parts != null ? parts.wordTwo() : null);
+    model.addAttribute("prefillInviteCodeNumber", parts != null ? parts.number() : null);
+  }
+
+  private String resolveSubmittedInviteCode(
+      String inviteCode, String inviteCodeWordOne, String inviteCodeWordTwo, String inviteCodeNumber) {
+    String combined = SessionInviteCodeSupport.compose(inviteCodeWordOne, inviteCodeWordTwo, inviteCodeNumber);
+    if (combined != null && !combined.isBlank()) {
+      return combined;
+    }
+    return inviteCode;
+  }
+
+  private String normalizeInviteCodeForLookup(String inviteCode) {
+    return SessionInviteCodeSupport.normalizeForLookup(inviteCode);
+  }
+
+  private boolean hasActiveInvite(LadderConfig cfg) {
+    if (cfg == null || cfg.getInviteCode() == null || cfg.getInviteCode().isBlank()) {
+      return false;
+    }
+    if (!cfg.isSessionType()) {
+      return true;
+    }
+    return SessionInviteCodeSupport.isCurrentlyActive(
+        cfg.getInviteCode(), cfg.getLastInviteChangeAt(), sessionInviteActiveSeconds, Instant.now());
+  }
+
+  private String asString(Object value) {
+    return value instanceof String str ? str : null;
   }
 
   @PostMapping("/{configId}/restore")

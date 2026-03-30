@@ -1,0 +1,523 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sessionBody">
+  <div class="card mb-3" th:if="${currentUserIsAdmin}">
+    <div class="card-header card-header-title text-center">Session Info</div>
+    <div class="card-body d-flex flex-column gap-3">
+      <div th:if="${inviteActive}"
+           th:with="inviteLink=${ladderInviteLink}"
+           class="d-flex flex-column gap-3">
+        <div class="invite-share d-flex flex-column gap-3 align-items-center text-center">
+          <input type="hidden" id="inviteCodeInput" th:value="${ladder.inviteCode}" />
+          <input type="hidden" id="inviteLinkInput" th:value="${inviteLink}" />
+          <div class="text-muted small">Choose how you want to share this session</div>
+          <div class="session-share-methods"
+               data-session-share-root
+               role="tablist"
+               aria-label="Choose how you want to share this session">
+            <button type="button"
+                    class="btn session-share-method"
+                    th:if="${checkInEnabled}"
+                    data-session-share-tab="nearby"
+                    th:classappend="${checkInEnabled} ? ' is-active' : ''"
+                    th:attr="aria-pressed=${checkInEnabled ? 'true' : 'false'}">
+              Nearby
+            </button>
+            <button type="button"
+                    class="btn session-share-method"
+                    data-session-share-tab="code"
+                    th:classappend="${!checkInEnabled} ? ' is-active' : ''"
+                    th:attr="aria-pressed=${!checkInEnabled ? 'true' : 'false'}">
+              Shared code
+            </button>
+            <button type="button"
+                    class="btn session-share-method"
+                    data-session-share-tab="qr"
+                    aria-pressed="false">
+              QR / link
+            </button>
+          </div>
+          <section class="session-share-panel d-flex flex-column gap-3 text-center"
+                   th:if="${checkInEnabled}"
+                   data-session-share-panel="nearby">
+            <div class="session-share-panel-intro"
+                 th:if="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
+              Nearby sharing is on for <span th:text="${ladder.nearbyShareLocationName}">Lakeside Courts</span>.
+            </div>
+            <div class="session-share-panel-intro"
+                 th:unless="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
+              Recommended for players already at the same courts.
+            </div>
+            <p class="text-muted small mb-0"
+               th:if="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
+              Players who check in nearby can find this session and ask to join.
+            </p>
+            <p class="text-muted small mb-0"
+               th:unless="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
+              Use your current location to let nearby checked-in players discover this session and request to join.
+            </p>
+            <div class="d-flex flex-column gap-3 align-items-center"
+                 th:attr="data-session-nearby-host=${true}, data-session-id=${ladder.id}">
+              <div class="session-share-panel-actions d-grid gap-2">
+                <button class="btn btn-action-primary w-100"
+                        type="button"
+                        data-nearby-start
+                        th:text="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)} ? 'Refresh Nearby Court' : 'Use My Current Location'">
+                  Use My Current Location
+                </button>
+              </div>
+              <div class="alert d-none mt-0 mb-0 w-100 text-start"
+                   data-nearby-status
+                   role="status"
+                   aria-live="polite"></div>
+              <div class="card shadow-sm border-0 d-none w-100 text-start" data-nearby-name-card>
+                <div class="card-body">
+                  <p class="text-muted small mb-3" data-nearby-prompt-message>
+                    Confirm the location name below or enter your own.
+                  </p>
+                  <form class="d-grid gap-3" data-nearby-name-form>
+                    <div class="d-grid gap-2" data-nearby-suggestion-list></div>
+                    <div>
+                      <label class="form-label" for="sessionNearbyCustomName">Use your own name</label>
+                      <input class="form-control"
+                             id="sessionNearbyCustomName"
+                             type="text"
+                             placeholder="e.g. Lakeside Courts"
+                             autocomplete="off"
+                             maxlength="80"
+                             data-nearby-custom-name>
+                    </div>
+                    <div class="d-grid gap-2">
+                      <button class="btn btn-action-primary" type="submit" data-nearby-submit>Finish Check-In</button>
+                      <button class="btn btn-nav-secondary" type="button" data-nearby-cancel>Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="session-share-panel d-flex flex-column gap-3 text-center"
+                   data-session-share-panel="code"
+                   th:attr="hidden=${checkInEnabled ? 'hidden' : null}">
+            <div class="session-share-panel-intro">Best when you want to say the code out loud.</div>
+            <div class="d-flex flex-column align-items-center gap-2">
+              <div class="session-code-chip font-monospace" th:text="${ladder.inviteCode}">DINK-7</div>
+              <!-- Hide right now to reduce information overload
+              <div class="small text-muted"
+                   th:if="${sessionInviteActiveUntil != null}"
+                   th:attr="data-utc-time=${sessionInviteActiveUntil}, data-time-format='datetime'">
+                Code auto-disables at 2:30 PM.
+              </div> -->
+            </div>
+            <div class="session-share-panel-actions d-grid gap-2">
+              <button class="btn btn-outline-contrast w-100"
+                      type="button"
+                      data-copy-target="inviteCodeInput">Copy url</button>
+            </div>
+          </section>
+          <section class="session-share-panel d-flex flex-column gap-3 text-center"
+                   data-session-share-panel="qr"
+                   hidden>
+            <div class="session-share-panel-intro">Your buddies can scan this QR code with their camera app to join.</div>
+            <div class="invite-share-qr d-flex flex-column align-items-center gap-2">
+              <div class="invite-qr-wrapper border rounded bg-white p-2 shadow-sm"
+                   id="inviteQrCode"
+                   role="img"
+                   aria-label="QR code for group invite link">
+                <div class="text-muted small">Loading...</div>
+              </div>
+              <div class="text-muted small">
+                Or copy and send the url via text/email.
+              </div>
+            </div>
+            <div class="session-share-panel-actions d-grid gap-2">
+              <button class="btn btn-outline-contrast w-100"
+                      type="button"
+                      data-copy-target="inviteLinkInput">Copy link</button>
+            </div>
+          </section>
+          <div class="session-share-footer d-flex flex-column align-items-center gap-2 w-100">
+            <div class="session-share-panel-actions d-grid gap-2">
+              <form method="post"
+                    class="m-0"
+                    th:action="@{'/groups/' + ${ladder.id} + '/disable-invite'}"
+                    onsubmit="return handleConfirmForm(this, 'Turn sharing off? New players will be unable to join until you turn it back on.');">
+                <button type="submit" class="btn btn-outline-contrast w-100">
+                  <span>Turn Sharing Off</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div th:if="${!inviteActive}" class="text-muted">
+        Session sharing is off right now. Turn it back on when you want to share by code or QR.
+      </div>
+      <div th:if="${!inviteActive}" class="d-flex gap-2 justify-content-center mt-2">
+        <form method="post"
+              class="m-0"
+              th:action="@{'/groups/' + ${ladder.id} + '/regen-invite'}">
+          <button type="submit" class="btn btn-action-primary btn-sm">Turn Sharing Back On</button>
+        </form>
+      </div>
+      <div class="small text-muted text-center">
+        Session expires at
+        <span th:text="${ladder.expiresAt != null ? @fhpbTime.pattern(ladder.expiresAt, authPrincipal, sessionDateTimePattern) : 'Not scheduled'}">
+          Saturday, Mar 15, 2:00 PM
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3" th:if="${currentUserIsAdmin}">
+    <div class="card-header card-header-title text-center">Join Requests</div>
+    <div class="card-body">
+      <p class="text-muted mb-3">
+        Players who ask to join this session inside Open-Pickle appear here. Approve or deny each request.
+      </p>
+      <div id="sessionJoinRequestsPanel" th:attr="data-session-id=${ladder.id}">
+        <div class="text-muted"
+             data-empty-state
+             th:classappend="${#lists.isEmpty(pendingSessionJoinRequests)} ? '' : ' d-none'">
+          No pending join requests.
+        </div>
+        <ul class="list-group"
+            data-request-list
+            th:classappend="${#lists.isEmpty(pendingSessionJoinRequests)} ? ' d-none' : ''">
+          <li class="list-group-item"
+              th:each="request : ${pendingSessionJoinRequests}"
+              th:attr="data-request-id=${request.id}">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+              <div class="flex-grow-1 min-w-0">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                  <strong th:text="${request.requesterDisplayName}">Player</strong>
+                  <span class="badge bg-light text-dark border"
+                        th:if="${request.requesterPublicCode != null and !#strings.isEmpty(request.requesterPublicCode)}"
+                        th:text="${request.requesterPublicCode}">CODE</span>
+                </div>
+                <div class="small text-muted"
+                     th:text="'Requested ' + ${@fhpbTime.displayDateTime24(request.requestedAt, (#authentication != null ? #authentication.principal : null))}">
+                  Requested 2026-03-29 10:00
+                </div>
+                <div class="small text-muted join-request-status" data-request-status></div>
+              </div>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-action-success btn-inline" data-request-action="approve">Allow</button>
+                <button type="button" class="btn btn-nav-secondary btn-inline" data-request-action="deny">Deny</button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header card-header-title text-center">Actions</div>
+    <div class="card-body d-grid gap-2 text-start">
+      <input type="hidden" id="ladderId" th:value="${ladder.id}" />
+      <input type="hidden" id="seasonId" th:value="${targetSeason != null ? targetSeason.id : null}" />
+      <script th:if="${targetSeason != null}" th:inline="javascript">
+        /*<![CDATA[*/
+        window.matchLogConfig = window.matchLogConfig || {};
+        window.matchLogConfig.language = /*[[${voiceLanguage}]]*/ 'en-US';
+        window.matchLogConfig.phraseHints = /*[[${voicePhraseHints}]]*/ [];
+        window.matchLogConfig.maxAlternatives = /*[[${voiceMaxAlternatives}]]*/ 3;
+        window.matchLogConfig.postMatchLoggedBaseUrl = /*[[@{/groups/{ladderId}(ladderId=${ladder.id})}]]*/ '/home';
+        window.matchLogConfig.reviewParams = {
+          competition: true,
+          returnTo: /*[[@{/groups/{ladderId}(ladderId=${ladder.id})}]]*/ '/home'
+        };
+        /*]]>*/
+      </script>
+      <p class="small text-muted mb-1">
+        Tip: remind players they have 2 days to confirm logged matches for competition credit.
+        They can review pending items from
+        <a th:href="@{/confirm-matches}">Confirm Matches</a>.
+      </p>
+      <div class="position-relative">
+        <div class="d-flex justify-content-center align-items-center gap-2">
+          <button th:if="${targetSeason != null}"
+                  id="logMatchVoiceBtn"
+                  type="button"
+                  class="btn btn-action-success btn-lg d-flex align-items-center justify-content-center p-3"
+                  aria-pressed="false"
+                  aria-label="Log Match by Voice"
+                  style="position:relative;">
+            <i class="bi bi-mic fs-4" aria-hidden="true"></i>
+            <span id="logMatchVoiceBtnLabel" class="visually-hidden">Log Match</span>
+            <span id="logMatchVoiceSpinner" class="ms-2 d-none" aria-hidden="true">
+              <span class="spinner-border spinner-border-sm text-warning"></span>
+            </span>
+          </button>
+          <a class="btn btn-action-success btn-card-width disabled"
+             th:unless="${targetSeason != null}"
+             href="#"
+             aria-disabled="true">
+            Voice Log
+          </a>
+
+          <a class="btn btn-action-primary btn-card-width"
+             th:if="${targetSeason != null}"
+             title="Log Match (Classic)"
+             th:href="@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}"
+             aria-label="Log Match (Classic)">
+            Log Match
+          </a>
+          <a class="btn btn-action-primary btn-card-width disabled"
+             th:unless="${targetSeason != null}"
+             href="#"
+             aria-disabled="true">
+            Log Match
+          </a>
+        </div>
+        <div th:if="${targetSeason != null}"
+             id="logMatchVoiceCaption"
+             class="text-center mt-2 mb-2 text-muted d-none"
+             aria-live="polite"
+             data-default-caption='Say something like, "Pam and I beat Ryan and Amy 11-8"'>
+          Say something like, "Pam and I beat Ryan and Amy 11-8"
+        </div>
+      </div>
+      <div class="pt-2 border-top mt-2 text-center">
+        <a class="btn btn-action-primary btn-card-width"
+           th:href="@{/round-robin/list(ladderId=${ladder.id})}">
+          Start a Round Robin
+        </a>
+        <div class="small text-muted mt-2">
+          Round robins are an optional way to mix up your games during the session.
+        </div>
+      </div>
+      <div class="pt-2 border-top mt-2">
+        <div class="small text-uppercase text-muted fw-semibold mb-2 text-center">Dashboard</div>
+        <div th:replace="~{components/matchDashboard :: matchDashboard}"></div>
+      </div>
+      <div id="sessionStandingContainer" class="pt-2 border-top mt-2">
+        <div class="small text-uppercase text-muted fw-semibold mb-2 text-center">Your Standing</div>
+        <div th:if="${sessionStandingRow != null}" class="session-standing-preview">
+          <div class="session-standing-band"
+               th:if="${sessionStandingRow.bandName != null and !#strings.isEmpty(sessionStandingRow.bandName)}"
+               th:text="${sessionStandingRow.bandName}">Division</div>
+          <div class="session-standing-grid session-standing-labels">
+            <div class="text-center" title="Form">Frm</div>
+            <div class="text-center" title="Rank">#</div>
+            <div>Player</div>
+            <div class="text-end">Rating</div>
+          </div>
+          <div class="session-standing-grid">
+            <span class="badge rounded-pill bg-light border session-standing-momentum"
+                  aria-live="polite"
+                  th:title="${(sessionStandingRow.momentum > 0 ? '+' : '') + sessionStandingRow.momentum + ' form'}"
+                  th:classappend="
+                    ${sessionStandingRow.momentum >= 12} ? ' text-success border-success' :
+                    (${sessionStandingRow.momentum >= 8}  ? ' text-success border-success' :
+                    (${sessionStandingRow.momentum >= 4}  ? ' text-success border-success' :
+                    (${sessionStandingRow.momentum > 0}   ? ' text-success border-success' :
+                    (${sessionStandingRow.momentum == 0}  ? ' text-muted border-secondary' :
+                    (${sessionStandingRow.momentum <= -12}? ' text-danger border-danger' :
+                    (${sessionStandingRow.momentum <= -8} ? ' text-danger border-danger' :
+                    (${sessionStandingRow.momentum <= -4} ? ' text-warning border-warning' :
+                                                              ' text-warning border-warning')))))))">
+              <i class="bi"
+                 aria-hidden="true"
+                 th:classappend="
+                   ${sessionStandingRow.momentum >= 12} ? ' bi-fire' :
+                   (${sessionStandingRow.momentum >= 8}  ? ' bi-triangle-fill' :
+                   (${sessionStandingRow.momentum >= 4}  ? ' bi-triangle-half' :
+                   (${sessionStandingRow.momentum > 0}   ? ' bi-triangle' :
+                   (${sessionStandingRow.momentum == 0}  ? ' bi-dash-circle' :
+                   (${sessionStandingRow.momentum <= -12}? ' bi-snow' :
+                   (${sessionStandingRow.momentum <= -8} ? ' bi-triangle-fill rot-180' :
+                   (${sessionStandingRow.momentum <= -4} ? ' bi-triangle-half rot-180' :
+                                                             ' bi-triangle rot-180')))))))"></i>
+              <span class="visually-hidden"
+                    th:text="${(sessionStandingRow.momentum > 0 ? '+' : '') + sessionStandingRow.momentum + ' form'}">0 form</span>
+            </span>
+            <div class="text-center text-muted session-standing-value" th:text="${sessionStandingRow.rank}">1</div>
+            <div class="session-standing-player">
+              <div class="player-name-with-badges">
+                <span class="fw-semibold player-name-label"
+                      th:text="${sessionStandingRow.displayName}">Player Name</span>
+                <span class="name-badge-strip"
+                      th:if="${sessionStandingRow.badgeViews != null and !#lists.isEmpty(sessionStandingRow.badgeViews)}">
+                  <span th:each="badge : ${sessionStandingRow.badgeViews}"
+                        class="name-badge-pill badge-detail-trigger"
+                        data-badge-detail-trigger
+                        aria-expanded="false"
+                        role="button"
+                        tabindex="0"
+                        th:title="${badge.title}"
+                        th:attr="aria-label=${!#strings.isEmpty(badge.unlockCondition) ? 'Unlock details for ' + badge.label + ': ' + badge.unlockCondition : 'Badge details for ' + badge.label}">
+                    <img class="name-badge-chip"
+                         th:src="${badge.imageUrl}"
+                         alt=""
+                         aria-hidden="true"
+                         loading="lazy" />
+                    <span class="name-badge-label"
+                          th:text="${badge.label}">Badge</span>
+                    <span class="badge-detail-overlay"
+                          data-badge-detail-overlay
+                          th:classappend="${#strings.isEmpty(badge.unlockCondition)} ? ' d-none'">
+                      <span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
+                      <span class="badge-detail-overlay-text"
+                            th:text="${badge.unlockCondition}">Unlock condition</span>
+                    </span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="text-end text-muted small session-standing-value"
+                 th:text="${1000 + sessionStandingRow.points}">1000</div>
+          </div>
+        </div>
+        <div class="text-center text-muted small" th:if="${sessionStandingRow == null}">
+          Your standing will appear here after your first confirmed global competition match.
+        </div>
+      </div>
+      <script th:if="${targetSeason != null}"
+              src="/js/match-log-voice.js"
+              th:src="@{/js/match-log-voice.js(v=${assetVersion})}"></script>
+    </div>
+  </div>
+
+  <div id="climbFasterCardContainer">
+    <div th:replace="~{components/climbFasterCard :: climbFasterCard}"></div>
+  </div>
+
+  <div id="sessionReportCardContainer"
+       class="card mb-3"
+       th:attr="data-session-standings-pending=${sessionStandingsRecalculationPending}">
+    <div class="card-header card-header-title card-collapse-header">
+      <button class="btn card-collapse-toggle collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#sessionReportCardCollapse"
+              aria-expanded="false"
+              aria-controls="sessionReportCardCollapse">
+        <span class="card-collapse-spacer" aria-hidden="true"></span>
+        <span class="card-collapse-title">Session Report Card</span>
+        <i class="bi bi-chevron-down card-collapse-icon" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div id="sessionReportCardCollapse" class="collapse">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+          <p class="small text-muted mb-0">
+            Only confirmed matches logged from this session appear here.
+          </p>
+          <a href="#"
+             class="link-primary small flex-shrink-0"
+             onclick="return refreshSessionReportCard()"
+             aria-label="Refresh session report standings"
+             title="Refresh session report standings">
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+          </a>
+        </div>
+        <div class="d-flex justify-content-center mb-3" th:if="${targetSeason != null}">
+          <div class="text-center">
+            <a class="btn btn-nav-primary btn-card-width"
+               th:href="@{/seasons/{seasonId}/matches/recent(seasonId=${targetSeason.id},backTo=${'/groups/' + ladder.id})}">
+              Show Recent Matches
+            </a>
+            <div class="small text-muted mt-2">
+              Browse the latest competition matches from this season.
+            </div>
+          </div>
+        </div>
+        <div th:if="${sessionReportStandings != null and !#lists.isEmpty(sessionReportStandings)}"
+             th:replace="~{fragments/roundrobinStandings :: standingsTable(${sessionReportStandings}, 'Standings')}">
+        </div>
+        <div class="text-center text-muted small"
+             th:if="${sessionReportStandings == null or #lists.isEmpty(sessionReportStandings)}">
+          No confirmed matches logged from this session yet.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3" id="members">
+    <div class="card-header card-header-title" th:text="${memberSectionTitle}">Members</div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-3">
+        <span class="small text-muted fw-semibold text-uppercase">Sort</span>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Sort members">
+          <a class="btn btn-outline-contrast"
+             th:classappend="${sort} == 'joined' ? ' active'"
+             th:href="@{|/groups/${ladder.id}?sort=joined#members|}">Join Date (Oldest)</a>
+          <a class="btn btn-outline-contrast"
+             th:classappend="${sort} == 'joined_desc' ? ' active'"
+             th:href="@{|/groups/${ladder.id}?sort=joined_desc#members|}">Join Date (Newest)</a>
+          <a class="btn btn-outline-contrast"
+             th:classappend="${sort} == 'alpha' ? ' active'"
+             th:href="@{|/groups/${ladder.id}?sort=alpha#members|}">A-Z</a>
+        </div>
+      </div>
+
+      <div th:if="${#lists.isEmpty(members)}" class="text-muted">
+        <span>No players have joined this session yet. Share the invite to build the roster.</span>
+      </div>
+
+      <ul class="list-group" th:if="${!#lists.isEmpty(members)}">
+        <li class="list-group-item" th:each="m : ${members}">
+          <div class="d-flex flex-wrap align-items-start justify-content-between w-100 gap-2">
+            <div class="d-flex flex-column align-items-start gap-1 flex-grow-1 min-w-0">
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <strong th:text="${
+  (userById[m.userId] != null && userById[m.userId].nickName != null && !#strings.isEmpty(userById[m.userId].nickName))
+    ? userById[m.userId].nickName
+    : 'missing name'
+}">Member Name</strong>
+                <span class="badge bg-dark" th:if="${m.userId == ownerUserId}">Owner</span>
+                <span class="badge badge-role-admin"
+                      th:if="${m.userId != ownerUserId and m.role.name() == 'ADMIN'}">Admin</span>
+                <span class="badge bg-light text-dark border" th:if="${m.role.name() == 'MEMBER'}">Member</span>
+              </div>
+
+              <div th:if="${currentUserIsAdmin}"
+                   th:replace="~{fragments/memberIdentity :: memberIdentity(${userById[m.userId] != null ? userById[m.userId].publicCode : null})}">
+              </div>
+
+              <span class="text-muted small"
+                    th:text="'Joined on ' + ${@fhpbTime.displayIsoDate(m.joinedAt, (#authentication != null ? #authentication.principal : null))}">
+                Joined on 2025-09-01
+              </span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 flex-shrink-0 justify-content-end align-self-center">
+              <div class="d-flex flex-wrap gap-2" th:if="${currentUserIsAdmin}">
+                <form method="post"
+                      class="m-0"
+                      th:if="${m.role.name() != 'ADMIN' and m.userId != ownerUserId}"
+                      th:action="@{'/groups/' + ${ladder.id} + '/promote/' + ${m.id}}"
+                      onsubmit="return handleConfirmForm(this, 'Promote this member to admin?');">
+                  <button type="submit" class="btn btn-action-success btn-inline">Promote</button>
+                </form>
+
+                <form method="post"
+                      class="m-0"
+                      th:if="${m.role.name() == 'ADMIN' and m.userId != ownerUserId}"
+                      th:action="@{'/groups/' + ${ladder.id} + '/demote/' + ${m.id}}"
+                      onsubmit="return handleConfirmForm(this, 'Demote this admin to member?');">
+                  <button type="submit" class="btn btn-nav-secondary btn-inline">Demote</button>
+                </form>
+
+                <form method="post"
+                      class="m-0"
+                      th:if="${m.userId != currentUserId and m.userId != ownerUserId}"
+                      th:action="@{'/groups/' + ${ladder.id} + '/remove/' + ${m.id}}"
+                      onsubmit="return handleConfirmForm(this, 'Remove this player from the session? They can rejoin later with the invite if there is space.');">
+                  <button type="submit" class="btn btn-action-danger btn-inline">Remove</button>
+                </form>
+              </div>
+              <form method="post"
+                    class="m-0"
+                    th:if="${m.userId == currentUserId}"
+                    th:action="@{'/groups/' + ${ladder.id} + '/leave/' + ${m.id}}"
+                    th:attr="onsubmit=|return handleConfirmForm(this, '${leaveConfirmMessage}')|">
+                <button type="submit" class="btn btn-action-danger btn-inline">Leave Session</button>
+              </form>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</th:block>

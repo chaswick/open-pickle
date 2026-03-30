@@ -20,8 +20,8 @@
             <div class="app-hero-card">
                 <h1 class="app-hero-title">Let's Pickle!</h1>
                 <p class="app-hero-subtitle"
-                   th:text="${showCompetitionSessionChooser or activeCompetitionSessionId != null} ? 'Choose log matches to open a session, then record results in the global competition.' : 'Choose start playing to start a session or join one from an invite link.'">
-                    Choose start playing to start a session or join one from an invite link.
+                   th:text="${showCompetitionSessionChooser or activeCompetitionSessionId != null} ? 'Choose log matches to open a session, then record results in the global competition.' : 'Choose start playing to start a session or join one from a shared code.'">
+                    Choose start playing to start a session or join one from a shared code.
                 </p>
             </div>
         </section>
@@ -65,7 +65,7 @@
                     <span class="app-action-callout app-action-callout-top"
                           th:if="${showStartHereCallout}">Start here</span>
                     <div class="app-action-title">Start Playing</div>
-                    <div class="app-action-subtitle">Start a session or join one from an invite link.</div>
+                    <div class="app-action-subtitle">Start a session or join one from a shared code.</div>
                 </div>
             </a>
 

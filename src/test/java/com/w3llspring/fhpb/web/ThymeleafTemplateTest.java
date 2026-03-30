@@ -2,6 +2,7 @@ package com.w3llspring.fhpb.web;
 
 import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.LadderMembership;
+import com.w3llspring.fhpb.web.model.LadderSecurity;
 import com.w3llspring.fhpb.web.config.BrandingProperties;
 import com.w3llspring.fhpb.web.config.OperatorProperties;
 import com.w3llspring.fhpb.web.service.StoryModeService;
@@ -21,6 +22,7 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 import java.lang.reflect.Constructor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -100,31 +102,197 @@ class ThymeleafTemplateTest {
     }
 
     @Test
-    void sessionShowPageUsesDashboardVoiceRecorderButton() throws Exception {
-        String template = Files.readString(Path.of("src/main/resources/templates/auth/show.html"));
+    void joinTemplateRendersSessionContextWithoutSessionApprovalModeEnabled() {
+        BrandingProperties branding = new BrandingProperties();
+        OperatorProperties operator = new OperatorProperties();
 
-        assertThat(template).contains("class=\"card-stack-col card-stack-col-desktop-fluid pb-5 text-start\"");
-        assertThat(template).contains("id=\"logMatchVoiceBtn\"");
-        assertThat(template).contains("window.matchLogConfig.reviewParams");
-        assertThat(template).contains("/js/match-log-voice.js");
-        assertThat(template).contains("competition: true");
-        assertThat(template).contains("th:href=\"@{/round-robin/list(ladderId=${ladder.id})}\"");
-        assertThat(template).contains("Start a Round Robin");
-        assertThat(template).contains("id=\"sessionStandingContainer\"");
-        assertThat(template).contains("session-standing-momentum");
-        assertThat(template).doesNotContain("th:href=\"@{/competition}\"");
-        assertThat(template).contains("data-bs-target=\"#sessionReportCardCollapse\"");
-        assertThat(template).contains("id=\"sessionReportCardCollapse\" class=\"collapse\"");
-        assertThat(template).contains("data-session-standings-pending=${sessionStandingsRecalculationPending}");
-        assertThat(template).contains("onclick=\"return refreshSessionReportCard()\"");
-        assertThat(template).contains("Show Recent Matches");
-        assertThat(template).contains("th:href=\"@{/seasons/{seasonId}/matches/recent(seasonId=${targetSeason.id},backTo=${'/groups/' + ladder.id})}\"");
-        assertThat(template).contains("th:href=\"@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}\"");
-        assertThat(template).doesNotContain("th:href=\"@{/voice-match-log");
-        assertThat(template).contains("th:href=\"@{/confirm-matches}\"");
-        assertThat(template).doesNotContain("Disputed Match Review");
-        assertThat(template).doesNotContain("/matches/{matchId}/reopen");
-        assertThat(template).doesNotContain("th:href=\"@{/log-match(editMatchId=${match.id}, seasonId=${seasonId}, ladderId=${ladder.id}, returnTo=${returnToPath})}\"");
+        String result = renderWebTemplate("auth/join", Map.ofEntries(
+                Map.entry("branding", branding),
+                Map.entry("operator", operator),
+                Map.entry("assetVersion", "test-build"),
+                Map.entry("_csrf", new DefaultCsrfToken("X-CSRF-TOKEN", "_csrf", "token")),
+                Map.entry("googleAnalyticsEnabled", false),
+                Map.entry("googleAnalyticsMeasurementId", ""),
+                Map.entry("googleAdsId", ""),
+                Map.entry("pwaInstallEligible", false),
+                Map.entry("showCompetitionSessionChooser", false),
+                Map.entry("checkInEnabled", false),
+                Map.entry("sessionJoinContext", true),
+                Map.entry("sessionApprovalMode", false),
+                Map.entry("returnToPath", "/competition/sessions")));
+
+        assertThat(result).contains("Join Session");
+        assertThat(result).contains("Session Code");
+        assertThat(result).contains("Manual code joins stay inside Open-Pickle.");
+        assertThat(result).contains("Ask the session owner for the shared code.");
+        assertThat(result).contains("name=\"inviteCodeWordOne\"");
+        assertThat(result).contains("name=\"inviteCodeWordTwo\"");
+        assertThat(result).contains("name=\"inviteCodeNumber\"");
+        assertThat(result).contains("Pick the two words and number");
+        assertThat(result).doesNotContain("Exception evaluating SpringEL expression");
+    }
+
+    @Test
+    void joinTemplateRendersNearbySessionFinderWhenCheckInIsEnabled() {
+        BrandingProperties branding = new BrandingProperties();
+        OperatorProperties operator = new OperatorProperties();
+
+        String result = renderWebTemplate("auth/join", Map.ofEntries(
+                Map.entry("branding", branding),
+                Map.entry("operator", operator),
+                Map.entry("assetVersion", "test-build"),
+                Map.entry("_csrf", new DefaultCsrfToken("X-CSRF-TOKEN", "_csrf", "token")),
+                Map.entry("googleAnalyticsEnabled", false),
+                Map.entry("googleAnalyticsMeasurementId", ""),
+                Map.entry("googleAdsId", ""),
+                Map.entry("pwaInstallEligible", false),
+                Map.entry("showCompetitionSessionChooser", false),
+                Map.entry("checkInEnabled", true),
+                Map.entry("sessionJoinContext", true),
+                Map.entry("sessionApprovalMode", false),
+                Map.entry("returnToPath", "/competition/sessions")));
+
+        assertThat(result).contains("Find Nearby Sessions");
+        assertThat(result).contains("data-session-nearby-join=\"true\"");
+        assertThat(result).contains("data-nearby-start");
+        assertThat(result).contains("data-nearby-results");
+        assertThat(result).contains("Use My Current Location");
+        assertThat(result).contains("Shared Code");
+    }
+
+    @Test
+    void sessionShowFragmentRendersWithMinimalSessionModel() {
+        LadderConfig ladder = new LadderConfig();
+        ladder.setId(42L);
+        ladder.setTitle("Saturday Open");
+        ladder.setType(LadderConfig.Type.SESSION);
+        ladder.setInviteCode("DINK-7");
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("ladder", ladder);
+        variables.put("currentUserIsAdmin", true);
+        variables.put("inviteActive", true);
+        variables.put("ladderInviteLink", "https://example.test/groups/join?inviteCode=DINK-7");
+        variables.put("checkInEnabled", false);
+        variables.put("pendingSessionJoinRequests", List.of());
+        variables.put("sessionDateTimePattern", "EEEE, MMM d, h:mm a");
+        variables.put("sessionStandingRow", null);
+        variables.put("sessionStandingsRecalculationPending", false);
+        variables.put("sessionReportStandings", List.of());
+        variables.put("memberSectionTitle", "Members");
+        variables.put("members", List.of());
+        variables.put("sort", "joined");
+        variables.put("currentUserId", 7L);
+        variables.put("ownerUserId", 7L);
+        variables.put("userById", Map.of());
+        variables.put("leaveConfirmMessage", "Leave this session?");
+        variables.put("links", List.of());
+        variables.put("improvementAdvice", null);
+
+        String result = renderWebTemplate("fragments/show/sessionBody", variables);
+
+        assertThat(result).contains("Session Info");
+        assertThat(result).contains("Choose how you want to share this session");
+        assertThat(result).contains("Session Report Card");
+        assertThat(result).contains("No players have joined this session yet.");
+    }
+
+    @Test
+    void groupShowFragmentRendersWithMinimalGroupModel() {
+        LadderConfig ladder = new LadderConfig();
+        ladder.setId(77L);
+        ladder.setTitle("Neighborhood Group");
+        ladder.setType(LadderConfig.Type.STANDARD);
+        ladder.setMode(LadderConfig.Mode.ROLLING);
+        ladder.setRollingEveryUnit(LadderConfig.CadenceUnit.WEEKS);
+        ladder.setSecurityLevel(LadderSecurity.STANDARD);
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("ladder", ladder);
+        variables.put("currentUserIsAdmin", true);
+        variables.put("currentUserId", 7L);
+        variables.put("ownerUserId", 7L);
+        variables.put("inviteActive", false);
+        variables.put("season", null);
+        variables.put("transitionAllowed", true);
+        variables.put("hasActiveSeason", false);
+        variables.put("maxRollingEveryCount", LadderConfig.MAX_ROLLING_EVERY_COUNT);
+        variables.put("storyModeFeatureEnabled", false);
+        variables.put("memberSectionTitle", "Members");
+        variables.put("members", List.of());
+        variables.put("sort", "joined");
+        variables.put("userById", Map.of());
+        variables.put("leaveConfirmMessage", "Leave this group?");
+        variables.put("recentDisplayNameChanges", List.of());
+        variables.put("bannedMembers", List.of());
+
+        String result = renderWebTemplate("fragments/show/groupBody", variables);
+
+        assertThat(result).contains("Invite Code");
+        assertThat(result).contains("Enable Invite");
+        assertThat(result).contains("Group Config");
+        assertThat(result).contains("No members yet.");
+        assertThat(result).contains("No banned members.");
+    }
+
+    @Test
+    void sessionShowTemplateIncludesShareMethodChooserAndShortCodeControls() throws Exception {
+        String shellTemplate = Files.readString(Path.of("src/main/resources/templates/auth/show.html"));
+        String sessionTemplate = Files.readString(Path.of("src/main/resources/templates/fragments/show/sessionBody.html"));
+
+        assertThat(shellTemplate).contains("fragments/show/sessionBody :: sessionBody");
+        assertThat(shellTemplate).contains("fragments/show/groupBody :: groupBody");
+        assertThat(shellTemplate).contains("/js/session-nearby-share.js");
+        assertThat(shellTemplate).doesNotContain("fetch('/groups/' + cfg + '/regen-invite'");
+
+        assertThat(sessionTemplate).contains("Choose how you want to share this session");
+        assertThat(sessionTemplate).contains("data-session-share-root");
+        assertThat(sessionTemplate).contains("data-session-share-tab=\"nearby\"");
+        assertThat(sessionTemplate).contains("data-session-share-tab=\"code\"");
+        assertThat(sessionTemplate).contains("data-session-share-tab=\"qr\"");
+        assertThat(sessionTemplate).contains("data-session-share-panel=\"nearby\"");
+        assertThat(sessionTemplate).contains("data-session-share-panel=\"code\"");
+        assertThat(sessionTemplate).contains("data-session-share-panel=\"qr\"");
+        assertThat(sessionTemplate).contains("data-session-nearby-host=${true}");
+        assertThat(sessionTemplate).contains("data-nearby-start");
+        assertThat(sessionTemplate).contains("Use My Current Location");
+        assertThat(sessionTemplate).contains("Refresh Nearby Court");
+        assertThat(sessionTemplate).contains("sessionInviteActiveUntil");
+        assertThat(sessionTemplate).contains("Code auto-disables");
+        assertThat(sessionTemplate).contains("/disable-invite");
+        assertThat(sessionTemplate).contains("/regen-invite");
+        assertThat(sessionTemplate).contains("Turn Sharing Off");
+        assertThat(sessionTemplate).contains("Turn Sharing Back On");
+        assertThat(sessionTemplate).contains("Players who ask to join this session inside Open-Pickle appear here.");
+    }
+
+    @Test
+    void sessionShowPageUsesDashboardVoiceRecorderButton() throws Exception {
+        String shellTemplate = Files.readString(Path.of("src/main/resources/templates/auth/show.html"));
+        String sessionTemplate = Files.readString(Path.of("src/main/resources/templates/fragments/show/sessionBody.html"));
+
+        assertThat(shellTemplate).contains("class=\"card-stack-col card-stack-col-desktop-fluid pb-5 text-start\"");
+        assertThat(sessionTemplate).contains("id=\"logMatchVoiceBtn\"");
+        assertThat(sessionTemplate).contains("window.matchLogConfig.reviewParams");
+        assertThat(sessionTemplate).contains("/js/match-log-voice.js");
+        assertThat(sessionTemplate).contains("competition: true");
+        assertThat(sessionTemplate).contains("th:href=\"@{/round-robin/list(ladderId=${ladder.id})}\"");
+        assertThat(sessionTemplate).contains("Start a Round Robin");
+        assertThat(sessionTemplate).contains("id=\"sessionStandingContainer\"");
+        assertThat(sessionTemplate).contains("session-standing-momentum");
+        assertThat(sessionTemplate).doesNotContain("th:href=\"@{/competition}\"");
+        assertThat(sessionTemplate).contains("data-bs-target=\"#sessionReportCardCollapse\"");
+        assertThat(sessionTemplate).contains("id=\"sessionReportCardCollapse\" class=\"collapse\"");
+        assertThat(sessionTemplate).contains("data-session-standings-pending=${sessionStandingsRecalculationPending}");
+        assertThat(sessionTemplate).contains("onclick=\"return refreshSessionReportCard()\"");
+        assertThat(sessionTemplate).contains("Show Recent Matches");
+        assertThat(sessionTemplate).contains("th:href=\"@{/seasons/{seasonId}/matches/recent(seasonId=${targetSeason.id},backTo=${'/groups/' + ladder.id})}\"");
+        assertThat(sessionTemplate).contains("th:href=\"@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}\"");
+        assertThat(sessionTemplate).doesNotContain("th:href=\"@{/voice-match-log");
+        assertThat(sessionTemplate).contains("th:href=\"@{/confirm-matches}\"");
+        assertThat(sessionTemplate).doesNotContain("Disputed Match Review");
+        assertThat(sessionTemplate).doesNotContain("/matches/{matchId}/reopen");
+        assertThat(sessionTemplate).doesNotContain("th:href=\"@{/log-match(editMatchId=${match.id}, seasonId=${seasonId}, ladderId=${ladder.id}, returnTo=${returnToPath})}\"");
     }
 
     @Test
@@ -319,7 +487,7 @@ class ThymeleafTemplateTest {
                 "</a>");
 
         assertThat(homeTemplate).contains("Choose log matches to open a session, then record results in the global competition.");
-        assertThat(homeTemplate).contains("Choose start playing to start a session or join one from an invite link.");
+        assertThat(homeTemplate).contains("Choose start playing to start a session or join one from a shared code.");
         assertThat(homeChooserAction).contains("Log Matches");
         assertThat(homeChooserAction).contains("@{/competition/sessions}");
         assertThat(homeActiveSessionAction).contains("Log Matches");
@@ -336,8 +504,10 @@ class ThymeleafTemplateTest {
         assertThat(sessionPickerTemplate).contains("class=\"app-action-grid\"");
         assertThat(sessionPickerTemplate).contains("Start a Session");
         assertThat(sessionPickerTemplate).contains("Join a Session");
-        assertThat(sessionPickerTemplate).contains("joinSessionHelpCollapse");
-        assertThat(sessionPickerTemplate).contains("use your phone camera to scan the session QR code");
+        assertThat(sessionPickerTemplate).contains("@{/groups/join(returnTo='/competition/sessions')}");
+        assertThat(sessionPickerTemplate).contains("join nearby or from a shared code");
+        assertThat(sessionPickerTemplate).contains("Find nearby sessions with your current location");
+        assertThat(sessionPickerTemplate).contains("The owner will approve your request.");
         assertThat(sessionPickerTemplate).doesNotContain("No Active Sessions Yet");
     }
 
@@ -410,19 +580,19 @@ class ThymeleafTemplateTest {
     @Test
     void tournamentTemplatesHideStoryModeCheckboxes() throws Exception {
         String createTemplate = Files.readString(Path.of("src/main/resources/templates/auth/createLadderConfig.html"));
-        String showTemplate = Files.readString(Path.of("src/main/resources/templates/auth/show.html"));
+        String groupTemplate = Files.readString(Path.of("src/main/resources/templates/fragments/show/groupBody.html"));
 
         assertThat(createTemplate)
                 .contains("th:if=\"${storyModeFeatureEnabled and !tournamentModePreset and (selectedLadderType == null or selectedLadderType.name() != 'SESSION')}\"");
         assertThat(createTemplate)
                 .contains("th:if=\"${!tournamentModePreset}\">Cancel</a>");
-        assertThat(showTemplate)
+        assertThat(groupTemplate)
                 .contains("th:if=\"${storyModeFeatureEnabled and !ladder.tournamentMode}\"");
     }
 
     @Test
     void showTemplateLocksTournamentModeSettings() throws Exception {
-        String template = Files.readString(Path.of("src/main/resources/templates/auth/show.html"));
+        String template = Files.readString(Path.of("src/main/resources/templates/fragments/show/groupBody.html"));
 
         assertThat(template).contains("Tournament mode is enabled.");
         assertThat(template).contains("id=\"modeSelectLocked\"");

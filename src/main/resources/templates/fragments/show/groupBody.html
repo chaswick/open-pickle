@@ -1,0 +1,510 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="groupBody">
+  <div th:if="${ladder.pendingDeletion}"
+       class="alert alert-danger d-flex justify-content-between align-items-center">
+    <div>
+      <strong>This group is scheduled for deletion.</strong>
+      <span th:attr="data-utc-time=${ladder.pendingDeletionAt}, data-time-format='datetime'"
+            th:text="${@fhpbTime.displayDateTime24(ladder.pendingDeletionAt, (#authentication != null ? #authentication.principal : null))}"></span>
+    </div>
+    <form method="post"
+          th:if="${currentUserId == ownerUserId}"
+          th:action="@{'/groups/' + ${ladder.id} + '/restore'}">
+      <button class="btn btn-action-success btn-inline" type="submit">Restore</button>
+    </form>
+  </div>
+
+  <div class="card mb-3" th:if="${currentUserIsAdmin}">
+    <div class="card-header card-header-title text-center">Invite Code</div>
+    <div class="card-body d-flex flex-column gap-3">
+      <div th:if="${inviteActive}"
+           th:with="inviteLink=${ladderInviteLink}"
+           class="d-flex flex-column gap-3">
+        <div class="invite-share d-flex flex-column gap-3 align-items-center text-center">
+          <div class="invite-share-qr d-flex flex-column align-items-center gap-2">
+            <div class="text-muted small">Have your buddies scan to join instantly</div>
+            <div class="invite-qr-wrapper border rounded bg-white p-2 shadow-sm"
+                 id="inviteQrCode"
+                 role="img"
+                 aria-label="QR code for group invite link">
+              <div class="text-muted small">Loading...</div>
+            </div>
+          </div>
+          <div class="invite-link-field d-flex flex-column flex-sm-row gap-2 w-100 justify-content-center">
+            <input type="hidden" id="inviteLinkInput" th:value="${inviteLink}" />
+            <div class="invite-link-actions d-grid gap-2 w-100">
+              <button class="btn btn-outline-contrast w-100"
+                      type="button"
+                      data-copy-target="inviteLinkInput">Copy link</button>
+              <form method="post"
+                    class="m-0"
+                    th:action="@{'/groups/' + ${ladder.id} + '/disable-invite'}"
+                    onsubmit="return handleConfirmForm(this, 'Disable this invite? New players will be unable to join until you enable a new invite.');">
+                <button type="submit" class="btn btn-outline-contrast w-100">
+                  <span>Disable Invite</span>
+                </button>
+              </form>
+            </div>
+            <div class="form-text"></div>
+          </div>
+        </div>
+      </div>
+      <div th:if="${!inviteActive}" class="text-muted">
+        Invites are disabled. Enable them below to generate a code.
+      </div>
+      <div th:if="${!inviteActive}" class="d-flex gap-2 justify-content-center mt-2">
+        <form method="post"
+              class="m-0"
+              th:action="@{'/groups/' + ${ladder.id} + '/regen-invite'}">
+          <button type="submit" class="btn btn-action-primary btn-sm">Enable Invite</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3" th:if="${currentUserIsAdmin}">
+    <div class="card-header card-header-title text-center">Group Config</div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label text-muted" for="groupTitleInput">Group name</label>
+        <form method="post" class="d-flex gap-2" th:action="@{'/groups/' + ${ladder.id} + '/title'}">
+          <input id="groupTitleInput"
+                 type="text"
+                 name="title"
+                 class="form-control"
+                 maxlength="80"
+                 th:value="${ladder.title}" />
+          <button type="submit" class="btn btn-action-primary">Save</button>
+        </form>
+        <div class="form-text">Updates the name shown on Home -> Manage Groups.</div>
+      </div>
+
+      <div class="mb-3 text-center">
+        <span th:if="${season != null}"
+              class="badge bg-light text-dark border"
+              th:with="placeholder=${season.endDate != null ? season.endDate.isAfter(season.startDate.plusYears(80)) : false}">
+          <i class="bi bi-calendar3"></i>
+          <span th:text="${season.startDate}">2025-09-01</span>
+          <span th:if="${placeholder}">&nbsp;-&nbsp;Present</span>
+          <span th:unless="${placeholder}">
+            &nbsp;-&nbsp;<span th:text="${season.endDate}">2025-10-15</span>
+          </span>
+        </span>
+        <span th:if="${season == null}" class="badge bg-light text-dark border">
+          <i class="bi bi-calendar3"></i> No active season
+        </span>
+      </div>
+
+      <form method="post"
+            th:action="@{'/groups/' + ${ladder.id} + '/config/all'}"
+            onsubmit="return confirmSettingsChanges(this);">
+        <div class="alert alert-warning text-start" th:if="${ladder.tournamentMode}">
+          Tournament mode is enabled. This group stays on manual seasons with standard confirmation, and each logged season match must match an active round-robin pairing. Only group admins can start or manage round-robins.
+        </div>
+
+        <input type="hidden" name="originalMode" th:value="${ladder.mode.name()}">
+        <input type="hidden" name="originalCount" th:value="${ladder.rollingEveryCount}">
+        <input type="hidden" name="originalUnit" th:value="${ladder.rollingEveryUnit.name()}">
+        <input type="hidden" name="hasActiveSeason" th:value="${season != null}">
+
+        <div class="stack-center mb-3">
+          <label class="form-label text-muted mb-0"
+                 th:attr="for=${ladder.tournamentMode} ? 'modeSelectLocked' : 'modeSelect'">Mode</label>
+          <th:block th:if="${ladder.tournamentMode}">
+            <input type="hidden" name="mode" value="MANUAL">
+            <select id="modeSelectLocked" class="form-select" disabled>
+              <option selected>Manual</option>
+            </select>
+            <div class="form-text text-center mt-1">
+              Tournament mode keeps season start and stop under admin control.
+            </div>
+          </th:block>
+          <select id="modeSelect" name="mode" class="form-select" th:unless="${ladder.tournamentMode}">
+            <option value="ROLLING" th:selected="${ladder.mode.name()=='ROLLING'}">Rolling</option>
+            <option value="MANUAL" th:selected="${ladder.mode.name()=='MANUAL'}">Manual</option>
+          </select>
+
+          <label class="form-label text-muted mb-0" for="invitesEnabledSelect">Invites</label>
+          <select id="invitesEnabledSelect" name="invitesEnabled" class="form-select">
+            <option th:value="true" th:selected="${ladder.inviteCode != null and !ladder.inviteCode.isEmpty()}">
+              Enabled
+            </option>
+            <option th:value="false" th:selected="${ladder.inviteCode == null or ladder.inviteCode.isEmpty()}">
+              Disabled
+            </option>
+          </select>
+
+          <div id="rollingBlock" class="stack-center"
+               th:classappend="${ladder.mode.name()=='ROLLING'} ? '' : 'd-none'">
+            <label class="form-label text-muted mb-0">New Season Every</label>
+            <div class="d-flex gap-2">
+              <div class="flex-fill">
+                <label class="visually-hidden" for="rollingCountInput">Season length count</label>
+                <input id="rollingCountInput"
+                       type="number"
+                       name="count"
+                       class="form-control"
+                       min="1"
+                       th:attr="max=${maxRollingEveryCount}"
+                       th:value="${ladder.rollingEveryCount}">
+              </div>
+              <div class="flex-fill">
+                <label class="visually-hidden" for="rollingUnitSelect">Season length unit</label>
+                <select id="rollingUnitSelect" name="unit" class="form-select">
+                  <option th:value="WEEKS" th:selected="${ladder.rollingEveryUnit.name()=='WEEKS'}">Weeks</option>
+                  <option th:value="MONTHS" th:selected="${ladder.rollingEveryUnit.name()=='MONTHS'}">Months</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="rollingHint"
+               class="form-text text-center mt-1"
+               th:classappend="${ladder.mode.name()=='ROLLING'} ? '' : 'd-none'">
+            A new season will start using the following settings. Note: you can not start/end more than one season per day.
+          </div>
+          <div id="manualHint"
+               class="form-text text-center mt-1"
+               th:classappend="${ladder.mode.name()=='MANUAL'} ? '' : 'd-none'">
+            Manual mode uses the Start Season and End Season controls below.
+          </div>
+        </div>
+
+        <label class="form-label text-muted mb-0"
+               th:attr="for=${ladder.tournamentMode} ? 'securityLevelLocked' : 'securityLevelSelect'">Match Confirmation</label>
+        <th:block th:if="${ladder.tournamentMode}">
+          <input type="hidden" name="securityLevel" value="STANDARD" />
+          <input type="hidden" name="allowGuestOnlyPersonalMatches" value="false" />
+          <select id="securityLevelLocked" class="form-select" disabled>
+            <option selected>Standard (opponent confirms)</option>
+          </select>
+          <div class="form-text text-center mt-1 mb-1">
+            Tournament matches stay provisional until standard confirmation finishes, but they are reserved against an active round-robin matchup when logged.
+          </div>
+        </th:block>
+        <select name="securityLevel" id="securityLevelSelect" class="form-select" th:unless="${ladder.tournamentMode}">
+          <option value="STANDARD"
+                  th:selected="${ladder.securityLevel.name() == 'STANDARD' or ladder.securityLevel.name() == 'NONE' or ladder.securityLevel.name() == 'HIGH'}">
+            Standard (opponent confirms)
+          </option>
+          <option value="SELF_CONFIRM" th:selected="${ladder.securityLevel.name() == 'SELF_CONFIRM'}">Casual (self-confirm)</option>
+        </select>
+        <div class="form-text text-center mt-1 mb-1" th:unless="${ladder.tournamentMode}">
+          Casual mode lets match loggers immediately confirm their own entries, ideal for trusted groups.
+        </div>
+        <div id="guestOnlyPersonalMatchBlock"
+             th:if="${!ladder.tournamentMode}"
+             th:class="${ladder.securityLevel != null and ladder.securityLevel.name() == 'SELF_CONFIRM'} ? 'form-check mt-2' : 'form-check mt-2 d-none'">
+          <input class="form-check-input"
+                 type="checkbox"
+                 id="allowGuestOnlyPersonalMatches"
+                 name="allowGuestOnlyPersonalMatches"
+                 th:disabled="${ladder.securityLevel == null or ladder.securityLevel.name() != 'SELF_CONFIRM'}"
+                 th:checked="${ladder.allowGuestOnlyPersonalMatches}" />
+          <label class="form-check-label" for="allowGuestOnlyPersonalMatches">
+            Allow personal record matches when all opponents are guests
+          </label>
+          <div class="form-text text-start">
+            Only applies in Casual mode. These matches can be confirmed and count for trophies, but never affect standings. Ideal if you want to track your personal activity.
+          </div>
+        </div>
+        <div class="form-check mt-3">
+          <input class="form-check-input"
+                 type="checkbox"
+                 id="carryOverPreviousRating"
+                 name="carryOverPreviousRating"
+                 th:checked="${ladder.carryOverPreviousRating}" />
+          <label class="form-check-label" for="carryOverPreviousRating">
+            Carry over previous rating
+          </label>
+          <div class="form-text text-start">
+            When enabled, each active member starts a new season with their ending rating from the previous season.
+            When off, new seasons start from the default baseline rating.
+          </div>
+        </div>
+        <div class="form-check mt-3" th:if="${storyModeFeatureEnabled and !ladder.tournamentMode}">
+          <input class="form-check-input"
+                 type="checkbox"
+                 id="storyModeDefaultEnabled"
+                 name="storyModeDefaultEnabled"
+                 th:checked="${ladder.storyModeDefaultEnabled}" />
+          <label class="form-check-label" for="storyModeDefaultEnabled">
+            Enable Story Mode
+          </label>
+          <div class="form-text text-start">
+            Turns the standings page into a Pat-the-Pickler story board for the current and upcoming seasons.
+            Match logging and season history stay normal underneath the playful presentation.
+          </div>
+        </div>
+        <div class="d-grid gap-2">
+          <button class="btn btn-action-primary btn-card-width" type="submit">Save Changes</button>
+        </div>
+      </form>
+
+      <div id="manualBlock"
+           class="stack-center stack-full mt-3"
+           th:classappend="${ladder.mode.name()=='MANUAL'} ? '' : 'd-none'">
+        <div class="d-grid gap-2">
+          <form method="post" class="d-grid" th:action="@{'/groups/' + ${ladder.id} + '/season/start'}">
+            <button class="btn btn-action-success btn-card-width"
+                    th:disabled="${!transitionAllowed or hasActiveSeason}">
+              Start Season
+            </button>
+          </form>
+
+          <form method="post"
+                class="d-grid"
+                th:if="${hasActiveSeason}"
+                th:action="@{'/groups/' + ${ladder.id} + '/season/end'}"
+                onsubmit="return handleConfirmForm(this, 'End current season now? Note: you can only create one season per day.');">
+            <button class="btn btn-action-danger btn-workflow-destructive btn-card-width">End Season</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function syncModeUi(form) {
+        if (!form || !form.mode) {
+          return;
+        }
+        const isRolling = form.mode.value === 'ROLLING';
+        const isSelfConfirm = form.securityLevel && form.securityLevel.value === 'SELF_CONFIRM';
+        const rollingBlock = document.getElementById('rollingBlock');
+        const manualBlock = document.getElementById('manualBlock');
+        const rollingHint = document.getElementById('rollingHint');
+        const manualHint = document.getElementById('manualHint');
+        const guestOnlyBlock = document.getElementById('guestOnlyPersonalMatchBlock');
+        const guestOnlyInput = document.getElementById('allowGuestOnlyPersonalMatches');
+        const countInput = form.count;
+        const unitInput = form.unit;
+
+        if (rollingBlock) rollingBlock.classList.toggle('d-none', !isRolling);
+        if (manualBlock) manualBlock.classList.toggle('d-none', isRolling);
+        if (rollingHint) rollingHint.classList.toggle('d-none', !isRolling);
+        if (manualHint) manualHint.classList.toggle('d-none', isRolling);
+
+        if (guestOnlyBlock) guestOnlyBlock.classList.toggle('d-none', !isSelfConfirm);
+        if (guestOnlyInput) {
+          guestOnlyInput.disabled = !isSelfConfirm;
+          if (!isSelfConfirm) {
+            guestOnlyInput.checked = false;
+          }
+        }
+
+        if (countInput) {
+          countInput.disabled = !isRolling;
+          countInput.required = isRolling;
+        }
+        if (unitInput) {
+          unitInput.disabled = !isRolling;
+        }
+      }
+
+      function confirmSettingsChanges(form) {
+        const originalMode = form.originalMode.value;
+        const newMode = form.mode.value;
+        const originalCount = form.originalCount.value;
+        const newCount = form.count.value;
+        const originalUnit = form.originalUnit.value;
+        const newUnit = form.unit.value;
+        const hasActiveSeason = form.hasActiveSeason.value === 'true';
+
+        if (hasActiveSeason) {
+          if (originalMode === 'ROLLING' && newMode === 'MANUAL') {
+            return handleConfirmForm(form, 'Switching to manual mode will end the current rolling season. You can only create one season per day. Continue?');
+          } else if (originalMode === 'MANUAL' && newMode === 'ROLLING') {
+            return handleConfirmForm(form, 'Switching to rolling mode will end the current season and start a new rolling season. You can only create one season per day. Continue?');
+          }
+        }
+
+        if (newMode === 'ROLLING' && originalMode === 'ROLLING' && hasActiveSeason &&
+            (newCount !== originalCount || newUnit !== originalUnit)) {
+          return handleConfirmForm(form, 'Changing the rolling cadence may end the current season early or update its end date. Continue?');
+        }
+
+        return true;
+      }
+
+      (function initModeUi() {
+        const form = document.querySelector('form[onsubmit*="confirmSettingsChanges"]');
+        if (!form || !form.mode) {
+          return;
+        }
+        syncModeUi(form);
+        form.mode.addEventListener('change', function () {
+          syncModeUi(form);
+        });
+        if (form.securityLevel) {
+          form.securityLevel.addEventListener('change', function () {
+            syncModeUi(form);
+          });
+        }
+      })();
+    </script>
+  </div>
+
+  <div class="card mb-3" id="members">
+    <div class="card-header card-header-title" th:text="${memberSectionTitle}">Members</div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-3">
+        <span class="small text-muted fw-semibold text-uppercase">Sort</span>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Sort members">
+          <a class="btn btn-outline-contrast"
+             th:classappend="${sort} == 'joined' ? ' active'"
+             th:href="@{|/groups/${ladder.id}?sort=joined#members|}">Join Date (Oldest)</a>
+          <a class="btn btn-outline-contrast"
+             th:classappend="${sort} == 'joined_desc' ? ' active'"
+             th:href="@{|/groups/${ladder.id}?sort=joined_desc#members|}">Join Date (Newest)</a>
+          <a class="btn btn-outline-contrast"
+             th:classappend="${sort} == 'alpha' ? ' active'"
+             th:href="@{|/groups/${ladder.id}?sort=alpha#members|}">A-Z</a>
+        </div>
+      </div>
+
+      <div th:if="${#lists.isEmpty(members)}" class="text-muted">
+        <span>No members yet. Share the invite to grow the group.</span>
+      </div>
+
+      <ul class="list-group" th:if="${!#lists.isEmpty(members)}">
+        <li class="list-group-item" th:each="m : ${members}">
+          <div class="d-flex flex-wrap align-items-start justify-content-between w-100 gap-2">
+            <div class="d-flex flex-column align-items-start gap-1 flex-grow-1 min-w-0">
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <strong th:text="${
+  (userById[m.userId] != null && userById[m.userId].nickName != null && !#strings.isEmpty(userById[m.userId].nickName))
+    ? userById[m.userId].nickName
+    : 'missing name'
+}">Member Name</strong>
+                <span class="badge bg-dark" th:if="${m.userId == ownerUserId}">Owner</span>
+                <span class="badge badge-role-admin"
+                      th:if="${m.userId != ownerUserId and m.role.name() == 'ADMIN'}">Admin</span>
+                <span class="badge bg-light text-dark border" th:if="${m.role.name() == 'MEMBER'}">Member</span>
+              </div>
+
+              <div th:if="${currentUserIsAdmin}"
+                   th:replace="~{fragments/memberIdentity :: memberIdentity(${userById[m.userId] != null ? userById[m.userId].publicCode : null})}">
+              </div>
+
+              <span class="text-muted small"
+                    th:text="'Joined on ' + ${@fhpbTime.displayIsoDate(m.joinedAt, (#authentication != null ? #authentication.principal : null))}">
+                Joined on 2025-09-01
+              </span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 flex-shrink-0 justify-content-end align-self-center">
+              <div class="d-flex flex-wrap gap-2" th:if="${currentUserIsAdmin}">
+                <form method="post"
+                      class="m-0"
+                      th:if="${m.role.name() != 'ADMIN' and m.userId != ownerUserId}"
+                      th:action="@{'/groups/' + ${ladder.id} + '/promote/' + ${m.id}}"
+                      onsubmit="return handleConfirmForm(this, 'Promote this member to admin?');">
+                  <button type="submit" class="btn btn-action-success btn-inline">Promote</button>
+                </form>
+
+                <form method="post"
+                      class="m-0"
+                      th:if="${m.role.name() == 'ADMIN' and m.userId != ownerUserId}"
+                      th:action="@{'/groups/' + ${ladder.id} + '/demote/' + ${m.id}}"
+                      onsubmit="return handleConfirmForm(this, 'Demote this admin to member?');">
+                  <button type="submit" class="btn btn-nav-secondary btn-inline">Demote</button>
+                </form>
+
+                <form method="post"
+                      class="m-0"
+                      th:if="${m.userId != currentUserId and m.role.name() != 'ADMIN' and m.userId != ownerUserId}"
+                      th:action="@{'/groups/' + ${ladder.id} + '/ban/' + ${m.id}}"
+                      onsubmit="return handleConfirmForm(this, 'Ban this member? They will be permanently banned from this group.');">
+                  <button type="submit" class="btn btn-action-danger btn-inline btn-workflow-critical">Ban</button>
+                </form>
+              </div>
+              <form method="post"
+                    class="m-0"
+                    th:if="${m.userId == currentUserId}"
+                    th:action="@{'/groups/' + ${ladder.id} + '/leave/' + ${m.id}}"
+                    th:attr="onsubmit=|return handleConfirmForm(this, '${leaveConfirmMessage}')|">
+                <button type="submit" class="btn btn-action-danger btn-inline">Leave Group</button>
+              </form>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card mb-3" th:if="${currentUserIsAdmin}">
+    <div class="card-header card-header-title">Recent Display Name Changes</div>
+    <div class="card-body">
+      <p class="identity-note text-muted mb-3">
+        Shows name changes recorded while a player was active in this group.
+      </p>
+
+      <div th:if="${#lists.isEmpty(recentDisplayNameChanges)}" class="text-muted">
+        No display name changes recorded for this group yet.
+      </div>
+
+      <ul class="list-group" th:if="${!#lists.isEmpty(recentDisplayNameChanges)}">
+        <li class="list-group-item" th:each="change : ${recentDisplayNameChanges}">
+          <div class="d-flex flex-column gap-1">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <strong th:text="${change.newDisplayName}">New Name</strong>
+              <span class="text-muted small">from</span>
+              <span th:text="${change.oldDisplayName}">Old Name</span>
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-2 text-muted small">
+              <span
+                th:text="'Changed ' + ${@fhpbTime.displayDateTime24(change.changedAt, (#authentication != null ? #authentication.principal : null))}">
+                Changed 2026-03-13 10:00
+              </span>
+              <div th:replace="~{fragments/memberIdentity :: memberIdentity(${userById[change.userId] != null ? userById[change.userId].publicCode : null})}">
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card mb-3" th:if="${currentUserIsAdmin}">
+    <div class="card-header card-header-title">Banned Members</div>
+    <div class="card-body">
+      <div th:if="${#lists.isEmpty(bannedMembers)}" class="text-muted">
+        No banned members.
+      </div>
+
+      <ul class="list-group" th:if="${!#lists.isEmpty(bannedMembers)}">
+        <li class="list-group-item" th:each="m : ${bannedMembers}">
+          <div class="d-flex flex-wrap align-items-start justify-content-between w-100 gap-2">
+            <div class="d-flex flex-column align-items-start gap-1 flex-grow-1 min-w-0">
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <strong th:text="${
+  (userById[m.userId] != null && userById[m.userId].nickName != null && !#strings.isEmpty(userById[m.userId].nickName))
+    ? userById[m.userId].nickName
+    : 'missing name'
+}">Member Name</strong>
+                <span class="badge bg-warning text-dark">Banned</span>
+              </div>
+
+              <div th:replace="~{fragments/memberIdentity :: memberIdentity(${userById[m.userId] != null ? userById[m.userId].publicCode : null})}">
+              </div>
+
+              <span class="text-muted small"
+                    th:if="${m.leftAt != null}"
+                    th:text="'Banned on ' + ${@fhpbTime.displayIsoDate(m.leftAt, (#authentication != null ? #authentication.principal : null))}">
+                Banned on 2025-09-01
+              </span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 flex-shrink-0 justify-content-end align-self-center">
+              <form method="post"
+                    class="m-0"
+                    th:action="@{'/groups/' + ${ladder.id} + '/unban/' + ${m.id}}"
+                    onsubmit="return handleConfirmForm(this, 'Unban this member? They will be able to rejoin via invite.');">
+                <button type="submit" class="btn btn-action-success btn-inline btn-workflow-confirm">Unban</button>
+              </form>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</th:block>

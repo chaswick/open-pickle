@@ -2,31 +2,156 @@
 <html lang="en" layout:decorate="~{layouts/authenticated}">
 
 <head>
-  <title layout:fragment="title">Join Group</title>
+  <title layout:fragment="title"
+         th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join Session' : 'Join Group'">Join Group</title>
   <meta layout:fragment="meta-tags">
 </head>
 
 <body>
   <main layout:fragment="content" class="container pt-4 pb-5 mt-4 text-center">
-    <h4 class="mb-3">Join Group</h4>
-
-    
+    <h4 class="mb-3"
+        th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join Session' : 'Join Group'">Join Group</h4>
 
     <div class="row justify-content-center">
       <div class="col-12 col-lg-6 mx-auto card-stack-col">
+        <div class="card mb-3 text-start"
+             th:if="${sessionJoinContext == true and sessionApprovalMode != true and checkInEnabled}">
+          <div class="card-header card-header-title text-center">Find Nearby Sessions</div>
+          <div class="card-body">
+            <p class="text-muted small mb-3">
+              Recommended when you are already at the courts. Use your current location to see nearby sessions, then the host can approve you in-app.
+            </p>
+            <div class="d-grid gap-3" data-session-nearby-join="true">
+              <button class="btn btn-action-primary btn-lg"
+                      type="button"
+                      data-nearby-start>
+                Use My Current Location
+              </button>
+              <div class="alert d-none mt-0 mb-0 text-start" data-nearby-status role="status" aria-live="polite"></div>
+              <div class="card shadow-sm border-0 d-none text-start" data-nearby-name-card>
+                <div class="card-body">
+                  <p class="text-muted small mb-3" data-nearby-prompt-message>
+                    Confirm the location name below or enter your own.
+                  </p>
+                  <form class="d-grid gap-3" data-nearby-name-form>
+                    <div class="d-grid gap-2" data-nearby-suggestion-list></div>
+                    <div>
+                      <label class="form-label" for="joinNearbyCustomName">Use your own name</label>
+                      <input class="form-control"
+                             id="joinNearbyCustomName"
+                             type="text"
+                             placeholder="e.g. Lakeside Courts"
+                             autocomplete="off"
+                             maxlength="80"
+                             data-nearby-custom-name>
+                    </div>
+                    <div class="d-grid gap-2">
+                      <button class="btn btn-action-primary" type="submit" data-nearby-submit>Finish Check-In</button>
+                      <button class="btn btn-nav-secondary" type="button" data-nearby-cancel>Cancel</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <div class="card shadow-sm border-0 d-none text-start" data-nearby-results>
+                <div class="card-body">
+                  <div class="fw-semibold mb-2" data-nearby-results-summary>Sessions near your current location</div>
+                  <div class="list-group" data-nearby-results-list></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <form method="post" action="/groups/join" th:action="@{/groups/join}" id="joinLadderForm" class="text-start">
           <input type="hidden" name="returnTo" th:if="${returnToPath != null}" th:value="${returnToPath}">
 
           <div class="card mb-3 text-center">
-            <div class="card-header card-header-title">Invite Code</div>
+            <div class="card-header card-header-title" th:if="${sessionApprovalMode == true or sessionJoinContext == true}">
+              <span th:text="${sessionJoinContext == true and sessionApprovalMode != true and checkInEnabled} ? 'Shared Code' : 'Session Code'">Session Code</span>
+            </div>
+            <div class="card-header card-header-title" th:unless="${sessionApprovalMode == true or sessionJoinContext == true}">Invite Code</div>
             <div class="card-body">
-              <label class="form-label">Enter the invite (words-digits)</label>
-              <input type="text" class="form-control form-control-lg text-center" name="inviteCode"
-                placeholder="e.g. dink-7" minlength="3" required th:value="${prefillInviteCode}">
-              <div class="form-text">Ask the group admin for the invite code.</div>
+              <label class="form-label"
+                     th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Pick the two words and number' : 'Enter the invite code (words-digits)'">
+                Enter the invite code (words-digits)
+              </label>
+              <p class="text-muted small mb-3" th:if="${sessionApprovalMode == true}">
+                The session owner will see your request inside Open-Pickle and choose whether to let you in.
+              </p>
+              <p class="text-muted small mb-3"
+                 th:if="${sessionApprovalMode != true and sessionJoinContext == true and checkInEnabled}">
+                Ask the session owner for the shared code. Use this if nearby discovery is unavailable or you would rather type the code.
+              </p>
+              <p class="text-muted small mb-3"
+                 th:if="${sessionApprovalMode != true and sessionJoinContext == true and !checkInEnabled}">
+                Ask the session owner for the shared code. Manual code joins stay inside Open-Pickle.
+              </p>
+
+              <div th:if="${sessionApprovalMode == true or sessionJoinContext == true}" class="d-grid gap-2 mb-3">
+                <input type="hidden"
+                       name="inviteCode"
+                       data-session-code-hidden
+                       th:value="${prefillInviteCode}">
+                <div class="row g-2">
+                  <div class="col-12 col-sm-4">
+                    <label class="visually-hidden" for="inviteCodeWordOne">First word</label>
+                    <select id="inviteCodeWordOne"
+                            name="inviteCodeWordOne"
+                            class="form-select form-select-lg text-center"
+                            data-session-code-word-one
+                            required>
+                      <option value="">Word 1</option>
+                      <option th:each="option : ${inviteCodeWordOneOptions}"
+                              th:value="${option}"
+                              th:text="${option}"
+                              th:selected="${option == prefillInviteCodeWordOne}">MINT</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-sm-4">
+                    <label class="visually-hidden" for="inviteCodeWordTwo">Second word</label>
+                    <select id="inviteCodeWordTwo"
+                            name="inviteCodeWordTwo"
+                            class="form-select form-select-lg text-center"
+                            data-session-code-word-two
+                            required>
+                      <option value="">Word 2</option>
+                      <option th:each="option : ${inviteCodeWordTwoOptions}"
+                              th:value="${option}"
+                              th:text="${option}"
+                              th:selected="${option == prefillInviteCodeWordTwo}">COURT</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-sm-4">
+                    <label class="visually-hidden" for="inviteCodeNumber">Number</label>
+                    <input id="inviteCodeNumber"
+                           type="text"
+                           name="inviteCodeNumber"
+                           class="form-control form-control-lg text-center"
+                           inputmode="numeric"
+                           maxlength="3"
+                           placeholder="42"
+                           data-session-code-number
+                           required
+                           th:value="${prefillInviteCodeNumber}">
+                  </div>
+                </div>
+              </div>
+
+              <input th:if="${sessionApprovalMode != true and sessionJoinContext != true}"
+                     type="text"
+                     class="form-control form-control-lg text-center"
+                     name="inviteCode"
+                     placeholder="e.g. dink-7"
+                     minlength="3"
+                     required
+                     th:value="${prefillInviteCode}">
+              <div class="form-text"
+                   th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Ask the session owner for the shared code.' : 'Ask the group admin for the invite code.'">
+                Ask the group admin for the invite code.
+              </div>
 
               <div class="d-grid gap-2">
-                <button class="btn btn-action-primary btn-lg" type="submit">Join</button>
+                <button class="btn btn-action-primary btn-lg" type="submit"
+                        th:text="${sessionApprovalMode == true} ? 'Ask to Join' : 'Join'">Join</button>
                 <a class="btn btn-nav-secondary" href="/"
                    th:href="${returnToPath != null} ? @{${returnToPath}} : @{/home}">Cancel</a>
               </div>
@@ -37,17 +162,51 @@
     </div>
   </main>
 
-  <script layout:fragment="scripts">
-    // Optional: light normalization so users can paste with spaces/caps
-    (function () {
-      const input = document.querySelector('input[name="inviteCode"]');
-      if (!input) return;
-      input.addEventListener('blur', function () {
-        if (!input.value) return;
-        input.value = input.value.trim().replace(/\s+/g, '-');
-      });
-    })();
-  </script>
+  <th:block layout:fragment="scripts">
+    <script th:src="@{/js/session-nearby-share.js(v=${assetVersion})}" src="/js/session-nearby-share.js"></script>
+    <script>
+      // Build the canonical session invite code from segmented controls when present.
+      (function () {
+        const form = document.getElementById('joinLadderForm');
+        const hiddenInput = document.querySelector('[data-session-code-hidden]');
+        if (form && hiddenInput) {
+          const wordOne = document.querySelector('[data-session-code-word-one]');
+          const wordTwo = document.querySelector('[data-session-code-word-two]');
+          const number = document.querySelector('[data-session-code-number]');
+          const normalizeWord = function (value) {
+            return (value || '').trim().toUpperCase().replace(/[^A-Z]+/g, '');
+          };
+          const normalizeNumber = function (value) {
+            return (value || '').trim().replace(/[^0-9]+/g, '');
+          };
+          const syncHidden = function () {
+            const values = [
+              normalizeWord(wordOne ? wordOne.value : ''),
+              normalizeWord(wordTwo ? wordTwo.value : ''),
+              normalizeNumber(number ? number.value : '')
+            ];
+            hiddenInput.value = values.every(Boolean) ? values.join('-') : '';
+          };
+          [wordOne, wordTwo, number].forEach(function (field) {
+            if (!field) return;
+            field.addEventListener('change', syncHidden);
+            field.addEventListener('input', syncHidden);
+            field.addEventListener('blur', syncHidden);
+          });
+          form.addEventListener('submit', syncHidden);
+          syncHidden();
+          return;
+        }
+
+        const input = document.querySelector('input[name="inviteCode"]');
+        if (!input) return;
+        input.addEventListener('blur', function () {
+          if (!input.value) return;
+          input.value = input.value.trim().replace(/\s+/g, '-');
+        });
+      })();
+    </script>
+  </th:block>
 </body>
 
 </html>

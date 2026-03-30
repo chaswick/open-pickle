@@ -18,7 +18,7 @@
                     Start Playing
                 </h1>
                 <p class="app-hero-subtitle"
-                   th:text="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? (${canCreateCompetitionSession ? 'Choose a session to open, start a new one, or join from an invite link.' : 'Choose a session to open, or join from an invite link.'}) : 'Choose how you want to get into the global competition: start a session or join one from an invite link.'">
+                   th:text="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)} ? (${canCreateCompetitionSession ? 'Choose a session to open, start a new one, or join nearby or from a shared code.' : 'Choose a session to open, or join nearby or from a shared code.'}) : 'Choose how you want to get into the global competition: start a session or join one nearby or from a shared code.'">
                     Choose how you want to get into the global competition.
                 </p>
             </div>
@@ -64,30 +64,16 @@
                 </button>
             </form>
 
-            <button type="button"
-                    class="app-action-tile app-action-help w-100 text-start border-0"
-                    th:if="${!competitionUnavailable}"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#joinSessionHelpCollapse"
-                    aria-expanded="false"
-                    aria-controls="joinSessionHelpCollapse">
+            <a class="app-action-tile app-action-help"
+               th:if="${!competitionUnavailable}"
+               th:href="@{/groups/join(returnTo='/competition/sessions')}">
                 <div class="app-action-icon"><i class="bi bi-phone" aria-hidden="true"></i></div>
                 <div>
                     <div class="app-action-title">Join a Session</div>
-                    <div class="app-action-subtitle">Use the invite link or QR code that the session owner sent you.</div>
+                    <div class="app-action-subtitle">Find nearby sessions with your current location, or enter the shared code. The owner will approve your request.</div>
                 </div>
-            </button>
+            </a>
         </section>
-
-        <div class="collapse mt-4" id="joinSessionHelpCollapse" th:if="${!competitionUnavailable}">
-            <div class="card shadow card-spotlight">
-                <div class="card-header card-header-title text-center">Join a Session</div>
-                <div class="card-body text-center">
-                    <p class="mb-2">Open the join link that the session owner sent you, or use your phone camera to scan the session QR code.</p>
-                    <p class="text-muted mb-0">Session joins happen from the invite link or QR code, not from a searchable list inside Open-Pickle.</p>
-                </div>
-            </div>
-        </div>
     </div>
 </body>
 

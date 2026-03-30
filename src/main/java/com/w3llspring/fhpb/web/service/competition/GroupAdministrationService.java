@@ -8,6 +8,7 @@ import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.InviteChangeCooldownException;
 import com.w3llspring.fhpb.web.service.LadderInviteGenerator;
+import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
 import com.w3llspring.fhpb.web.util.InputValidation;
 import java.time.Duration;
 import java.time.Instant;
@@ -52,7 +53,11 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   public LadderConfig regenInviteCode(Long ladderConfigId, Long requesterUserId) {
     LadderConfig cfg = lockConfigForInviteChange(ladderConfigId);
     requireAdmin(cfg, requesterUserId);
-    regenerateInviteCode(cfg);
+    if (hasActiveInvite(cfg)) {
+      regenerateInviteCode(cfg);
+    } else {
+      ensureInviteEnabled(cfg);
+    }
     return configs.save(cfg);
   }
 
@@ -82,7 +87,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   @Override
   @Transactional
   public LadderConfig joinByInvite(String inviteCode, Long userId) {
-    String code = inviteCode == null ? null : inviteCode.trim().toUpperCase(Locale.ROOT);
+    String code = normalizeInviteCode(inviteCode);
     LadderConfig cfg =
         configs
             .findByInviteCode(code)
@@ -478,15 +483,16 @@ public class GroupAdministrationService implements GroupAdministrationOperations
       return;
     }
     Instant now = Instant.now();
-    enforceInviteChangeCooldown(cfg, now);
-    cfg.setInviteCode(uniqueInvite());
+    // Re-enabling after a manual disable should be immediate. Cooldown still applies
+    // while an invite is active and for explicit regenerate actions.
+    cfg.setInviteCode(uniqueInvite(cfg));
     cfg.setLastInviteChangeAt(now);
   }
 
   private void regenerateInviteCode(LadderConfig cfg) {
     Instant now = Instant.now();
     enforceInviteChangeCooldown(cfg, now);
-    cfg.setInviteCode(uniqueInvite());
+    cfg.setInviteCode(uniqueInvite(cfg));
     cfg.setLastInviteChangeAt(now);
   }
 
@@ -545,15 +551,21 @@ public class GroupAdministrationService implements GroupAdministrationOperations
     return totalSeconds + (totalSeconds == 1L ? " second" : " seconds");
   }
 
-  private String uniqueInvite() {
+  private String uniqueInvite(LadderConfig cfg) {
+    boolean sessionCode = cfg != null && cfg.isSessionType();
     for (int i = 0; i < MAX_INVITE_GENERATION_ATTEMPTS; i++) {
-      String code = generator.generate();
+      String code = sessionCode ? generator.generateSessionCode() : generator.generate();
       code = code == null ? null : code.toUpperCase(Locale.ROOT);
       if (code != null && configs.findByInviteCode(code).isEmpty()) {
         return code;
       }
     }
     throw new IllegalStateException("Unable to generate unique invite code");
+  }
+
+  private String normalizeInviteCode(String inviteCode) {
+    String normalized = SessionInviteCodeSupport.normalizeForLookup(inviteCode);
+    return normalized == null ? null : normalized.toUpperCase(Locale.ROOT);
   }
 
   private void removeSessionMemberInternal(LadderMembership membership, Long requesterUserId) {

@@ -57,6 +57,12 @@ public class LadderConfig {
   @Column(name = "last_invite_change_at")
   private Instant lastInviteChangeAt;
 
+  @Column(name = "nearby_share_location_id")
+  private Long nearbyShareLocationId;
+
+  @Column(name = "nearby_share_location_name", length = PlayLocationAlias.MAX_NAME_LENGTH)
+  private String nearbyShareLocationName;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 16)
   private Status status = Status.ACTIVE;
@@ -184,6 +190,22 @@ public class LadderConfig {
 
   public void setLastInviteChangeAt(Instant lastInviteChangeAt) {
     this.lastInviteChangeAt = lastInviteChangeAt;
+  }
+
+  public Long getNearbyShareLocationId() {
+    return nearbyShareLocationId;
+  }
+
+  public void setNearbyShareLocationId(Long nearbyShareLocationId) {
+    this.nearbyShareLocationId = nearbyShareLocationId;
+  }
+
+  public String getNearbyShareLocationName() {
+    return nearbyShareLocationName;
+  }
+
+  public void setNearbyShareLocationName(String nearbyShareLocationName) {
+    this.nearbyShareLocationName = nearbyShareLocationName;
   }
 
   public Status getStatus() {

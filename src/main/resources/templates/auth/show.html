@@ -50,6 +50,85 @@
       margin-right: auto;
     }
 
+    .session-code-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 10rem;
+      padding: 0.65rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(18, 68, 122, 0.16);
+      background: #f8fbff;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .session-share-methods {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 34rem;
+      margin: 0 auto;
+    }
+
+    .session-share-method {
+      border: 1px solid rgba(18, 68, 122, 0.16);
+      border-radius: 0.9rem;
+      background: #ffffff;
+      color: #23405e;
+      font-weight: 700;
+      transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .session-share-method:hover,
+    .session-share-method:focus-visible {
+      border-color: rgba(18, 68, 122, 0.34);
+      color: #163757;
+    }
+
+    .session-share-method.is-active,
+    .session-share-method[aria-pressed="true"] {
+      background: #12447a;
+      border-color: #12447a;
+      color: #ffffff;
+      box-shadow: 0 10px 24px rgba(18, 68, 122, 0.16);
+    }
+
+    .session-share-panel {
+      border: 1px solid rgba(18, 68, 122, 0.12);
+      border-radius: 1rem;
+      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+      padding: 1rem;
+    }
+
+    .session-share-panel[hidden] {
+      display: none !important;
+    }
+
+    .session-share-panel-intro {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #173c61;
+    }
+
+    .session-share-panel-actions {
+      width: 100%;
+      max-width: 14rem;
+      margin: 0 auto;
+    }
+
+    .session-share-footer {
+      padding-top: 0.25rem;
+      border-top: 1px solid rgba(18, 68, 122, 0.1);
+    }
+
+    .join-request-status:empty {
+      display: none;
+    }
+
     @media (max-width: 576px) {
       .invite-share-qr .invite-qr-wrapper {
         width: 200px;
@@ -223,754 +302,17 @@
          th:href="${isSessionLadder} ? @{/home} : (${isCompetitionLadder} ? @{/competition} : @{/private-groups/{ladderId}(ladderId=${ladder.id},seasonId=${season != null ? season.id : null})})">Back</a>
     </div>
     <div class="card-stack-col card-stack-col-desktop-fluid pb-5 text-start">
-
-      
-      <div th:if="${ladder.pendingDeletion and !isSessionLadder}"
-        class="alert alert-danger d-flex justify-content-between align-items-center">
-        <div>
-          <strong>This group is scheduled for deletion.</strong>
-              <span th:attr="data-utc-time=${ladder.pendingDeletionAt}, data-time-format='datetime'"
-                th:text="${@fhpbTime.displayDateTime24(ladder.pendingDeletionAt, (#authentication != null ? #authentication.principal : null))}"></span>
-        </div>
-        <form method="post" th:if="${currentUserId == ownerUserId}"
-          th:action="@{'/groups/' + ${ladder.id} + '/restore'}">
-          <button class="btn btn-action-success btn-inline" type="submit">Restore</button>
-        </form>
-      </div>
-
-      
-
-          
-          <div class="card mb-3" th:if="${currentUserIsAdmin}">
-            <div class="card-header card-header-title text-center"
-                 th:text="${isSessionLadder} ? 'Session Info' : 'Invite Code'">Invite Code</div>
-            <div class="card-body d-flex flex-column gap-3">
-              <p class="text-muted mb-0" th:if="${isSessionLadder}">
-                Matches logged from this session count toward the
-                <span class="fw-semibold text-body"
-                    th:text="${targetSeason != null and targetSeason.ladderConfig != null ? targetSeason.ladderConfig.title : branding.appName + ' Global Competition'}">Global Competition</span>
-                <span class="fw-semibold text-body"
-                      th:text="${targetSeason != null ? targetSeason.name : 'current season'}">Season</span>
-                <span class="text-body"
-                      th:if="${sessionTargetSeasonDateRange != null and !#strings.isEmpty(sessionTargetSeasonDateRange)}"
-                      th:text="|(${sessionTargetSeasonDateRange})|">(Season dates)</span>.
-              </p>
-              <div th:if="${ladder.inviteCode != null}"
-                th:with="inviteLink=${ladderInviteLink}"
-                class="d-flex flex-column gap-3">
-                <div class="invite-share d-flex flex-column gap-3 align-items-center text-center">
-                  <div class="invite-share-qr d-flex flex-column align-items-center gap-2">
-                    <div class="text-muted small">Have your buddies scan to join instantly</div>
-                    <div class="invite-qr-wrapper border rounded bg-white p-2 shadow-sm" id="inviteQrCode"
-                      role="img" aria-label="QR code for group invite link">
-                      <div class="text-muted small">Loading...</div>
-                    </div>
-                  </div>
-                  <div class="invite-link-field d-flex flex-column flex-sm-row gap-2 w-100 justify-content-center">
-                    
-                    <input type="hidden" id="inviteLinkInput" th:value="${inviteLink}" />
-                    <div class="invite-link-actions d-grid gap-2 w-100">
-                      <button class="btn btn-outline-contrast w-100" type="button" data-copy-target="inviteLinkInput">Copy link</button>
-                      <button type="button" class="btn btn-outline-contrast w-100" id="inviteToggleBtn"
-                        th:attr="data-config-id=${ladder.id}, data-has-invite=${ladder.inviteCode != null}">
-                        Disable Invite
-                      </button>
-                    </div>
-                    <div class="form-text"></div>
-                  </div>
-                </div>
-              </div>
-              <div th:if="${ladder.inviteCode == null}" class="text-muted">
-                Invites are disabled. Enable them below to generate a code.
-              </div>
-              <div th:if="${ladder.inviteCode == null}" class="d-flex gap-2 justify-content-center mt-2">
-                <form method="post" class="m-0" th:action="@{'/groups/' + ${ladder.id} + '/regen-invite'}">
-                  <button type="submit" class="btn btn-action-primary btn-sm">Enable Invite</button>
-                </form>
-
-                
-              </div>
-              <div class="small text-muted text-center" th:if="${isSessionLadder}">
-                Session expires at
-                <span th:text="${ladder.expiresAt != null ? @fhpbTime.pattern(ladder.expiresAt, authPrincipal, sessionDateTimePattern) : 'Not scheduled'}">
-                  Saturday, Mar 15, 2:00 PM
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="card mb-3" th:if="${isSessionLadder}">
-            <div class="card-header card-header-title text-center">Actions</div>
-            <div class="card-body d-grid gap-2 text-start">
-              <input type="hidden" id="ladderId" th:value="${ladder.id}" />
-              <input type="hidden" id="seasonId" th:value="${targetSeason != null ? targetSeason.id : null}" />
-              <script th:if="${targetSeason != null}" th:inline="javascript">
-                /*<![CDATA[*/
-                window.matchLogConfig = window.matchLogConfig || {};
-                window.matchLogConfig.language = /*[[${voiceLanguage}]]*/ 'en-US';
-                window.matchLogConfig.phraseHints = /*[[${voicePhraseHints}]]*/ [];
-                window.matchLogConfig.maxAlternatives = /*[[${voiceMaxAlternatives}]]*/ 3;
-                window.matchLogConfig.postMatchLoggedBaseUrl = /*[[@{/groups/{ladderId}(ladderId=${ladder.id})}]]*/ '/home';
-                window.matchLogConfig.reviewParams = {
-                  competition: true,
-                  returnTo: /*[[@{/groups/{ladderId}(ladderId=${ladder.id})}]]*/ '/home'
-                };
-                /*]]>*/
-              </script>
-              <p class="small text-muted mb-1">
-                Tip: remind players they have 2 days to confirm logged matches for competition credit.
-                They can review pending items from
-                <a th:href="@{/confirm-matches}">Confirm Matches</a>.
-              </p>
-              <div class="position-relative">
-                <div class="d-flex justify-content-center align-items-center gap-2">
-                  <button th:if="${targetSeason != null}"
-                          id="logMatchVoiceBtn"
-                          type="button"
-                          class="btn btn-action-success btn-lg d-flex align-items-center justify-content-center p-3"
-                          aria-pressed="false"
-                          aria-label="Log Match by Voice"
-                          style="position:relative;">
-                    <i class="bi bi-mic fs-4" aria-hidden="true"></i>
-                    <span id="logMatchVoiceBtnLabel" class="visually-hidden">Log Match</span>
-                    <span id="logMatchVoiceSpinner" class="ms-2 d-none" aria-hidden="true">
-                      <span class="spinner-border spinner-border-sm text-warning"></span>
-                    </span>
-                  </button>
-                  <a class="btn btn-action-success btn-card-width disabled"
-                     th:unless="${targetSeason != null}"
-                     href="#"
-                     aria-disabled="true">
-                    Voice Log
-                  </a>
-
-                  <a class="btn btn-action-primary btn-card-width"
-                     th:if="${targetSeason != null}"
-                     title="Log Match (Classic)"
-                     th:href="@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}"
-                     aria-label="Log Match (Classic)">
-                    Log Match
-                  </a>
-                  <a class="btn btn-action-primary btn-card-width disabled"
-                     th:unless="${targetSeason != null}"
-                     href="#"
-                     aria-disabled="true">
-                    Log Match
-                  </a>
-                </div>
-                <div th:if="${targetSeason != null}"
-                     id="logMatchVoiceCaption"
-                     class="text-center mt-2 mb-2 text-muted d-none"
-                     aria-live="polite"
-                     data-default-caption='Say something like, "Pam and I beat Ryan and Amy 11-8"'>
-                  Say something like, "Pam and I beat Ryan and Amy 11-8"
-                </div>
-              </div>
-              <div class="pt-2 border-top mt-2 text-center">
-                <a class="btn btn-action-primary btn-card-width"
-                   th:href="@{/round-robin/list(ladderId=${ladder.id})}">
-                  Start a Round Robin
-                </a>
-                <div class="small text-muted mt-2">
-                  Round robins are an optional way to mix up your games during the session.
-                </div>
-              </div>
-              <div class="pt-2 border-top mt-2">
-                <div class="small text-uppercase text-muted fw-semibold mb-2 text-center">Dashboard</div>
-                <div th:replace="~{components/matchDashboard :: matchDashboard}"></div>
-              </div>
-              <div id="sessionStandingContainer" class="pt-2 border-top mt-2">
-                <div class="small text-uppercase text-muted fw-semibold mb-2 text-center">Your Standing</div>
-                <div th:if="${sessionStandingRow != null}" class="session-standing-preview">
-                    <div class="session-standing-band" th:if="${sessionStandingRow.bandName != null and !#strings.isEmpty(sessionStandingRow.bandName)}"
-                         th:text="${sessionStandingRow.bandName}">Division</div>
-                    <div class="session-standing-grid session-standing-labels">
-                      <div class="text-center" title="Form">Frm</div>
-                      <div class="text-center" title="Rank">#</div>
-                      <div>Player</div>
-                      <div class="text-end">Rating</div>
-                    </div>
-                    <div class="session-standing-grid">
-                      <span class="badge rounded-pill bg-light border session-standing-momentum"
-                            aria-live="polite"
-                            th:title="${(sessionStandingRow.momentum > 0 ? '+' : '') + sessionStandingRow.momentum + ' form'}"
-                            th:classappend="
-                              ${sessionStandingRow.momentum >= 12} ? ' text-success border-success' :
-                              (${sessionStandingRow.momentum >= 8}  ? ' text-success border-success' :
-                              (${sessionStandingRow.momentum >= 4}  ? ' text-success border-success' :
-                              (${sessionStandingRow.momentum > 0}   ? ' text-success border-success' :
-                              (${sessionStandingRow.momentum == 0}  ? ' text-muted border-secondary' :
-                              (${sessionStandingRow.momentum <= -12}? ' text-danger border-danger' :
-                              (${sessionStandingRow.momentum <= -8} ? ' text-danger border-danger' :
-                              (${sessionStandingRow.momentum <= -4} ? ' text-warning border-warning' :
-                                                                        ' text-warning border-warning')))))))">
-                        <i class="bi"
-                           aria-hidden="true"
-                           th:classappend="
-                             ${sessionStandingRow.momentum >= 12} ? ' bi-fire' :
-                             (${sessionStandingRow.momentum >= 8}  ? ' bi-triangle-fill' :
-                             (${sessionStandingRow.momentum >= 4}  ? ' bi-triangle-half' :
-                             (${sessionStandingRow.momentum > 0}   ? ' bi-triangle' :
-                             (${sessionStandingRow.momentum == 0}  ? ' bi-dash-circle' :
-                             (${sessionStandingRow.momentum <= -12}? ' bi-snow' :
-                             (${sessionStandingRow.momentum <= -8} ? ' bi-triangle-fill rot-180' :
-                             (${sessionStandingRow.momentum <= -4} ? ' bi-triangle-half rot-180' :
-                                                                       ' bi-triangle rot-180')))))))"></i>
-                        <span class="visually-hidden"
-                              th:text="${(sessionStandingRow.momentum > 0 ? '+' : '') + sessionStandingRow.momentum + ' form'}">0 form</span>
-                      </span>
-                      <div class="text-center text-muted session-standing-value" th:text="${sessionStandingRow.rank}">1</div>
-                      <div class="session-standing-player">
-                        <div class="player-name-with-badges">
-                          <span class="fw-semibold player-name-label"
-                                th:text="${sessionStandingRow.displayName}">Player Name</span>
-                          <span class="name-badge-strip" th:if="${sessionStandingRow.badgeViews != null and !#lists.isEmpty(sessionStandingRow.badgeViews)}">
-                            <span th:each="badge : ${sessionStandingRow.badgeViews}"
-                                  class="name-badge-pill badge-detail-trigger"
-                                  data-badge-detail-trigger
-                                  aria-expanded="false"
-                                  role="button"
-                                  tabindex="0"
-                                  th:title="${badge.title}"
-                                  th:attr="aria-label=${!#strings.isEmpty(badge.unlockCondition) ? 'Unlock details for ' + badge.label + ': ' + badge.unlockCondition : 'Badge details for ' + badge.label}">
-                              <img class="name-badge-chip"
-                                   th:src="${badge.imageUrl}"
-                                   alt=""
-                                   aria-hidden="true"
-                                   loading="lazy" />
-                              <span class="name-badge-label"
-                                    th:text="${badge.label}">Badge</span>
-                              <span class="badge-detail-overlay"
-                                    data-badge-detail-overlay
-                                    th:classappend="${#strings.isEmpty(badge.unlockCondition)} ? ' d-none'">
-                                <span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
-                                <span class="badge-detail-overlay-text"
-                                      th:text="${badge.unlockCondition}">Unlock condition</span>
-                              </span>
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                      <div class="text-end text-muted small session-standing-value"
-                           th:text="${1000 + sessionStandingRow.points}">1000</div>
-                    </div>
-                </div>
-                <div class="text-center text-muted small" th:if="${sessionStandingRow == null}">
-                  Your standing will appear here after your first confirmed global competition match.
-                </div>
-              </div>
-              <script th:if="${targetSeason != null}" src="/js/match-log-voice.js"
-                      th:src="@{/js/match-log-voice.js(v=${assetVersion})}"></script>
-            </div>
-          </div>
-
-          <div id="climbFasterCardContainer" th:if="${isSessionLadder}">
-            <div th:replace="~{components/climbFasterCard :: climbFasterCard}"></div>
-          </div>
-
-          <div id="sessionReportCardContainer"
-               class="card mb-3"
-               th:if="${isSessionLadder}"
-               th:attr="data-session-standings-pending=${sessionStandingsRecalculationPending}">
-            <div class="card-header card-header-title card-collapse-header">
-              <button class="btn card-collapse-toggle collapsed"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#sessionReportCardCollapse"
-                      aria-expanded="false"
-                      aria-controls="sessionReportCardCollapse">
-                <span class="card-collapse-spacer" aria-hidden="true"></span>
-                <span class="card-collapse-title">Session Report Card</span>
-                <i class="bi bi-chevron-down card-collapse-icon" aria-hidden="true"></i>
-              </button>
-            </div>
-            <div id="sessionReportCardCollapse" class="collapse">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                <p class="small text-muted mb-0">
-                  Only confirmed matches logged from this session appear here.
-                </p>
-                <a href="#"
-                   class="link-primary small flex-shrink-0"
-                   onclick="return refreshSessionReportCard()"
-                   aria-label="Refresh session report standings"
-                   title="Refresh session report standings">
-                  <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
-                </a>
-              </div>
-              <div class="d-flex justify-content-center mb-3" th:if="${targetSeason != null}">
-                <div class="text-center">
-                  <a class="btn btn-nav-primary btn-card-width"
-                     th:href="@{/seasons/{seasonId}/matches/recent(seasonId=${targetSeason.id},backTo=${'/groups/' + ladder.id})}">
-                    Show Recent Matches
-                  </a>
-                  <div class="small text-muted mt-2">
-                    Browse the latest competition matches from this season.
-                  </div>
-                </div>
-              </div>
-              <div th:if="${sessionReportStandings != null and !#lists.isEmpty(sessionReportStandings)}"
-                   th:replace="~{fragments/roundrobinStandings :: standingsTable(${sessionReportStandings}, 'Standings')}">
-              </div>
-              <div class="text-center text-muted small"
-                   th:if="${sessionReportStandings == null or #lists.isEmpty(sessionReportStandings)}">
-                No confirmed matches logged from this session yet.
-              </div>
-            </div>
-            </div>
-          </div>
-
-          
-          <div class="card mb-3" th:if="${currentUserIsAdmin and !isSessionLadder}">
-            <div class="card-header card-header-title text-center">Group Config</div>
-            <div class="card-body">
-
-              <div class="mb-3">
-                <label class="form-label text-muted" for="groupTitleInput">Group name</label>
-                <form method="post" class="d-flex gap-2" th:action="@{'/groups/' + ${ladder.id} + '/title'}">
-                  <input id="groupTitleInput" type="text" name="title" class="form-control" maxlength="80" th:value="${ladder.title}" />
-                  <button type="submit" class="btn btn-action-primary">Save</button>
-                </form>
-                <div class="form-text">Updates the name shown on Home -> Manage Groups.</div>
-              </div>
-
-              
-              <div class="mb-3 text-center">
-                <span th:if="${season != null}" class="badge bg-light text-dark border"
-                  th:with="placeholder=${season.endDate != null ? season.endDate.isAfter(season.startDate.plusYears(80)) : false}">
-                  <i class="bi bi-calendar3"></i>
-                  <span th:text="${season.startDate}">2025-09-01</span>
-                  <span th:if="${placeholder}">&nbsp;-&nbsp;Present</span>
-                  <span th:unless="${placeholder}">
-                    &nbsp;-&nbsp;<span th:text="${season.endDate}">2025-10-15</span>
-                  </span>
-                </span>
-                <span th:if="${season == null}" class="badge bg-light text-dark border">
-                  <i class="bi bi-calendar3"></i> No active season
-                </span>
-              </div>
-
-              <form method="post" th:action="@{'/groups/' + ${ladder.id} + '/config/all'}"
-                    onsubmit="return confirmSettingsChanges(this);">
-
-                <div class="alert alert-warning text-start"
-                     th:if="${ladder.tournamentMode}">
-                  Tournament mode is enabled. This group stays on manual seasons with standard confirmation, and each logged season match must match an active round-robin pairing. Only group admins can start or manage round-robins.
-                </div>
-
-                
-                <input type="hidden" name="originalMode" th:value="${ladder.mode.name()}">
-                <input type="hidden" name="originalCount" th:value="${ladder.rollingEveryCount}">
-                <input type="hidden" name="originalUnit" th:value="${ladder.rollingEveryUnit.name()}">
-                <input type="hidden" name="hasActiveSeason" th:value="${season != null}">
-
-                <div class="stack-center mb-3">
-                  
-                  <label class="form-label text-muted mb-0"
-                         th:attr="for=${ladder.tournamentMode} ? 'modeSelectLocked' : 'modeSelect'">Mode</label>
-                  <th:block th:if="${ladder.tournamentMode}">
-                    <input type="hidden" name="mode" value="MANUAL">
-                    <select id="modeSelectLocked" class="form-select" disabled>
-                      <option selected>Manual</option>
-                    </select>
-                    <div class="form-text text-center mt-1">
-                      Tournament mode keeps season start and stop under admin control.
-                    </div>
-                  </th:block>
-                  <select id="modeSelect" name="mode" class="form-select" th:unless="${ladder.tournamentMode}">
-                    <option value="ROLLING" th:selected="${ladder.mode.name()=='ROLLING'}">Rolling</option>
-                    <option value="MANUAL" th:selected="${ladder.mode.name()=='MANUAL'}">Manual</option>
-                  </select>
-
-                  
-                  <label class="form-label text-muted mb-0" for="invitesEnabledSelect">Invites</label>
-                  <select id="invitesEnabledSelect" name="invitesEnabled" class="form-select">
-                    <option th:value="true" th:selected="${ladder.inviteCode != null and !ladder.inviteCode.isEmpty()}">
-                      Enabled</option>
-                    <option th:value="false" th:selected="${ladder.inviteCode == null or ladder.inviteCode.isEmpty()}">
-                      Disabled</option>
-                  </select>
-
-                  
-                  <div id="rollingBlock" class="stack-center"
-                    th:classappend="${ladder.mode.name()=='ROLLING'} ? '' : 'd-none'">
-                    <label class="form-label text-muted mb-0">New Season Every</label>
-                    <div class="d-flex gap-2">
-                      <div class="flex-fill">
-                        <label class="visually-hidden" for="rollingCountInput">Season length count</label>
-                        <input id="rollingCountInput" type="number" name="count" class="form-control" min="1"
-                          th:attr="max=${maxRollingEveryCount}"
-                          th:value="${ladder.rollingEveryCount}">
-                      </div>
-                      <div class="flex-fill">
-                        <label class="visually-hidden" for="rollingUnitSelect">Season length unit</label>
-                        <select id="rollingUnitSelect" name="unit" class="form-select">
-                          <option th:value="WEEKS" th:selected="${ladder.rollingEveryUnit.name()=='WEEKS'}">Weeks</option>
-                          <option th:value="MONTHS" th:selected="${ladder.rollingEveryUnit.name()=='MONTHS'}">Months
-                          </option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                  <div id="rollingHint" class="form-text text-center mt-1"
-                    th:classappend="${ladder.mode.name()=='ROLLING'} ? '' : 'd-none'">
-                    A new season will start using the following settings. Note: you can not start/end more than one season per day.
-                  </div>
-                  <div id="manualHint" class="form-text text-center mt-1"
-                    th:classappend="${ladder.mode.name()=='MANUAL'} ? '' : 'd-none'">
-                    Manual mode uses the Start Season and End Season controls below.
-                  </div>
-                </div>
-
-                
-                <label class="form-label text-muted mb-0"
-                       th:attr="for=${ladder.tournamentMode} ? 'securityLevelLocked' : 'securityLevelSelect'">Match Confirmation</label>
-                <th:block th:if="${ladder.tournamentMode}">
-                  <input type="hidden" name="securityLevel" value="STANDARD" />
-                  <input type="hidden" name="allowGuestOnlyPersonalMatches" value="false" />
-                  <select id="securityLevelLocked" class="form-select" disabled>
-                    <option selected>Standard (opponent confirms)</option>
-                  </select>
-                  <div class="form-text text-center mt-1 mb-1">
-                    Tournament matches stay provisional until standard confirmation finishes, but they are reserved against an active round-robin matchup when logged.
-                  </div>
-                </th:block>
-                <select name="securityLevel" id="securityLevelSelect" class="form-select" th:unless="${ladder.tournamentMode}">
-                  <option value="STANDARD"
-                    th:selected="${ladder.securityLevel.name() == 'STANDARD' or ladder.securityLevel.name() == 'NONE' or ladder.securityLevel.name() == 'HIGH'}">
-                    Standard (opponent confirms)
-                  </option>
-                  <option value="SELF_CONFIRM" th:selected="${ladder.securityLevel.name() == 'SELF_CONFIRM'}">Casual (self-confirm)</option>
-                </select>
-                <div class="form-text text-center mt-1 mb-1" th:unless="${ladder.tournamentMode}">
-                  Casual mode lets match loggers immediately confirm their own entries, ideal for trusted groups.
-                </div>
-                <div id="guestOnlyPersonalMatchBlock"
-                  th:if="${!ladder.tournamentMode}"
-                  th:class="${ladder.securityLevel != null and ladder.securityLevel.name() == 'SELF_CONFIRM'} ? 'form-check mt-2' : 'form-check mt-2 d-none'">
-                  <input class="form-check-input"
-                         type="checkbox"
-                         id="allowGuestOnlyPersonalMatches"
-                         name="allowGuestOnlyPersonalMatches"
-                         th:disabled="${ladder.securityLevel == null or ladder.securityLevel.name() != 'SELF_CONFIRM'}"
-                         th:checked="${ladder.allowGuestOnlyPersonalMatches}" />
-                  <label class="form-check-label" for="allowGuestOnlyPersonalMatches">
-                    Allow personal record matches when all opponents are guests
-                  </label>
-                  <div class="form-text text-start">
-                    Only applies in Casual mode. These matches can be confirmed and count for trophies, but never affect standings. Ideal if you want to track your personal activity.
-                  </div>
-                </div>
-                <div class="form-check mt-3">
-                  <input class="form-check-input"
-                         type="checkbox"
-                         id="carryOverPreviousRating"
-                         name="carryOverPreviousRating"
-                         th:checked="${ladder.carryOverPreviousRating}" />
-                  <label class="form-check-label" for="carryOverPreviousRating">
-                    Carry over previous rating
-                  </label>
-                  <div class="form-text text-start">
-                    When enabled, each active member starts a new season with their ending rating from the previous season.
-                    When off, new seasons start from the default baseline rating.
-                  </div>
-                </div>
-                <div class="form-check mt-3" th:if="${storyModeFeatureEnabled and !ladder.tournamentMode}">
-                  <input class="form-check-input"
-                         type="checkbox"
-                         id="storyModeDefaultEnabled"
-                         name="storyModeDefaultEnabled"
-                         th:checked="${ladder.storyModeDefaultEnabled}" />
-                  <label class="form-check-label" for="storyModeDefaultEnabled">
-                    Enable Story Mode
-                  </label>
-                  <div class="form-text text-start">
-                    Turns the standings page into a Pat-the-Pickler story board for the current and upcoming seasons.
-                    Match logging and season history stay normal underneath the playful presentation.
-                  </div>
-                </div>
-                <div class="d-grid gap-2">
-                  <button class="btn btn-action-primary btn-card-width" type="submit">Save Changes</button>
-                </div>
-              </form>
-
-              
-              <div id="manualBlock" class="stack-center stack-full mt-3"
-                th:classappend="${ladder.mode.name()=='MANUAL'} ? '' : 'd-none'">
-
-                <div class="d-grid gap-2">
-                  
-                  <form method="post" class="d-grid" th:action="@{'/groups/' + ${ladder.id} + '/season/start'}">
-                    <button class="btn btn-action-success btn-card-width"
-                      th:disabled="${!transitionAllowed or hasActiveSeason}">
-                      Start Season
-                    </button>
-                  </form>
-
-                  
-                  <form method="post" class="d-grid" th:if="${hasActiveSeason}"
-                    th:action="@{'/groups/' + ${ladder.id} + '/season/end'}"
-                    onsubmit="return handleConfirmForm(this, 'End current season now? Note: you can only create one season per day.');">
-                    <button class="btn btn-action-danger btn-workflow-destructive btn-card-width">End Season</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <script>
-              function syncModeUi(form) {
-                if (!form || !form.mode) {
-                  return;
-                }
-                const isRolling = form.mode.value === 'ROLLING';
-                const isSelfConfirm = form.securityLevel && form.securityLevel.value === 'SELF_CONFIRM';
-                const rollingBlock = document.getElementById('rollingBlock');
-                const manualBlock = document.getElementById('manualBlock');
-                const rollingHint = document.getElementById('rollingHint');
-                const manualHint = document.getElementById('manualHint');
-                const guestOnlyBlock = document.getElementById('guestOnlyPersonalMatchBlock');
-                const guestOnlyInput = document.getElementById('allowGuestOnlyPersonalMatches');
-                const countInput = form.count;
-                const unitInput = form.unit;
-
-                if (rollingBlock) rollingBlock.classList.toggle('d-none', !isRolling);
-                if (manualBlock) manualBlock.classList.toggle('d-none', isRolling);
-                if (rollingHint) rollingHint.classList.toggle('d-none', !isRolling);
-                if (manualHint) manualHint.classList.toggle('d-none', isRolling);
-
-                if (guestOnlyBlock) guestOnlyBlock.classList.toggle('d-none', !isSelfConfirm);
-                if (guestOnlyInput) {
-                  guestOnlyInput.disabled = !isSelfConfirm;
-                  if (!isSelfConfirm) {
-                    guestOnlyInput.checked = false;
-                  }
-                }
-
-                if (countInput) {
-                  countInput.disabled = !isRolling;
-                  countInput.required = isRolling;
-                }
-                if (unitInput) {
-                  unitInput.disabled = !isRolling;
-                }
-              }
-
-              function confirmSettingsChanges(form) {
-                const originalMode = form.originalMode.value;
-                const newMode = form.mode.value;
-                const originalCount = form.originalCount.value;
-                const newCount = form.count.value;
-                const originalUnit = form.originalUnit.value;
-                const newUnit = form.unit.value;
-                const hasActiveSeason = form.hasActiveSeason.value === 'true';
-
-                if (hasActiveSeason) {
-                  if (originalMode === 'ROLLING' && newMode === 'MANUAL') {
-                    return handleConfirmForm(form, 'Switching to manual mode will end the current rolling season. You can only create one season per day. Continue?');
-                  } else if (originalMode === 'MANUAL' && newMode === 'ROLLING') {
-                    return handleConfirmForm(form, 'Switching to rolling mode will end the current season and start a new rolling season. You can only create one season per day. Continue?');
-                  }
-                }
-
-                if (newMode === 'ROLLING' && originalMode === 'ROLLING' && hasActiveSeason &&
-                    (newCount !== originalCount || newUnit !== originalUnit)) {
-                  return handleConfirmForm(form, 'Changing the rolling cadence may end the current season early or update its end date. Continue?');
-                }
-
-                return true;
-              }
-
-              (function initModeUi() {
-                const form = document.querySelector('form[onsubmit*="confirmSettingsChanges"]');
-                if (!form || !form.mode) {
-                  return;
-                }
-                syncModeUi(form);
-                form.mode.addEventListener('change', function () {
-                  syncModeUi(form);
-                });
-                if (form.securityLevel) {
-                  form.securityLevel.addEventListener('change', function () {
-                    syncModeUi(form);
-                  });
-                }
-              })();
-            </script>
-          </div>
-
-          <div class="card mb-3" id="members">
-            <div class="card-header card-header-title" th:text="${memberSectionTitle}">Members</div>
-
-            <div class="card-body">
-              <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mb-3">
-                <span class="small text-muted fw-semibold text-uppercase">Sort</span>
-                <div class="btn-group btn-group-sm" role="group" aria-label="Sort members">
-                  <a class="btn btn-outline-contrast" th:classappend="${sort} == 'joined' ? ' active'"
-                    th:href="@{|/groups/${ladder.id}?sort=joined#members|}">Join Date (Oldest)</a>
-                  <a class="btn btn-outline-contrast" th:classappend="${sort} == 'joined_desc' ? ' active'"
-                    th:href="@{|/groups/${ladder.id}?sort=joined_desc#members|}">Join Date (Newest)</a>
-                  <a class="btn btn-outline-contrast" th:classappend="${sort} == 'alpha' ? ' active'"
-                    th:href="@{|/groups/${ladder.id}?sort=alpha#members|}">A-Z</a>
-                </div>
-              </div>
-
-              <div th:if="${#lists.isEmpty(members)}" class="text-muted">
-                <span th:text="${isSessionLadder} ? 'No players have joined this session yet. Share the invite to build the roster.' : 'No members yet. Share the invite to grow the group.'">
-                  No members yet. Share the invite to grow the group.
-                </span>
-              </div>
-
-              <ul class="list-group" th:if="${!#lists.isEmpty(members)}">
-                <li class="list-group-item" th:each="m : ${members}">
-                  <div class="d-flex flex-wrap align-items-start justify-content-between w-100 gap-2">
-
-                    
-                    <div class="d-flex flex-column align-items-start gap-1 flex-grow-1 min-w-0">
-                      <div class="d-flex flex-wrap align-items-center gap-2">
-                        <strong th:text="${
-            (userById[m.userId] != null && userById[m.userId].nickName != null && !#strings.isEmpty(userById[m.userId].nickName))
-              ? userById[m.userId].nickName
-              : 'missing name'
-          }">Member Name</strong>
-
-                        <span class="badge bg-dark" th:if="${m.userId == ownerUserId}">Owner</span>
-                        <span class="badge badge-role-admin"
-                          th:if="${m.userId != ownerUserId and m.role.name() == 'ADMIN'}">Admin</span>
-                        <span class="badge bg-light text-dark border" th:if="${m.role.name() == 'MEMBER'}">Member</span>
-                      </div>
-
-                      <div th:if="${currentUserIsAdmin}"
-                        th:replace="~{fragments/memberIdentity :: memberIdentity(${userById[m.userId] != null ? userById[m.userId].publicCode : null})}">
-                      </div>
-
-                      <span class="text-muted small"
-                        th:text="'Joined on ' + ${@fhpbTime.displayIsoDate(m.joinedAt, (#authentication != null ? #authentication.principal : null))}">
-                        Joined on 2025-09-01
-                      </span>
-                    </div>
-
-                    
-                    <div class="d-flex flex-wrap gap-2 flex-shrink-0 justify-content-end align-self-center">
-                      <div class="d-flex flex-wrap gap-2" th:if="${currentUserIsAdmin}">
-                        <form method="post" class="m-0" th:if="${m.role.name() != 'ADMIN' and m.userId != ownerUserId}"
-                          th:action="@{'/groups/' + ${ladder.id} + '/promote/' + ${m.id}}"
-                          onsubmit="return handleConfirmForm(this, 'Promote this member to admin?');">
-                          <button type="submit" class="btn btn-action-success btn-inline">Promote</button>
-                        </form>
-
-                        <form method="post" class="m-0" th:if="${m.role.name() == 'ADMIN' and m.userId != ownerUserId}"
-                          th:action="@{'/groups/' + ${ladder.id} + '/demote/' + ${m.id}}"
-                          onsubmit="return handleConfirmForm(this, 'Demote this admin to member?');">
-                          <button type="submit" class="btn btn-nav-secondary btn-inline">Demote</button>
-                        </form>
-
-                        <form method="post" class="m-0"
-                          th:if="${isSessionLadder and m.userId != currentUserId and m.userId != ownerUserId}"
-                          th:action="@{'/groups/' + ${ladder.id} + '/remove/' + ${m.id}}"
-                          onsubmit="return handleConfirmForm(this, 'Remove this player from the session? They can rejoin later with the invite if there is space.');">
-                          <button type="submit" class="btn btn-action-danger btn-inline">Remove</button>
-                        </form>
-
-                        <form method="post" class="m-0"
-                          th:if="${!isSessionLadder and m.userId != currentUserId and m.role.name() != 'ADMIN' and m.userId != ownerUserId}"
-                          th:action="@{'/groups/' + ${ladder.id} + '/ban/' + ${m.id}}"
-                          onsubmit="return handleConfirmForm(this, 'Ban this member? They will be permanently banned from this group.');">
-                          <button type="submit" class="btn btn-action-danger btn-inline btn-workflow-critical">Ban</button>
-                        </form>
-                      </div>
-                      <form method="post" class="m-0" th:if="${m.userId == currentUserId}"
-                        th:action="@{'/groups/' + ${ladder.id} + '/leave/' + ${m.id}}"
-                        th:attr="onsubmit=|return handleConfirmForm(this, '${leaveConfirmMessage}')|">
-                        <button type="submit" class="btn btn-action-danger btn-inline"
-                                th:text="${isSessionLadder} ? 'Leave Session' : 'Leave Group'">Leave Group</button>
-                      </form>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="card mb-3" th:if="${currentUserIsAdmin and !isSessionLadder}">
-            <div class="card-header card-header-title">Recent Display Name Changes</div>
-            <div class="card-body">
-              <p class="identity-note text-muted mb-3">
-                Shows name changes recorded while a player was active in this group.
-              </p>
-
-              <div th:if="${#lists.isEmpty(recentDisplayNameChanges)}" class="text-muted">
-                No display name changes recorded for this group yet.
-              </div>
-
-              <ul class="list-group" th:if="${!#lists.isEmpty(recentDisplayNameChanges)}">
-                <li class="list-group-item" th:each="change : ${recentDisplayNameChanges}">
-                  <div class="d-flex flex-column gap-1">
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                      <strong th:text="${change.newDisplayName}">New Name</strong>
-                      <span class="text-muted small">from</span>
-                      <span th:text="${change.oldDisplayName}">Old Name</span>
-                    </div>
-
-                    <div class="d-flex flex-wrap align-items-center gap-2 text-muted small">
-                      <span
-                        th:text="'Changed ' + ${@fhpbTime.displayDateTime24(change.changedAt, (#authentication != null ? #authentication.principal : null))}">
-                        Changed 2026-03-13 10:00
-                      </span>
-                      <div th:replace="~{fragments/memberIdentity :: memberIdentity(${userById[change.userId] != null ? userById[change.userId].publicCode : null})}">
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          
-          <div class="card mb-3" th:if="${currentUserIsAdmin and !isSessionLadder}">
-            <div class="card-header card-header-title">Banned Members</div>
-            <div class="card-body">
-              <div th:if="${#lists.isEmpty(bannedMembers)}" class="text-muted">
-                No banned members.
-              </div>
-
-              <ul class="list-group" th:if="${!#lists.isEmpty(bannedMembers)}">
-                <li class="list-group-item" th:each="m : ${bannedMembers}">
-                  <div class="d-flex flex-wrap align-items-start justify-content-between w-100 gap-2">
-                    <div class="d-flex flex-column align-items-start gap-1 flex-grow-1 min-w-0">
-                      <div class="d-flex flex-wrap align-items-center gap-2">
-                        <strong th:text="${
-            (userById[m.userId] != null && userById[m.userId].nickName != null && !#strings.isEmpty(userById[m.userId].nickName))
-              ? userById[m.userId].nickName
-              : 'missing name'
-          }">Member Name</strong>
-                        <span class="badge bg-warning text-dark">Banned</span>
-                      </div>
-
-                      <div th:replace="~{fragments/memberIdentity :: memberIdentity(${userById[m.userId] != null ? userById[m.userId].publicCode : null})}">
-                      </div>
-
-                      <span class="text-muted small" th:if="${m.leftAt != null}"
-                        th:text="'Banned on ' + ${@fhpbTime.displayIsoDate(m.leftAt, (#authentication != null ? #authentication.principal : null))}">
-                        Banned on 2025-09-01
-                      </span>
-                    </div>
-
-                    <div class="d-flex flex-wrap gap-2 flex-shrink-0 justify-content-end align-self-center">
-                      <form method="post" class="m-0" th:action="@{'/groups/' + ${ladder.id} + '/unban/' + ${m.id}}"
-                        onsubmit="return handleConfirmForm(this, 'Unban this member? They will be able to rejoin via invite.');">
-                        <button type="submit" class="btn btn-action-success btn-inline btn-workflow-confirm">Unban</button>
-                      </form>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
+      <div th:if="${isSessionLadder}"
+           th:replace="~{fragments/show/sessionBody :: sessionBody}"></div>
+      <div th:unless="${isSessionLadder}"
+           th:replace="~{fragments/show/groupBody :: groupBody}"></div>
     </div>
     </th:block>
   </main>
 
-  <script layout:fragment="scripts">
+  <th:block layout:fragment="scripts">
+    <script th:src="@{/js/session-nearby-share.js(v=${assetVersion})}" src="/js/session-nearby-share.js"></script>
+    <script>
     (function () {
       ['banToast', 'unbanToast', 'inviteDisabledToast', 'joinedToast', 'leftToast', 'passwordChangedToast', 'matchLoggedToast'].forEach(function (id) {
         const el = document.getElementById(id);
@@ -978,6 +320,51 @@
           new bootstrap.Toast(el, { delay: 2000 }).show();
         }
       });
+
+      function csrfHeaders(baseHeaders) {
+        if (window.FHPB && window.FHPB.Csrf && typeof window.FHPB.Csrf.headers === 'function') {
+          return window.FHPB.Csrf.headers(baseHeaders || {});
+        }
+        return baseHeaders || {};
+      }
+
+      (function () {
+        const shareRoot = document.querySelector('[data-session-share-root]');
+        if (!shareRoot) return;
+
+        const buttons = Array.from(shareRoot.querySelectorAll('[data-session-share-tab]'));
+        const panels = Array.from(document.querySelectorAll('[data-session-share-panel]'));
+        if (!buttons.length || !panels.length) return;
+
+        const activate = function (target) {
+          if (!target) return;
+          buttons.forEach(function (button) {
+            const active = button.getAttribute('data-session-share-tab') === target;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+          });
+          panels.forEach(function (panel) {
+            const active = panel.getAttribute('data-session-share-panel') === target;
+            if (active) {
+              panel.removeAttribute('hidden');
+            } else {
+              panel.setAttribute('hidden', 'hidden');
+            }
+          });
+        };
+
+        buttons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            activate(button.getAttribute('data-session-share-tab'));
+          });
+        });
+
+        const initialButton =
+            buttons.find(function (button) {
+              return button.getAttribute('aria-pressed') === 'true';
+            }) || buttons[0];
+        activate(initialButton ? initialButton.getAttribute('data-session-share-tab') : null);
+      })();
 
       const copyButtons = document.querySelectorAll('[data-copy-target]');
       copyButtons.forEach(function (btn) {
@@ -1022,45 +409,156 @@
             handleFailure();
           }
         });
-
-          (function () {
-                function setupToggle(btn) {
-                  if (!btn) return;
-                  function csrfHeaders(baseHeaders) {
-                    return window.FHPB.Csrf.headers(baseHeaders);
-                  }
-                  btn.addEventListener('click', function (ev) {
-                    var hasInvite = btn.getAttribute('data-has-invite') === 'true';
-                    var cfg = btn.getAttribute('data-config-id');
-                    if (hasInvite) {
-                      var msg = 'Disable this invite? New players will be unable to join until you enable a new invite.';
-                      window.fhpbConfirm(msg, function () {
-                        fetch('/groups/' + cfg + '/disable-invite', {
-                          method: 'POST',
-                          headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
-                          body: ''
-                        }).then(function () {
-                          window.location = '/groups/' + cfg + '?inviteDisabled=1';
-                        }).catch(function () { window.location.reload(); });
-                      });
-                    } else {
-                      fetch('/groups/' + cfg + '/regen-invite', {
-                        method: 'POST',
-                        headers: csrfHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' }),
-                        body: ''
-                      }).then(function () {
-                        window.location = '/groups/' + cfg + '?inviteRegenerated=1';
-                      }).catch(function () { window.location.reload(); });
-                    }
-                  });
-                }
-
-            var b = document.getElementById('inviteToggleBtn');
-            var b2 = document.getElementById('inviteToggleBtnNull');
-            setupToggle(b);
-            setupToggle(b2);
-          })();
       });
+
+      (function () {
+        const panel = document.getElementById('sessionJoinRequestsPanel');
+        if (!panel) return;
+
+        const sessionId = panel.getAttribute('data-session-id');
+        const list = panel.querySelector('[data-request-list]');
+        const emptyState = panel.querySelector('[data-empty-state]');
+        if (!sessionId || !list || !emptyState) return;
+
+        const formatRequestedAt = function (value) {
+          if (!value) return '';
+          try {
+            return new Date(value).toLocaleString([], {
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit'
+            });
+          } catch (e) {
+            return value;
+          }
+        };
+
+        const updateEmptyState = function () {
+          const hasItems = list.children.length > 0;
+          list.classList.toggle('d-none', !hasItems);
+          emptyState.classList.toggle('d-none', hasItems);
+        };
+
+        const fetchJson = function (url, options) {
+          return fetch(url, options).then(function (response) {
+            return response.json().catch(function () { return {}; }).then(function (payload) {
+              return { ok: response.ok, payload: payload };
+            });
+          });
+        };
+
+        const buildItem = function (request) {
+          const item = document.createElement('li');
+          item.className = 'list-group-item';
+          item.setAttribute('data-request-id', request.id);
+
+          const row = document.createElement('div');
+          row.className = 'd-flex flex-wrap align-items-start justify-content-between gap-2';
+
+          const info = document.createElement('div');
+          info.className = 'flex-grow-1 min-w-0';
+
+          const title = document.createElement('div');
+          title.className = 'd-flex flex-wrap align-items-center gap-2';
+
+          const name = document.createElement('strong');
+          name.textContent = request.requesterDisplayName || 'Player';
+          title.appendChild(name);
+
+          if (request.requesterPublicCode) {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-light text-dark border';
+            badge.textContent = request.requesterPublicCode;
+            title.appendChild(badge);
+          }
+
+          const requested = document.createElement('div');
+          requested.className = 'small text-muted';
+          requested.textContent = 'Requested ' + formatRequestedAt(request.requestedAt);
+
+          const status = document.createElement('div');
+          status.className = 'small text-muted join-request-status';
+          status.setAttribute('data-request-status', '');
+
+          info.appendChild(title);
+          info.appendChild(requested);
+          info.appendChild(status);
+
+          const actions = document.createElement('div');
+          actions.className = 'd-flex flex-wrap gap-2';
+
+          const allowBtn = document.createElement('button');
+          allowBtn.type = 'button';
+          allowBtn.className = 'btn btn-action-success btn-inline';
+          allowBtn.setAttribute('data-request-action', 'approve');
+          allowBtn.textContent = 'Allow';
+
+          const denyBtn = document.createElement('button');
+          denyBtn.type = 'button';
+          denyBtn.className = 'btn btn-nav-secondary btn-inline';
+          denyBtn.setAttribute('data-request-action', 'deny');
+          denyBtn.textContent = 'Deny';
+
+          actions.appendChild(allowBtn);
+          actions.appendChild(denyBtn);
+          row.appendChild(info);
+          row.appendChild(actions);
+          item.appendChild(row);
+
+          [allowBtn, denyBtn].forEach(function (button) {
+            button.addEventListener('click', function () {
+              const action = button.getAttribute('data-request-action');
+              const statusEl = item.querySelector('[data-request-status]');
+              if (!action || !statusEl) return;
+              statusEl.textContent = action === 'approve' ? 'Processing approval...' : 'Declining request...';
+              fetchJson('/api/sessions/' + sessionId + '/join-requests/' + request.id + '/' + action, {
+                method: 'POST',
+                headers: csrfHeaders({ 'Accept': 'application/json' }),
+                body: ''
+              }).then(function (result) {
+                if (!result.ok) {
+                  statusEl.textContent =
+                      result.payload && result.payload.message ? result.payload.message : 'Unable to update request.';
+                  return;
+                }
+                if (result.payload && result.payload.status === 'PENDING') {
+                  statusEl.textContent = result.payload.message || 'Request is still pending.';
+                  return;
+                }
+                loadRequests();
+              }).catch(function () {
+                statusEl.textContent = 'Unable to update request right now.';
+              });
+            });
+          });
+
+          return item;
+        };
+
+        const renderRequests = function (requests) {
+          while (list.firstChild) {
+            list.removeChild(list.firstChild);
+          }
+          (requests || []).forEach(function (request) {
+            list.appendChild(buildItem(request));
+          });
+          updateEmptyState();
+        };
+
+        function loadRequests() {
+          fetchJson('/api/sessions/' + sessionId + '/join-requests', {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+          }).then(function (result) {
+            if (!result.ok) return;
+            renderRequests(result.payload);
+          }).catch(function () {});
+        }
+
+        loadRequests();
+        window.setInterval(loadRequests, 5000);
+      })();
 
       (function () {
         const inviteLinkInput = document.getElementById('inviteLinkInput');
@@ -1121,7 +619,9 @@
         }
       })();
     })();
-  </script>
+    </script>
+  </th:block>
 </body>
 
 </html>
+

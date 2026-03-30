@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{layouts/authenticated}">
+
+<head>
+  <title layout:fragment="title">Session Join Request</title>
+  <meta layout:fragment="meta-tags">
+</head>
+
+<body>
+  <main layout:fragment="content" class="container pt-4 pb-5 mt-4 text-center">
+    <h4 class="mb-3" th:text="${joinRequestStatus.pending} ? 'Waiting for Approval' : 'Session Join Request'">
+      Session Join Request
+    </h4>
+
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-6 mx-auto card-stack-col">
+        <div class="card mb-3 text-center"
+             id="sessionJoinRequestStatusCard"
+             th:attr="data-request-id=${joinRequestStatus.id}, data-pending=${joinRequestStatus.pending}, data-redirect-url=${joinRequestStatus.redirectUrl}">
+          <div class="card-header card-header-title">Session Join Request</div>
+          <div class="card-body">
+            <div class="mb-3">
+              <div class="fw-semibold"
+                   th:text="${joinRequestStatus.sessionTitle != null ? joinRequestStatus.sessionTitle : 'Session'}">
+                Session
+              </div>
+              <div class="text-muted small" th:if="${joinRequestStatus.requestedAt != null}">
+                Requested
+                <span th:text="${@fhpbTime.displayDateTime24(joinRequestStatus.requestedAt, (#authentication != null ? #authentication.principal : null))}">
+                  2026-03-29 10:00
+                </span>
+              </div>
+            </div>
+
+            <div id="sessionJoinRequestSpinner" class="mb-3" th:if="${joinRequestStatus.pending}">
+              <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+            </div>
+
+            <p id="sessionJoinRequestMessage"
+               class="mb-3"
+               th:text="${joinRequestStatus.message}">
+              Waiting for the session host to approve your request.
+            </p>
+
+            <div class="d-grid gap-2">
+              <a class="btn btn-action-primary"
+                 id="sessionJoinRequestOpenBtn"
+                 th:if="${joinRequestStatus.redirectUrl != null}"
+                 th:href="@{${joinRequestStatus.redirectUrl}}">
+                Open Session
+              </a>
+              <a class="btn btn-nav-secondary" th:href="@{/competition/sessions}">
+                Back to Start Playing
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script layout:fragment="scripts">
+    (function () {
+      const card = document.getElementById('sessionJoinRequestStatusCard');
+      const messageEl = document.getElementById('sessionJoinRequestMessage');
+      const spinnerEl = document.getElementById('sessionJoinRequestSpinner');
+      if (!card || card.getAttribute('data-pending') !== 'true') {
+        return;
+      }
+
+      const requestId = card.getAttribute('data-request-id');
+      if (!requestId) {
+        return;
+      }
+
+      let stopped = false;
+
+      const stopPolling = function () {
+        stopped = true;
+        if (spinnerEl) {
+          spinnerEl.remove();
+        }
+      };
+
+      const poll = function () {
+        if (stopped) {
+          return;
+        }
+        fetch('/api/session-join-requests/' + requestId, {
+          headers: { 'Accept': 'application/json' },
+          credentials: 'same-origin'
+        }).then(function (response) {
+          if (!response.ok) {
+            throw new Error('poll failed');
+          }
+          return response.json();
+        }).then(function (payload) {
+          if (!payload) {
+            return;
+          }
+          if (messageEl && payload.message) {
+            messageEl.textContent = payload.message;
+          }
+          if (payload.status === 'APPROVED' && payload.redirectUrl) {
+            stopPolling();
+            window.location = payload.redirectUrl;
+            return;
+          }
+          if (payload.status !== 'PENDING') {
+            stopPolling();
+          }
+        }).catch(function () {
+          stopPolling();
+          if (messageEl) {
+            messageEl.textContent = 'Unable to refresh request status right now. Reload to check again.';
+          }
+        });
+      };
+
+      poll();
+      window.setInterval(poll, 2500);
+    })();
+  </script>
+</body>
+
+</html>

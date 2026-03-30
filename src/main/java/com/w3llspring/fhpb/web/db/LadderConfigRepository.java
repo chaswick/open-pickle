@@ -46,5 +46,11 @@ public interface LadderConfigRepository extends JpaRepository<LadderConfig, Long
   List<LadderConfig> findByTypeAndStatusAndExpiresAtBefore(
       LadderConfig.Type type, LadderConfig.Status status, Instant cutoff);
 
+  List<LadderConfig> findByTypeAndStatusAndNearbyShareLocationIdAndInviteCodeIsNotNullAndExpiresAtAfterOrderByUpdatedAtDesc(
+      LadderConfig.Type type,
+      LadderConfig.Status status,
+      Long nearbyShareLocationId,
+      Instant cutoff);
+
   Optional<LadderConfig> findFirstByTypeOrderByIdAsc(LadderConfig.Type type);
 }
