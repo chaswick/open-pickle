@@ -14,11 +14,12 @@ class ReturnToSanitizerTest {
   }
 
   @Test
-  void rejectsBrowserAndStaticResourceTargets() {
+  void rejectsBrowserStaticAndInternalTargets() {
     assertThat(
             ReturnToSanitizer.sanitize(
                 "/.well-known/appspecific/com.chrome.devtools.json?continue"))
         .isNull();
+    assertThat(ReturnToSanitizer.sanitize("/error?continue")).isNull();
     assertThat(ReturnToSanitizer.sanitize("/css/site.css")).isNull();
     assertThat(ReturnToSanitizer.sanitize("/sw.js")).isNull();
   }

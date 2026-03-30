@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,13 +25,16 @@ class TermsAcknowledgementAuthenticationSuccessHandlerTest {
   private static final TermsAcceptancePolicy TERMS_POLICY =
       new TermsAcceptancePolicy("2026-03-19T00:00:00-04:00");
 
-  @Test
-  void onAuthenticationSuccess_discardsUnsafeSavedRequestBeforeRedirecting() throws Exception {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "http://localhost:8090/.well-known/appspecific/com.chrome.devtools.json?continue",
+        "http://localhost:8090/error?continue"
+      })
+  void onAuthenticationSuccess_discardsUnsafeSavedRequestBeforeRedirecting(String redirectUrl)
+      throws Exception {
     UserRepository userRepository = mock(UserRepository.class);
-    MutableRequestCache requestCache =
-        new MutableRequestCache(
-            savedRequest(
-                "http://localhost:8090/.well-known/appspecific/com.chrome.devtools.json?continue"));
+    MutableRequestCache requestCache = new MutableRequestCache(savedRequest(redirectUrl));
     TermsAcknowledgementAuthenticationSuccessHandler handler =
         new TermsAcknowledgementAuthenticationSuccessHandler(
             userRepository, TERMS_POLICY, requestCache);

@@ -39,7 +39,9 @@ public final class ReturnToSanitizer {
     }
 
     String pathLower = path.toLowerCase(Locale.ROOT);
-    if (pathLower.startsWith("/.well-known/")
+    if (pathLower.equals("/error")
+        || pathLower.startsWith("/error/")
+        || pathLower.startsWith("/.well-known/")
         || pathLower.startsWith("/css/")
         || pathLower.startsWith("/js/")
         || pathLower.startsWith("/images/")
