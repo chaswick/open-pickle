@@ -28,6 +28,7 @@ import com.w3llspring.fhpb.web.service.matchentry.MatchEntryContextService;
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import com.w3llspring.fhpb.web.service.standings.SeasonStandingsViewService;
 import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
+import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
@@ -51,6 +52,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,14 +63,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Controller
 @RequestMapping("/groups")
 public class LadderConfigController {
   private static final Pattern LEGACY_AUTO_SESSION_TITLE =
       Pattern.compile("^(.+ Session) - [A-Z][a-z]{2} \\d{1,2}, \\d{1,2}:\\d{2} [AP]M$");
+  private static final String SESSION_TOUR_OWNER = "owner";
+  private static final String SESSION_TOUR_JOINER = "joiner";
 
   private final GroupAdministrationOperations groupAdministration;
   private final GroupCreationService groupCreationService;
@@ -99,6 +105,7 @@ public class LadderConfigController {
   private SeasonStandingsViewService seasonStandingsViewService;
   private CompetitionDisplayNameModerationService competitionDisplayNameModerationService;
   private final SessionJoinRequestService sessionJoinRequestService;
+  @Autowired private UserOnboardingService userOnboardingService;
 
   @Autowired
   public LadderConfigController(
@@ -342,7 +349,8 @@ public class LadderConfigController {
       ra.addFlashAttribute("toastMessage", outcome.toastMessage());
       ra.addFlashAttribute("toastLevel", outcome.toastLevel());
     }
-    return "redirect:/groups/" + outcome.configId();
+    return redirectToSession(
+        outcome.configId(), false, outcome.reusedExistingSession() ? null : SESSION_TOUR_OWNER);
   }
 
   @PostMapping
@@ -402,7 +410,10 @@ public class LadderConfigController {
         ra.addFlashAttribute("toastMessage", sessionOutcome.toastMessage());
         ra.addFlashAttribute("toastLevel", sessionOutcome.toastLevel());
       }
-      return "redirect:/groups/" + sessionOutcome.configId();
+      return redirectToSession(
+          sessionOutcome.configId(),
+          false,
+          sessionOutcome.reusedExistingSession() ? null : SESSION_TOUR_OWNER);
     }
     GroupCreationService.GroupCreationOutcome outcome =
         groupCreationService.createGroup(
@@ -577,6 +588,11 @@ public class LadderConfigController {
         cfg.isSessionType() && currentUserIsAdmin && sessionJoinRequestService != null
             ? sessionJoinRequestService.listPendingForAdmin(configId, currentUser.getId())
             : List.of());
+    String sessionTourVariant =
+        resolveSessionTourVariant(cfg, currentUser, request.getParameter("tour"));
+    if (sessionTourVariant != null) {
+      model.addAttribute("sessionTourVariant", sessionTourVariant);
+    }
 
     List<UserDisplayNameAudit> recentDisplayNameChanges =
         currentUserIsAdmin && !cfg.isSessionType()
@@ -1195,12 +1211,80 @@ public class LadderConfigController {
 
   private String joinRedirectFor(LadderConfig cfg) {
     if (cfg != null && cfg.isSessionType()) {
-      return "redirect:/groups/" + cfg.getId() + "?joined=1";
+      return redirectToSession(cfg.getId(), true, SESSION_TOUR_JOINER);
     }
     if (cfg != null && cfg.getId() != null) {
       return "redirect:/private-groups/" + cfg.getId() + "?joined=1";
     }
     return "redirect:/private-groups";
+  }
+
+  @PostMapping("/session-tour-complete")
+  @ResponseBody
+  public ResponseEntity<Void> completeSessionTour(
+      @RequestParam("tour") String tour, Authentication auth) {
+    User currentUser = getCurrentUser(auth);
+    if (currentUser == null || currentUser.getId() == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+    String markerKey = markerKeyForSessionTour(tour);
+    if (markerKey == null || userOnboardingService == null) {
+      return ResponseEntity.badRequest().build();
+    }
+    userOnboardingService.markCompleted(currentUser.getId(), markerKey);
+    return ResponseEntity.noContent().build();
+  }
+
+  private String redirectToSession(Long configId, boolean joined, String tour) {
+    if (configId == null) {
+      return "redirect:/competition/sessions";
+    }
+    UriComponentsBuilder redirect = UriComponentsBuilder.fromPath("/groups/{configId}");
+    if (joined) {
+      redirect.queryParam("joined", 1);
+    }
+    if (StringUtils.hasText(tour)) {
+      redirect.queryParam("tour", tour);
+    }
+    return "redirect:" + redirect.buildAndExpand(configId).encode().toUriString();
+  }
+
+  private String resolveSessionTourVariant(
+      LadderConfig cfg, User currentUser, String requestedTour) {
+    if (cfg == null
+        || currentUser == null
+        || currentUser.getId() == null
+        || !cfg.isSessionType()
+        || !StringUtils.hasText(requestedTour)
+        || userOnboardingService == null) {
+      return null;
+    }
+
+    if (SESSION_TOUR_OWNER.equalsIgnoreCase(requestedTour)
+        && Objects.equals(cfg.getOwnerUserId(), currentUser.getId())
+        && userOnboardingService.shouldShow(
+            currentUser.getId(), UserOnboardingService.SESSION_OWNER_TOUR_V1)) {
+      return SESSION_TOUR_OWNER;
+    }
+
+    if (SESSION_TOUR_JOINER.equalsIgnoreCase(requestedTour)
+        && !Objects.equals(cfg.getOwnerUserId(), currentUser.getId())
+        && userOnboardingService.shouldShow(
+            currentUser.getId(), UserOnboardingService.SESSION_JOINER_TOUR_V1)) {
+      return SESSION_TOUR_JOINER;
+    }
+
+    return null;
+  }
+
+  private String markerKeyForSessionTour(String tour) {
+    if (SESSION_TOUR_OWNER.equalsIgnoreCase(tour)) {
+      return UserOnboardingService.SESSION_OWNER_TOUR_V1;
+    }
+    if (SESSION_TOUR_JOINER.equalsIgnoreCase(tour)) {
+      return UserOnboardingService.SESSION_JOINER_TOUR_V1;
+    }
+    return null;
   }
 
   private JoinFeedback invalidInviteFeedback() {

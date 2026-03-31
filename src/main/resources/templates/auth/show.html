@@ -283,6 +283,120 @@
 <body>
   <main layout:fragment="content" class="app-page">
     <th:block th:with="authPrincipal=${#authentication != null ? #authentication.principal : null}, sessionDateTimePattern='EEEE, MMM d, h:mm a'">
+    <div class="app-home-tour"
+         th:if="${isSessionLadder and sessionTourVariant != null}"
+         hidden
+         data-session-tour-root="true"
+         th:attr="data-session-tour-complete-url=@{/groups/session-tour-complete},
+                  data-session-tour-value=${sessionTourVariant}">
+      <div class="app-home-tour-backdrop"></div>
+      <div class="app-home-tour-dialog" role="dialog" aria-modal="true" aria-label="Session quick tour">
+        <div class="app-home-tour-card">
+          <div class="app-home-tour-progress">
+            <div class="app-home-tour-kicker">Session Tour</div>
+            <div class="app-home-tour-counter" data-session-tour-counter>1 of 4</div>
+          </div>
+
+          <th:block th:if="${sessionTourVariant == 'owner'}">
+            <section class="app-home-tour-step is-active" data-session-tour-step aria-hidden="false">
+              <h2 class="app-home-tour-title">Your Session Is Ready</h2>
+              <p class="app-home-tour-copy">
+                You started this session, so you are the one who shares it with everyone else.
+              </p>
+              <p class="app-home-tour-copy">
+                Use the Invite Buddies card for the shared code, QR, or nearby sharing when your group is at the courts.
+              </p>
+            </section>
+
+            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
+              <h2 class="app-home-tour-title">Watch Who Is Here</h2>
+              <p class="app-home-tour-copy">
+                The Who's Here section keeps the roster current and shows pending join requests when approval is on.
+              </p>
+              <p class="app-home-tour-copy">
+                Approve players, remove someone if needed, and make sure the right people are in before matches start getting logged.
+              </p>
+            </section>
+
+            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
+              <h2 class="app-home-tour-title">Run Matches Or Start A Round Robin</h2>
+              <p class="app-home-tour-copy">
+                The Actions card is where your group logs matches, confirms results, and starts a round robin if you want structured pairings.
+              </p>
+              <p class="app-home-tour-copy">
+                Once a round robin starts, this page becomes the hub for the active assignment.
+              </p>
+            </section>
+
+            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
+              <h2 class="app-home-tour-title">End The Session When Play Is Over</h2>
+              <p class="app-home-tour-copy">
+                When you are done, use the leave button to end the session. As the starter, that closes it out for everyone.
+              </p>
+              <p class="app-home-tour-copy">
+                Until then, keep the invite handy and use the dashboard here to stay on top of confirmations.
+              </p>
+            </section>
+          </th:block>
+
+          <th:block th:if="${sessionTourVariant == 'joiner'}">
+            <section class="app-home-tour-step is-active" data-session-tour-step aria-hidden="false">
+              <h2 class="app-home-tour-title">You Are In The Session</h2>
+              <p class="app-home-tour-copy">
+                The session starter already handled setup, so your job is to play and use this page for the match flow.
+              </p>
+              <p class="app-home-tour-copy">
+                You do not need to create another session for the same set of games.
+              </p>
+            </section>
+
+            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
+              <h2 class="app-home-tour-title">One Player Logs The Match</h2>
+              <p class="app-home-tour-copy">
+                After each game, one player from the match should use the Actions card to log the result.
+              </p>
+              <p class="app-home-tour-copy">
+                Voice log or classic log both work. Only one person needs to enter the score.
+              </p>
+            </section>
+
+            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
+              <h2 class="app-home-tour-title">The Other Team Confirms It</h2>
+              <p class="app-home-tour-copy">
+                Once the result is logged, one player from the other team confirms it from the dashboard here or later from Confirm Matches.
+              </p>
+              <p class="app-home-tour-copy">
+                You can confirm right away or wait until the end of the session if that is easier for your group.
+              </p>
+            </section>
+
+            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
+              <h2 class="app-home-tour-title">Check Your Standing And Leave When Done</h2>
+              <p class="app-home-tour-copy">
+                This page also shows your current standing and any round-robin assignment the session owner starts.
+              </p>
+              <p class="app-home-tour-copy">
+                When you are finished playing, leave the session here. Your confirmed results still count toward the competition season.
+              </p>
+            </section>
+          </th:block>
+
+          <div class="app-home-tour-footer">
+            <div class="app-home-tour-dots" aria-hidden="true">
+              <span class="app-home-tour-dot is-active" data-session-tour-dot></span>
+              <span class="app-home-tour-dot" data-session-tour-dot></span>
+              <span class="app-home-tour-dot" data-session-tour-dot></span>
+              <span class="app-home-tour-dot" data-session-tour-dot></span>
+            </div>
+            <div class="app-home-tour-actions">
+              <button type="button" class="btn btn-nav-secondary d-none" data-session-tour-back>Back</button>
+              <button type="button" class="btn btn-action-primary" data-session-tour-next>Next</button>
+              <button type="button" class="btn btn-action-primary d-none" data-session-tour-finish>Got it</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="app-page-header">
       <div>
         <h1 class="app-page-title"
@@ -322,6 +436,95 @@
     <script th:src="@{/js/session-nearby-share.js(v=${assetVersion})}" src="/js/session-nearby-share.js"></script>
     <script>
     (function () {
+      (function () {
+        const root = document.querySelector('[data-session-tour-root="true"]');
+        if (!root) return;
+
+        const completeUrl = root.getAttribute('data-session-tour-complete-url');
+        const tourValue = root.getAttribute('data-session-tour-value');
+        const steps = Array.from(root.querySelectorAll('[data-session-tour-step]'));
+        const dots = Array.from(root.querySelectorAll('[data-session-tour-dot]'));
+        const counter = root.querySelector('[data-session-tour-counter]');
+        const backButton = root.querySelector('[data-session-tour-back]');
+        const nextButton = root.querySelector('[data-session-tour-next]');
+        const finishButton = root.querySelector('[data-session-tour-finish]');
+        let activeIndex = 0;
+
+        if (!steps.length || !tourValue) return;
+
+        const hideTour = function () {
+          root.setAttribute('hidden', 'hidden');
+          document.body.classList.remove('app-home-tour-open');
+        };
+
+        const showTour = function () {
+          root.removeAttribute('hidden');
+          document.body.classList.add('app-home-tour-open');
+        };
+
+        const completeTour = function () {
+          if (!completeUrl || !window.fetch) {
+            hideTour();
+            return;
+          }
+
+          const headers =
+              window.FHPB && window.FHPB.Csrf && typeof window.FHPB.Csrf.headers === 'function'
+                  ? window.FHPB.Csrf.headers({
+                      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                    })
+                  : { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' };
+          window.fetch(completeUrl, {
+            method: 'POST',
+            headers: headers,
+            body: 'tour=' + encodeURIComponent(tourValue)
+          }).then(function () {
+            hideTour();
+          }).catch(function () {
+            hideTour();
+          });
+        };
+
+        const renderStep = function () {
+          const lastIndex = steps.length - 1;
+
+          steps.forEach(function (step, index) {
+            const isActive = index === activeIndex;
+            step.classList.toggle('is-active', isActive);
+            step.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+          });
+
+          dots.forEach(function (dot, index) {
+            dot.classList.toggle('is-active', index === activeIndex);
+          });
+
+          if (counter) {
+            counter.textContent = (activeIndex + 1) + ' of ' + steps.length;
+          }
+
+          backButton.classList.toggle('d-none', activeIndex === 0);
+          nextButton.classList.toggle('d-none', activeIndex === lastIndex);
+          finishButton.classList.toggle('d-none', activeIndex !== lastIndex);
+        };
+
+        showTour();
+        renderStep();
+
+        backButton.addEventListener('click', function () {
+          activeIndex = Math.max(0, activeIndex - 1);
+          renderStep();
+        });
+
+        nextButton.addEventListener('click', function () {
+          activeIndex = Math.min(steps.length - 1, activeIndex + 1);
+          renderStep();
+        });
+
+        finishButton.addEventListener('click', function () {
+          completeTour();
+        });
+      })();
+
       ['banToast', 'unbanToast', 'inviteDisabledToast', 'joinedToast', 'leftToast', 'passwordChangedToast', 'matchLoggedToast'].forEach(function (id) {
         const el = document.getElementById(id);
         if (el && typeof bootstrap !== 'undefined' && bootstrap.Toast) {

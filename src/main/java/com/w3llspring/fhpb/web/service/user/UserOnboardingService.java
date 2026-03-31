@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserOnboardingService {
 
   public static final String HOME_TOUR_V1 = "home_tour_v1";
+  public static final String SESSION_OWNER_TOUR_V1 = "session_owner_tour_v1";
+  public static final String SESSION_JOINER_TOUR_V1 = "session_joiner_tour_v1";
 
   private final UserOnboardingMarkerRepository userOnboardingMarkerRepository;
 

@@ -85,7 +85,7 @@ class LadderConfigControllerStartSessionTest {
 
     String view = controller.startSession(auth, "/home", redirectAttributes);
 
-    assertThat(view).isEqualTo("redirect:/groups/99");
+    assertThat(view).isEqualTo("redirect:/groups/99?tour=owner");
     assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
         .isEqualTo("Match session created.");
   }

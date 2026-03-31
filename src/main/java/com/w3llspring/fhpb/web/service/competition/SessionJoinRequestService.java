@@ -357,7 +357,7 @@ public class SessionJoinRequestService {
         request.getExpiresAt(),
         statusMessageFor(request.getStatus()),
         request.getStatus() == SessionJoinRequest.Status.APPROVED && sessionId != null
-            ? "/groups/" + sessionId + "?joined=1"
+            ? "/groups/" + sessionId + "?joined=1&tour=joiner"
             : null);
   }
 

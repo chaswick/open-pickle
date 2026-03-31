@@ -444,6 +444,14 @@ class ThymeleafTemplateTest {
         assertThat(shellTemplate).contains("fragments/show/groupBody :: groupBody");
         assertThat(shellTemplate).contains("/js/session-nearby-share.js");
         assertThat(shellTemplate).contains("Session expires at");
+        assertThat(shellTemplate).contains("data-session-tour-root=\"true\"");
+        assertThat(shellTemplate).contains("data-session-tour-complete-url");
+        assertThat(shellTemplate).contains("data-session-tour-value=${sessionTourVariant}");
+        assertThat(shellTemplate).contains("Your Session Is Ready");
+        assertThat(shellTemplate).contains("You Are In The Session");
+        assertThat(shellTemplate).contains("data-session-tour-next");
+        assertThat(shellTemplate).contains("data-session-tour-finish");
+        assertThat(shellTemplate).contains("body: 'tour=' + encodeURIComponent(tourValue)");
         assertThat(shellTemplate).contains("window.FHPB.SessionMembers = window.FHPB.SessionMembers || {}");
         assertThat(shellTemplate).contains("window.FHPB.SessionMembers.refresh = loadMembers;");
         assertThat(shellTemplate).contains("window.FHPB.SessionMembers.refresh();");

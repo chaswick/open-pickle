@@ -143,7 +143,7 @@ class LadderConfigControllerJoinTest {
 
     String view = controller.joinForm("dink-7", null, true, auth, model);
 
-    assertThat(view).isEqualTo("redirect:/groups/42?joined=1");
+    assertThat(view).isEqualTo("redirect:/groups/42?joined=1&tour=joiner");
     verify(groupAdministration).joinByInvite("DINK-7", 7L);
   }
 

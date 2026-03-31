@@ -249,6 +249,22 @@ class SessionJoinRequestServiceTest {
     verify(groupAdministration).requireActiveMember(42L, 7L);
   }
 
+  @Test
+  void getStatusForRequesterApprovedRedirectsBackToSessionWithJoinerTour() {
+    LadderConfig session = session(42L, "DINK-7");
+    SessionJoinRequest request = pendingRequest(100L, session, 8L, "DINK-7");
+    request.setStatus(SessionJoinRequest.Status.APPROVED);
+    request.setResolvedAt(Instant.now());
+    request.setResolvedByUserId(7L);
+
+    when(requests.findById(100L)).thenReturn(Optional.of(request));
+
+    SessionJoinRequestService.RequestStatusView status = service.getStatusForRequester(100L, 8L);
+
+    assertThat(status.status()).isEqualTo(SessionJoinRequest.Status.APPROVED);
+    assertThat(status.redirectUrl()).isEqualTo("/groups/42?joined=1&tour=joiner");
+  }
+
   private LadderConfig session(Long id, String inviteCode) {
     LadderConfig session = new LadderConfig();
     session.setId(id);
