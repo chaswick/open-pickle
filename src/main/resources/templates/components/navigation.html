@@ -36,6 +36,14 @@
                        th:href="@{/help}">Help</a>
                 </li>
             </ul>
+
+            <form method="post"
+                  th:action="@{/logout}"
+                  class="d-none"
+                  sec:authorize="isAuthenticated()"
+                  aria-hidden="true">
+                <button type="submit" tabindex="-1">Logout</button>
+            </form>
         </div>
     </div>
 </nav>
