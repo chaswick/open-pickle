@@ -475,7 +475,6 @@
         // If standings are already marked as recalculating on page load,
         // keep refreshing until server reports the recalculation is complete.
         FHPB.Confirmations.watchStandingsRecalcOnLoad();
-        FHPB.Confirmations.watchSessionInsightsRecalcOnLoad();
         FHPB.Confirmations.showPageLoadFloatingToast();
         FHPB.Confirmations.startMatchDashboardPolling();
       });
@@ -904,19 +903,6 @@
       });
     },
 
-    hasSessionInsights: function() {
-      return !!document.getElementById('sessionStandingContainer')
-        || !!document.getElementById('sessionReportCardContainer')
-        || !!document.getElementById('climbFasterCardContainer');
-    },
-
-    isSessionInsightsPendingInDoc: function(doc) {
-      var source = doc || document;
-      var container = source.getElementById && source.getElementById('sessionReportCardContainer');
-      if (!container) return false;
-      return container.getAttribute('data-session-standings-pending') === 'true';
-    },
-
     replaceContainerPreservingCollapse: function(containerId, doc, collapseId) {
       var currentContainer = document.getElementById(containerId);
       if (!currentContainer || !currentContainer.parentNode || !doc) return false;
@@ -938,99 +924,6 @@
       }
 
       return true;
-    },
-
-    refreshSessionInsightContainers: function(doc) {
-      if (!doc) return false;
-
-      var replaced = false;
-      replaced = FHPB.Confirmations.replaceContainerPreservingCollapse(
-        'climbFasterCardContainer',
-        doc,
-        'climbFasterCardCollapse'
-      ) || replaced;
-      replaced = FHPB.Confirmations.replaceContainerPreservingCollapse(
-        'sessionStandingContainer',
-        doc
-      ) || replaced;
-      replaced = FHPB.Confirmations.replaceContainerPreservingCollapse(
-        'sessionReportCardContainer',
-        doc,
-        'sessionReportCardCollapse'
-      ) || replaced;
-
-      if (replaced && window.FHPB && FHPB.DateTime && typeof FHPB.DateTime.initializeLocalTimes === 'function') {
-        FHPB.DateTime.initializeLocalTimes();
-      }
-
-      return replaced;
-    },
-
-    refreshSessionInsightsOnce: function(options) {
-      var settings = options || {};
-      if (!FHPB.Confirmations.hasSessionInsights()) {
-        if (settings.reloadOnFailure) {
-          window.location.reload();
-        }
-        return Promise.resolve(false);
-      }
-
-      return fetch(window.location.href, {
-        cache: 'no-store',
-        credentials: 'same-origin',
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-      })
-      .then(function(response) {
-        if (response.ok) return response.text();
-        throw new Error('Failed to refresh session insights');
-      })
-      .then(function(html) {
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(html, 'text/html');
-        var replaced = false;
-        var changed = false;
-
-        ['climbFasterCardContainer', 'sessionStandingContainer', 'sessionReportCardContainer'].forEach(function(containerId) {
-          var currentContainer = document.getElementById(containerId);
-          var freshContainer = doc.getElementById(containerId);
-          if (!currentContainer || !freshContainer) return;
-          if (currentContainer.innerHTML !== freshContainer.innerHTML) {
-            changed = true;
-          }
-        });
-
-        replaced = FHPB.Confirmations.refreshSessionInsightContainers(doc);
-        if (!replaced && settings.reloadOnFailure) {
-          window.location.reload();
-        }
-        return {
-          replaced: replaced,
-          changed: changed,
-          pending: FHPB.Confirmations.isSessionInsightsPendingInDoc(doc)
-        };
-      })
-      .catch(function(err) {
-        console.error('Failed to refresh session insights:', err);
-        if (settings.reloadOnFailure) {
-          window.location.reload();
-        }
-        return { replaced: false, changed: false, pending: false };
-      });
-    },
-
-    refreshSessionInsightsAfterConfirm: function() {
-      if (!FHPB.Confirmations.hasSessionInsights()) return;
-
-      FHPB.Confirmations.refreshSessionInsightsOnce({ reloadOnFailure: true })
-        .then(function(result) {
-          if (!result) return;
-        });
-    },
-
-    watchSessionInsightsRecalcOnLoad: function() {
-      if (!FHPB.Confirmations.hasSessionInsights()) return;
-      if (!FHPB.Confirmations.isSessionInsightsPendingInDoc(document)) return;
-      FHPB.Confirmations.refreshSessionInsightsOnce({ reloadOnFailure: false });
     },
 
     localRecalcIndicatorUntil: 0,
@@ -1106,9 +999,11 @@
       if (!matchRoot) return false;
       var removable = (matchRoot.closest && matchRoot.closest('.match-dashboard-card')) || matchRoot;
       if (!removable || !removable.parentNode) return false;
+      var parent = removable.parentNode;
 
-      removable.parentNode.removeChild(removable);
+      parent.removeChild(removable);
       FHPB.Confirmations.updateDashboardEmptyState();
+      FHPB.Confirmations.updateSessionConfirmationState(parent);
       return true;
     },
 
@@ -1119,6 +1014,61 @@
 
       if (dashboardList.querySelector('.match-dashboard-card')) return;
       emptyMessage.classList.remove('d-none');
+    },
+
+    updateSessionConfirmationState: function(contextRoot) {
+      if (!contextRoot || !contextRoot.closest) return;
+
+      var modal = contextRoot.closest('[data-session-confirmation-modal]');
+      if (!modal) return;
+
+      var modalType = modal.getAttribute('data-session-confirmation-modal');
+      if (!modalType) return;
+
+      var remainingCards = modal.querySelectorAll('.match-dashboard-card').length;
+      var actionRow = document.querySelector('.session-hero-confirmation-actions');
+      var button = document.querySelector('[data-session-confirmation-button="' + modalType + '"]');
+      var badge = button ? button.querySelector('[data-session-confirmation-count]') : null;
+      var label = button ? button.querySelector('[data-session-confirmation-label]') : null;
+
+      if (button) {
+        if (remainingCards > 0) {
+          button.classList.remove('d-none');
+          if (badge) {
+            badge.textContent = String(remainingCards);
+          }
+          if (label) {
+            var lowerLabel = (label.textContent || modalType).trim().toLowerCase();
+            if (lowerLabel === 'inbox') {
+              button.setAttribute(
+                'aria-label',
+                remainingCards === 1
+                  ? 'Inbox, 1 match needs your confirmation'
+                  : 'Inbox, ' + remainingCards + ' matches need your confirmation');
+            } else {
+              button.setAttribute(
+                'aria-label',
+                remainingCards === 1
+                  ? 'Outbox, 1 match is waiting on the other team'
+                  : 'Outbox, ' + remainingCards + ' matches are waiting on the other team');
+            }
+          }
+        } else {
+          button.classList.add('d-none');
+        }
+      }
+
+      if (actionRow) {
+        var visibleButtons = actionRow.querySelectorAll('[data-session-confirmation-button]:not(.d-none)');
+        actionRow.classList.toggle('d-none', visibleButtons.length === 0);
+      }
+
+      if (remainingCards > 0 || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+        return;
+      }
+
+      var modalInstance = bootstrap.Modal.getInstance(modal) || bootstrap.Modal.getOrCreateInstance(modal);
+      modalInstance.hide();
     },
 
     refreshMatchRowFragment: function(matchId, currentRoot) {
@@ -1223,8 +1173,6 @@
         FHPB.Confirmations.serverRecalcPendingSeen = false;
         FHPB.Confirmations.showLocalRecalcIndicator(2500);
         FHPB.Confirmations.refreshStandingsAfterConfirm(0);
-      } else if (FHPB.Confirmations.hasSessionInsights()) {
-        FHPB.Confirmations.refreshSessionInsightsAfterConfirm();
       }
 
       window.setTimeout(function() {
@@ -1301,8 +1249,6 @@
           FHPB.Confirmations.showLocalRecalcIndicator(4000);
           if (document.getElementById('ladderStandingsContainer')) {
             FHPB.Confirmations.refreshStandingsAfterConfirm(0);
-          } else if (FHPB.Confirmations.hasSessionInsights()) {
-            FHPB.Confirmations.refreshSessionInsightsAfterConfirm();
           }
           FHPB.Confirmations.syncAfterConfirmationStateChange(matchId, button, skipFragmentRefresh);
         } else {
@@ -1645,18 +1591,6 @@ window.refreshMatchDashboard = function() {
   return false;
 };
 
-window.refreshSessionReportCard = function() {
-  try {
-    if (window.FHPB && FHPB.Confirmations && typeof FHPB.Confirmations.refreshSessionInsightsOnce === 'function') {
-      FHPB.Confirmations.refreshSessionInsightsOnce({ reloadOnFailure: true });
-      return false;
-    }
-    window.location.reload();
-  } catch (e) {
-    console.error('refreshSessionReportCard failed', e);
-  }
-  return false;
-};
 
 // Small cross-page confirm helper that uses native confirm on larger screens
 // and a Bootstrap modal on small/mobile screens so text is reliably visible.

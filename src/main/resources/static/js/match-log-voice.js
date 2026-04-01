@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Default caption for the voice helper when server doesn't render one
   const DEFAULT_VOICE_CAPTION = 'Say something like, "Pam and I beat Ryan and Amy 11-8"';
+  const configuredCaption = caption.getAttribute('data-default-caption');
+  const helperCaption = configuredCaption !== null ? configuredCaption : DEFAULT_VOICE_CAPTION;
+  const helperCaptionEnabled = helperCaption.trim().length > 0;
 
   // Endpoint
   const INTERPRET_URL = '/voice-match-log/interpret';
@@ -75,8 +78,8 @@ document.addEventListener('DOMContentLoaded', function() {
   btn.setAttribute('aria-label', 'Log Match by Voice');
 
   // If server didn't render a helpful caption, populate a sensible default for users.
-  if (caption && (!caption.textContent || caption.textContent.trim() === '')) {
-    caption.textContent = DEFAULT_VOICE_CAPTION;
+  if (caption && helperCaptionEnabled && (!caption.textContent || caption.textContent.trim() === '')) {
+    caption.textContent = helperCaption;
   }
 
   // Observe mutations and attribute changes so we can restore the caption if
@@ -91,7 +94,8 @@ document.addEventListener('DOMContentLoaded', function() {
         recreated.id = 'logMatchVoiceCaption';
         recreated.className = 'text-center mt-2 mb-2 text-muted d-none';
         recreated.setAttribute('aria-live', 'polite');
-        recreated.textContent = DEFAULT_VOICE_CAPTION;
+        recreated.setAttribute('data-default-caption', helperCaption);
+        recreated.textContent = helperCaptionEnabled ? helperCaption : '';
         if (buttonWrapper && buttonWrapper.parentElement) {
           buttonWrapper.insertAdjacentElement('afterend', recreated);
         } else {
@@ -102,8 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
       // Don't interfere with intentional hiding via d-none class
       // Only restore text content when visible and empty
       const txt = c.textContent ? c.textContent.trim() : '';
-      if (!recognizing && !c.classList.contains('d-none') && (!txt || txt === '')) {
-        c.textContent = DEFAULT_VOICE_CAPTION;
+      if (helperCaptionEnabled && !recognizing && !c.classList.contains('d-none') && (!txt || txt === '')) {
+        c.textContent = helperCaption;
       }
     } catch (e) { /* ignore */ }
   });
@@ -121,8 +125,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!c) return;
         // Only restore text when caption is visible (not d-none)
         const txt = c.textContent ? c.textContent.trim() : '';
-        if (!recognizing && !c.classList.contains('d-none') && (!txt || txt === '')) {
-          c.textContent = DEFAULT_VOICE_CAPTION;
+        if (helperCaptionEnabled && !recognizing && !c.classList.contains('d-none') && (!txt || txt === '')) {
+          c.textContent = helperCaption;
         }
       } catch (e) { /* ignore */ }
       attempts++;
@@ -217,8 +221,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // actively starting to listen or when we intentionally replace with a transcript.
         // If there's no transcript/content, restore the default helper caption so the UI
         // doesn't collapse (CSS :empty hides the element).
-        if (caption && (!caption.textContent || caption.textContent.trim() === '')) {
-          caption.textContent = DEFAULT_VOICE_CAPTION;
+        if (caption && helperCaptionEnabled && (!caption.textContent || caption.textContent.trim() === '')) {
+          caption.textContent = helperCaption;
+        } else if (caption && !helperCaptionEnabled) {
+          caption.textContent = '';
+          caption.classList.add('d-none');
         }
         break;
       case 'listening':
@@ -303,6 +310,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Replace placeholder with transcript when user starts speaking
       const currentTranscript = interim || final;
       if (currentTranscript) {
+        if (caption.classList.contains('d-none')) {
+          caption.classList.remove('d-none');
+        }
         caption.textContent = currentTranscript;
       }
       // Reset inactivity timeout on each result (user is speaking)
@@ -515,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     // Show the caption when mic button is clicked
-    if (caption.classList.contains('d-none')) {
+    if (helperCaptionEnabled && caption.classList.contains('d-none')) {
       caption.classList.remove('d-none');
     }
     if (firstUse) {

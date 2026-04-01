@@ -41,7 +41,7 @@ class LadderConfigControllerLeaveTest {
   }
 
   @Test
-  void leave_sessionRedirectsToHome() {
+  void leave_sessionRedirectsToCompetitionSessions() {
     User user = new User();
     user.setId(5L);
     user.setNickName("Tester");
@@ -58,7 +58,7 @@ class LadderConfigControllerLeaveTest {
 
     String view = controller.leave(99L, 77L, auth, redirectAttributes);
 
-    assertThat(view).isEqualTo("redirect:/home");
+    assertThat(view).isEqualTo("redirect:/competition/sessions");
     assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
         .isEqualTo("You left the session.");
   }

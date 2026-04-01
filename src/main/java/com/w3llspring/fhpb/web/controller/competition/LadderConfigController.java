@@ -3,12 +3,15 @@ package com.w3llspring.fhpb.web.controller.competition;
 import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
+import com.w3llspring.fhpb.web.db.MatchRepository;
 import com.w3llspring.fhpb.web.db.UserDisplayNameAuditRepository;
 import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.model.LadderConfig;
+import com.w3llspring.fhpb.web.model.LadderMatchLink;
 import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.LadderSeason;
 import com.w3llspring.fhpb.web.model.LadderSecurity;
+import com.w3llspring.fhpb.web.model.Match;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.model.UserDisplayNameAudit;
 import com.w3llspring.fhpb.web.service.CompetitionDisplayNameModerationService;
@@ -17,6 +20,7 @@ import com.w3llspring.fhpb.web.service.InviteChangeCooldownException;
 import com.w3llspring.fhpb.web.service.LadderConfigService;
 import com.w3llspring.fhpb.web.service.LadderImprovementAdvisor;
 import com.w3llspring.fhpb.web.service.MatchDashboardService;
+import com.w3llspring.fhpb.web.service.MatchRowModel;
 import com.w3llspring.fhpb.web.service.SeasonCarryOverService;
 import com.w3llspring.fhpb.web.service.SeasonTransitionService;
 import com.w3llspring.fhpb.web.service.StoryModeService;
@@ -32,11 +36,15 @@ import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
+import com.w3llspring.fhpb.web.util.UserPublicName;
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,11 +83,13 @@ public class LadderConfigController {
       Pattern.compile("^(.+ Session) - [A-Z][a-z]{2} \\d{1,2}, \\d{1,2}:\\d{2} [AP]M$");
   private static final String SESSION_TOUR_OWNER = "owner";
   private static final String SESSION_TOUR_JOINER = "joiner";
+  private static final int SESSION_RECENT_TICKER_LIMIT = 5;
 
   private final GroupAdministrationOperations groupAdministration;
   private final GroupCreationService groupCreationService;
   private final LadderConfigRepository configs;
   private final LadderSeasonRepository seasons;
+  private final MatchRepository matchRepo;
   private final UserRepository userRepo;
   private final UserDisplayNameAuditRepository userDisplayNameAuditRepository;
   private final LadderMembershipRepository membershipRepo;
@@ -109,6 +119,7 @@ public class LadderConfigController {
 
   @Autowired
   public LadderConfigController(
+      MatchRepository matchRepo,
       UserRepository userRepo,
       UserDisplayNameAuditRepository userDisplayNameAuditRepository,
       GroupAdministrationService groupAdministration,
@@ -129,9 +140,53 @@ public class LadderConfigController {
       SessionJoinRequestService sessionJoinRequestService,
       @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
     this(
+        matchRepo,
         userRepo,
         userDisplayNameAuditRepository,
         (GroupAdministrationOperations) groupAdministration,
+        groupCreationService,
+        configs,
+        seasons,
+        membershipRepo,
+        storyModeService,
+        defaultMaxMembers,
+        competitionSeasonService,
+        transitionSvc,
+        matchDashboardService,
+        matchDashboardViewService,
+        improvementAdvisor,
+        matchEntryContextService,
+        roundRobinService,
+        seasonStandingsViewService,
+        competitionDisplayNameModerationService,
+        sessionJoinRequestService);
+  }
+
+  public LadderConfigController(
+      UserRepository userRepo,
+      UserDisplayNameAuditRepository userDisplayNameAuditRepository,
+      GroupAdministrationService groupAdministration,
+      GroupCreationService groupCreationService,
+      LadderConfigRepository configs,
+      LadderSeasonRepository seasons,
+      LadderMembershipRepository membershipRepo,
+      StoryModeService storyModeService,
+      CompetitionSeasonService competitionSeasonService,
+      SeasonTransitionService transitionSvc,
+      MatchDashboardService matchDashboardService,
+      MatchDashboardViewService matchDashboardViewService,
+      LadderImprovementAdvisor improvementAdvisor,
+      MatchEntryContextService matchEntryContextService,
+      RoundRobinService roundRobinService,
+      SeasonStandingsViewService seasonStandingsViewService,
+      CompetitionDisplayNameModerationService competitionDisplayNameModerationService,
+      SessionJoinRequestService sessionJoinRequestService,
+      @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
+    this(
+        null,
+        userRepo,
+        userDisplayNameAuditRepository,
+        groupAdministration,
         groupCreationService,
         configs,
         seasons,
@@ -162,6 +217,7 @@ public class LadderConfigController {
       StoryModeService storyModeService,
       @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
     this(
+        null,
         userRepo,
         userDisplayNameAuditRepository,
         (GroupAdministrationOperations) groupAdministration,
@@ -194,6 +250,7 @@ public class LadderConfigController {
       StoryModeService storyModeService,
       @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
     this(
+        null,
         userRepo,
         userDisplayNameAuditRepository,
         groupAdministration,
@@ -229,6 +286,7 @@ public class LadderConfigController {
       StoryModeService storyModeService,
       @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
     this(
+        null,
         userRepo,
         userDisplayNameAuditRepository,
         groupAdministration,
@@ -251,6 +309,7 @@ public class LadderConfigController {
   }
 
   private LadderConfigController(
+      MatchRepository matchRepo,
       UserRepository userRepo,
       UserDisplayNameAuditRepository userDisplayNameAuditRepository,
       GroupAdministrationOperations groupAdministration,
@@ -270,6 +329,7 @@ public class LadderConfigController {
       SeasonStandingsViewService seasonStandingsViewService,
       CompetitionDisplayNameModerationService competitionDisplayNameModerationService,
       SessionJoinRequestService sessionJoinRequestService) {
+    this.matchRepo = matchRepo;
     this.groupAdministration = groupAdministration;
     this.groupCreationService = groupCreationService;
     this.configs = configs;
@@ -523,7 +583,17 @@ public class LadderConfigController {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
       }
     }
-
+    Optional<LadderMembership> currentMembership =
+        membershipRepo.findByLadderConfigIdAndUserId(configId, currentUser.getId());
+    boolean currentUserIsAdmin =
+        currentUserIsSiteAdmin
+            || currentMembership
+                .filter(
+                    m ->
+                        m.getState() == LadderMembership.State.ACTIVE
+                            && m.getRole() == LadderMembership.Role.ADMIN)
+                .isPresent();
+    model.addAttribute("currentUserIsAdmin", currentUserIsAdmin);
     // === New: season flags for Thymeleaf ===
     var activeSeasonOpt =
         cfg.isSessionType() ? Optional.<LadderSeason>empty() : seasons.findActive(configId);
@@ -547,6 +617,8 @@ public class LadderConfigController {
         targetSeason != null && targetSeason.isStandingsRecalcInProgress());
     MatchDashboardService.DashboardModel sessionDashboard =
         matchDashboardViewService != null ? matchDashboardViewService.emptyDashboard() : null;
+    SessionConfirmationState sessionConfirmationState = SessionConfirmationState.empty();
+    List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionBaseStandings = List.of();
     if (cfg.isSessionType() && matchDashboardService != null && matchDashboardViewService != null) {
       sessionDashboard = matchDashboardService.buildPendingForUserInSeason(currentUser, targetSeason);
       matchDashboardViewService.applyToModel(model, sessionDashboard);
@@ -560,29 +632,19 @@ public class LadderConfigController {
               ? sessionDashboard.matchRowModel().getConfirmableMatchIds()
               : Set.of());
       model.addAttribute("canStartSessionRoundRobin", canStartSessionRoundRobin(cfg, currentUser));
-      applySessionStandingPreview(model, currentUser, targetSeason);
-      List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionReportStandings =
-          roundRobinService != null ? roundRobinService.computeStandingsForSession(cfg) : List.of();
-      model.addAttribute(
-          "sessionReportStandings",
-          sessionReportStandings != null ? sessionReportStandings : List.of());
+      sessionBaseStandings =
+          roundRobinService != null
+              ? Objects.requireNonNullElse(roundRobinService.computeStandingsForSession(cfg), List.of())
+              : List.of();
       model.addAttribute(
           "improvementAdvice",
           improvementAdvisor != null
               ? improvementAdvisor.buildAdvice(currentUser, cfg, targetSeason)
               : null);
+      sessionConfirmationState = buildSessionConfirmationState(sessionDashboard);
+      applySessionConfirmationModel(model, sessionConfirmationState);
     }
 
-    boolean currentUserIsAdmin =
-        currentUserIsSiteAdmin
-            || membershipRepo
-                .findByLadderConfigIdAndUserId(configId, currentUser.getId())
-                .filter(
-                    m ->
-                        m.getState() == LadderMembership.State.ACTIVE
-                            && m.getRole() == LadderMembership.Role.ADMIN)
-                .isPresent();
-    model.addAttribute("currentUserIsAdmin", currentUserIsAdmin);
     model.addAttribute(
         "pendingSessionJoinRequests",
         cfg.isSessionType() && currentUserIsAdmin && sessionJoinRequestService != null
@@ -666,6 +728,10 @@ public class LadderConfigController {
               .map(member -> userById.get(member.getUserId()))
               .filter(Objects::nonNull)
               .toList();
+      model.addAttribute("sessionHeroTitle", resolveSessionDisplayTitle(cfg));
+      applySessionRecentTickerModel(model, cfg);
+      applySessionStandingsModel(
+          model, members, userById, targetSeason, sessionBaseStandings);
       model.addAttribute(
           "voiceLanguage",
           matchEntryContextService != null
@@ -741,24 +807,324 @@ public class LadderConfigController {
     return "auth/show";
   }
 
-  private void applySessionStandingPreview(
-      Model model, User currentUser, LadderSeason targetSeason) {
-    if (model == null
-        || currentUser == null
-        || currentUser.getId() == null
-        || targetSeason == null
-        || seasonStandingsViewService == null) {
-      model.addAttribute("sessionStandingRow", null);
+  private void applySessionStandingsModel(
+      Model model,
+      List<LadderMembership> members,
+      Map<Long, User> userById,
+      LadderSeason targetSeason,
+      List<com.w3llspring.fhpb.web.model.RoundRobinStanding> baseStandings) {
+    LinkedHashSet<Long> activeMemberIds = new LinkedHashSet<>();
+    if (members != null) {
+      for (LadderMembership member : members) {
+        if (member != null && member.getUserId() != null) {
+          activeMemberIds.add(member.getUserId());
+        }
+      }
+    }
+
+    List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionStandings = new ArrayList<>();
+    if (baseStandings != null) {
+      sessionStandings.addAll(
+          baseStandings.stream()
+              .filter(Objects::nonNull)
+              .filter(
+                  standing ->
+                      standing.getUserId() == null
+                          || activeMemberIds.isEmpty()
+                          || activeMemberIds.contains(standing.getUserId()))
+              .toList());
+    }
+
+    LinkedHashSet<Long> seenUserIds = new LinkedHashSet<>();
+    for (com.w3llspring.fhpb.web.model.RoundRobinStanding standing : sessionStandings) {
+      if (standing.getUserId() != null) {
+        seenUserIds.add(standing.getUserId());
+      }
+    }
+
+    if (members != null) {
+      for (LadderMembership member : members) {
+        if (member == null || member.getUserId() == null || !seenUserIds.add(member.getUserId())) {
+          continue;
+        }
+        User user = userById != null ? userById.get(member.getUserId()) : null;
+        sessionStandings.add(
+            new com.w3llspring.fhpb.web.model.RoundRobinStanding(
+                member.getUserId(), resolveSessionStandingName(user)));
+      }
+    }
+
+    Map<Long, Integer> globalRankByUserId = new LinkedHashMap<>();
+    Map<Long, Integer> ratingByUserId = new LinkedHashMap<>();
+    Map<Long, Integer> momentumByUserId = new LinkedHashMap<>();
+    if (members != null) {
+      for (LadderMembership member : members) {
+        if (member != null && member.getUserId() != null) {
+          ratingByUserId.put(member.getUserId(), Integer.valueOf(1000));
+          momentumByUserId.put(member.getUserId(), Integer.valueOf(0));
+        }
+      }
+    }
+    if (targetSeason != null && seasonStandingsViewService != null) {
+      SeasonStandingsViewService.SeasonStandingsView standingsView =
+          seasonStandingsViewService.load(targetSeason);
+      for (var row : standingsView.rows()) {
+        if (row == null || row.userId == null) {
+          continue;
+        }
+        globalRankByUserId.put(row.userId, Integer.valueOf(row.rank));
+        ratingByUserId.put(row.userId, Integer.valueOf(1000 + row.points));
+        momentumByUserId.put(row.userId, Integer.valueOf(row.momentum));
+      }
+    }
+
+    model.addAttribute("sessionStandings", sessionStandings);
+    model.addAttribute("sessionGlobalRankByUserId", globalRankByUserId);
+    model.addAttribute("sessionRatingByUserId", ratingByUserId);
+    model.addAttribute("sessionMomentumByUserId", momentumByUserId);
+  }
+
+  private void applySessionRecentTickerModel(Model model, LadderConfig sessionConfig) {
+    model.addAttribute("sessionRecentTickerItems", buildSessionRecentTickerItems(sessionConfig));
+  }
+
+  private List<SessionRecentTickerItem> buildSessionRecentTickerItems(LadderConfig sessionConfig) {
+    if (sessionConfig == null
+        || sessionConfig.getId() == null
+        || !sessionConfig.isSessionType()
+        || matchRepo == null) {
+      return List.of();
+    }
+
+    List<Match> recentMatches =
+        matchRepo.findConfirmedBySourceSessionConfigIdOrderByPlayedAtDescWithUsers(
+            sessionConfig.getId());
+    if (recentMatches == null || recentMatches.isEmpty()) {
+      return List.of();
+    }
+
+    List<SessionRecentTickerItem> items = new ArrayList<>();
+    recentMatches.stream()
+        .filter(Objects::nonNull)
+        .limit(SESSION_RECENT_TICKER_LIMIT)
+        .forEach(
+            match -> {
+              Instant timeline = matchTimeline(match);
+              items.add(
+                  new SessionRecentTickerItem(
+                      match.getId(),
+                      buildSessionRecentTickerAgeLabel(timeline),
+                      buildSessionRecentTickerSummary(match),
+                      timeline));
+            });
+    return items;
+  }
+
+  private String buildSessionRecentTickerSummary(Match match) {
+    if (match == null) {
+      return "";
+    }
+
+    boolean teamAWon = match.isTeamAWinner();
+    String winners =
+        teamAWon
+            ? sessionTickerTeamLabel(match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest())
+            : sessionTickerTeamLabel(match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest());
+    String losers =
+        teamAWon
+            ? sessionTickerTeamLabel(match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest())
+            : sessionTickerTeamLabel(match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest());
+    int winnerScore = teamAWon ? match.getScoreA() : match.getScoreB();
+    int loserScore = teamAWon ? match.getScoreB() : match.getScoreA();
+    return winners + " def " + losers + " " + winnerScore + "-" + loserScore;
+  }
+
+  private String sessionTickerTeamLabel(
+      User firstPlayer, boolean firstGuest, User secondPlayer, boolean secondGuest) {
+    List<String> names = new ArrayList<>(2);
+    if (firstGuest) {
+      names.add(UserPublicName.GUEST);
+    } else if (firstPlayer != null) {
+      names.add(UserPublicName.forUser(firstPlayer));
+    }
+    if (secondGuest) {
+      names.add(UserPublicName.GUEST);
+    } else if (secondPlayer != null) {
+      names.add(UserPublicName.forUser(secondPlayer));
+    }
+    if (names.isEmpty()) {
+      return "Guest Squad";
+    }
+    return String.join(" & ", names);
+  }
+
+  private Instant matchTimeline(Match match) {
+    if (match == null) {
+      return Instant.EPOCH;
+    }
+    if (match.getPlayedAt() != null) {
+      return match.getPlayedAt();
+    }
+    if (match.getCreatedAt() != null) {
+      return match.getCreatedAt();
+    }
+    return Instant.EPOCH;
+  }
+
+  private String buildSessionRecentTickerAgeLabel(Instant timeline) {
+    if (timeline == null || Instant.EPOCH.equals(timeline)) {
+      return "Recent";
+    }
+
+    Duration age = Duration.between(timeline, Instant.now());
+    if (age.isNegative()) {
+      age = Duration.ZERO;
+    }
+
+    long seconds = age.getSeconds();
+    if (seconds < 90L) {
+      return "Just now";
+    }
+
+    long minutes = age.toMinutes();
+    if (minutes < 60L) {
+      return minutes + " minute" + (minutes == 1L ? "" : "s") + " ago";
+    }
+
+    long hours = age.toHours();
+    if (hours < 24L) {
+      return hours + " hour" + (hours == 1L ? "" : "s") + " ago";
+    }
+
+    long days = age.toDays();
+    return days + " day" + (days == 1L ? "" : "s") + " ago";
+  }
+
+  private void applySessionConfirmationModel(Model model, SessionConfirmationState state) {
+    SessionConfirmationState effectiveState =
+        state != null ? state : SessionConfirmationState.empty();
+    model.addAttribute(
+        "sessionConfirmationInboxCount", Integer.valueOf(effectiveState.inboxCount()));
+    model.addAttribute(
+        "sessionConfirmationOutboxCount", Integer.valueOf(effectiveState.outboxCount()));
+    model.addAttribute("sessionConfirmationInboxLinks", effectiveState.inboxLinks());
+    model.addAttribute("sessionConfirmationOutboxLinks", effectiveState.outboxLinks());
+    model.addAttribute(
+        "sessionConfirmationInboxConfirmableMatchIds", effectiveState.inboxConfirmableMatchIds());
+    model.addAttribute(
+        "sessionConfirmationInboxNullifyApprovableByMatchId",
+        effectiveState.inboxNullifyApprovableByMatchId());
+    model.addAttribute(
+        "sessionConfirmationOutboxWaitingOnOpponentByMatchId",
+        effectiveState.outboxWaitingOnOpponentByMatchId());
+    model.addAttribute(
+        "sessionConfirmationOutboxNullifyWaitingOnOpponentByMatchId",
+        effectiveState.outboxNullifyWaitingOnOpponentByMatchId());
+    model.addAttribute("sessionConfirmationsAutoOpen", effectiveState.hasAny());
+  }
+
+  private SessionConfirmationState buildSessionConfirmationState(
+      MatchDashboardService.DashboardModel dashboard) {
+    Set<Long> inboxMatchIds = sessionConfirmationInboxMatchIds(dashboard);
+    Set<Long> outboxMatchIds = sessionConfirmationOutboxMatchIds(dashboard);
+    MatchRowModel rowModel = dashboard != null ? dashboard.matchRowModel() : null;
+    return new SessionConfirmationState(
+        filterLinksByMatchIds(dashboard, inboxMatchIds),
+        filterLinksByMatchIds(dashboard, outboxMatchIds),
+        filterMatchIds(rowModel != null ? rowModel.getConfirmableMatchIds() : Set.of(), inboxMatchIds),
+        filterTrueFlagsByMatchIds(
+            rowModel != null ? rowModel.getNullifyApprovableByMatchId() : Map.of(), inboxMatchIds),
+        filterTrueFlagsByMatchIds(
+            rowModel != null ? rowModel.getWaitingOnOpponentByMatchId() : Map.of(), outboxMatchIds),
+        filterTrueFlagsByMatchIds(
+            rowModel != null ? rowModel.getNullifyWaitingOnOpponentByMatchId() : Map.of(),
+            outboxMatchIds));
+  }
+
+  private Set<Long> sessionConfirmationInboxMatchIds(
+      MatchDashboardService.DashboardModel dashboard) {
+    Set<Long> inboxMatchIds = new LinkedHashSet<>();
+    if (dashboard != null
+        && dashboard.matchRowModel() != null
+        && dashboard.matchRowModel().getConfirmableMatchIds() != null) {
+      inboxMatchIds.addAll(dashboard.matchRowModel().getConfirmableMatchIds());
+    }
+    collectTrueMatchIds(
+        inboxMatchIds,
+        dashboard != null && dashboard.matchRowModel() != null
+            ? dashboard.matchRowModel().getNullifyApprovableByMatchId()
+            : Map.of());
+    return inboxMatchIds;
+  }
+
+  private Set<Long> sessionConfirmationOutboxMatchIds(
+      MatchDashboardService.DashboardModel dashboard) {
+    Set<Long> outboxMatchIds = new LinkedHashSet<>();
+    collectTrueMatchIds(
+        outboxMatchIds,
+        dashboard != null && dashboard.matchRowModel() != null
+            ? dashboard.matchRowModel().getWaitingOnOpponentByMatchId()
+            : Map.of());
+    collectTrueMatchIds(
+        outboxMatchIds,
+        dashboard != null && dashboard.matchRowModel() != null
+            ? dashboard.matchRowModel().getNullifyWaitingOnOpponentByMatchId()
+            : Map.of());
+    return outboxMatchIds;
+  }
+
+  private List<LadderMatchLink> filterLinksByMatchIds(
+      MatchDashboardService.DashboardModel dashboard, Set<Long> matchIds) {
+    if (dashboard == null || dashboard.links() == null || dashboard.links().isEmpty()) {
+      return List.of();
+    }
+    if (matchIds == null || matchIds.isEmpty()) {
+      return List.of();
+    }
+    return dashboard.links().stream()
+        .filter(Objects::nonNull)
+        .filter(link -> link.getMatch() != null && matchIds.contains(link.getMatch().getId()))
+        .toList();
+  }
+
+  private Set<Long> filterMatchIds(Set<Long> matchIds, Set<Long> allowedMatchIds) {
+    if (matchIds == null || matchIds.isEmpty() || allowedMatchIds == null || allowedMatchIds.isEmpty()) {
+      return Set.of();
+    }
+    return matchIds.stream()
+        .filter(Objects::nonNull)
+        .filter(allowedMatchIds::contains)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  private Map<Long, Boolean> filterTrueFlagsByMatchIds(
+      Map<Long, Boolean> flagsByMatchId, Set<Long> allowedMatchIds) {
+    if (flagsByMatchId == null
+        || flagsByMatchId.isEmpty()
+        || allowedMatchIds == null
+        || allowedMatchIds.isEmpty()) {
+      return Map.of();
+    }
+    Map<Long, Boolean> filtered = new LinkedHashMap<>();
+    for (Map.Entry<Long, Boolean> entry : flagsByMatchId.entrySet()) {
+      if (entry.getKey() != null
+          && allowedMatchIds.contains(entry.getKey())
+          && Boolean.TRUE.equals(entry.getValue())) {
+        filtered.put(entry.getKey(), Boolean.TRUE);
+      }
+    }
+    return filtered;
+  }
+
+  private void collectTrueMatchIds(Set<Long> target, Map<Long, Boolean> flagsByMatchId) {
+    if (target == null || flagsByMatchId == null || flagsByMatchId.isEmpty()) {
       return;
     }
-    SeasonStandingsViewService.SeasonStandingsView standingsView =
-        seasonStandingsViewService.load(targetSeason);
-    if (standingsView.standings().isEmpty()) {
-      model.addAttribute("sessionStandingRow", null);
-      return;
+    for (Map.Entry<Long, Boolean> entry : flagsByMatchId.entrySet()) {
+      if (entry.getKey() != null && Boolean.TRUE.equals(entry.getValue())) {
+        target.add(entry.getKey());
+      }
     }
-    var currentRow = seasonStandingsViewService.findRowForUser(standingsView, currentUser.getId());
-    model.addAttribute("sessionStandingRow", currentRow);
   }
 
   private boolean canStartSessionRoundRobin(LadderConfig ladder, User currentUser) {
@@ -774,6 +1140,7 @@ public class LadderConfigController {
   private void applySessionRoundRobinTask(
       Model model, LadderConfig sessionConfig, User currentUser, java.util.Set<Long> confirmableMatchIds) {
     model.addAttribute("sessionRoundRobinTask", null);
+    model.addAttribute("sessionRoundRobinRounds", List.of());
     if (model == null
         || sessionConfig == null
         || !sessionConfig.isSessionType()
@@ -830,6 +1197,170 @@ public class LadderConfigController {
     task.put("quickLogB1", sessionRoundRobinQuickLogValue(currentUserId, assignment.entry(), "b1"));
     task.put("quickLogB2", sessionRoundRobinQuickLogValue(currentUserId, assignment.entry(), "b2"));
     model.addAttribute("sessionRoundRobinTask", task);
+    model.addAttribute(
+        "sessionRoundRobinRounds",
+        buildSessionRoundRobinRounds(
+            currentUser,
+            assignment,
+            displayNames,
+            confirmableMatchIds,
+            task));
+  }
+
+  private List<Map<String, Object>> buildSessionRoundRobinRounds(
+      User currentUser,
+      RoundRobinService.ActiveSessionAssignment assignment,
+      Map<Long, String> displayNames,
+      Set<Long> confirmableMatchIds,
+      Map<String, Object> currentRoundTask) {
+    if (currentUser == null
+        || currentUser.getId() == null
+        || assignment == null
+        || assignment.roundRobin() == null
+        || assignment.roundRobin().getId() == null
+        || roundRobinService == null) {
+      return List.of();
+    }
+
+    try {
+      int maxRound =
+          assignment.maxRound() > 0
+              ? assignment.maxRound()
+              : roundRobinService.getMaxRound(assignment.roundRobin().getId());
+      if (maxRound <= 0) {
+        return List.of(buildCurrentSessionRoundRobinRound(assignment, displayNames, currentRoundTask));
+      }
+
+      List<Map<String, Object>> rounds = new ArrayList<>();
+      for (int roundNumber = 1; roundNumber <= maxRound; roundNumber++) {
+        var entry =
+            findSessionRoundRobinEntryForUser(
+                roundRobinService.getEntriesForRound(assignment.roundRobin().getId(), roundNumber),
+                currentUser.getId());
+        if (entry == null) {
+          continue;
+        }
+
+        LinkedHashMap<String, Object> round = new LinkedHashMap<>();
+        round.put("roundNumber", Integer.valueOf(roundNumber));
+        round.put("current", Boolean.valueOf(roundNumber == assignment.currentRound()));
+        round.put("bye", entry.isBye());
+        round.put("a1Name", sessionRoundRobinName(entry.getA1(), displayNames));
+        round.put("a2Name", sessionRoundRobinName(entry.getA2(), displayNames));
+        round.put("b1Name", sessionRoundRobinName(entry.getB1(), displayNames));
+        round.put("b2Name", sessionRoundRobinName(entry.getB2(), displayNames));
+
+        Match linkedMatch = resolveSessionRoundRobinMatch(assignment.roundRobin(), entry);
+        round.put("match", linkedMatch);
+
+        boolean currentRound = roundNumber == assignment.currentRound();
+        boolean canConfirm =
+            currentRound
+                && linkedMatch != null
+                && linkedMatch.getId() != null
+                && confirmableMatchIds != null
+                && confirmableMatchIds.contains(linkedMatch.getId());
+        boolean readyToLog = currentRound && !entry.isBye() && linkedMatch == null;
+
+        round.put("canConfirm", Boolean.valueOf(canConfirm));
+        round.put("readyToLog", Boolean.valueOf(readyToLog));
+        round.put("quickLogA1", currentRound ? currentRoundTask.get("quickLogA1") : null);
+        round.put("quickLogA2", currentRound ? currentRoundTask.get("quickLogA2") : null);
+        round.put("quickLogB1", currentRound ? currentRoundTask.get("quickLogB1") : null);
+        round.put("quickLogB2", currentRound ? currentRoundTask.get("quickLogB2") : null);
+        round.put(
+            "status",
+            sessionRoundRobinRoundStatus(roundNumber, assignment.currentRound(), entry, linkedMatch));
+        rounds.add(round);
+      }
+      return rounds.isEmpty()
+          ? List.of(buildCurrentSessionRoundRobinRound(assignment, displayNames, currentRoundTask))
+          : rounds;
+    } catch (RuntimeException ex) {
+      return List.of(buildCurrentSessionRoundRobinRound(assignment, displayNames, currentRoundTask));
+    }
+  }
+
+  private Map<String, Object> buildCurrentSessionRoundRobinRound(
+      RoundRobinService.ActiveSessionAssignment assignment,
+      Map<Long, String> displayNames,
+      Map<String, Object> currentRoundTask) {
+    LinkedHashMap<String, Object> round = new LinkedHashMap<>();
+    round.put("roundNumber", Integer.valueOf(assignment.currentRound()));
+    round.put("current", Boolean.TRUE);
+    round.put("bye", assignment.entry().isBye());
+    round.put("a1Name", sessionRoundRobinName(assignment.entry().getA1(), displayNames));
+    round.put("a2Name", sessionRoundRobinName(assignment.entry().getA2(), displayNames));
+    round.put("b1Name", sessionRoundRobinName(assignment.entry().getB1(), displayNames));
+    round.put("b2Name", sessionRoundRobinName(assignment.entry().getB2(), displayNames));
+    round.put("match", assignment.match());
+    round.put("canConfirm", currentRoundTask.get("canConfirm"));
+    round.put("readyToLog", currentRoundTask.get("readyToLog"));
+    round.put("quickLogA1", currentRoundTask.get("quickLogA1"));
+    round.put("quickLogA2", currentRoundTask.get("quickLogA2"));
+    round.put("quickLogB1", currentRoundTask.get("quickLogB1"));
+    round.put("quickLogB2", currentRoundTask.get("quickLogB2"));
+    round.put(
+        "status",
+        sessionRoundRobinRoundStatus(
+            assignment.currentRound(), assignment.currentRound(), assignment.entry(), assignment.match()));
+    return round;
+  }
+
+  private com.w3llspring.fhpb.web.model.RoundRobinEntry findSessionRoundRobinEntryForUser(
+      List<com.w3llspring.fhpb.web.model.RoundRobinEntry> entries, Long userId) {
+    if (entries == null || userId == null) {
+      return null;
+    }
+    for (com.w3llspring.fhpb.web.model.RoundRobinEntry entry : entries) {
+      if (entry == null) {
+        continue;
+      }
+      if (sameSessionRoundRobinUser(entry.getA1(), userId)
+          || sameSessionRoundRobinUser(entry.getA2(), userId)
+          || sameSessionRoundRobinUser(entry.getB1(), userId)
+          || sameSessionRoundRobinUser(entry.getB2(), userId)) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  private Match resolveSessionRoundRobinMatch(
+      com.w3llspring.fhpb.web.model.RoundRobin roundRobin,
+      com.w3llspring.fhpb.web.model.RoundRobinEntry entry) {
+    if (entry == null || roundRobinService == null) {
+      return null;
+    }
+    if (entry.getMatchId() != null) {
+      Match linkedMatch = roundRobinService.getMatch(entry.getMatchId());
+      if (linkedMatch != null) {
+        return linkedMatch;
+      }
+    }
+    return roundRobin != null
+        ? roundRobinService.findLoggedMatchForEntry(roundRobin, entry, roundRobin.getCreatedAt()).orElse(null)
+        : null;
+  }
+
+  private String sessionRoundRobinRoundStatus(
+      int roundNumber,
+      int currentRound,
+      com.w3llspring.fhpb.web.model.RoundRobinEntry entry,
+      Match linkedMatch) {
+    if (entry == null) {
+      return null;
+    }
+    if (entry.isBye()) {
+      return "Bye";
+    }
+    if (linkedMatch != null && linkedMatch.getState() == com.w3llspring.fhpb.web.model.MatchState.CONFIRMED) {
+      return roundRobinService.formatMatchResultForEntry(linkedMatch, entry);
+    }
+    if (linkedMatch != null) {
+      return roundNumber == currentRound ? "Result logged" : "Logged";
+    }
+    return roundNumber < currentRound ? "No result logged" : (roundNumber == currentRound ? "Ready" : "Coming up");
   }
 
   private void collectSessionRoundRobinUserId(User user, java.util.Set<Long> userIds) {
@@ -888,6 +1419,14 @@ public class LadderConfigController {
 
   private boolean sameSessionRoundRobinUser(User user, Long userId) {
     return user != null && user.getId() != null && user.getId().equals(userId);
+  }
+
+  private String resolveSessionStandingName(User user) {
+    if (user == null) {
+      return "Player";
+    }
+    String displayName = UserPublicName.forUser(user);
+    return StringUtils.hasText(displayName) ? displayName : "Player";
   }
 
   @PostMapping("/{configId}/ban/{memberId}")
@@ -975,7 +1514,7 @@ public class LadderConfigController {
       boolean ownerLeaving = Objects.equals(ladder.getOwnerUserId(), currentUser.getId());
       redirect.addFlashAttribute("toastMessage", ownerLeaving ? "Session ended." : "You left the session.");
       redirect.addFlashAttribute("toastLevel", "light");
-      return "redirect:/home";
+      return "redirect:/competition/sessions";
     }
 
     // Option A: flash attributes (preferred if your home page reads them)
@@ -1544,6 +2083,38 @@ public class LadderConfigController {
   }
 
   private record JoinFeedback(String message, String level) {}
+
+  private record SessionConfirmationState(
+      List<LadderMatchLink> inboxLinks,
+      List<LadderMatchLink> outboxLinks,
+      Set<Long> inboxConfirmableMatchIds,
+      Map<Long, Boolean> inboxNullifyApprovableByMatchId,
+      Map<Long, Boolean> outboxWaitingOnOpponentByMatchId,
+      Map<Long, Boolean> outboxNullifyWaitingOnOpponentByMatchId) {
+
+    private static SessionConfirmationState empty() {
+      return new SessionConfirmationState(List.of(), List.of(), Set.of(), Map.of(), Map.of(), Map.of());
+    }
+
+    private int inboxCount() {
+      return inboxLinks.size();
+    }
+
+    private int outboxCount() {
+      return outboxLinks.size();
+    }
+
+    private int totalCount() {
+      return inboxCount() + outboxCount();
+    }
+
+    private boolean hasAny() {
+      return totalCount() > 0;
+    }
+  }
+
+  public record SessionRecentTickerItem(
+      Long matchId, String ageLabel, String summary, Instant playedAt) {}
 
   @PostMapping("/{ladderId}/title")
   @Transactional

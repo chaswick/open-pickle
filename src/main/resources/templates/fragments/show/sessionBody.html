@@ -134,16 +134,298 @@
     </div>
   </div>
 
-  <div class="card mb-3">
-    <div class="card-header card-header-title text-center">Who's Here</div>
+  <div class="card mb-3"
+       th:attr="data-session-standings-pending=${sessionStandingsRecalculationPending}">
+    <div class="card-header card-header-title d-flex justify-content-between align-items-center">
+      <span>Session Standings</span>
+      <span class="standings-recalc-indicator"
+            th:if="${sessionStandingsRecalculationPending}">
+        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+        Updating
+      </span>
+    </div>
+    <div class="card-body p-0">
+      <div class="px-3 pt-3 pb-3"
+           th:if="${canStartSessionRoundRobin != null and canStartSessionRoundRobin}">
+        <div class="session-toolbar">
+          <div class="session-toolbar-group">
+          <a class="btn btn-nav-secondary"
+             th:href="@{/round-robin/list(ladderId=${ladder.id})}">
+            Start Round Robin
+          </a>
+          </div>
+        </div>
+      </div>
+
+      <div th:if="${targetSeason != null and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}"
+           id="logMatchVoiceCaption"
+           class="small text-muted px-3 pb-3 d-none"
+           th:classappend="${(canStartSessionRoundRobin != null and canStartSessionRoundRobin) ? '' : ' pt-3'}"
+           aria-live="polite"
+           data-default-caption=""></div>
+
+      <div class="list-group list-group-flush session-roster-list"
+           data-session-standings-list="true"
+           th:if="${sessionStandings != null and !#lists.isEmpty(sessionStandings)}">
+        <div class="list-group-item ladder-standing-row ladder-header-row">
+          <div class="ladder-row-inner session-roster-row-inner text-uppercase small fw-semibold text-muted">
+            <span class="session-roster-form-col" title="Form">
+              <span class="visually-hidden">Form</span>
+            </span>
+            <span class="ladder-rank" title="Session rank">
+              <span class="visually-hidden">Session rank</span>
+            </span>
+            <span class="player-cell">Player</span>
+            <span class="ladder-rating session-roster-stat-header">
+              <span class="visually-hidden">Choose session stat to show</span>
+              <div class="session-stat-links">
+                <button type="button"
+                        class="session-stat-link is-active"
+                        data-session-stat-toggle="rating"
+                        aria-label="Sort by rating"
+                        aria-pressed="true">
+                  Rtg
+                </button>
+                <span class="session-stat-divider" aria-hidden="true">/</span>
+                <button type="button"
+                        class="session-stat-link"
+                        data-session-stat-toggle="wins"
+                        aria-label="Sort by wins"
+                        aria-pressed="false">
+                  W
+                </button>
+                <span class="session-stat-divider" aria-hidden="true">/</span>
+                <button type="button"
+                        class="session-stat-link"
+                        data-session-stat-toggle="points-for"
+                        aria-label="Sort by points for"
+                        aria-pressed="false">
+                  PF
+                </button>
+              </div>
+            </span>
+          </div>
+        </div>
+        <div th:each="s,iter : ${sessionStandings}"
+             th:with="ratingValue=${sessionRatingByUserId != null and sessionRatingByUserId[s.userId] != null ? sessionRatingByUserId[s.userId] : 1000},
+                      globalRank=${sessionGlobalRankByUserId != null and sessionGlobalRankByUserId[s.userId] != null ? sessionGlobalRankByUserId[s.userId] : null},
+                      momentumValue=${s.userId != null and sessionMomentumByUserId != null and sessionMomentumByUserId[s.userId] != null ? sessionMomentumByUserId[s.userId] : 0},
+                      globalRankSuffix=${globalRank == null ? '' : ((globalRank % 100 >= 11 and globalRank % 100 <= 13) ? 'th' : (globalRank % 10 == 1 ? 'st' : (globalRank % 10 == 2 ? 'nd' : (globalRank % 10 == 3 ? 'rd' : 'th'))))},
+                      ratingLabel=${globalRank != null ? ratingValue + ' (' + globalRank + globalRankSuffix + ')' : ratingValue + ''},
+                      clickableRating=${currentUserId != null and s.userId == currentUserId and improvementAdvice != null and improvementAdvice.recentChanges != null and !#lists.isEmpty(improvementAdvice.recentChanges)}"
+             class="list-group-item ladder-standing-row session-roster-row"
+             data-session-row
+             th:attr="data-session-original-rank=${iter.index + 1},
+                      data-session-rating-label=${ratingLabel},
+                      data-session-sort-rating=${ratingValue},
+                      data-session-sort-wins=${s.wins},
+                      data-session-sort-points-for=${s.pointsFor}"
+             th:classappend="${currentUserId != null and s.userId == currentUserId} ? ' current-user-row' : null">
+          <div class="ladder-row-inner session-roster-row-inner">
+            <span class="session-roster-form-col">
+              <span class="ladder-momentum session-roster-form"
+                    aria-live="polite"
+                    th:title="${(momentumValue > 0 ? '+' : '') + momentumValue + ' form'}"
+                    th:classappend="
+                      ${momentumValue > 0}   ? ' text-success' :
+                      (${momentumValue == 0} ? ' text-muted' :
+                      (${momentumValue <= -8}? ' text-danger' :
+                                                ' text-warning'))">
+                <i class="bi"
+                   aria-hidden="true"
+                   th:classappend="
+                      ${momentumValue >= 12} ? ' bi-fire' :
+                      (${momentumValue >= 8}  ? ' bi-triangle-fill' :
+                      (${momentumValue >= 4}  ? ' bi-triangle-half' :
+                      (${momentumValue > 0}   ? ' bi-triangle' :
+                      (${momentumValue == 0}  ? ' bi-dash-circle' :
+                      (${momentumValue <= -12}? ' bi-snow' :
+                      (${momentumValue <= -8} ? ' bi-triangle-fill rot-180' :
+                      (${momentumValue <= -4} ? ' bi-triangle-half rot-180' :
+                                                ' bi-triangle rot-180')))))))"></i>
+              </span>
+            </span>
+            <span class="ladder-rank text-muted session-roster-rank"
+                  data-session-row-rank
+                  th:text="${iter.index + 1}">1</span>
+            <div class="player-cell session-roster-player-cell">
+              <div class="player-name-with-badges">
+                <div class="player-name-line">
+                  <span class="fw-semibold player-name-label"
+                        th:title="${s.nickName}"
+                        th:text="${s.nickName}">Player Name</span>
+                </div>
+                <span class="name-badge-strip"
+                      th:if="${s.badgeViews != null and !#lists.isEmpty(s.badgeViews)}">
+                  <span th:each="badge : ${s.badgeViews}"
+                        class="name-badge-pill badge-detail-trigger"
+                        data-badge-detail-trigger
+                        aria-expanded="false"
+                        role="button"
+                        tabindex="0"
+                        th:title="${badge.title}"
+                        th:attr="aria-label=${!#strings.isEmpty(badge.unlockCondition) ? 'Unlock details for ' + badge.label + ': ' + badge.unlockCondition : 'Badge details for ' + badge.label}">
+                    <img class="name-badge-chip"
+                         th:src="${badge.imageUrl}"
+                         alt=""
+                         aria-hidden="true"
+                         loading="lazy" />
+                    <span class="name-badge-label"
+                          th:text="${badge.label}">Badge</span>
+                    <span class="badge-detail-overlay"
+                          data-badge-detail-overlay
+                          th:classappend="${#strings.isEmpty(badge.unlockCondition)} ? ' d-none'">
+                      <span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
+                      <span class="badge-detail-overlay-text"
+                            th:text="${badge.unlockCondition}">Unlock condition</span>
+                    </span>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <span class="ladder-rating text-muted small session-roster-stat-cell"
+                  data-session-stat-cell>
+              <span class="session-roster-stat-stack">
+                <button type="button"
+                        class="session-rating-trigger session-roster-stat-value"
+                        data-session-rating-trigger
+                        hidden
+                        th:if="${clickableRating}"
+                        data-bs-toggle="modal"
+                        data-bs-target="#sessionRatingDetailsModal">
+                  <span class="session-roster-number"
+                        data-session-rating-trigger-text
+                        th:text="${ratingLabel}">1000 (4th)</span>
+                </button>
+                <span class="session-roster-number session-roster-stat-value"
+                      data-session-stat-text
+                      th:text="${ratingLabel}">
+                  1000 (4th)
+                </span>
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div th:if="${sessionStandings == null or #lists.isEmpty(sessionStandings)}"
+           class="text-center text-muted px-3 py-3">
+        No players have joined this session yet.
+      </div>
+      <div class="small text-muted ps-3 pe-3 pt-3 pb-3">
+        <span th:if="${improvementAdvice != null and improvementAdvice.recentChanges != null and !#lists.isEmpty(improvementAdvice.recentChanges)}">
+          Tap your rating to open recent changes.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <script th:if="${targetSeason != null}" th:inline="javascript">
+    /*<![CDATA[*/
+    window.matchLogConfig = window.matchLogConfig || {};
+    window.matchLogConfig.language = /*[[${voiceLanguage}]]*/ 'en-US';
+    window.matchLogConfig.phraseHints = /*[[${voicePhraseHints}]]*/ [];
+    window.matchLogConfig.maxAlternatives = /*[[${voiceMaxAlternatives}]]*/ 3;
+    window.matchLogConfig.postMatchLoggedBaseUrl = /*[[@{/groups/{ladderId}(ladderId=${ladder.id})}]]*/ '/home';
+    window.matchLogConfig.reviewParams = {
+      competition: true,
+      returnTo: /*[[@{/groups/{ladderId}(ladderId=${ladder.id})}]]*/ '/home'
+    };
+    /*]]>*/
+  </script>
+
+  <div class="card mb-3" th:if="${sessionRoundRobinTask != null}">
+    <div class="card-header card-header-title text-center">Your Round Robin</div>
+    <div class="card-body d-grid gap-3">
+      <div class="text-center">
+        <div class="fw-semibold">
+          Round <span th:text="${sessionRoundRobinTask.currentRound}">1</span>
+          <span th:if="${sessionRoundRobinTask.maxRound != null}">of <span th:text="${sessionRoundRobinTask.maxRound}">3</span></span>
+        </div>
+        <div class="small text-muted mt-1" th:if="${sessionRoundRobinTask.bye}">
+          Bye this round.
+        </div>
+        <div class="small text-muted mt-1" th:if="${sessionRoundRobinTask.readyToLog}">
+          This is your next assigned match.
+        </div>
+        <div class="small text-muted mt-1" th:if="${sessionRoundRobinTask.canConfirm}">
+          Result logged. Confirm it here.
+        </div>
+        <div class="small text-muted mt-1" th:if="${sessionRoundRobinTask.waitingOnOpponentConfirmation}">
+          Waiting on the other team to confirm.
+        </div>
+        <div class="small text-muted mt-1" th:if="${sessionRoundRobinTask.confirmed and !sessionRoundRobinTask.bye}">
+          Confirmed. Check the next round when it opens.
+        </div>
+      </div>
+
+      <ul class="nav nav-pills justify-content-center session-round-nav"
+          role="tablist"
+          th:if="${sessionRoundRobinRounds != null and #lists.size(sessionRoundRobinRounds) > 1}">
+        <li class="nav-item" role="presentation" th:each="round : ${sessionRoundRobinRounds}">
+          <button type="button"
+                  class="nav-link"
+                  role="tab"
+                  data-bs-toggle="pill"
+                  th:id="${'session-round-tab-' + sessionRoundRobinTask.roundRobinId + '-' + round.roundNumber}"
+                  th:classappend="${round.current} ? ' active' : null"
+                  th:attr="data-bs-target=${'#session-round-pane-' + sessionRoundRobinTask.roundRobinId + '-' + round.roundNumber},
+                           aria-controls=${'session-round-pane-' + sessionRoundRobinTask.roundRobinId + '-' + round.roundNumber},
+                           aria-selected=${round.current ? 'true' : 'false'}"
+                  th:text="${'R' + round.roundNumber}">
+            R1
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div th:each="round : ${sessionRoundRobinRounds}"
+             class="tab-pane fade"
+             role="tabpanel"
+             th:id="${'session-round-pane-' + sessionRoundRobinTask.roundRobinId + '-' + round.roundNumber}"
+             th:classappend="${round.current} ? ' show active' : null"
+             th:attr="aria-labelledby=${'session-round-tab-' + sessionRoundRobinTask.roundRobinId + '-' + round.roundNumber}">
+          <div th:if="${round.bye}" class="text-center small text-muted py-3">
+            Bye this round.
+          </div>
+          <div th:unless="${round.bye}" class="session-round-preview">
+            <div class="session-round-preview-team">
+              <span th:text="${round.a1Name != null ? round.a1Name : ''}">Player A1</span>
+              <span th:if="${round.a2Name != null and !#strings.isEmpty(round.a2Name)}"
+                    th:text="${round.a2Name}">Player A2</span>
+            </div>
+            <div class="session-round-preview-vs">vs</div>
+            <div class="session-round-preview-team">
+              <span th:text="${round.b1Name != null ? round.b1Name : ''}">Player B1</span>
+              <span th:if="${round.b2Name != null and !#strings.isEmpty(round.b2Name)}"
+                    th:text="${round.b2Name}">Player B2</span>
+            </div>
+            <div class="small text-muted mt-3 text-center"
+                 th:if="${round.status != null}"
+                 th:text="${round.status}">Coming up</div>
+            <div th:if="${round.readyToLog}" class="mt-3 text-center">
+              <a class="btn btn-action-primary btn-card-width"
+                 th:href="@{/log-match(ladderId=${ladder.id},seasonId=${targetSeason.id},a1=${round.quickLogA1},a2=${round.quickLogA2},b1=${round.quickLogB1},b2=${round.quickLogB2},returnTo=${'/groups/' + ladder.id},returnToRoundRobinId=${sessionRoundRobinTask.roundRobinId},returnToRoundRobinEntryId=${sessionRoundRobinTask.entryId},returnToRoundRobinRound=${round.roundNumber})}">
+                Log This Match
+              </a>
+            </div>
+            <div th:if="${round.canConfirm}" class="mt-3 d-flex justify-content-center"
+                 data-skip-confirm-fragment-refresh="true"
+                 th:insert="~{fragments/matchRow :: matchRow_confirmation(match=${round.match}, pendingForCurrentUser=${true}, waitingOnOpponent=${false}, deletable=${false})}">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3" th:if="${currentUserIsAdmin}">
+    <div class="card-header card-header-title text-center">Players</div>
     <div class="card-body d-grid gap-3"
          id="sessionMembersPanel"
          th:attr="data-session-id=${ladder.id},
                   data-current-user-id=${currentUserId},
                   data-owner-user-id=${ownerUserId},
-                  data-current-user-is-admin=${currentUserIsAdmin ? 'true' : 'false'},
-                  data-leave-confirm-message=${leaveConfirmMessage},
-                  data-leave-action-label=${leaveActionLabel != null ? leaveActionLabel : 'Leave Session'}">
+                  data-current-user-is-admin=${currentUserIsAdmin ? 'true' : 'false'}">
       <div class="small text-muted text-center"
            data-member-section-title
            th:text="${memberSectionTitle}">Session Members (1/20)</div>
@@ -179,15 +461,6 @@
                     th:action="@{'/groups/' + ${ladder.id} + '/remove/' + ${m.id}}"
                     onsubmit="return handleConfirmForm(this, 'Remove this player from the session? They can rejoin later with the invite if there is space.');">
                 <button type="submit" class="btn btn-action-danger btn-inline">Remove</button>
-              </form>
-              <form method="post"
-                    class="m-0"
-                    th:if="${m.userId == currentUserId}"
-                    th:action="@{'/groups/' + ${ladder.id} + '/leave/' + ${m.id}}"
-                    th:attr="onsubmit=|return handleConfirmForm(this, '${leaveConfirmMessage}')|">
-                <button type="submit"
-                        class="btn btn-action-danger btn-inline"
-                        th:text="${leaveActionLabel != null ? leaveActionLabel : 'Leave Session'}">Leave Session</button>
               </form>
             </div>
           </div>
@@ -237,285 +510,209 @@
     </div>
   </div>
 
-  <div class="card mb-3" th:if="${members != null and #lists.size(members) > 1}">
-    <div class="card-header card-header-title text-center">Actions</div>
-    <div class="card-body d-grid gap-2 text-start">
-      <input type="hidden" id="ladderId" th:value="${ladder.id}" />
-      <input type="hidden" id="seasonId" th:value="${targetSeason != null ? targetSeason.id : null}" />
-      <script th:if="${targetSeason != null}" th:inline="javascript">
-        /*<![CDATA[*/
-        window.matchLogConfig = window.matchLogConfig || {};
-        window.matchLogConfig.language = /*[[${voiceLanguage}]]*/ 'en-US';
-        window.matchLogConfig.phraseHints = /*[[${voicePhraseHints}]]*/ [];
-        window.matchLogConfig.maxAlternatives = /*[[${voiceMaxAlternatives}]]*/ 3;
-        window.matchLogConfig.postMatchLoggedBaseUrl = /*[[@{/groups/{ladderId}(ladderId=${ladder.id})}]]*/ '/home';
-        window.matchLogConfig.reviewParams = {
-          competition: true,
-          returnTo: /*[[@{/groups/{ladderId}(ladderId=${ladder.id})}]]*/ '/home'
-        };
-        /*]]>*/
-      </script>
-      <div th:if="${sessionRoundRobinTask != null}" class="card border-warning-subtle bg-warning-subtle bg-opacity-25 mb-3">
-        <div class="card-body text-center">
-          <div class="small text-uppercase text-muted fw-semibold mb-2">Your Round Robin</div>
-          <div class="fw-semibold">
-            Round <span th:text="${sessionRoundRobinTask.currentRound}">1</span>
-            <span th:if="${sessionRoundRobinTask.maxRound != null}">of <span th:text="${sessionRoundRobinTask.maxRound}">3</span></span>
-          </div>
-
-          <div th:if="${sessionRoundRobinTask.bye}" class="small text-muted mt-2">
-            You have a bye this round. Wait here for the next round to open.
-          </div>
-
-          <div th:if="${!sessionRoundRobinTask.bye}" class="d-flex flex-column text-center small mt-2">
-            <span th:text="${sessionRoundRobinTask.a1Name != null ? sessionRoundRobinTask.a1Name : ''}">Player A1</span>
-            <span th:text="${sessionRoundRobinTask.a2Name != null ? sessionRoundRobinTask.a2Name : ''}">Player A2</span>
-            <span class="fw-bold">vs</span>
-            <span th:text="${sessionRoundRobinTask.b1Name != null ? sessionRoundRobinTask.b1Name : ''}">Player B1</span>
-            <span th:text="${sessionRoundRobinTask.b2Name != null ? sessionRoundRobinTask.b2Name : ''}">Player B2</span>
-          </div>
-
-          <div th:if="${sessionRoundRobinTask.readyToLog}" class="small text-muted mt-2">
-            Log this pairing next. Other session matches are paused until your round-robin task is done.
-          </div>
-          <div th:if="${sessionRoundRobinTask.canConfirm}" class="small text-muted mt-2">
-            Your result is logged. Confirm it here so the round can keep moving.
-          </div>
-          <div th:if="${sessionRoundRobinTask.waitingOnOpponentConfirmation}" class="small text-muted mt-2">
-            Your result is logged. Waiting on the other team to confirm before the round can move on.
-          </div>
-          <div th:if="${sessionRoundRobinTask.confirmed and !sessionRoundRobinTask.bye}" class="small text-muted mt-2">
-            Your result is confirmed. Stay on this card until the next round opens.
-          </div>
-
-          <div th:if="${sessionRoundRobinTask.readyToLog}" class="mt-3">
-            <a class="btn btn-action-primary btn-card-width"
-               th:href="@{/log-match(ladderId=${ladder.id},seasonId=${targetSeason.id},a1=${sessionRoundRobinTask.quickLogA1},a2=${sessionRoundRobinTask.quickLogA2},b1=${sessionRoundRobinTask.quickLogB1},b2=${sessionRoundRobinTask.quickLogB2},returnTo=${'/groups/' + ladder.id},returnToRoundRobinId=${sessionRoundRobinTask.roundRobinId},returnToRoundRobinEntryId=${sessionRoundRobinTask.entryId},returnToRoundRobinRound=${sessionRoundRobinTask.currentRound})}">
-              Quick Log Round Robin Match
-            </a>
-          </div>
-
-          <div th:if="${sessionRoundRobinTask.canConfirm}" class="mt-3 d-flex justify-content-center"
-               data-skip-confirm-fragment-refresh="true"
-               th:insert="~{fragments/matchRow :: matchRow_confirmation(match=${sessionRoundRobinTask.match}, pendingForCurrentUser=${true}, waitingOnOpponent=${false}, deletable=${false})}">
-          </div>
-
-          <div class="mt-3">
-            <a class="btn btn-nav-secondary btn-card-width"
-               th:href="@{/round-robin/view/{id}(id=${sessionRoundRobinTask.roundRobinId},round=${sessionRoundRobinTask.currentRound})}">
-              Open Round Robin
-            </a>
-          </div>
-          <div class="small text-muted mt-2">
-            Confirm matches when prompted. Other session match logging stays locked until this round-robin step is complete.
-          </div>
+  <div class="modal fade"
+       id="sessionConfirmationsInboxModal"
+       data-session-confirmation-modal="inbox"
+       tabindex="-1"
+       aria-labelledby="sessionConfirmationsInboxModalLabel"
+       aria-hidden="true"
+       th:if="${sessionConfirmationInboxLinks != null and !#lists.isEmpty(sessionConfirmationInboxLinks)}">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5"
+              id="sessionConfirmationsInboxModalLabel">Inbox</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-      </div>
-
-      <div th:if="${sessionRoundRobinTask == null}">
-        <p class="small text-muted mb-1">
-          Tip: remind players they have 2 days to confirm logged matches for competition credit.
-          They can review pending items from
-          <a th:href="@{/confirm-matches}">Confirm Matches</a>.
-        </p>
-        <div class="position-relative">
-          <div class="d-flex justify-content-center align-items-center gap-2">
-            <button th:if="${targetSeason != null}"
-                    id="logMatchVoiceBtn"
-                    type="button"
-                    class="btn btn-action-success btn-lg d-flex align-items-center justify-content-center p-3"
-                    aria-pressed="false"
-                    aria-label="Log Match by Voice"
-                    style="position:relative;">
-              <i class="bi bi-mic fs-4" aria-hidden="true"></i>
-              <span id="logMatchVoiceBtnLabel" class="visually-hidden">Log Match</span>
-              <span id="logMatchVoiceSpinner" class="ms-2 d-none" aria-hidden="true">
-                <span class="spinner-border spinner-border-sm text-warning"></span>
-              </span>
-            </button>
-            <a class="btn btn-action-success btn-card-width disabled"
-               th:unless="${targetSeason != null}"
-               href="#"
-               aria-disabled="true">
-              Voice Log
-            </a>
-
-            <a class="btn btn-action-primary btn-card-width"
-               th:if="${targetSeason != null}"
-               title="Log Match (Classic)"
-               th:href="@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}"
-               aria-label="Log Match (Classic)">
-              Log Match
-            </a>
-            <a class="btn btn-action-primary btn-card-width disabled"
-               th:unless="${targetSeason != null}"
-               href="#"
-               aria-disabled="true">
-              Log Match
-            </a>
-          </div>
-          <div th:if="${targetSeason != null}"
-               id="logMatchVoiceCaption"
-               class="text-center mt-2 mb-2 text-muted d-none"
-               aria-live="polite"
-               data-default-caption='Say something like, "Pam and I beat Ryan and Amy 11-8"'>
-            Say something like, "Pam and I beat Ryan and Amy 11-8"
-          </div>
-        </div>
-        <div class="pt-2 border-top mt-2 text-center">
-          <a class="btn btn-action-primary btn-card-width"
-             th:if="${canStartSessionRoundRobin}"
-             th:href="@{/round-robin/list(ladderId=${ladder.id})}">
-            Start a Round Robin
-          </a>
-          <a class="btn btn-action-primary btn-card-width disabled"
-             th:unless="${canStartSessionRoundRobin}"
-             href="#"
-             aria-disabled="true">
-            Start a Round Robin
-          </a>
-          <div class="small text-muted mt-2"
-               th:text="${canStartSessionRoundRobin} ? 'Round robins are an optional way to mix up your games during the session.' : 'Only the session starter can start a round robin from here.'">
-            Round robins are an optional way to mix up your games during the session.
-          </div>
-        </div>
-      </div>
-      <div class="pt-2 border-top mt-2">
-        <div class="small text-uppercase text-muted fw-semibold mb-2 text-center">Dashboard</div>
-        <div th:replace="~{components/matchDashboard :: matchDashboard}"></div>
-      </div>
-      <div id="sessionStandingContainer" class="pt-2 border-top mt-2">
-        <div class="small text-uppercase text-muted fw-semibold mb-2 text-center">Your Standing</div>
-        <div th:if="${sessionStandingRow != null}" class="session-standing-preview">
-          <div class="session-standing-band"
-               th:if="${sessionStandingRow.bandName != null and !#strings.isEmpty(sessionStandingRow.bandName)}"
-               th:text="${sessionStandingRow.bandName}">Division</div>
-          <div class="session-standing-grid session-standing-labels">
-            <div class="text-center" title="Form">Frm</div>
-            <div class="text-center" title="Rank">#</div>
-            <div>Player</div>
-            <div class="text-end">Rating</div>
-          </div>
-          <div class="session-standing-grid">
-            <span class="badge rounded-pill bg-light border session-standing-momentum"
-                  aria-live="polite"
-                  th:title="${(sessionStandingRow.momentum > 0 ? '+' : '') + sessionStandingRow.momentum + ' form'}"
-                  th:classappend="
-                    ${sessionStandingRow.momentum >= 12} ? ' text-success border-success' :
-                    (${sessionStandingRow.momentum >= 8}  ? ' text-success border-success' :
-                    (${sessionStandingRow.momentum >= 4}  ? ' text-success border-success' :
-                    (${sessionStandingRow.momentum > 0}   ? ' text-success border-success' :
-                    (${sessionStandingRow.momentum == 0}  ? ' text-muted border-secondary' :
-                    (${sessionStandingRow.momentum <= -12}? ' text-danger border-danger' :
-                    (${sessionStandingRow.momentum <= -8} ? ' text-danger border-danger' :
-                    (${sessionStandingRow.momentum <= -4} ? ' text-warning border-warning' :
-                                                              ' text-warning border-warning')))))))">
-              <i class="bi"
-                 aria-hidden="true"
-                 th:classappend="
-                   ${sessionStandingRow.momentum >= 12} ? ' bi-fire' :
-                   (${sessionStandingRow.momentum >= 8}  ? ' bi-triangle-fill' :
-                   (${sessionStandingRow.momentum >= 4}  ? ' bi-triangle-half' :
-                   (${sessionStandingRow.momentum > 0}   ? ' bi-triangle' :
-                   (${sessionStandingRow.momentum == 0}  ? ' bi-dash-circle' :
-                   (${sessionStandingRow.momentum <= -12}? ' bi-snow' :
-                   (${sessionStandingRow.momentum <= -8} ? ' bi-triangle-fill rot-180' :
-                   (${sessionStandingRow.momentum <= -4} ? ' bi-triangle-half rot-180' :
-                                                             ' bi-triangle rot-180')))))))"></i>
-              <span class="visually-hidden"
-                    th:text="${(sessionStandingRow.momentum > 0 ? '+' : '') + sessionStandingRow.momentum + ' form'}">0 form</span>
-            </span>
-            <div class="text-center text-muted session-standing-value" th:text="${sessionStandingRow.rank}">1</div>
-            <div class="session-standing-player">
-              <div class="player-name-with-badges">
-                <span class="fw-semibold player-name-label"
-                      th:text="${sessionStandingRow.displayName}">Player Name</span>
-                <span class="name-badge-strip"
-                      th:if="${sessionStandingRow.badgeViews != null and !#lists.isEmpty(sessionStandingRow.badgeViews)}">
-                  <span th:each="badge : ${sessionStandingRow.badgeViews}"
-                        class="name-badge-pill badge-detail-trigger"
-                        data-badge-detail-trigger
-                        aria-expanded="false"
-                        role="button"
-                        tabindex="0"
-                        th:title="${badge.title}"
-                        th:attr="aria-label=${!#strings.isEmpty(badge.unlockCondition) ? 'Unlock details for ' + badge.label + ': ' + badge.unlockCondition : 'Badge details for ' + badge.label}">
-                    <img class="name-badge-chip"
-                         th:src="${badge.imageUrl}"
-                         alt=""
-                         aria-hidden="true"
-                         loading="lazy" />
-                    <span class="name-badge-label"
-                          th:text="${badge.label}">Badge</span>
-                    <span class="badge-detail-overlay"
-                          data-badge-detail-overlay
-                          th:classappend="${#strings.isEmpty(badge.unlockCondition)} ? ' d-none'">
-                      <span class="badge-detail-overlay-label text-uppercase">Unlocked</span>
-                      <span class="badge-detail-overlay-text"
-                            th:text="${badge.unlockCondition}">Unlock condition</span>
-                    </span>
-                  </span>
-                </span>
-              </div>
-            </div>
-            <div class="text-end text-muted small session-standing-value"
-                 th:text="${1000 + sessionStandingRow.points}">1000</div>
-          </div>
-        </div>
-        <div class="text-center text-muted small" th:if="${sessionStandingRow == null}">
-          Your standing will appear here after your first confirmed global competition match.
-        </div>
-      </div>
-      <script th:if="${targetSeason != null}"
-              src="/js/match-log-voice.js"
-              th:src="@{/js/match-log-voice.js(v=${assetVersion})}"></script>
-    </div>
-  </div>
-
-  <div id="sessionReportCardContainer"
-       class="card mb-3"
-       th:if="${sessionReportStandings != null and !#lists.isEmpty(sessionReportStandings)}"
-       th:attr="data-session-standings-pending=${sessionStandingsRecalculationPending}">
-    <div class="card-header card-header-title card-collapse-header">
-      <button class="btn card-collapse-toggle collapsed"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#sessionReportCardCollapse"
-              aria-expanded="false"
-              aria-controls="sessionReportCardCollapse">
-        <span class="card-collapse-spacer" aria-hidden="true"></span>
-        <span class="card-collapse-title">Session Report Card</span>
-        <i class="bi bi-chevron-down card-collapse-icon" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div id="sessionReportCardCollapse" class="collapse">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-          <p class="small text-muted mb-0">
-            Only confirmed matches logged from this session appear here.
-          </p>
-          <a href="#"
-             class="link-primary small flex-shrink-0"
-             onclick="return refreshSessionReportCard()"
-             aria-label="Refresh session report standings"
-             title="Refresh session report standings">
-            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
-          </a>
-        </div>
-        <div class="d-flex justify-content-center mb-3" th:if="${targetSeason != null}">
-          <div class="text-center">
-            <a class="btn btn-nav-primary btn-card-width"
-               th:href="@{/seasons/{seasonId}/matches/recent(seasonId=${targetSeason.id},backTo=${'/groups/' + ladder.id})}">
-              Show Recent Matches
-            </a>
-            <div class="small text-muted mt-2">
-              Browse the latest competition matches from this season.
-            </div>
-          </div>
-        </div>
-        <div th:replace="~{fragments/roundrobinStandings :: standingsTable(${sessionReportStandings}, 'Standings')}">
+        <div class="modal-body d-grid gap-3">
+          <div class="small text-muted">Your confirmation is needed on these matches.</div>
+          <div th:replace="~{fragments/show/sessionBody :: sessionConfirmationList(
+                 confirmationLinks=${sessionConfirmationInboxLinks},
+                 confirmableMatchIds=${sessionConfirmationInboxConfirmableMatchIds})}"></div>
         </div>
       </div>
     </div>
   </div>
+
+  <div class="modal fade"
+       id="sessionConfirmationsOutboxModal"
+       data-session-confirmation-modal="outbox"
+       tabindex="-1"
+       aria-labelledby="sessionConfirmationsOutboxModalLabel"
+       aria-hidden="true"
+       th:if="${sessionConfirmationOutboxLinks != null and !#lists.isEmpty(sessionConfirmationOutboxLinks)}">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5"
+              id="sessionConfirmationsOutboxModalLabel">Outbox</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body d-grid gap-3">
+          <div class="small text-muted">These matches are waiting on the other team.</div>
+          <div th:replace="~{fragments/show/sessionBody :: sessionConfirmationList(
+                 confirmationLinks=${sessionConfirmationOutboxLinks},
+                 confirmableMatchIds=${null})}"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <th:block th:fragment="sessionConfirmationList(confirmationLinks, confirmableMatchIds)">
+    <div class="d-flex flex-column">
+      <div th:each="lnk : ${confirmationLinks}"
+           th:data-match-id="${lnk.match.id}"
+           class="match-dashboard-card card mb-1 position-relative"
+           th:with="isParticipant=${loggedInUser != null and (loggedInUser.id == lnk.match.a1?.id or loggedInUser.id == lnk.match.a2?.id or loggedInUser.id == lnk.match.b1?.id or loggedInUser.id == lnk.match.b2?.id)}"
+           th:classappend="${isParticipant and ((loggedInUser.id == lnk.match.a1?.id or loggedInUser.id == lnk.match.a2?.id) and lnk.match.scoreA > lnk.match.scoreB or (loggedInUser.id == lnk.match.b1?.id or loggedInUser.id == lnk.match.b2?.id) and lnk.match.scoreB > lnk.match.scoreA) ? 'bg-success bg-opacity-10' : (isParticipant ? 'bg-danger bg-opacity-10' : '')}">
+        <div class="card-body p-2">
+          <div th:insert="~{fragments/matchRow :: matchRow(match=${lnk.match}, confirmable=${confirmableMatchIds != null and confirmableMatchIds.contains(lnk.match.id)}, editable=${editableByMatchId != null and editableByMatchId[lnk.match.id] != null ? editableByMatchId[lnk.match.id] : lnk.match.isEditableBy(loggedInUser)}, showTime=true, title=${null}, showScore=true, showState=true, showAdminControls=false, a1Name=null, a2Name=null, b1Name=null, b2Name=null, confirmer=${confirmerByMatchId != null ? confirmerByMatchId[lnk.match.id] : null}, removeOnConfirm=${true})}"></div>
+        </div>
+      </div>
+    </div>
+  </th:block>
+
+  <div class="modal fade"
+       id="sessionRatingDetailsModal"
+       tabindex="-1"
+       aria-labelledby="sessionRatingDetailsModalLabel"
+       aria-hidden="true"
+       th:if="${improvementAdvice != null and improvementAdvice.recentChanges != null and !#lists.isEmpty(improvementAdvice.recentChanges)}">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="sessionRatingDetailsModalLabel">Recent Rating Changes</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-grid gap-2 climb-faster-changes">
+            <details class="climb-faster-change" th:each="change : ${improvementAdvice.recentChanges}">
+              <summary class="climb-faster-change-summary">
+                <span th:if="${change.occurredAt != null}"
+                      th:attr="data-utc-time=${change.occurredAt},data-time-format='relative-change'"
+                      class="fhpb-relative-change-time climb-faster-change-time"></span>
+                <span th:if="${change.occurredAt != null}"> &middot; </span>
+                <span th:text="${change.summary}"></span>
+              </summary>
+              <ul class="climb-faster-change-steps mt-2 mb-0">
+                <li th:each="step : ${change.explanationSteps}" th:text="${step}"></li>
+              </ul>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const list = document.querySelector('[data-session-standings-list="true"]');
+      const statButtons = Array.from(document.querySelectorAll('[data-session-stat-toggle]'));
+      if (!list || !statButtons.length) {
+        return;
+      }
+
+      const rows = Array.from(list.querySelectorAll('[data-session-row]'));
+      if (!rows.length) {
+        return;
+      }
+
+      function updateStatControls(statKey) {
+        statButtons.forEach(function (button) {
+          const isActive = button.getAttribute('data-session-stat-toggle') === statKey;
+          button.classList.toggle('is-active', isActive);
+          button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+      }
+
+      function sortRows(statKey) {
+        const sorted = rows.slice().sort(function (a, b) {
+          const aValue = Number(a.getAttribute('data-session-sort-' + statKey) || '0');
+          const bValue = Number(b.getAttribute('data-session-sort-' + statKey) || '0');
+          if (bValue !== aValue) {
+            return bValue - aValue;
+          }
+
+          const aRank = Number(a.getAttribute('data-session-original-rank') || '0');
+          const bRank = Number(b.getAttribute('data-session-original-rank') || '0');
+          return aRank - bRank;
+        });
+
+        sorted.forEach(function (row) {
+          list.appendChild(row);
+        });
+      }
+
+      function renumberRows() {
+        Array.from(list.querySelectorAll('[data-session-row]')).forEach(function (row, index) {
+          const rankCell = row.querySelector('[data-session-row-rank]');
+          if (rankCell) {
+            rankCell.textContent = String(index + 1);
+          }
+        });
+      }
+
+      function setHiddenState(element, hidden) {
+        if (!element) {
+          return;
+        }
+        if (hidden) {
+          element.setAttribute('hidden', 'hidden');
+          return;
+        }
+        element.removeAttribute('hidden');
+      }
+
+      function updateStatColumn(statKey) {
+        updateStatControls(statKey);
+        rows.forEach(function (row) {
+          const ratingTrigger = row.querySelector('[data-session-rating-trigger]');
+          const ratingTriggerText = row.querySelector('[data-session-rating-trigger-text]');
+          const statText = row.querySelector('[data-session-stat-text]');
+          const nextValue = row.getAttribute('data-session-sort-' + statKey) || '';
+          const ratingLabel = row.getAttribute('data-session-rating-label') || nextValue;
+          const showingClickableRating = statKey === 'rating' && !!ratingTrigger;
+
+          if (statText) {
+            statText.textContent = statKey === 'rating' ? ratingLabel : nextValue;
+          }
+          if (ratingTrigger) {
+            setHiddenState(ratingTrigger, !showingClickableRating);
+            if (ratingTriggerText) {
+              ratingTriggerText.textContent = ratingLabel;
+            }
+          }
+          if (statText) {
+            setHiddenState(statText, showingClickableRating);
+          }
+        });
+        sortRows(statKey);
+        renumberRows();
+      }
+
+      statButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          updateStatColumn(button.getAttribute('data-session-stat-toggle') || 'rating');
+        });
+      });
+
+      updateStatColumn('rating');
+    })();
+  </script>
+
+  <script th:if="${targetSeason != null}"
+          src="/js/match-log-voice.js"
+          th:src="@{/js/match-log-voice.js(v=${assetVersion})}"></script>
+  <script th:if="${sessionConfirmationsAutoOpen}">
+    (function () {
+      const modalEl = document.getElementById('sessionConfirmationsInboxModal')
+        || document.getElementById('sessionConfirmationsOutboxModal');
+      if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+        return;
+      }
+      window.setTimeout(function () {
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+      }, 120);
+    })();
+  </script>
 </th:block>

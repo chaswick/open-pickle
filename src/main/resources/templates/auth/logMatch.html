@@ -164,15 +164,6 @@
         title="Toggle very large text for better outdoor readability">Large text</button>
     </div>
 
-    <div class="app-page-back mb-3">
-      <a class="btn btn-nav-secondary btn-lg w-100"
-         th:href="${returnToPath != null} ? @{${returnToPath}} : (${competitionLogMode} ? @{/competition/log-match(ladderId=${ladderId})} : @{/private-groups/{ladderId}(ladderId=${ladderId},seasonId=${seasonId})})">
-        Back
-      </a>
-    </div>
-
-    <div th:if="${showLadderSelection}" th:replace="~{components/ladderSelector :: ladderSelector}"></div>
-
     <form method="post" action="/log-match" th:action="@{/log-match}" id="logMatchForm">
       <input type="hidden" name="seasonId" th:value="${seasonId}" />
       <input type="hidden" name="ladderId" th:value="${ladderId}" />

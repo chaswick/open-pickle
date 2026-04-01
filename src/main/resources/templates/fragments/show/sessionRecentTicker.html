@@ -1,0 +1,28 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sessionRecentTicker">
+  <div class="session-recent-ticker-shell"
+       th:if="${isSessionLadder and sessionRecentTickerItems != null and !#lists.isEmpty(sessionRecentTickerItems)}">
+    <div class="session-recent-ticker"
+         data-session-recent-ticker="true">
+      <span class="session-recent-ticker-viewport">
+        <span class="session-recent-ticker-fallback"
+              data-session-recent-source
+              aria-hidden="true">
+          <span class="session-recent-ticker-item"
+                th:each="item : ${sessionRecentTickerItems}"
+                data-session-recent-item>
+            <span class="session-recent-ticker-age"
+                  data-session-recent-age
+                  th:attr="data-utc-time=${item.playedAt},data-time-format='relative-change'"
+                  th:text="${item.ageLabel}">Just now</span>
+            <span class="session-recent-ticker-separator" aria-hidden="true">:</span>
+            <span class="session-recent-ticker-copy"
+                  th:text="${item.summary}">Eddie &amp; Dave def Young &amp; Guest 11-5</span>
+          </span>
+        </span>
+        <span class="session-recent-ticker-marquee d-none"
+              data-session-recent-marquee
+              aria-hidden="true"></span>
+      </span>
+    </div>
+  </div>
+</th:block>

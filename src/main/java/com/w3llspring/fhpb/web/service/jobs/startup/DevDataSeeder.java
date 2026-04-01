@@ -80,6 +80,7 @@ import com.w3llspring.fhpb.web.service.trophy.AutoTrophyService;
 import com.w3llspring.fhpb.web.service.trophy.FallbackTrophyTemplates;
 import com.w3llspring.fhpb.web.service.trophy.GeneratedTrophy;
 import com.w3llspring.fhpb.web.service.trophy.TrophyArtService;
+import com.w3llspring.fhpb.web.service.user.UserPublicCodeGenerator;
 
 /**
  * Rebuilds a representative dataset every time the dev/docker profiles boot.
@@ -264,7 +265,7 @@ public class DevDataSeeder {
         // Keep one extra owner slot on the seeded admin so the dev competition ladder can coexist
         // with the three standard demo ladders even when the global per-user limit is set to 3.
         admin.setMaxOwnedLadders(Math.max(defaultMaxOwnedLadders, 4));
-        admin = userRepo.save(admin);
+        admin = saveUserWithUniquePublicCode(admin);
 
         addCourtName(admin, "Charlie", null);
         addCourtName(member, "Dave", null);
@@ -487,6 +488,15 @@ public class DevDataSeeder {
                 other2Clone,
                 sunriseRiley,
                 sunriseJordan);
+        seedSessionTickerMatches(
+                memberSession,
+                competitionSeason,
+                member,
+                coach,
+                spectator,
+                other1,
+                sunriseRiley,
+                sunriseJordan);
         List<User> largePickerSessionRoster = Stream.concat(
                         Stream.of(
                                 member,
@@ -509,6 +519,19 @@ public class DevDataSeeder {
                 largePickerSessionRoster.toArray(User[]::new));
         upsertMembership(competitionSeason.getLadderConfig(), pickerCaptain, Role.MEMBER, State.ACTIVE);
         largePickerSessionRoster.forEach(user -> upsertMembership(competitionSeason.getLadderConfig(), user, Role.MEMBER, State.ACTIVE));
+        seedSessionTickerMatches(
+                largePickerSession,
+                competitionSeason,
+                pickerCaptain,
+                member,
+                coach,
+                spectator,
+                other1,
+                other2,
+                sunriseRiley,
+                sunriseJordan,
+                sunriseSky,
+                sunriseDawn);
         seedCompetitionMatches(
                 competitionSeason,
                 member,
@@ -821,7 +844,7 @@ public class DevDataSeeder {
         if (termsAccepted) {
             user.setAcknowledgedTermsAt(Instant.now().minusSeconds(86_400));
         }
-        return userRepo.save(user);
+        return saveUserWithUniquePublicCode(user);
     }
 
     private List<User> createLargeSessionQaUsers(int desiredCount) {
@@ -858,7 +881,7 @@ public class DevDataSeeder {
             int scoreA,
             int scoreB) {
         // Seed data should count in standings by default.
-        return logMatch(season, matchDate, a1, a2, b1, b2, scoreA, scoreB, MatchState.CONFIRMED, false, null);
+        return logMatch(season, matchDate, a1, a2, b1, b2, scoreA, scoreB, MatchState.CONFIRMED, false, null, null);
     }
 
     private Match logMatch(LadderSeason season,
@@ -872,13 +895,40 @@ public class DevDataSeeder {
             MatchState state,
             boolean scoreEstimated,
             Integer confidenceScore) {
+        return logMatch(season, matchDate, a1, a2, b1, b2, scoreA, scoreB, state, scoreEstimated, confidenceScore, null);
+    }
 
+    private Match logSessionMatch(LadderConfig sourceSessionConfig,
+            LadderSeason season,
+            LocalDate matchDate,
+            User a1,
+            User a2,
+            User b1,
+            User b2,
+            int scoreA,
+            int scoreB) {
+        return logMatch(season, matchDate, a1, a2, b1, b2, scoreA, scoreB, MatchState.CONFIRMED, false, null, sourceSessionConfig);
+    }
+
+    private Match logMatch(LadderSeason season,
+            LocalDate matchDate,
+            User a1,
+            User a2,
+            User b1,
+            User b2,
+            int scoreA,
+            int scoreB,
+            MatchState state,
+            boolean scoreEstimated,
+            Integer confidenceScore,
+            LadderConfig sourceSessionConfig) {
         Match match = new Match();
         LadderSeason managedSeason = season;
         if (season != null && season.getId() != null) {
             managedSeason = seasonRepo.findByIdWithLadderConfig(season.getId()).orElse(season);
         }
         match.setSeason(managedSeason);
+        match.setSourceSessionConfig(sourceSessionConfig);
         ZonedDateTime played = matchDate.atTime(18, 0).atZone(LADDER_ZONE);
         Instant occurredAt = played.toInstant();
         match.setPlayedAt(occurredAt);
@@ -1137,6 +1187,48 @@ public class DevDataSeeder {
                 .filter(user -> !Objects.equals(user.getId(), owner.getId()))
                 .forEach(user -> upsertMembership(session, user, Role.MEMBER, State.ACTIVE));
         return configRepo.saveAndFlush(session);
+    }
+
+    private void seedSessionTickerMatches(LadderConfig sessionConfig,
+            LadderSeason competitionSeason,
+            User... featuredPlayers) {
+        if (sessionConfig == null || competitionSeason == null) {
+            return;
+        }
+
+        List<User> pool = Stream.of(featuredPlayers)
+                .filter(Objects::nonNull)
+                .filter(user -> user.getId() != null)
+                .distinct()
+                .collect(Collectors.toList());
+        if (pool.size() < 4) {
+            return;
+        }
+
+        int[][] scores = {
+                { 11, 5 },
+                { 15, 13 },
+                { 11, 7 },
+                { 15, 10 }
+        };
+        LocalDate seedStart = LocalDate.now(LADDER_ZONE).minusDays(scores.length);
+        for (int i = 0; i < scores.length; i++) {
+            int offset = i % pool.size();
+            User a1 = pool.get(offset);
+            User a2 = pool.get((offset + 1) % pool.size());
+            User b1 = pool.get((offset + 2) % pool.size());
+            User b2 = pool.get((offset + 3) % pool.size());
+            logSessionMatch(
+                    sessionConfig,
+                    competitionSeason,
+                    seedStart.plusDays(i),
+                    a1,
+                    a2,
+                    b1,
+                    b2,
+                    scores[i][0],
+                    scores[i][1]);
+        }
     }
 
     private void seedCompetitionMatches(LadderSeason competitionSeason,
@@ -1442,7 +1534,27 @@ public class DevDataSeeder {
         if (termsAccepted) {
             user.setAcknowledgedTermsAt(user.getRegisteredAt().plus(Duration.ofHours(12)));
         }
+        return saveUserWithUniquePublicCode(user);
+    }
+
+    private User saveUserWithUniquePublicCode(User user) {
+        if (user == null) {
+            return null;
+        }
+        if (user.getPublicCode() == null || user.getPublicCode().isBlank()) {
+            user.setPublicCode(generateUniquePublicCode());
+        }
         return userRepo.save(user);
+    }
+
+    private String generateUniquePublicCode() {
+        for (int attempt = 0; attempt < 256; attempt++) {
+            String candidate = UserPublicCodeGenerator.nextCode();
+            if (!userRepo.existsByPublicCode(candidate)) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException("Unable to generate a unique public code for dev seed data.");
     }
 
     private int seedProceduralCompetitionMatches(LadderSeason competitionSeason,

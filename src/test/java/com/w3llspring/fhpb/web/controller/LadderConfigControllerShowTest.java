@@ -8,6 +8,7 @@ import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
 import com.w3llspring.fhpb.web.db.LadderStandingRepository;
+import com.w3llspring.fhpb.web.db.MatchRepository;
 import com.w3llspring.fhpb.web.db.UserDisplayNameAuditRepository;
 import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.model.CustomUserDetails;
@@ -60,14 +61,15 @@ class LadderConfigControllerShowTest {
   @Mock private LadderSeasonRepository seasons;
   @Mock private LadderMembershipRepository membershipRepo;
   @Mock private LadderStandingRepository standingRepo;
+  @Mock private MatchRepository matchRepo;
   @Mock private GroupAdministrationOperations groupAdministration;
   private LadderConfigController controller;
-  private List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionReportStandings;
+  private List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionStandings;
 
   @BeforeEach
   void setUp() {
     ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
-    sessionReportStandings = List.of();
+    sessionStandings = List.of();
     SeasonTransitionService transitionSvcStub =
         new SeasonTransitionService(null, null) {
           @Override
@@ -92,7 +94,7 @@ class LadderConfigControllerShowTest {
           @Override
           public List<com.w3llspring.fhpb.web.model.RoundRobinStanding> computeStandingsForSession(
               LadderConfig sessionConfig) {
-            return sessionReportStandings;
+            return sessionStandings;
           }
 
           @Override
@@ -115,6 +117,7 @@ class LadderConfigControllerShowTest {
             roundRobinServiceStub,
             storyModeServiceStub,
             20);
+    ReflectionTestUtils.setField(controller, "matchRepo", matchRepo);
     ReflectionTestUtils.setField(controller, "siteWideAdminEmail", "admin@test.com");
   }
 
@@ -240,6 +243,14 @@ class LadderConfigControllerShowTest {
     currentUser.setId(7L);
     currentUser.setNickName("Tester");
 
+    User tickerPartner = new User();
+    tickerPartner.setId(8L);
+    tickerPartner.setNickName("Partner");
+
+    User tickerOpponent = new User();
+    tickerOpponent.setId(9L);
+    tickerOpponent.setNickName("Opponent");
+
     LadderConfig cfg = new LadderConfig();
     cfg.setId(42L);
     cfg.setTitle("Saturday Open Session");
@@ -269,6 +280,27 @@ class LadderConfigControllerShowTest {
     link.setMatch(match);
     link.setSeason(targetSeason);
 
+    Match waitingMatch = new Match();
+    org.springframework.test.util.ReflectionTestUtils.setField(waitingMatch, "id", 401L);
+    waitingMatch.setSeason(targetSeason);
+
+    LadderMatchLink waitingLink = new LadderMatchLink();
+    waitingLink.setMatch(waitingMatch);
+    waitingLink.setSeason(targetSeason);
+
+    Match recentConfirmedMatch = new Match();
+    ReflectionTestUtils.setField(recentConfirmedMatch, "id", 499L);
+    recentConfirmedMatch.setSeason(targetSeason);
+    recentConfirmedMatch.setSourceSessionConfig(cfg);
+    recentConfirmedMatch.setA1(currentUser);
+    recentConfirmedMatch.setA2(tickerPartner);
+    recentConfirmedMatch.setB1(tickerOpponent);
+    recentConfirmedMatch.setB2(null);
+    recentConfirmedMatch.setB2Guest(true);
+    recentConfirmedMatch.setScoreA(11);
+    recentConfirmedMatch.setScoreB(5);
+    recentConfirmedMatch.setPlayedAt(Instant.parse("2026-03-31T15:55:00Z"));
+
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
     when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
@@ -280,7 +312,9 @@ class LadderConfigControllerShowTest {
             42L, LadderMembership.State.BANNED))
         .thenReturn(List.of());
     when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
-        .thenReturn(List.of(currentUser));
+        .thenReturn(List.of(currentUser, tickerPartner, tickerOpponent));
+    when(matchRepo.findConfirmedBySourceSessionConfigIdOrderByPlayedAtDescWithUsers(42L))
+        .thenReturn(List.of(recentConfirmedMatch));
 
     CompetitionSeasonService competitionSeasonService =
         new CompetitionSeasonService(null, null, null) {
@@ -294,7 +328,7 @@ class LadderConfigControllerShowTest {
           @Override
           public DashboardModel buildPendingForUserInSeason(User viewer, LadderSeason season) {
             return new DashboardModel(
-                List.of(link),
+                List.of(link, waitingLink),
                 new MatchRowModel(
                     java.util.Set.of(400L),
                     java.util.Map.of(),
@@ -317,7 +351,7 @@ class LadderConfigControllerShowTest {
         new com.w3llspring.fhpb.web.model.RoundRobinStanding(7L, "Tester");
     reportStanding.incWins();
     reportStanding.addPointsFor(22);
-    sessionReportStandings = List.of(reportStanding);
+    sessionStandings = List.of(reportStanding);
     LadderV2Service ladderV2Service =
         new LadderV2Service(
             null,
@@ -400,11 +434,21 @@ class LadderConfigControllerShowTest {
     String view = controller.show(42L, "joined", model, auth, request);
 
     assertThat(view).isEqualTo("auth/show");
-    assertThat(model.get("links")).isEqualTo(List.of(link));
+    assertThat(model.get("links")).isEqualTo(List.of(link, waitingLink));
     assertThat(model.get("confirmableMatchIds")).isEqualTo(java.util.Set.of(400L));
     assertThat(model.get("waitingOnOpponentByMatchId")).isEqualTo(java.util.Map.of(401L, true));
-    assertThat(model.get("sessionStandingRow")).isNotNull();
-    assertThat(model.get("sessionReportStandings")).isEqualTo(List.of(reportStanding));
+    assertThat(model.get("sessionConfirmationInboxCount")).isEqualTo(Integer.valueOf(1));
+    assertThat(model.get("sessionConfirmationOutboxCount")).isEqualTo(Integer.valueOf(1));
+    assertThat(model.get("sessionConfirmationInboxLinks")).isEqualTo(List.of(link));
+    assertThat(model.get("sessionConfirmationOutboxLinks")).isEqualTo(List.of(waitingLink));
+    assertThat(model.get("sessionConfirmationInboxConfirmableMatchIds"))
+        .isEqualTo(java.util.Set.of(400L));
+    assertThat(model.get("sessionConfirmationInboxNullifyApprovableByMatchId"))
+        .isEqualTo(java.util.Map.of());
+    assertThat(model.get("sessionConfirmationOutboxWaitingOnOpponentByMatchId"))
+        .isEqualTo(java.util.Map.of(401L, true));
+    assertThat(model.get("sessionConfirmationOutboxNullifyWaitingOnOpponentByMatchId"))
+        .isEqualTo(java.util.Map.of());
     assertThat(model.get("sessionStandingsRecalculationPending")).isEqualTo(Boolean.TRUE);
     assertThat(model.get("improvementAdvice")).isEqualTo(improvementAdvice);
     assertThat(model.get("sessionDisplayTitle")).isEqualTo("Saturday Open Session");
@@ -418,8 +462,13 @@ class LadderConfigControllerShowTest {
     assertThat((List<String>) model.get("voicePhraseHints"))
         .contains("Tester", "I beat", "We beat");
     assertThat(model.get("courtNameByUser")).isEqualTo(java.util.Map.of(7L, "Center Court"));
+    assertThat((java.util.Map<Long, Integer>) model.get("sessionMomentumByUserId"))
+        .containsEntry(7L, 3);
     assertThat((String) model.get("ladderInviteLink")).contains("inviteCode=DINK-7");
     assertThat((String) model.get("ladderInviteLink")).contains("autoJoin=true");
+    assertThat((List<LadderConfigController.SessionRecentTickerItem>) model.get("sessionRecentTickerItems"))
+        .extracting(LadderConfigController.SessionRecentTickerItem::summary)
+        .containsExactly("Tester & Partner def Opponent & Guest 11-5");
   }
 
   @Test
@@ -556,6 +605,115 @@ class LadderConfigControllerShowTest {
   }
 
   @Test
+  void show_sessionRoutesNullifyApprovalsIntoInboxAndNullifyWaitsIntoOutbox() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Saturday Open Session");
+    cfg.setOwnerUserId(7L);
+    cfg.setType(LadderConfig.Type.SESSION);
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.ADMIN);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    LadderSeason targetSeason = new LadderSeason();
+    ReflectionTestUtils.setField(targetSeason, "id", 55L);
+    targetSeason.setLadderConfig(cfg);
+
+    Match nullifyInboxMatch = new Match();
+    ReflectionTestUtils.setField(nullifyInboxMatch, "id", 500L);
+    nullifyInboxMatch.setSeason(targetSeason);
+
+    Match nullifyOutboxMatch = new Match();
+    ReflectionTestUtils.setField(nullifyOutboxMatch, "id", 501L);
+    nullifyOutboxMatch.setSeason(targetSeason);
+
+    LadderMatchLink nullifyInboxLink = new LadderMatchLink();
+    nullifyInboxLink.setMatch(nullifyInboxMatch);
+    nullifyInboxLink.setSeason(targetSeason);
+
+    LadderMatchLink nullifyOutboxLink = new LadderMatchLink();
+    nullifyOutboxLink.setMatch(nullifyOutboxMatch);
+    nullifyOutboxLink.setSeason(targetSeason);
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
+        .thenReturn(Optional.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser));
+    when(matchRepo.findConfirmedBySourceSessionConfigIdOrderByPlayedAtDescWithUsers(42L))
+        .thenReturn(List.of());
+
+    CompetitionSeasonService competitionSeasonService =
+        new CompetitionSeasonService(null, null, null) {
+          @Override
+          public LadderSeason resolveTargetSeason(LadderConfig ladderConfig) {
+            return targetSeason;
+          }
+        };
+    MatchDashboardService dashboardService =
+        new MatchDashboardService(null, null, null, null, null) {
+          @Override
+          public DashboardModel buildPendingForUserInSeason(User viewer, LadderSeason season) {
+            return new DashboardModel(
+                List.of(nullifyInboxLink, nullifyOutboxLink),
+                new MatchRowModel(
+                    Set.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of(),
+                    Map.of(500L, true),
+                    Map.of(501L, true)));
+          }
+        };
+    ReflectionTestUtils.setField(controller, "competitionSeasonService", competitionSeasonService);
+    ReflectionTestUtils.setField(controller, "matchDashboardService", dashboardService);
+    ReflectionTestUtils.setField(
+        controller, "matchDashboardViewService", new MatchDashboardViewService());
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    assertThat(model.get("sessionConfirmationInboxCount")).isEqualTo(Integer.valueOf(1));
+    assertThat(model.get("sessionConfirmationOutboxCount")).isEqualTo(Integer.valueOf(1));
+    assertThat(model.get("sessionConfirmationInboxLinks")).isEqualTo(List.of(nullifyInboxLink));
+    assertThat(model.get("sessionConfirmationOutboxLinks")).isEqualTo(List.of(nullifyOutboxLink));
+    assertThat(model.get("sessionConfirmationInboxConfirmableMatchIds")).isEqualTo(Set.of());
+    assertThat(model.get("sessionConfirmationInboxNullifyApprovableByMatchId"))
+        .isEqualTo(Map.of(500L, true));
+    assertThat(model.get("sessionConfirmationOutboxWaitingOnOpponentByMatchId"))
+        .isEqualTo(Map.of());
+    assertThat(model.get("sessionConfirmationOutboxNullifyWaitingOnOpponentByMatchId"))
+        .isEqualTo(Map.of(501L, true));
+    assertThat(model.get("sessionConfirmationsAutoOpen")).isEqualTo(Boolean.TRUE);
+  }
+
+  @Test
   void show_sessionStripsLegacyTimestampFromAutoGeneratedTitle() {
     User currentUser = new User();
     currentUser.setId(7L);
@@ -598,6 +756,65 @@ class LadderConfigControllerShowTest {
 
     assertThat(view).isEqualTo("auth/show");
     assertThat(model.get("sessionDisplayTitle")).isEqualTo("Tester's Session");
+    assertThat(model.get("sessionHeroTitle")).isEqualTo("Tester's Session");
+  }
+
+  @Test
+  void show_sessionJoinerUsesNormalizedSessionNameForHeroTitle() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    User owner = new User();
+    owner.setId(8L);
+    owner.setNickName("Charlie");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Charlie's Session - Mar 16, 7:00 PM");
+    cfg.setOwnerUserId(8L);
+    cfg.setType(LadderConfig.Type.SESSION);
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.MEMBER);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    LadderMembership ownerMembership = new LadderMembership();
+    ownerMembership.setId(102L);
+    ownerMembership.setLadderConfig(cfg);
+    ownerMembership.setUserId(8L);
+    ownerMembership.setRole(LadderMembership.Role.ADMIN);
+    ownerMembership.setState(LadderMembership.State.ACTIVE);
+    ownerMembership.setJoinedAt(Instant.now().minusSeconds(300));
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
+        .thenReturn(Optional.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(ownerMembership, currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser, owner));
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    assertThat(model.get("sessionDisplayTitle")).isEqualTo("Charlie's Session");
+    assertThat(model.get("sessionHeroTitle")).isEqualTo("Charlie's Session");
   }
 
   @Test
