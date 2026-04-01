@@ -10,6 +10,36 @@
   
   
   <style>
+    .log-match-page {
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+    .log-match-toolbar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .log-match-team-card .card-header {
+      padding: 0.8rem 1rem;
+    }
+    .log-match-team-card .card-body {
+      padding: 1rem;
+    }
+    .log-match-team-layout {
+      display: block;
+    }
+    .log-match-team-players {
+      min-width: 0;
+    }
+    .log-match-team-grid {
+      margin-bottom: 1rem;
+    }
+    .log-match-score-field .form-label {
+      margin-bottom: 0.35rem;
+    }
+    .log-match-actions {
+      margin-top: 0.25rem;
+    }
     .log-match-large {
       font-size: 1.25rem;
       line-height: 1.25;
@@ -81,8 +111,109 @@
       font-size: 2rem;
     }
     @media (max-width: 576px) {
+      .log-match-page {
+        max-width: 100%;
+      }
+      .log-match-toolbar {
+        display: block;
+        margin-bottom: 0.65rem;
+      }
+      .log-match-page .alert,
+      .log-match-team-card {
+        margin-bottom: 0.75rem !important;
+      }
+      .log-match-team-card .card-header {
+        padding: 0.6rem 0.85rem;
+      }
+      .log-match-team-card .card-body {
+        padding: 0.8rem;
+      }
+      .log-match-large {
+        font-size: 1rem;
+        line-height: 1.2;
+      }
+      .log-match-large .form-label,
+      .log-match-large label,
+      .log-match-large .card-header-title {
+        font-size: 0.95rem;
+      }
+      .log-match-large .form-label {
+        margin-bottom: 0.25rem;
+      }
+      .log-match-large .form-select,
+      .log-match-large .form-control,
+      .log-match-large .btn {
+        font-size: 1rem;
+        padding: 0.45rem 0.65rem;
+      }
+      .log-match-team-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 5.5rem;
+        gap: 0.75rem;
+        align-items: start;
+      }
+      .log-match-team-grid {
+        --bs-gutter-x: 0;
+        --bs-gutter-y: 0.65rem;
+        margin-bottom: 0 !important;
+      }
+      .log-match-team-grid > [class*='col-'] {
+        flex: 0 0 100%;
+        width: 100%;
+      }
+      .log-match-score-field {
+        min-width: 0;
+        margin-top: 0;
+      }
+      .log-match-score-field .form-label {
+        margin-bottom: 0.25rem;
+        text-align: center;
+      }
+      .match-log-picker-shell {
+        margin-bottom: 0 !important;
+      }
       .score-input {
-        min-height: 4.5rem;
+        min-height: 3.25rem;
+        font-size: 1.5rem;
+      }
+      .player-picker-trigger {
+        min-height: 2.85rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #logMatchSizeToggle {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        padding: 0.45rem 0.75rem;
+        font-size: 0.95rem;
+      }
+      .log-match-actions {
+        gap: 0.65rem !important;
+      }
+    }
+    @media (max-width: 576px) {
+      .log-match-very-large .form-label,
+      .log-match-very-large label,
+      .log-match-very-large .card-header-title {
+        font-size: 1.1rem;
+      }
+      .log-match-very-large .form-select,
+      .log-match-very-large .form-control,
+      .log-match-very-large .btn,
+      .log-match-very-large .player-picker-option {
+        font-size: 1.15rem;
+        padding: 0.6rem 0.8rem;
+      }
+      .log-match-very-large .score-input {
+        min-height: 3.85rem;
+        font-size: 1.8rem;
+      }
+      .log-match-very-large .player-picker-trigger {
+        white-space: normal;
       }
     }
     #logMatchSizeToggle {
@@ -150,7 +281,7 @@
 
 <body>
   <div layout:fragment="content"
-       class="log-match-large"
+       class="log-match-page log-match-large"
        th:attr="data-player-picker-mode=${useSearchablePlayerPicker == true ? 'search' : 'native'}">
     
     <div th:if="${editMode}" class="alert alert-info mb-3" role="alert">
@@ -159,7 +290,7 @@
       <span th:if="${match != null}"> #<span th:text="${match.id}">123</span></span>
     </div>
     
-    <div class="mb-3 d-flex align-items-center justify-content-center">
+    <div class="log-match-toolbar">
       <button id="logMatchSizeToggle" type="button" class="btn btn-nav-secondary btn-lg" aria-pressed="false"
         title="Toggle very large text for better outdoor readability">Large text</button>
     </div>
@@ -181,11 +312,13 @@
       <input th:if="${editMode}" type="hidden" name="expectedVersion" th:value="${expectedVersion}" />
 
       
-      <div class="card mb-3">
+      <div class="card mb-3 log-match-team-card">
         <div class="card-header card-header-title">Team A</div>
         <div class="card-body">
-          <div class="row g-2 mb-3">
-            <div class="col-12 col-md-6">
+          <div class="log-match-team-layout">
+            <div class="log-match-team-players">
+              <div class="row g-2 mb-3 log-match-team-grid">
+                <div class="col-12 col-md-6">
               <label class="form-label" for="teamAPlayer1">Player 1</label>
         
         <div th:if="${useSearchablePlayerPicker == true and ((editMode == true and hasSeasonAdminOverride == true) or voiceReviewMode == true)}"
@@ -261,8 +394,8 @@
                     th:selected="${loggedInUser != null and u.id == loggedInUser.id}"></option>
                 </select>
               </div>
-            </div>
-            <div class="col-12 col-md-6">
+                </div>
+                <div class="col-12 col-md-6">
               <label class="form-label" for="teamAPlayer2">Player 2</label>
               <div th:if="${useSearchablePlayerPicker == true}"
                    class="match-log-picker-shell d-none mb-2"
@@ -288,31 +421,35 @@
                   th:attr="data-search=${playerSearchTextByUser != null and playerSearchTextByUser.containsKey(u.id) ? playerSearchTextByUser[u.id] : (u.nickName ?: '')},data-picker-primary=${playerPrimaryLabelByUser != null and playerPrimaryLabelByUser.containsKey(u.id) ? playerPrimaryLabelByUser[u.id] : (u.nickName ?: 'missing name')},data-picker-secondary=${playerSecondaryLabelByUser != null and playerSecondaryLabelByUser.containsKey(u.id) ? playerSecondaryLabelByUser[u.id] : ''},data-picker-recent=${recentPlayerIds != null and recentPlayerIds.contains(u.id) ? 'true' : null}"
                   th:selected="${selectedA2Id != null and selectedA2Id == u.id}"></option>
               </select>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label class="form-label d-block" for="teamAScore">Score</label>
-            <input class="form-control score-input"
-                   id="teamAScore"
-                   type="number"
-                   name="scoreA"
-                   min="0"
-                   max="30"
-                   step="1"
-                   inputmode="numeric"
-                   required
-                   th:value="${selectedScoreA}" />
+            <div class="log-match-score-field">
+              <label class="form-label d-block" for="teamAScore">Score</label>
+              <input class="form-control score-input"
+                     id="teamAScore"
+                     type="number"
+                     name="scoreA"
+                     min="0"
+                     max="30"
+                     step="1"
+                     inputmode="numeric"
+                     required
+                     th:value="${selectedScoreA}" />
+            </div>
           </div>
         </div>
       </div>
 
       
-      <div class="card mb-3">
+      <div class="card mb-3 log-match-team-card">
         <div class="card-header card-header-title">Team B</div>
         <div class="card-body">
-          <div class="row g-2 mb-3">
-            <div class="col-12 col-md-6">
+          <div class="log-match-team-layout">
+            <div class="log-match-team-players">
+              <div class="row g-2 mb-3 log-match-team-grid">
+                <div class="col-12 col-md-6">
               <label class="form-label" for="teamBPlayer1">Player 1</label>
               <div th:if="${useSearchablePlayerPicker == true}"
                    class="match-log-picker-shell d-none mb-2"
@@ -338,8 +475,8 @@
                   th:attr="data-search=${playerSearchTextByUser != null and playerSearchTextByUser.containsKey(u.id) ? playerSearchTextByUser[u.id] : (u.nickName ?: '')},data-picker-primary=${playerPrimaryLabelByUser != null and playerPrimaryLabelByUser.containsKey(u.id) ? playerPrimaryLabelByUser[u.id] : (u.nickName ?: 'missing name')},data-picker-secondary=${playerSecondaryLabelByUser != null and playerSecondaryLabelByUser.containsKey(u.id) ? playerSecondaryLabelByUser[u.id] : ''},data-picker-recent=${recentPlayerIds != null and recentPlayerIds.contains(u.id) ? 'true' : null}"
                   th:selected="${selectedB1Id != null and selectedB1Id == u.id}"></option>
               </select>
-            </div>
-            <div class="col-12 col-md-6">
+                </div>
+                <div class="col-12 col-md-6">
               <label class="form-label" for="teamBPlayer2">Player 2</label>
               <div th:if="${useSearchablePlayerPicker == true}"
                    class="match-log-picker-shell d-none mb-2"
@@ -365,28 +502,30 @@
                   th:attr="data-search=${playerSearchTextByUser != null and playerSearchTextByUser.containsKey(u.id) ? playerSearchTextByUser[u.id] : (u.nickName ?: '')},data-picker-primary=${playerPrimaryLabelByUser != null and playerPrimaryLabelByUser.containsKey(u.id) ? playerPrimaryLabelByUser[u.id] : (u.nickName ?: 'missing name')},data-picker-secondary=${playerSecondaryLabelByUser != null and playerSecondaryLabelByUser.containsKey(u.id) ? playerSecondaryLabelByUser[u.id] : ''},data-picker-recent=${recentPlayerIds != null and recentPlayerIds.contains(u.id) ? 'true' : null}"
                   th:selected="${selectedB2Id != null and selectedB2Id == u.id}"></option>
               </select>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label class="form-label d-block" for="teamBScore">Score</label>
-            <input class="form-control score-input"
-                   id="teamBScore"
-                   type="number"
-                   name="scoreB"
-                   min="0"
-                   max="30"
-                   step="1"
-                   inputmode="numeric"
-                   required
-                   th:value="${selectedScoreB}" />
+            <div class="log-match-score-field">
+              <label class="form-label d-block" for="teamBScore">Score</label>
+              <input class="form-control score-input"
+                     id="teamBScore"
+                     type="number"
+                     name="scoreB"
+                     min="0"
+                     max="30"
+                     step="1"
+                     inputmode="numeric"
+                     required
+                     th:value="${selectedScoreB}" />
+            </div>
           </div>
         </div>
       </div>
 
       
 
-      <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+      <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center log-match-actions">
   <button type="submit" class="btn btn-action-primary btn-lg" 
     th:text="${editMode == true ? 'Update Match' : 'Log Match'}">Log Match</button>
         <a th:href="${returnToRoundRobinId != null}

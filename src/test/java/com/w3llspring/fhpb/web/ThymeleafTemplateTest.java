@@ -1101,6 +1101,10 @@ class ThymeleafTemplateTest {
     void matchLogTemplateIncludesSearchablePlayerPickerHooks() throws Exception {
         String logMatchTemplate = Files.readString(Path.of("src/main/resources/templates/auth/logMatch.html"));
 
+        assertThat(logMatchTemplate).contains("log-match-page log-match-large");
+        assertThat(logMatchTemplate).contains("log-match-toolbar");
+        assertThat(logMatchTemplate).contains("log-match-team-layout");
+        assertThat(logMatchTemplate).contains("log-match-team-grid");
         assertThat(logMatchTemplate).contains("data-player-picker-mode");
         assertThat(logMatchTemplate).contains("playerPickerModal");
         assertThat(logMatchTemplate).contains("data-picker-enabled");
