@@ -43,15 +43,19 @@
               Nearby sharing is on for <span th:text="${ladder.nearbyShareLocationName}">Lakeside Courts</span>.
             </div>
             <div class="session-share-panel-intro"
-                 th:unless="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
+                 th:if="${(ladder.nearbyShareLocationName == null or #strings.isEmpty(ladder.nearbyShareLocationName)) and ladder.nearbyShareLocationId != null}">
+              Nearby sharing is on for your current court.
+            </div>
+            <div class="session-share-panel-intro"
+                 th:unless="${ladder.nearbyShareLocationId != null}">
               Recommended for players already at the same courts.
             </div>
             <p class="text-muted small mb-0"
-               th:if="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
+               th:if="${ladder.nearbyShareLocationId != null}">
               Player can find nearby sessions and request to join.
             </p>
             <p class="text-muted small mb-0"
-               th:unless="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
+               th:unless="${ladder.nearbyShareLocationId != null}">
               Access your phone's location to let nearby checked-in players discover this session and request to join.
             </p>
             <div class="d-flex flex-column gap-3 align-items-center"
@@ -60,7 +64,7 @@
                 <button class="btn btn-action-primary w-100"
                         type="button"
                         data-nearby-start
-                        th:text="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)} ? 'Refresh Nearby Court' : 'Use My Current Location'">
+                        th:text="${ladder.nearbyShareLocationId != null} ? 'Refresh Nearby Court' : 'Use My Current Location'">
                   Use My Current Location
                 </button>
               </div>
@@ -68,30 +72,9 @@
                    data-nearby-status
                    role="status"
                    aria-live="polite"></div>
-              <div class="card shadow-sm border-0 d-none w-100 text-start" data-nearby-name-card>
-                <div class="card-body">
-                  <p class="text-muted small mb-3" data-nearby-prompt-message>
-                    Confirm the location name below or enter your own.
-                  </p>
-                  <form class="d-grid gap-3" data-nearby-name-form>
-                    <div class="d-grid gap-2" data-nearby-suggestion-list></div>
-                    <div>
-                      <label class="form-label" for="sessionNearbyCustomName">Use your own name</label>
-                      <input class="form-control"
-                             id="sessionNearbyCustomName"
-                             type="text"
-                             placeholder="e.g. Lakeside Courts"
-                             autocomplete="off"
-                             maxlength="80"
-                             data-nearby-custom-name>
-                    </div>
-                    <div class="d-grid gap-2">
-                      <button class="btn btn-action-primary" type="submit" data-nearby-submit>Finish Check-In</button>
-                      <button class="btn btn-nav-secondary" type="button" data-nearby-cancel>Cancel</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+              <p class="text-muted small mb-0 w-100 text-start">
+                This nearby-sharing check-in does not save a court name.
+              </p>
             </div>
           </section>
           <section class="session-share-panel d-flex flex-column gap-3 text-center"

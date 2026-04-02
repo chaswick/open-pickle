@@ -657,6 +657,11 @@ class RoundRobinControllerTest {
               public LadderSeason findSeasonForLadder(Long ladderConfigId) {
                 return season;
               }
+
+              @Override
+              public String getDisplayNameForUser(User user, Long ladderConfigId) {
+                return user != null && user.getNickName() != null ? user.getNickName() : "";
+              }
             },
             stubAccessService(null, false),
             ladderMembershipRepository,
@@ -684,9 +689,9 @@ class RoundRobinControllerTest {
             principal);
 
     assertThat(view).isEqualTo("redirect:/round-robin/list?ladderId=42&seasonId=77");
-    assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
+        assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
         .isEqualTo(
-            "Tournament mode requires group admins to start and manage round-robins. Matches logged for this season must match an active round-robin pairing.");
+            "Tournament mode requires league admins to start and manage round-robins. Matches logged for this season must match an active round-robin pairing.");
   }
 
   @Test

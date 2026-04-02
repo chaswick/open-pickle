@@ -162,7 +162,8 @@
     }
   }
 
-  function createCheckInFlow(root, onCheckedIn) {
+  function createCheckInFlow(root, onCheckedIn, options) {
+    const settings = options || {};
     const state = {
       latitude: null,
       longitude: null,
@@ -188,7 +189,7 @@
         state.latitude = position.coords.latitude;
         state.longitude = position.coords.longitude;
 
-        const payload = await postJson('/api/check-in/resolve', {
+        const payload = await postJson(settings.resolveUrl || '/api/check-in/resolve', {
           latitude: state.latitude,
           longitude: state.longitude
         });
@@ -233,7 +234,7 @@
 
       setBusy(root, true, 'Finishing check-in...');
       try {
-        const payload = await postJson('/api/check-in/complete', {
+        const payload = await postJson(settings.completeUrl || '/api/check-in/complete', {
           latitude: state.latitude,
           longitude: state.longitude,
           locationId: state.locationId,
@@ -328,11 +329,17 @@
     const sessionId = root.getAttribute('data-session-id');
     if (!sessionId) return;
 
-    const flow = createCheckInFlow(root, async function () {
-      setStatus(root, 'Updating nearby sharing...', 'info');
-      await postJson('/api/sessions/' + sessionId + '/nearby-sharing', {});
-      window.location.reload();
-    });
+    const flow = createCheckInFlow(
+      root,
+      async function () {
+        setStatus(root, 'Updating nearby sharing...', 'info');
+        await postJson('/api/sessions/' + sessionId + '/nearby-sharing', {});
+        window.location.reload();
+      },
+      {
+        resolveUrl: '/api/check-in/session-nearby-join'
+      }
+    );
 
     const startButton = root.querySelector('[data-nearby-start]');
     if (startButton) {
@@ -343,16 +350,22 @@
   }
 
   function initJoinNearby(root) {
-    const flow = createCheckInFlow(root, async function () {
-      setStatus(root, 'Looking for nearby sessions...', 'info');
-      const payload = await getJson('/api/sessions/nearby-sharing/candidates');
-      renderNearbySessions(root, payload);
-      if (payload.sessions && payload.sessions.length) {
-        setStatus(root, 'Choose a nearby session below. The host will still approve your request.', 'info');
-      } else {
-        setStatus(root, 'No nearby sessions found. You can still use the shared code below.', 'warning');
+    const flow = createCheckInFlow(
+      root,
+      async function () {
+        setStatus(root, 'Looking for nearby sessions...', 'info');
+        const payload = await getJson('/api/sessions/nearby-sharing/candidates');
+        renderNearbySessions(root, payload);
+        if (payload.sessions && payload.sessions.length) {
+          setStatus(root, 'Choose a nearby session below. The host will still approve your request.', 'info');
+        } else {
+          setStatus(root, 'No nearby sessions found. You can still use the shared code below.', 'warning');
+        }
+      },
+      {
+        resolveUrl: '/api/check-in/session-nearby-join'
       }
-    });
+    );
 
     const startButton = root.querySelector('[data-nearby-start]');
     if (startButton) {

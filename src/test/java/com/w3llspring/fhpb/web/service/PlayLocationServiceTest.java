@@ -137,6 +137,62 @@ class PlayLocationServiceTest {
   }
 
   @Test
+  void resolveSessionNearbyJoinCheckInCreatesTemporaryCheckInWithoutAlias() {
+    PlayLocation location = location(11L, 27.0d, -82.0d);
+    User userReference = user(1L);
+
+    when(playLocationRepository.findWithinBoundingBox(
+            anyDouble(), anyDouble(), anyDouble(), anyDouble()))
+        .thenReturn(List.of(location));
+    when(playLocationAliasRepository
+            .findByLocation_IdAndUser_IdOrderByUsageCountDescLastUsedAtDescIdAsc(11L, 1L))
+        .thenReturn(List.of());
+    when(playLocationCheckInRepository.findActiveWithLocationByUserId(eq(1L), any(Instant.class)))
+        .thenReturn(List.of());
+    when(userRepository.getReferenceById(1L)).thenReturn(userReference);
+
+    PlayLocationService.ResolveOutcome outcome =
+        service.resolveSessionNearbyJoinCheckIn(1L, 27.0d, -82.0d);
+
+    assertThat(outcome.getStatus()).isEqualTo("checked_in");
+    assertThat(outcome.getMessage()).isEqualTo("Location confirmed. Looking for nearby sessions now.");
+    ArgumentCaptor<PlayLocationCheckIn> checkInCaptor =
+        ArgumentCaptor.forClass(PlayLocationCheckIn.class);
+    verify(playLocationCheckInRepository).save(checkInCaptor.capture());
+    assertThat(checkInCaptor.getValue().getDisplayName()).isEmpty();
+    verify(playLocationAliasRepository, never()).save(any(PlayLocationAlias.class));
+    verify(playLocationRepository, never()).save(any(PlayLocation.class));
+  }
+
+  @Test
+  void resolveSessionNearbyJoinCheckInCreatesUnnamedLocationWhenNoSavedLocationExists() {
+    User userReference = user(1L);
+    when(playLocationRepository.findWithinBoundingBox(
+            anyDouble(), anyDouble(), anyDouble(), anyDouble()))
+        .thenReturn(List.of());
+    when(userRepository.getReferenceById(1L)).thenReturn(userReference);
+    when(playLocationRepository.save(any(PlayLocation.class)))
+        .thenAnswer(
+            invocation -> {
+              PlayLocation saved = invocation.getArgument(0);
+              saved.setId(88L);
+              return saved;
+            });
+
+    PlayLocationService.ResolveOutcome outcome =
+        service.resolveSessionNearbyJoinCheckIn(1L, 27.0d, -82.0d);
+
+    assertThat(outcome.getStatus()).isEqualTo("checked_in");
+    assertThat(outcome.getMessage()).isEqualTo("Location confirmed. Looking for nearby sessions now.");
+    ArgumentCaptor<PlayLocationCheckIn> checkInCaptor =
+        ArgumentCaptor.forClass(PlayLocationCheckIn.class);
+    verify(playLocationCheckInRepository).save(checkInCaptor.capture());
+    assertThat(checkInCaptor.getValue().getDisplayName()).isEmpty();
+    verify(playLocationRepository).save(any(PlayLocation.class));
+    verify(playLocationAliasRepository, never()).save(any(PlayLocationAlias.class));
+  }
+
+  @Test
   void completeCheckInCreatesNewLocationWhenNothingNearbyExists() {
     User userReference = user(1L);
     when(playLocationRepository.findWithinBoundingBox(

@@ -249,7 +249,7 @@
 		<p class="text-muted small mb-4">
 			What people call you on the court. "John", "Bike Mike", etc. For example,
 			"Me and Juan beat Amy and Ryan 11 to 9."</p>
-		<p class="text-muted small mb-4">If certain private groups call you different names, you can assign court names to specific groups below.</p>
+		<p class="text-muted small mb-4">If certain private leagues call you different names, you can assign court names to specific leagues below.</p>
 		<div class="mt-4">
 			<p class="text-muted small" th:if="${#lists.isEmpty(courtNames)}">
 				You haven't added any court names yet.
@@ -265,9 +265,9 @@
 								autocomplete="off" th:attr="maxlength=${courtNameMaxLength}" />
 						</div>
 						<div class="col-12 col-lg-5">
-							<label class="visually-hidden" th:for="|courtLadder-${row.id}|">Group scope</label>
+							<label class="visually-hidden" th:for="|courtLadder-${row.id}|">League scope</label>
 							<select class="form-select" th:id="|courtLadder-${row.id}|" name="ladderConfigId">
-								<option value="" th:selected="${row.ladderId == null}">All groups</option>
+								<option value="" th:selected="${row.ladderId == null}">All leagues</option>
 								<option th:each="option : ${ladderOptions}" th:value="${option.ladderId}"
 									th:text="${option.label}"
 									th:selected="${row.ladderId != null and row.ladderId == option.ladderId}"></option>
@@ -299,9 +299,9 @@
 					th:attr="maxlength=${courtNameMaxLength}" />
 			</div>
 			<div class="col-12 col-lg-5">
-				<label class="visually-hidden" for="newCourtLadderConfigId">Group scope</label>
+				<label class="visually-hidden" for="newCourtLadderConfigId">League scope</label>
 				<select class="form-select" id="newCourtLadderConfigId" name="ladderConfigId">
-					<option value="" selected>All groups</option>
+					<option value="" selected>All leagues</option>
 					<option th:each="option : ${ladderOptions}" th:value="${option.ladderId}" th:text="${option.label}">
 					</option>
 				</select>

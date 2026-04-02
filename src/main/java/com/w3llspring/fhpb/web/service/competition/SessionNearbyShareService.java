@@ -67,14 +67,17 @@ public class SessionNearbyShareService {
     PlayLocationCheckIn activeCheckIn = requireActiveCheckIn(adminUserId, now);
     groupAdministration.syncInviteAvailability(session, adminUserId, true);
     session.setNearbyShareLocationId(activeCheckIn.getLocation().getId());
-    session.setNearbyShareLocationName(resolveLocationName(activeCheckIn));
+    String locationName = resolveOptionalLocationName(activeCheckIn);
+    session.setNearbyShareLocationName(locationName);
     LadderConfig saved = configs.save(session);
     return new NearbyShareStatusView(
         saved.getId(),
         saved.getNearbyShareLocationId(),
         saved.getNearbyShareLocationName(),
         hasActiveNearbySharing(saved, now),
-        "Nearby sharing is on for " + saved.getNearbyShareLocationName() + ".");
+        StringUtils.hasText(saved.getNearbyShareLocationName())
+            ? "Nearby sharing is on for " + saved.getNearbyShareLocationName() + "."
+            : "Nearby sharing is on for your current court.");
   }
 
   @Transactional(readOnly = true)
@@ -119,7 +122,7 @@ public class SessionNearbyShareService {
                             .size()))
             .toList();
 
-    return new NearbySessionsView(resolveLocationName(activeCheckIn), views);
+    return new NearbySessionsView(resolveOptionalLocationName(activeCheckIn), views);
   }
 
   @Transactional(readOnly = true)
@@ -151,7 +154,6 @@ public class SessionNearbyShareService {
     if (session == null
         || !session.isSessionType()
         || session.getNearbyShareLocationId() == null
-        || !StringUtils.hasText(session.getNearbyShareLocationName())
         || session.getStatus() != LadderConfig.Status.ACTIVE
         || session.getExpiresAt() == null
         || !session.getExpiresAt().isAfter(now)) {
@@ -192,17 +194,18 @@ public class SessionNearbyShareService {
         .orElseThrow(() -> new IllegalStateException("Check in first to use nearby session sharing."));
   }
 
-  private String resolveLocationName(PlayLocationCheckIn activeCheckIn) {
+  private String resolveOptionalLocationName(PlayLocationCheckIn activeCheckIn) {
     if (activeCheckIn != null && StringUtils.hasText(activeCheckIn.getDisplayName())) {
       return activeCheckIn.getDisplayName().trim();
     }
-    throw new IllegalStateException("Check in first to use nearby session sharing.");
+    return null;
   }
 
   private String resolveLocationName(LadderConfig session, PlayLocationCheckIn fallbackCheckIn) {
     if (session != null && StringUtils.hasText(session.getNearbyShareLocationName())) {
       return session.getNearbyShareLocationName().trim();
     }
-    return resolveLocationName(fallbackCheckIn);
+    String fallbackName = resolveOptionalLocationName(fallbackCheckIn);
+    return StringUtils.hasText(fallbackName) ? fallbackName : null;
   }
 }

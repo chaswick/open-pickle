@@ -85,7 +85,7 @@ class ThymeleafTemplateTest {
                 "selectorMemberships", List.of(membership(7L, "Ladder X", LadderConfig.Type.STANDARD)),
                 "restorableLadders", List.of()));
 
-        assertThat(result).contains("Your Groups");
+        assertThat(result).contains("Your Leagues");
         assertThat(result).contains("Ladder X");
         assertThat(result).doesNotContain("Global Competition");
         assertThat(result).doesNotContain("/groups/99");
@@ -98,10 +98,10 @@ class ThymeleafTemplateTest {
                 "selectorMemberships", List.of(),
                 "restorableLadders", List.of()));
 
-        assertThat(result).contains("You're not in any groups yet.");
-        assertThat(result).doesNotContain("Create a new group, or view your existing groups below.");
+        assertThat(result).contains("You're not in any leagues yet.");
+        assertThat(result).doesNotContain("Create a new league, or view your existing leagues below.");
         assertThat(result).doesNotContain("Global Competition");
-        assertThat(result).doesNotContain("Your Groups");
+        assertThat(result).doesNotContain("Your Leagues");
     }
 
     @Test
@@ -160,7 +160,10 @@ class ThymeleafTemplateTest {
         assertThat(result).contains("data-nearby-start");
         assertThat(result).contains("data-nearby-results");
         assertThat(result).contains("Use My Current Location");
+        assertThat(result).contains("It will not ask you to save a court name.");
         assertThat(result).contains("Shared Code");
+        assertThat(result).doesNotContain("data-nearby-name-card");
+        assertThat(result).doesNotContain("Confirm the location name below or enter your own.");
     }
 
     @Test
@@ -278,7 +281,7 @@ class ThymeleafTemplateTest {
 
         assertThat(result).contains("Invite Code");
         assertThat(result).contains("Enable Invite");
-        assertThat(result).contains("Group Config");
+        assertThat(result).contains("League Config");
         assertThat(result).contains("No members yet.");
         assertThat(result).contains("No banned members.");
     }
@@ -324,7 +327,7 @@ class ThymeleafTemplateTest {
         assertThat(result).contains("Session Standings");
         assertThat(result).contains("Session is live now.");
         assertThat(result).contains("href=\"/competition/sessions\"");
-        assertThat(result).doesNotContain("Group Config");
+        assertThat(result).doesNotContain("League Config");
         assertThat(result).doesNotContain("Banned Members");
         assertThat(result).doesNotContain("Invite Buddies");
         assertThat(result).doesNotContain("Leave Session Early");
@@ -418,7 +421,7 @@ class ThymeleafTemplateTest {
         String result = renderWebTemplate("auth/show", variables);
 
         assertThat(result).contains("Invite Code");
-        assertThat(result).contains("Group Config");
+        assertThat(result).contains("League Config");
         assertThat(result).doesNotContain("Invite Buddies");
         assertThat(result).doesNotContain("Who's Here");
         assertThat(result).doesNotContain("Session expires at");
@@ -561,6 +564,9 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("data-nearby-start");
         assertThat(sessionTemplate).contains("Use My Current Location");
         assertThat(sessionTemplate).contains("Refresh Nearby Court");
+        assertThat(sessionTemplate).contains("This nearby-sharing check-in does not save a court name.");
+        assertThat(sessionTemplate).doesNotContain("data-nearby-name-card");
+        assertThat(sessionTemplate).doesNotContain("Confirm the location name below or enter your own.");
         assertThat(sessionTemplate).contains("sessionInviteActiveUntil");
         assertThat(sessionTemplate).contains("Code auto-disables");
         assertThat(sessionTemplate).contains("Invite Buddies");
@@ -814,8 +820,8 @@ class ThymeleafTemplateTest {
     void privateGroupPickerIncludesCreateAndTournamentShortcuts() throws Exception {
         String template = Files.readString(Path.of("src/main/resources/templates/auth/private-group-picker.html"));
 
-        assertThat(template).contains("Create a Group");
-        assertThat(template).contains("Join a Group");
+        assertThat(template).contains("Create a League");
+        assertThat(template).contains("Join a League");
         assertThat(template).contains("th:href=\"@{/groups/new(returnTo='/private-groups')}\"");
         assertThat(template).contains("th:href=\"@{/groups/join(returnTo='/private-groups')}\"");
         assertThat(template).contains("Create Tournament");
@@ -876,7 +882,7 @@ class ThymeleafTemplateTest {
         assertThat(navigationTemplate).contains("href=\"/private-groups\"");
         assertThat(navigationTemplate).contains("href=\"/account-menu\"");
         assertThat(navigationTemplate).contains("Global Competition");
-        assertThat(navigationTemplate).contains("Private Groups");
+        assertThat(navigationTemplate).contains("Private Leagues");
         assertThat(navigationTemplate).contains("User Account");
         assertThat(navigationTemplate).contains("@{/help}");
 

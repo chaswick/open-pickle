@@ -184,10 +184,7 @@ public class PlayLocationService {
           null, "No saved location was found nearby. Name this place to add it.");
     }
 
-    List<PlayLocationAlias> userAliases =
-        playLocationAliasRepository
-            .findByLocation_IdAndUser_IdOrderByUsageCountDescLastUsedAtDescIdAsc(
-                nearby.location().getId(), userId);
+    List<PlayLocationAlias> userAliases = findUserAliases(nearby.location().getId(), userId);
     if (!userAliases.isEmpty()) {
       PlayLocationAlias alias = userAliases.get(0);
       Instant now = Instant.now();
@@ -211,6 +208,26 @@ public class PlayLocationService {
         nearby.location().getId(),
         "A nearby location already exists. Is it one of these?",
         suggestions);
+  }
+
+  @Transactional
+  public ResolveOutcome resolveSessionNearbyJoinCheckIn(long userId, double latitude, double longitude) {
+    validateCoordinates(latitude, longitude);
+
+    NearbyLocation nearby = findNearbyLocation(latitude, longitude);
+    Instant now = Instant.now();
+    boolean creatingNewLocation = nearby == null || nearby.location() == null;
+    enforceCheckInLimits(userId, creatingNewLocation, now);
+    PlayLocationCheckIn priorCheckIn = findActiveCheckIn(userId, now);
+    PlayLocation location =
+        resolveTargetLocation(userId, null, nearby, latitude, longitude);
+    String displayName = resolveExistingAliasDisplayName(location.getId(), userId);
+    createCheckIn(userId, location, defaultString(displayName), now);
+    if (StringUtils.hasText(displayName)) {
+      return ResolveOutcome.checkedIn(
+          buildSuccessMessage(displayName, priorCheckIn, location));
+    }
+    return ResolveOutcome.checkedIn("Location confirmed. Looking for nearby sessions now.");
   }
 
   @Transactional
@@ -436,6 +453,22 @@ public class PlayLocationService {
         .limit(suggestionCount)
         .map(SuggestionCluster::toSuggestion)
         .collect(Collectors.toList());
+  }
+
+  private List<PlayLocationAlias> findUserAliases(Long locationId, long userId) {
+    if (locationId == null) {
+      return List.of();
+    }
+    return playLocationAliasRepository
+        .findByLocation_IdAndUser_IdOrderByUsageCountDescLastUsedAtDescIdAsc(locationId, userId);
+  }
+
+  private String resolveExistingAliasDisplayName(Long locationId, long userId) {
+    return findUserAliases(locationId, userId).stream()
+        .map(PlayLocationAlias::getDisplayName)
+        .filter(StringUtils::hasText)
+        .findFirst()
+        .orElse(null);
   }
 
   private PlayLocation resolveTargetLocation(

@@ -14,7 +14,7 @@ public class BrandingProperties {
   private static final String DEFAULT_LANDING_PAGE_TITLE =
       "Free Global Pickleball Competition";
   private static final String DEFAULT_LANDING_META_DESCRIPTION =
-      "Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private groups, round robins, and season trophies.";
+      "Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private leagues, round robins, and season trophies.";
   private static final String DEFAULT_LANDING_KICKER = "Community-driven Pickleball";
   private static final String DEFAULT_MANIFEST_THEME_COLOR = "#2d4a3b";
   private static final String DEFAULT_MANIFEST_BACKGROUND_COLOR = "#2d4a3b";
@@ -78,7 +78,7 @@ public class BrandingProperties {
   public String getLandingCopy() {
     return "Compete globally in a seasonal pickleball competition where your rating resets. "
         + getAppName()
-        + " automates the standings, keeps match logging easy, and supports private groups, round robins, trophies to track your finishes, and more.";
+        + " automates the standings, keeps match logging easy, and supports private leagues, round robins, trophies to track your finishes, and more.";
   }
 
   public String getSocialImagePath() {

@@ -3,15 +3,15 @@
     layout:decorate="~{layouts/authenticated}">
 
 <head>
-    <title layout:fragment="title">Private Groups</title>
+    <title layout:fragment="title">Private Leagues</title>
 </head>
 
 <body>
     <div layout:fragment="content" class="app-home">
         <section class="app-hero">
             <div class="app-hero-card">
-                <h1 class="app-hero-title">Private Groups</h1>
-                <p class="app-hero-subtitle">Choose one of your groups, create a new one, or join from an invite code.</p>
+                <h1 class="app-hero-title">Private Leagues</h1>
+                <p class="app-hero-subtitle">Choose one of your leagues, create a new one, or join from an invite code.</p>
             </div>
         </section>
 
@@ -28,7 +28,7 @@
                 <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
                 <div>
                     <span class="app-action-callout app-action-callout-top" th:if="${isRecent}">Recent</span>
-                    <div class="app-action-title" th:text="${membership.ladderConfig.title}">Group Name</div>
+                    <div class="app-action-title" th:text="${membership.ladderConfig.title}">League Name</div>
                     <div class="app-action-subtitle"
                          th:text="${membership.role != null ? membership.role + ' member. Open plans, logging, standings, and round robins.' : 'Open plans, logging, standings, and round robins.'}">
                         Open plans, logging, standings, and round robins.
@@ -40,8 +40,8 @@
                th:href="@{/groups/new(returnTo='/private-groups')}">
                 <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Create a Group</div>
-                    <div class="app-action-subtitle">Set up a new group, season mode, and invite settings.</div>
+                    <div class="app-action-title">Create a League</div>
+                    <div class="app-action-subtitle">Set up a new league, season mode, and invite settings.</div>
                 </div>
             </a>
 
@@ -49,8 +49,8 @@
                th:href="@{/groups/join(returnTo='/private-groups')}">
                 <div class="app-action-icon"><i class="bi bi-person-plus" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Join a Group</div>
-                    <div class="app-action-subtitle">Use an invite code from a group admin to join an existing group.</div>
+                    <div class="app-action-title">Join a League</div>
+                    <div class="app-action-subtitle">Use an invite code from a league admin to join an existing league.</div>
                 </div>
             </a>
 
@@ -59,19 +59,19 @@
                 <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
                 <div>
                     <div class="app-action-title">Create Tournament</div>
-                    <div class="app-action-subtitle">Create a private group with tournament mode, manual seasons, and admin-run round robins.</div>
+                    <div class="app-action-subtitle">Create a private league with tournament mode, manual seasons, and admin-run round robins.</div>
                 </div>
             </a>
         </section>
 
         <div class="card mt-4 shadow card-spotlight"
              th:if="${privateGroupMemberships == null or #lists.isEmpty(privateGroupMemberships)}">
-            <div class="card-header card-header-title text-center">No Private Groups Yet</div>
+            <div class="card-header card-header-title text-center">No Private Leagues Yet</div>
             <div class="card-body text-center">
-                <p class="text-muted mb-3">Create a group, join one by invite code, or start a tournament-ready private setup.</p>
+                <p class="text-muted mb-3">Create a league, join one by invite code, or start a tournament-ready private setup.</p>
                 <div class="d-grid gap-2 col-sm-8 mx-auto">
-                    <a class="btn btn-action-primary btn-lg" th:href="@{/groups/new(returnTo='/private-groups')}">Create a Group</a>
-                    <a class="btn btn-nav-secondary btn-lg" th:href="@{/groups/join(returnTo='/private-groups')}">Join a Group</a>
+                    <a class="btn btn-action-primary btn-lg" th:href="@{/groups/new(returnTo='/private-groups')}">Create a League</a>
+                    <a class="btn btn-nav-secondary btn-lg" th:href="@{/groups/join(returnTo='/private-groups')}">Join a League</a>
                     <a class="btn btn-nav-secondary btn-lg" th:href="@{/groups/new(returnTo='/private-groups',tournamentMode=true)}">Create Tournament</a>
                 </div>
             </div>

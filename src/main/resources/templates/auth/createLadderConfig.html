@@ -6,7 +6,7 @@
       layout:decorate="~{layouts/authenticated}">
 
 <head>
-  <title layout:fragment="title">Create Group</title>
+  <title layout:fragment="title">Create League</title>
 </head>
 
 <body>
@@ -15,12 +15,12 @@
       <div class="app-page-header">
         <div>
           <h1 class="app-page-title"
-              th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start Match Session' : (${tournamentModePreset} ? 'Create Tournament' : 'Create Group')">
-            Create Group
+              th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start Match Session' : (${tournamentModePreset} ? 'Create Tournament' : 'Create League')">
+            Create League
           </h1>
           <p class="app-page-subtitle"
-             th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Create a temporary roster-sharing session that logs into the competition season.' : (${tournamentModePreset} ? 'Create a tournament-ready group with manual seasons and admin-run round robins.' : 'Set up a new group, season mode, and invite settings.')">
-            Set up a new group, season mode, and invite settings.
+             th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Create a temporary roster-sharing session that logs into the competition season.' : (${tournamentModePreset} ? 'Create a tournament-ready league with manual seasons and admin-run round robins.' : 'Set up a new league, season mode, and invite settings.')">
+            Set up a new league, season mode, and invite settings.
           </p>
         </div>
       </div>
@@ -42,19 +42,19 @@
 
           <div class="card mb-3">
             <div class="card-header card-header-title text-center"
-                 th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Session details' : (${tournamentModePreset} ? 'Tournament details' : 'Group details')">
-              Group details
+                 th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Session details' : (${tournamentModePreset} ? 'Tournament details' : 'League details')">
+              League details
             </div>
             <div class="card-body">
               
               <div class="mb-3">
                 <label class="form-label"
-                       th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Session Name' : (${tournamentModePreset} ? 'Tournament Name' : 'Group Name')">
-                  Group Name
+                       th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Session Name' : (${tournamentModePreset} ? 'Tournament Name' : 'League Name')">
+                  League Name
                 </label>
                 <input type="text" class="form-control" name="title"
                        th:attr="maxlength=${groupTitleMaxLength}"
-                       th:placeholder="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'e.g. Saturday Open Play' : (${tournamentModePreset} ? 'e.g. Spring Club Championship' : 'e.g. Wednesday Night Crewe')"
+                       th:placeholder="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'e.g. Saturday Open Play' : (${tournamentModePreset} ? 'e.g. Spring Club Championship' : 'e.g. Wednesday Night League')"
                        required>
               </div>
 
@@ -84,10 +84,10 @@
                 <div class="rounded-3 border bg-light p-3 mb-3">
                   <h6 class="fw-semibold mb-2">Tournament defaults</h6>
                   <p class="mb-2 text-muted">
-                    Tournament groups are created with manual start/stop seasons, standard opponent confirmation, and an immediate season start.
+                    Tournament leagues are created with manual start/stop seasons, standard opponent confirmation, and an immediate season start.
                   </p>
                   <p class="mb-0 text-muted">
-                    Tournament mode also requires season matches to line up with an active round-robin matchup, and only group admins can start or manage round robins.
+                    Tournament mode also requires season matches to line up with an active round-robin matchup, and only league admins can start or manage round robins.
                   </p>
                 </div>
               </th:block>
@@ -125,7 +125,7 @@
                 <input type="date" class="form-control" name="seasonStart" required
                        th:value="${param.seasonStart != null ? param.seasonStart : #temporals.format(defaultSeasonStart, 'yyyy-MM-dd')}">
                 <div class="form-text">
-                  Rolling groups start immediately using the current UTC time. Manual mode still lets admins end and start seasons on demand.
+                  Rolling leagues start immediately using the current UTC time. Manual mode still lets admins end and start seasons on demand.
                 </div>
               </div>
 
@@ -172,8 +172,8 @@
           <div class="d-grid gap-2">
             <button class="btn btn-action-primary btn-card-width" type="submit"
                     th:disabled="${selectedLadderType != null and selectedLadderType.name() == 'SESSION' and !competitionSeasonAvailable}"
-                    th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start Match Session' : (${tournamentModePreset} ? 'Create Tournament' : 'Create Group')">
-              Create Group
+                    th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start Match Session' : (${tournamentModePreset} ? 'Create Tournament' : 'Create League')">
+              Create League
             </button>
             <a class="btn btn-nav-secondary btn-card-width" href="/" th:href="@{/home}" th:if="${!tournamentModePreset}">Cancel</a>
           </div>

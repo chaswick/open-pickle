@@ -28,30 +28,9 @@
                 Use My Current Location
               </button>
               <div class="alert d-none mt-0 mb-0 text-start" data-nearby-status role="status" aria-live="polite"></div>
-              <div class="card shadow-sm border-0 d-none text-start" data-nearby-name-card>
-                <div class="card-body">
-                  <p class="text-muted small mb-3" data-nearby-prompt-message>
-                    Confirm the location name below or enter your own.
-                  </p>
-                  <form class="d-grid gap-3" data-nearby-name-form>
-                    <div class="d-grid gap-2" data-nearby-suggestion-list></div>
-                    <div>
-                      <label class="form-label" for="joinNearbyCustomName">Use your own name</label>
-                      <input class="form-control"
-                             id="joinNearbyCustomName"
-                             type="text"
-                             placeholder="e.g. Lakeside Courts"
-                             autocomplete="off"
-                             maxlength="80"
-                             data-nearby-custom-name>
-                    </div>
-                    <div class="d-grid gap-2">
-                      <button class="btn btn-action-primary" type="submit" data-nearby-submit>Finish Check-In</button>
-                      <button class="btn btn-nav-secondary" type="button" data-nearby-cancel>Cancel</button>
-                    </div>
-                  </form>
-                </div>
-              </div>
+              <p class="text-muted small mb-0 text-start">
+                This only matches you to a saved nearby court. It will not ask you to save a court name.
+              </p>
               <div class="card shadow-sm border-0 d-none text-start" data-nearby-results>
                 <div class="card-body">
                   <div class="fw-semibold mb-2" data-nearby-results-summary>Sessions near your current location</div>
@@ -145,8 +124,8 @@
                      required
                      th:value="${prefillInviteCode}">
               <div class="form-text"
-                   th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Ask the session owner for the shared code.' : 'Ask the group admin for the invite code.'">
-                Ask the group admin for the invite code.
+                   th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Ask the session owner for the shared code.' : 'Ask the league admin for the invite code.'">
+                Ask the league admin for the invite code.
               </div>
 
               <div class="d-grid gap-2">

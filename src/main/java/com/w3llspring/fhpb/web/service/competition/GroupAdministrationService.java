@@ -278,11 +278,12 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   @Override
   @Transactional
   public void requireActiveMember(Long configId, Long userId) {
-    LadderMembership membership =
-        memberships
-            .findByLadderConfigIdAndUserId(configId, userId)
-            .orElseThrow(() -> new SecurityException("Not a member"));
-    if (membership.getState() != LadderMembership.State.ACTIVE) {
+    boolean activeMember =
+        memberships.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+                configId, LadderMembership.State.ACTIVE)
+            .stream()
+            .anyMatch(membership -> Objects.equals(membership.getUserId(), userId));
+    if (!activeMember) {
       throw new SecurityException("Not active in ladder");
     }
   }

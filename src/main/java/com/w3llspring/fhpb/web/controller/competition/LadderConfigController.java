@@ -576,23 +576,21 @@ public class LadderConfigController {
       return "redirect:/competition";
     }
 
-    if (!(cfg.isCompetitionType() && currentUserIsSiteAdmin)) {
-      try {
-        groupAdministration.requireActiveMember(configId, currentUser.getId());
-      } catch (SecurityException ex) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-      }
+    List<LadderMembership> allActive =
+        membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            configId, LadderMembership.State.ACTIVE);
+    LadderMembership currentMembership =
+        allActive.stream()
+            .filter(member -> Objects.equals(member.getUserId(), currentUser.getId()))
+            .findFirst()
+            .orElse(null);
+    if (!(cfg.isCompetitionType() && currentUserIsSiteAdmin) && currentMembership == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
-    Optional<LadderMembership> currentMembership =
-        membershipRepo.findByLadderConfigIdAndUserId(configId, currentUser.getId());
+    boolean currentUserIsLadderAdmin =
+        currentMembership != null && currentMembership.getRole() == LadderMembership.Role.ADMIN;
     boolean currentUserIsAdmin =
-        currentUserIsSiteAdmin
-            || currentMembership
-                .filter(
-                    m ->
-                        m.getState() == LadderMembership.State.ACTIVE
-                            && m.getRole() == LadderMembership.Role.ADMIN)
-                .isPresent();
+        (cfg.isCompetitionType() && currentUserIsSiteAdmin) || currentUserIsLadderAdmin;
     model.addAttribute("currentUserIsAdmin", currentUserIsAdmin);
     // === New: season flags for Thymeleaf ===
     var activeSeasonOpt =
@@ -647,7 +645,7 @@ public class LadderConfigController {
 
     model.addAttribute(
         "pendingSessionJoinRequests",
-        cfg.isSessionType() && currentUserIsAdmin && sessionJoinRequestService != null
+        cfg.isSessionType() && currentUserIsLadderAdmin && sessionJoinRequestService != null
             ? sessionJoinRequestService.listPendingForAdmin(configId, currentUser.getId())
             : List.of());
     String sessionTourVariant =
@@ -675,9 +673,6 @@ public class LadderConfigController {
     model.addAttribute("seasons", seasons.findByLadderConfigIdOrderByStartDateDesc(configId));
 
     // Base list (already joinedAt ASC from repo)
-    var allActive =
-        membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
-            configId, LadderMembership.State.ACTIVE);
     var members = allActive.stream().collect(Collectors.toList());
 
     var bannedMembers =

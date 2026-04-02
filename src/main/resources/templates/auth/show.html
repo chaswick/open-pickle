@@ -714,7 +714,7 @@
           <span th:unless="${ladder.expiresAt != null}">Session is live now.</span>
         </p>
         <p class="app-page-subtitle" th:unless="${isSessionLadder}">
-          Invite players, manage members, and adjust group settings.
+          Invite players, manage members, and adjust league settings.
         </p>
         <div class="session-hero-actions"
              th:if="${isSessionLadder and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}">

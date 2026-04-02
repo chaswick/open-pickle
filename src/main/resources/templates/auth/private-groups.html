@@ -3,15 +3,15 @@
     layout:decorate="~{layouts/authenticated}">
 
 <head>
-    <title layout:fragment="title">Private Groups</title>
+    <title layout:fragment="title">Private Leagues</title>
 </head>
 
 <body>
     <div layout:fragment="content" class="app-home">
         <section class="app-hero">
             <div class="app-hero-card">
-                <h1 class="app-hero-title" th:text="${ladderName != null ? ladderName : 'Private Group'}">Private Group</h1>
-                <p class="app-hero-subtitle">Plans, match logging, standings, round robins, and group management.</p>
+                <h1 class="app-hero-title" th:text="${ladderName != null ? ladderName : 'Private League'}">Private League</h1>
+                <p class="app-hero-subtitle">Plans, match logging, standings, round robins, and league management.</p>
                 <div class="app-hero-subtitle" th:if="${seasonName != null and seasonName != ''}">
                     <div class="fw-semibold" th:text="${seasonName}">Season</div>
                     <div th:text="${seasonDateRange}">Date Range</div>
@@ -70,8 +70,8 @@
                th:href="@{/groups/{id}(id=${ladderId})}">
                 <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Manage Group</div>
-                    <div class="app-action-subtitle">Invite players, manage members, and adjust group settings.</div>
+                    <div class="app-action-title">Manage League</div>
+                    <div class="app-action-subtitle">Invite players, manage members, and adjust league settings.</div>
                 </div>
             </a>
         </section>

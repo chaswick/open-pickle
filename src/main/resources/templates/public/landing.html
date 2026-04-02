@@ -8,7 +8,7 @@
     <title layout:fragment="title" th:text="${branding.landingPageTitle}">Free Global Pickleball Competition</title>
 
     <th:block layout:fragment="styles">
-          <meta name="description" content="Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private groups, round robins, and season trophies."
+          <meta name="description" content="Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private leagues, round robins, and season trophies."
               th:content="${branding.landingMetaDescription}">
         <link rel="preload" as="image" href="/images/landing/openPickleScreenshot.png" th:href="@{${branding.snapshotPath}}">
     </th:block>
@@ -43,7 +43,7 @@
                                     </div>
                                 </div>
                                 <h1 class="landing-title" th:text="${branding.landingPageTitle}">Free Global Pickleball Competition</h1>
-                                <p class="landing-copy" th:text="${branding.landingCopy}">Compete globally in a seasonal pickleball competition where your rating resets. Open-Pickle automates the standings, keeps match logging easy, and supports private groups, round robins, trophies to track your finishes, and more.</p>
+                                <p class="landing-copy" th:text="${branding.landingCopy}">Compete globally in a seasonal pickleball competition where your rating resets. Open-Pickle automates the standings, keeps match logging easy, and supports private leagues, round robins, trophies to track your finishes, and more.</p>
                                 <div class="landing-proof-mark landing-proof-mark-cta">
                                     <img src="/images/landing/notamoneygrab.png"
                                          th:src="@{/images/landing/notamoneygrab.png}"
@@ -63,7 +63,7 @@
                                     <li>Short seasons with rating resets.</li>
                                     <li>Automated standings after every confirmed match.</li>
                                     <li>One click to get started in the global competition.</li>
-                                    <li>Private groups and round robins for your regular crew.</li>
+                                    <li>Private leagues and round robins for your regular crew.</li>
                                     <li>Earn season trophies and rating bands based on your performance.</li>
                                     <li>Community-supported, not paywalled.</li>
                                     <li>Built with direct community feedback from active players.</li>
@@ -131,7 +131,7 @@
             <div class="container">
                 <div class="landing-bottom-panel">
                     <h2>Ready to start a new season?</h2>
-                    <p>Create an account, invite your players, and run global competition, private groups, and round robins with standings that stay current automatically.</p>
+                    <p>Create an account, invite your players, and run global competition, private leagues, and round robins with standings that stay current automatically.</p>
                     <div class="landing-bottom-actions">
                         <a th:href="@{/register}" class="btn btn-light btn-lg">Register free</a>
                         <a th:href="@{/login}" class="btn btn-action-primary btn-lg">Sign in</a>

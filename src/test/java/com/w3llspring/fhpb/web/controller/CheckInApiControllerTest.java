@@ -15,6 +15,7 @@ import com.w3llspring.fhpb.web.model.CustomUserDetails;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.PlayLocationService;
 import com.w3llspring.fhpb.web.service.user.DisplayNameModerationService;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,7 @@ public class CheckInApiControllerTest {
 
   @BeforeEach
   void setUp() {
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
     playLocationService = new StubPlayLocationService();
     CheckInApiController controller = new CheckInApiController(playLocationService);
     ReflectionTestUtils.setField(controller, "checkInEnabled", true);
@@ -48,6 +50,7 @@ public class CheckInApiControllerTest {
   @AfterEach
   void tearDown() {
     SecurityContextHolder.clearContext();
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
   }
 
   @Test
@@ -112,6 +115,27 @@ public class CheckInApiControllerTest {
   }
 
   @Test
+  void sessionNearbyJoinReturnsSuccessMessage() throws Exception {
+    playLocationService.sessionNearbyResolveOutcome =
+        PlayLocationService.ResolveOutcome.checkedIn(
+            "Location confirmed. Looking for nearby sessions now.");
+
+    mockMvc
+        .perform(
+            post("/api/check-in/session-nearby-join")
+                .contentType("application/json")
+                .content("{\"latitude\":27.0,\"longitude\":-82.0}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("checked_in"))
+        .andExpect(
+            jsonPath("$.message")
+                .value("Location confirmed. Looking for nearby sessions now."));
+    assertThat(playLocationService.lastSessionNearbyResolvedUserId).isEqualTo(123L);
+    assertThat(playLocationService.lastSessionNearbyResolvedLatitude).isEqualTo(27.0d);
+    assertThat(playLocationService.lastSessionNearbyResolvedLongitude).isEqualTo(-82.0d);
+  }
+
+  @Test
   void completeReturnsTooManyRequestsWhenRateLimited() throws Exception {
     playLocationService.completeFailure =
         new PlayLocationService.CheckInRateLimitException("Please wait.");
@@ -138,13 +162,18 @@ public class CheckInApiControllerTest {
 
   private static final class StubPlayLocationService extends PlayLocationService {
     private ResolveOutcome resolveOutcome = ResolveOutcome.checkedIn("Checked in.");
+    private ResolveOutcome sessionNearbyResolveOutcome = ResolveOutcome.checkedIn("Checked in.");
     private CheckInOutcome completeOutcome = new CheckInOutcome("Checked in.");
     private Long lastResolvedUserId;
     private double lastResolvedLatitude;
     private double lastResolvedLongitude;
+    private Long lastSessionNearbyResolvedUserId;
+    private double lastSessionNearbyResolvedLatitude;
+    private double lastSessionNearbyResolvedLongitude;
     private Long lastCompletedUserId;
     private CompleteCheckInCommand lastCompleteCommand;
     private RuntimeException resolveFailure;
+    private RuntimeException sessionNearbyResolveFailure;
     private RuntimeException completeFailure;
 
     private StubPlayLocationService() {
@@ -169,6 +198,17 @@ public class CheckInApiControllerTest {
       this.lastResolvedLatitude = latitude;
       this.lastResolvedLongitude = longitude;
       return resolveOutcome;
+    }
+
+    @Override
+    public ResolveOutcome resolveSessionNearbyJoinCheckIn(long userId, double latitude, double longitude) {
+      if (sessionNearbyResolveFailure != null) {
+        throw sessionNearbyResolveFailure;
+      }
+      this.lastSessionNearbyResolvedUserId = userId;
+      this.lastSessionNearbyResolvedLatitude = latitude;
+      this.lastSessionNearbyResolvedLongitude = longitude;
+      return sessionNearbyResolveOutcome;
     }
 
     @Override

@@ -41,23 +41,28 @@ public class CheckInApiController {
   @PostMapping("/resolve")
   public ResolveResponse resolve(@RequestBody ResolveRequest request) {
     ensureFeatureEnabled();
-    if (request == null || request.latitude() == null || request.longitude() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, "Location coordinates are required.");
-    }
+    validateCoordinates(request);
 
     try {
-      PlayLocationService.ResolveOutcome outcome =
+      return toResolveResponse(
           playLocationService.resolveCheckIn(
-              resolveCurrentUserId(), request.latitude(), request.longitude());
-      List<SuggestionResponse> suggestions =
-          outcome.getSuggestions().stream()
-              .map(
-                  suggestion ->
-                      new SuggestionResponse(suggestion.getName(), suggestion.getUsageCount()))
-              .toList();
-      return new ResolveResponse(
-          outcome.getStatus(), outcome.getLocationId(), outcome.getMessage(), suggestions);
+              resolveCurrentUserId(), request.latitude(), request.longitude()));
+    } catch (PlayLocationService.CheckInRateLimitException ex) {
+      throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+    } catch (IllegalArgumentException ex) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+  }
+
+  @PostMapping("/session-nearby-join")
+  public ResolveResponse resolveSessionNearbyJoin(@RequestBody ResolveRequest request) {
+    ensureFeatureEnabled();
+    validateCoordinates(request);
+
+    try {
+      return toResolveResponse(
+          playLocationService.resolveSessionNearbyJoinCheckIn(
+              resolveCurrentUserId(), request.latitude(), request.longitude()));
     } catch (PlayLocationService.CheckInRateLimitException ex) {
       throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
     } catch (IllegalArgumentException ex) {
@@ -95,6 +100,22 @@ public class CheckInApiController {
     if (!checkInEnabled) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
+  }
+
+  private void validateCoordinates(ResolveRequest request) {
+    if (request == null || request.latitude() == null || request.longitude() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Location coordinates are required.");
+    }
+  }
+
+  private ResolveResponse toResolveResponse(PlayLocationService.ResolveOutcome outcome) {
+    List<SuggestionResponse> suggestions =
+        outcome.getSuggestions().stream()
+            .map(suggestion -> new SuggestionResponse(suggestion.getName(), suggestion.getUsageCount()))
+            .toList();
+    return new ResolveResponse(
+        outcome.getStatus(), outcome.getLocationId(), outcome.getMessage(), suggestions);
   }
 
   private Long resolveCurrentUserId() {

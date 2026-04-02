@@ -2,7 +2,7 @@
   <div th:if="${ladder.pendingDeletion}"
        class="alert alert-danger d-flex justify-content-between align-items-center">
     <div>
-      <strong>This group is scheduled for deletion.</strong>
+      <strong>This league is scheduled for deletion.</strong>
       <span th:attr="data-utc-time=${ladder.pendingDeletionAt}, data-time-format='datetime'"
             th:text="${@fhpbTime.displayDateTime24(ladder.pendingDeletionAt, (#authentication != null ? #authentication.principal : null))}"></span>
     </div>
@@ -25,7 +25,7 @@
             <div class="invite-qr-wrapper border rounded bg-white p-2 shadow-sm"
                  id="inviteQrCode"
                  role="img"
-                 aria-label="QR code for group invite link">
+                 aria-label="QR code for league invite link">
               <div class="text-muted small">Loading...</div>
             </div>
           </div>
@@ -62,10 +62,10 @@
   </div>
 
   <div class="card mb-3" th:if="${currentUserIsAdmin}">
-    <div class="card-header card-header-title text-center">Group Config</div>
+    <div class="card-header card-header-title text-center">League Config</div>
     <div class="card-body">
       <div class="mb-3">
-        <label class="form-label text-muted" for="groupTitleInput">Group name</label>
+        <label class="form-label text-muted" for="groupTitleInput">League name</label>
         <form method="post" class="d-flex gap-2" th:action="@{'/groups/' + ${ladder.id} + '/title'}">
           <input id="groupTitleInput"
                  type="text"
@@ -75,7 +75,7 @@
                  th:value="${ladder.title}" />
           <button type="submit" class="btn btn-action-primary">Save</button>
         </form>
-        <div class="form-text">Updates the name shown on Home -> Manage Groups.</div>
+        <div class="form-text">Updates the name shown on Home -> Manage Leagues.</div>
       </div>
 
       <div class="mb-3 text-center">
@@ -98,7 +98,7 @@
             th:action="@{'/groups/' + ${ladder.id} + '/config/all'}"
             onsubmit="return confirmSettingsChanges(this);">
         <div class="alert alert-warning text-start" th:if="${ladder.tournamentMode}">
-          Tournament mode is enabled. This group stays on manual seasons with standard confirmation, and each logged season match must match an active round-robin pairing. Only group admins can start or manage round-robins.
+          Tournament mode is enabled. This league stays on manual seasons with standard confirmation, and each logged season match must match an active round-robin pairing. Only league admins can start or manage round-robins.
         </div>
 
         <input type="hidden" name="originalMode" th:value="${ladder.mode.name()}">

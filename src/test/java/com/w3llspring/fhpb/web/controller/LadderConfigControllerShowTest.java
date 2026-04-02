@@ -157,8 +157,6 @@ class LadderConfigControllerShowTest {
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findActive(42L)).thenReturn(Optional.empty());
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
-    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
-        .thenReturn(Optional.of(currentMembership));
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(currentMembership, otherMembership));
@@ -206,8 +204,6 @@ class LadderConfigControllerShowTest {
 
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
-    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
-        .thenReturn(Optional.of(currentMembership));
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(currentMembership));
@@ -303,8 +299,6 @@ class LadderConfigControllerShowTest {
 
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
-    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
-        .thenReturn(Optional.of(currentMembership));
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(currentMembership));
@@ -524,8 +518,6 @@ class LadderConfigControllerShowTest {
 
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
-    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
-        .thenReturn(Optional.of(currentMembership));
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(currentMembership));
@@ -646,8 +638,6 @@ class LadderConfigControllerShowTest {
 
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
-    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
-        .thenReturn(Optional.of(currentMembership));
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(currentMembership));
@@ -735,8 +725,6 @@ class LadderConfigControllerShowTest {
 
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
-    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
-        .thenReturn(Optional.of(currentMembership));
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(currentMembership));
@@ -793,8 +781,6 @@ class LadderConfigControllerShowTest {
 
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
-    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
-        .thenReturn(Optional.of(currentMembership));
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(ownerMembership, currentMembership));
@@ -815,6 +801,120 @@ class LadderConfigControllerShowTest {
     assertThat(view).isEqualTo("auth/show");
     assertThat(model.get("sessionDisplayTitle")).isEqualTo("Charlie's Session");
     assertThat(model.get("sessionHeroTitle")).isEqualTo("Charlie's Session");
+  }
+
+  @Test
+  void show_sessionJoinerUsesActiveRosterWhenDirectMembershipLookupIsStale() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    User owner = new User();
+    owner.setId(8L);
+    owner.setNickName("Charlie");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Charlie's Session - Mar 16, 7:00 PM");
+    cfg.setOwnerUserId(8L);
+    cfg.setType(LadderConfig.Type.SESSION);
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.MEMBER);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    LadderMembership ownerMembership = new LadderMembership();
+    ownerMembership.setId(102L);
+    ownerMembership.setLadderConfig(cfg);
+    ownerMembership.setUserId(8L);
+    ownerMembership.setRole(LadderMembership.Role.ADMIN);
+    ownerMembership.setState(LadderMembership.State.ACTIVE);
+    ownerMembership.setJoinedAt(Instant.now().minusSeconds(300));
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(ownerMembership, currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser, owner));
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    assertThat(model.get("currentUserIsAdmin")).isEqualTo(false);
+    assertThat(model.get("sessionDisplayTitle")).isEqualTo("Charlie's Session");
+    assertThat(model.get("sessionHeroTitle")).isEqualTo("Charlie's Session");
+  }
+
+  @Test
+  void show_sessionMemberWhoIsSiteWideAdminIsNotTreatedAsSessionAdmin() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+    currentUser.setEmail("admin@test.com");
+
+    User owner = new User();
+    owner.setId(8L);
+    owner.setNickName("Charlie");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Charlie's Session - Mar 16, 7:00 PM");
+    cfg.setOwnerUserId(8L);
+    cfg.setType(LadderConfig.Type.SESSION);
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.MEMBER);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    LadderMembership ownerMembership = new LadderMembership();
+    ownerMembership.setId(102L);
+    ownerMembership.setLadderConfig(cfg);
+    ownerMembership.setUserId(8L);
+    ownerMembership.setRole(LadderMembership.Role.ADMIN);
+    ownerMembership.setState(LadderMembership.State.ACTIVE);
+    ownerMembership.setJoinedAt(Instant.now().minusSeconds(300));
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(ownerMembership, currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser, owner));
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    assertThat(model.get("currentUserIsAdmin")).isEqualTo(false);
+    assertThat(model.get("pendingSessionJoinRequests")).isEqualTo(List.of());
   }
 
   @Test
@@ -839,8 +939,6 @@ class LadderConfigControllerShowTest {
 
     when(configs.findById(42L)).thenReturn(Optional.of(cfg));
     when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
-    when(membershipRepo.findByLadderConfigIdAndUserId(42L, 7L))
-        .thenReturn(Optional.of(currentMembership));
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(currentMembership));

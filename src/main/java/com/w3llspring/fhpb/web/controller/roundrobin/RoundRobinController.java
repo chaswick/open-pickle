@@ -1070,7 +1070,7 @@ public class RoundRobinController {
       return "Only the session starter can start round-robins from this session.";
     }
     if (ladderConfig.isTournamentMode()) {
-      return "Tournament mode requires group admins to start and manage round-robins. Matches logged for this season must match an active round-robin pairing.";
+      return "Tournament mode requires league admins to start and manage round-robins. Matches logged for this season must match an active round-robin pairing.";
     }
     return null;
   }
