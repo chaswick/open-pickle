@@ -3,6 +3,7 @@ package com.w3llspring.fhpb.web.controller.competition;
 import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
+import com.w3llspring.fhpb.web.db.MatchConfirmationRepository;
 import com.w3llspring.fhpb.web.db.MatchRepository;
 import com.w3llspring.fhpb.web.db.UserDisplayNameAuditRepository;
 import com.w3llspring.fhpb.web.db.UserRepository;
@@ -84,7 +85,7 @@ public class LadderConfigController {
       Pattern.compile("^(.+ Session) - [A-Z][a-z]{2} \\d{1,2}, \\d{1,2}:\\d{2} [AP]M$");
   private static final String SESSION_TOUR_OWNER = "owner";
   private static final String SESSION_TOUR_JOINER = "joiner";
-  private static final int SESSION_RECENT_TICKER_LIMIT = 5;
+  private static final int SESSION_RECENT_TICKER_LIMIT = 3;
 
   private final GroupAdministrationOperations groupAdministration;
   private final GroupCreationService groupCreationService;
@@ -117,6 +118,7 @@ public class LadderConfigController {
   private CompetitionDisplayNameModerationService competitionDisplayNameModerationService;
   private final SessionJoinRequestService sessionJoinRequestService;
   @Autowired private UserOnboardingService userOnboardingService;
+  @Autowired private MatchConfirmationRepository matchConfirmationRepository;
 
   @Autowired
   public LadderConfigController(
@@ -607,7 +609,11 @@ public class LadderConfigController {
     model.addAttribute("isCompetitionLadder", cfg.isCompetitionType());
     model.addAttribute("sessionDisplayTitle", resolveSessionDisplayTitle(cfg));
     LadderSeason targetSeason =
-        competitionSeasonService != null ? competitionSeasonService.resolveTargetSeason(cfg) : null;
+        cfg.isSessionType()
+            ? resolveSessionTargetSeason(cfg)
+            : (competitionSeasonService != null
+                ? competitionSeasonService.resolveTargetSeason(cfg)
+                : null);
     model.addAttribute("targetSeason", targetSeason);
     model.addAttribute(
         "sessionTargetSeasonDateRange", targetSeason != null ? dateRange(targetSeason) : "");
@@ -883,6 +889,21 @@ public class LadderConfigController {
         findSessionStandingsAwaitingConfirmationUserIds(targetSeason));
   }
 
+  private LadderSeason resolveSessionTargetSeason(LadderConfig sessionConfig) {
+    if (sessionConfig == null || !sessionConfig.isSessionType()) {
+      return null;
+    }
+
+    LadderSeason linkedTargetSeason =
+        competitionSeasonService != null ? competitionSeasonService.resolveTargetSeason(sessionConfig) : null;
+    if (linkedTargetSeason != null) {
+      return linkedTargetSeason;
+    }
+    return competitionSeasonService != null
+        ? competitionSeasonService.resolveActiveCompetitionSeason()
+        : null;
+  }
+
   private Set<Long> findSessionStandingsAwaitingConfirmationUserIds(LadderSeason targetSeason) {
     if (targetSeason == null || matchRepo == null) {
       return Set.of();
@@ -930,28 +951,62 @@ public class LadderConfigController {
       return List.of();
     }
 
-    List<Match> recentMatches =
-        matchRepo.findConfirmedBySourceSessionConfigIdOrderByPlayedAtDescWithUsers(
-            sessionConfig.getId());
-    if (recentMatches == null || recentMatches.isEmpty()) {
+    List<SessionRecentTickerMatchTimeline> timelines =
+        loadSessionRecentTickerTimelines(sessionConfig.getId());
+    if (timelines.isEmpty()) {
       return List.of();
     }
 
-    List<SessionRecentTickerItem> items = new ArrayList<>();
-    recentMatches.stream()
+    Map<Long, Match> matchById =
+        matchRepo.findAllByIdInWithUsers(
+                timelines.stream().map(SessionRecentTickerMatchTimeline::matchId).toList())
+            .stream()
+            .filter(Objects::nonNull)
+            .collect(Collectors.toMap(Match::getId, match -> match, (left, right) -> left));
+
+    return timelines.stream()
+        .map(
+            timeline -> {
+              Match match = matchById.get(timeline.matchId());
+              if (match == null) {
+                return null;
+              }
+              Instant confirmedAt = timeline.confirmedAt();
+              return new SessionRecentTickerItem(
+                  match.getId(),
+                  buildSessionRecentTickerAgeLabel(confirmedAt),
+                  buildSessionRecentTickerSummary(match),
+                  confirmedAt);
+            })
         .filter(Objects::nonNull)
-        .limit(SESSION_RECENT_TICKER_LIMIT)
-        .forEach(
-            match -> {
-              Instant timeline = matchTimeline(match);
-              items.add(
-                  new SessionRecentTickerItem(
-                      match.getId(),
-                      buildSessionRecentTickerAgeLabel(timeline),
-                      buildSessionRecentTickerSummary(match),
-                      timeline));
-            });
-    return items;
+        .toList();
+  }
+
+  private List<SessionRecentTickerMatchTimeline> loadSessionRecentTickerTimelines(Long sessionConfigId) {
+    if (sessionConfigId == null || matchConfirmationRepository == null) {
+      return List.of();
+    }
+
+    List<MatchConfirmationRepository.SessionConfirmedMatchTimeline> projections =
+        matchConfirmationRepository.findRecentConfirmedSessionTimelines(
+            sessionConfigId,
+            MatchState.CONFIRMED,
+            PageRequest.of(0, SESSION_RECENT_TICKER_LIMIT));
+    if (projections == null || projections.isEmpty()) {
+      return List.of();
+    }
+
+    return projections.stream()
+        .filter(
+            projection ->
+                projection != null
+                    && projection.getMatchId() != null
+                    && projection.getConfirmedAt() != null)
+        .map(
+            projection ->
+                new SessionRecentTickerMatchTimeline(
+                    projection.getMatchId(), projection.getConfirmedAt()))
+        .toList();
   }
 
   private String buildSessionRecentTickerSummary(Match match) {
@@ -990,19 +1045,6 @@ public class LadderConfigController {
       return "Guest Squad";
     }
     return String.join(" & ", names);
-  }
-
-  private Instant matchTimeline(Match match) {
-    if (match == null) {
-      return Instant.EPOCH;
-    }
-    if (match.getPlayedAt() != null) {
-      return match.getPlayedAt();
-    }
-    if (match.getCreatedAt() != null) {
-      return match.getCreatedAt();
-    }
-    return Instant.EPOCH;
   }
 
   private String buildSessionRecentTickerAgeLabel(Instant timeline) {
@@ -2148,7 +2190,9 @@ public class LadderConfigController {
   }
 
   public record SessionRecentTickerItem(
-      Long matchId, String ageLabel, String summary, Instant playedAt) {}
+      Long matchId, String ageLabel, String summary, Instant confirmedAt) {}
+
+  private record SessionRecentTickerMatchTimeline(Long matchId, Instant confirmedAt) {}
 
   @PostMapping("/{ladderId}/title")
   @Transactional

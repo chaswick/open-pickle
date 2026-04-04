@@ -45,6 +45,58 @@
       return context.querySelector('[data-session-standings-root="true"]');
     },
 
+    getTickerAnchor: function (scope) {
+      var context = scope && typeof scope.querySelector === 'function' ? scope : document;
+      return context.querySelector('[data-session-recent-ticker-anchor="true"]');
+    },
+
+    getTickerSignature: function (anchor) {
+      if (!anchor) {
+        return '';
+      }
+
+      return Array.prototype.slice.call(anchor.querySelectorAll('[data-session-recent-item]'))
+        .map(function (item) {
+          var age = item.querySelector('[data-session-recent-age]');
+          var copy = item.querySelector('.session-recent-ticker-copy');
+          var utcTime = age ? (age.getAttribute('data-utc-time') || '') : '';
+          var summary = copy ? copy.textContent.trim() : item.textContent.trim();
+          return utcTime + '|' + summary;
+        })
+        .join('||');
+    },
+
+    syncRecentTicker: function (doc) {
+      var currentAnchor = FHPB.SessionStandings.getTickerAnchor();
+      var freshAnchor = FHPB.SessionStandings.getTickerAnchor(doc);
+      if (!currentAnchor || !freshAnchor) {
+        return;
+      }
+
+      var currentSignature = FHPB.SessionStandings.getTickerSignature(currentAnchor);
+      var freshSignature = FHPB.SessionStandings.getTickerSignature(freshAnchor);
+      if (currentSignature === freshSignature) {
+        return;
+      }
+
+      var freshMarkup = freshAnchor.innerHTML || '';
+
+      var currentTicker = currentAnchor.querySelector('[data-session-recent-ticker]');
+      if (currentTicker
+          && window.FHPB
+          && FHPB.SessionRecentTicker
+          && typeof FHPB.SessionRecentTicker.unmount === 'function') {
+        FHPB.SessionRecentTicker.unmount(currentTicker);
+      }
+
+      currentAnchor.innerHTML = freshMarkup;
+      if (window.FHPB
+          && FHPB.SessionRecentTicker
+          && typeof FHPB.SessionRecentTicker.mountAll === 'function') {
+        FHPB.SessionRecentTicker.mountAll(currentAnchor);
+      }
+    },
+
     hasActiveRoot: function () {
       return !!FHPB.SessionStandings.getRoot();
     },
@@ -324,6 +376,7 @@
         .then(function (html) {
           var parser = new DOMParser();
           var doc = parser.parseFromString(html, 'text/html');
+          FHPB.SessionStandings.syncRecentTicker(doc);
           var freshRoot = FHPB.SessionStandings.getRoot(doc);
           if (!freshRoot || !currentRoot.parentNode) {
             return;

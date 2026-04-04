@@ -77,6 +77,37 @@ function renderStandingRow(player, index, currentUserId, activeStat) {
     </div>`;
 }
 
+function renderTickerAnchor(items = []) {
+  const markup = items.length
+    ? `
+      <div class="session-recent-ticker-shell" data-session-recent-ticker-shell="true">
+        <div class="session-recent-ticker" data-session-recent-ticker="true">
+          <span class="session-recent-ticker-viewport">
+            <span class="session-recent-ticker-fallback" data-session-recent-source aria-hidden="true">
+              ${items.map((item) => `
+                <span class="session-recent-ticker-item" data-session-recent-item>
+                  <span class="session-recent-ticker-age"
+                        data-session-recent-age
+                        data-utc-time="${item.confirmedAt}"
+                        data-time-format="relative-change">${item.ageLabel}</span>
+                  <span class="session-recent-ticker-separator" aria-hidden="true">:</span>
+                  <span class="session-recent-ticker-copy">${item.summary}</span>
+                </span>`).join('')}
+            </span>
+            <span class="session-recent-ticker-marquee d-none"
+                  data-session-recent-marquee
+                  aria-hidden="true"></span>
+          </span>
+        </div>
+      </div>`
+    : '';
+
+  return `
+    <div data-session-recent-ticker-anchor="true">
+      ${markup}
+    </div>`;
+}
+
 function renderStandingsCard(players, options = {}) {
   const currentUserId = String(options.currentUserId || players[0]?.userId || '1');
   const activeStat = options.activeStat || 'rating';
@@ -204,6 +235,10 @@ function installEnvironment() {
     CollapseState: {
       captureCurrentState() {},
       restoreAll() {}
+    },
+    SessionRecentTicker: {
+      mountAll: vi.fn(),
+      unmount: vi.fn()
     }
   };
   window.fetch = vi.fn();
@@ -218,7 +253,8 @@ function configureReplayTimings() {
 }
 
 function mountCurrent(players, options = {}) {
-  document.body.innerHTML = renderStandingsCard(players, options);
+  document.body.innerHTML =
+    renderTickerAnchor(options.tickerItems || []) + renderStandingsCard(players, options);
   const root = window.FHPB.SessionStandings.getRoot();
   installLayoutMetrics(root);
   window.FHPB.SessionStandings.mount(root);
@@ -229,7 +265,7 @@ function mountCurrent(players, options = {}) {
 }
 
 function buildDocumentHtml(players, options = {}) {
-  return `<!doctype html><html><body>${renderStandingsCard(players, options)}</body></html>`;
+  return `<!doctype html><html><body>${renderTickerAnchor(options.tickerItems || [])}${renderStandingsCard(players, options)}</body></html>`;
 }
 
 async function flushMicrotasks() {
@@ -269,6 +305,10 @@ function getLayer(root) {
 
 function getRow(root, userId) {
   return root.querySelector(`[data-session-row-user-id="${userId}"]`);
+}
+
+function getTickerAnchor(scope = document) {
+  return scope.querySelector('[data-session-recent-ticker-anchor="true"]');
 }
 
 function getRankText(scope) {
@@ -399,5 +439,43 @@ describe('session standings replay', () => {
     expect(captureCurrentState).toHaveBeenCalledWith('sessionStandingsCollapse', expect.any(HTMLElement));
     expect(upgradeAll).toHaveBeenCalledWith(freshRoot);
     expect(restoreAll).toHaveBeenCalledWith(freshRoot);
+  });
+
+  it('refreshes the ticker from the existing standings poll without replacing the standings card', async () => {
+    const players = [
+      createPlayer(1, 'Alice', 1500, 5, 44, '+4 form', 'ladder-momentum session-roster-form text-success', 'bi bi-triangle-half', 1),
+      createPlayer(2, 'Bob', 1400, 3, 38, '0 form', 'ladder-momentum session-roster-form text-muted', 'bi bi-dash-circle', 2)
+    ];
+
+    mountCurrent(players, {
+      currentUserId: '1',
+      tickerItems: [
+        {
+          ageLabel: '2 minutes ago',
+          summary: 'Alice & Bob def Carol & Dave 11-8',
+          confirmedAt: '2026-03-31T15:55:00Z'
+        }
+      ]
+    });
+    const currentRoot = window.FHPB.SessionStandings.getRoot();
+    const originalTickerMarkup = getTickerAnchor().innerHTML;
+
+    await refreshTo(players, {
+      currentUserId: '1',
+      tickerItems: [
+        {
+          ageLabel: 'Just now',
+          summary: 'Eve & Frank def Gail & Hank 11-6',
+          confirmedAt: '2026-03-31T16:05:00Z'
+        }
+      ]
+    });
+
+    expect(window.FHPB.SessionRecentTicker.unmount).toHaveBeenCalledTimes(1);
+    expect(window.FHPB.SessionRecentTicker.mountAll).toHaveBeenCalledWith(getTickerAnchor());
+    expect(getTickerAnchor().innerHTML).not.toBe(originalTickerMarkup);
+    expect(getTickerAnchor().textContent).toContain('Eve & Frank def Gail & Hank 11-6');
+    expect(window.FHPB.SessionStandings.getRoot()).toBe(currentRoot);
+    expect(getLayer(currentRoot)).toBeNull();
   });
 });

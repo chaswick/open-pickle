@@ -2,14 +2,24 @@ package com.w3llspring.fhpb.web.db;
 
 import com.w3llspring.fhpb.web.model.Match;
 import com.w3llspring.fhpb.web.model.MatchConfirmation;
+import com.w3llspring.fhpb.web.model.MatchState;
 import com.w3llspring.fhpb.web.model.User;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface MatchConfirmationRepository extends JpaRepository<MatchConfirmation, Long> {
+
+  interface SessionConfirmedMatchTimeline {
+    Long getMatchId();
+
+    Instant getConfirmedAt();
+  }
 
   Optional<MatchConfirmation> findByMatchAndPlayer(Match match, User player);
 
@@ -32,31 +42,42 @@ public interface MatchConfirmationRepository extends JpaRepository<MatchConfirma
   int deleteByCreatedAtBeforeAndConfirmedAtIsNull(Instant cutoff);
 
   /** Trust system: Find confirmation requests for a specific player in a season. */
-  @org.springframework.data.jpa.repository.Query(
+  @Query(
       "select mc from MatchConfirmation mc "
           + "where mc.player.id = :playerId "
           + "and mc.match.season.id = :seasonId")
   List<MatchConfirmation> findByPlayerIdAndMatchSeasonId(
-      @org.springframework.data.repository.query.Param("playerId") Long playerId,
-      @org.springframework.data.repository.query.Param("seasonId") Long seasonId);
+      @Param("playerId") Long playerId, @Param("seasonId") Long seasonId);
 
   /** Batch loader used by dashboards to gather confirmations without per-match queries. */
-  @org.springframework.data.jpa.repository.Query(
+  @Query(
       "select distinct mc from MatchConfirmation mc "
           + "join fetch mc.match m "
           + "left join fetch mc.player "
           + "where m.id in :matchIds")
   List<MatchConfirmation> findByMatchIdIn(
-      @org.springframework.data.repository.query.Param("matchIds") Collection<Long> matchIds);
+      @Param("matchIds") Collection<Long> matchIds);
 
   /** Batch loader for player-season confirmation requests. */
-  @org.springframework.data.jpa.repository.Query(
+  @Query(
       "select distinct mc from MatchConfirmation mc "
           + "join fetch mc.match m "
           + "left join fetch mc.player p "
           + "where p.id in :playerIds "
           + "and m.season.id = :seasonId")
   List<MatchConfirmation> findByPlayerIdInAndMatchSeasonId(
-      @org.springframework.data.repository.query.Param("playerIds") Collection<Long> playerIds,
-      @org.springframework.data.repository.query.Param("seasonId") Long seasonId);
+      @Param("playerIds") Collection<Long> playerIds, @Param("seasonId") Long seasonId);
+
+  @Query(
+      "select mc.match.id as matchId, max(mc.confirmedAt) as confirmedAt "
+          + "from MatchConfirmation mc "
+          + "where mc.match.sourceSessionConfig.id = :sessionConfigId "
+          + "and mc.match.state = :confirmedState "
+          + "and mc.confirmedAt is not null "
+          + "group by mc.match.id "
+          + "order by max(mc.confirmedAt) desc, mc.match.id desc")
+  List<SessionConfirmedMatchTimeline> findRecentConfirmedSessionTimelines(
+      @Param("sessionConfigId") Long sessionConfigId,
+      @Param("confirmedState") MatchState confirmedState,
+      Pageable pageable);
 }

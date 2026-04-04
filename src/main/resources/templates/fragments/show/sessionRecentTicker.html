@@ -1,5 +1,6 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sessionRecentTicker">
   <div class="session-recent-ticker-shell"
+       data-session-recent-ticker-shell="true"
        th:if="${isSessionLadder and sessionRecentTickerItems != null and !#lists.isEmpty(sessionRecentTickerItems)}">
     <div class="session-recent-ticker"
          data-session-recent-ticker="true">
@@ -12,7 +13,7 @@
                 data-session-recent-item>
             <span class="session-recent-ticker-age"
                   data-session-recent-age
-                  th:attr="data-utc-time=${item.playedAt},data-time-format='relative-change'"
+                  th:attr="data-utc-time=${item.confirmedAt},data-time-format='relative-change'"
                   th:text="${item.ageLabel}">Just now</span>
             <span class="session-recent-ticker-separator" aria-hidden="true">:</span>
             <span class="session-recent-ticker-copy"

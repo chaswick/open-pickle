@@ -717,8 +717,10 @@
 <body>
   <main layout:fragment="content" class="app-page">
     <th:block th:with="authPrincipal=${#authentication != null ? #authentication.principal : null}, sessionDateTimePattern='EEEE, MMM d, h:mm a'">
-    <div th:if="${isSessionLadder}"
-         th:replace="~{fragments/show/sessionRecentTicker :: sessionRecentTicker}"></div>
+      <div th:if="${isSessionLadder}"
+           data-session-recent-ticker-anchor="true">
+        <div th:replace="~{fragments/show/sessionRecentTicker :: sessionRecentTicker}"></div>
+      </div>
     <div class="app-home-tour"
          th:if="${isSessionLadder and sessionTourVariant != null}"
          hidden

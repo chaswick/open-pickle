@@ -8,6 +8,7 @@ import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
 import com.w3llspring.fhpb.web.db.LadderStandingRepository;
+import com.w3llspring.fhpb.web.db.MatchConfirmationRepository;
 import com.w3llspring.fhpb.web.db.MatchRepository;
 import com.w3llspring.fhpb.web.db.UserDisplayNameAuditRepository;
 import com.w3llspring.fhpb.web.db.UserRepository;
@@ -62,6 +63,7 @@ class LadderConfigControllerShowTest {
   @Mock private LadderMembershipRepository membershipRepo;
   @Mock private LadderStandingRepository standingRepo;
   @Mock private MatchRepository matchRepo;
+  @Mock private MatchConfirmationRepository matchConfirmationRepository;
   @Mock private GroupAdministrationOperations groupAdministration;
   private LadderConfigController controller;
   private List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionStandings;
@@ -118,6 +120,7 @@ class LadderConfigControllerShowTest {
             storyModeServiceStub,
             20);
     ReflectionTestUtils.setField(controller, "matchRepo", matchRepo);
+    ReflectionTestUtils.setField(controller, "matchConfirmationRepository", matchConfirmationRepository);
     ReflectionTestUtils.setField(controller, "siteWideAdminEmail", "admin@test.com");
   }
 
@@ -307,8 +310,14 @@ class LadderConfigControllerShowTest {
         .thenReturn(List.of());
     when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
         .thenReturn(List.of(currentUser, tickerPartner, tickerOpponent));
-    when(matchRepo.findConfirmedBySourceSessionConfigIdOrderByPlayedAtDescWithUsers(42L))
-        .thenReturn(List.of(recentConfirmedMatch));
+    when(matchConfirmationRepository.findRecentConfirmedSessionTimelines(
+            org.mockito.ArgumentMatchers.eq(42L),
+            org.mockito.ArgumentMatchers.eq(com.w3llspring.fhpb.web.model.MatchState.CONFIRMED),
+            org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+        .thenReturn(
+            List.of(
+                tickerTimeline(499L, Instant.parse("2026-03-31T16:05:00Z"))));
+    when(matchRepo.findAllByIdInWithUsers(List.of(499L))).thenReturn(List.of(recentConfirmedMatch));
 
     CompetitionSeasonService competitionSeasonService =
         new CompetitionSeasonService(null, null, null) {
@@ -463,6 +472,205 @@ class LadderConfigControllerShowTest {
     assertThat((List<LadderConfigController.SessionRecentTickerItem>) model.get("sessionRecentTickerItems"))
         .extracting(LadderConfigController.SessionRecentTickerItem::summary)
         .containsExactly("Tester & Partner def Opponent & Guest 11-5");
+  }
+
+  @Test
+  void show_sessionTickerUsesLastThreeConfirmedMatchesByConfirmedTime() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    User partner = new User();
+    partner.setId(8L);
+    partner.setNickName("Partner");
+
+    User opponentOne = new User();
+    opponentOne.setId(9L);
+    opponentOne.setNickName("Opponent One");
+
+    User opponentTwo = new User();
+    opponentTwo.setId(10L);
+    opponentTwo.setNickName("Opponent Two");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Saturday Open Session");
+    cfg.setOwnerUserId(7L);
+    cfg.setType(LadderConfig.Type.SESSION);
+    cfg.setInviteCode("DINK-7");
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.ADMIN);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    Match firstDisplayed = tickerMatch(501L, cfg, currentUser, partner, opponentOne, 11, 5);
+    firstDisplayed.setPlayedAt(Instant.parse("2026-03-31T12:00:00Z"));
+
+    Match secondDisplayed = tickerMatch(502L, cfg, partner, opponentOne, opponentTwo, 11, 7);
+    secondDisplayed.setPlayedAt(Instant.parse("2026-03-31T18:00:00Z"));
+
+    Match newestConfirmed = tickerMatch(503L, cfg, opponentOne, opponentTwo, currentUser, 11, 9);
+    newestConfirmed.setPlayedAt(Instant.parse("2026-03-31T08:00:00Z"));
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser, partner, opponentOne, opponentTwo));
+    when(matchConfirmationRepository.findRecentConfirmedSessionTimelines(
+            org.mockito.ArgumentMatchers.eq(42L),
+            org.mockito.ArgumentMatchers.eq(com.w3llspring.fhpb.web.model.MatchState.CONFIRMED),
+            org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+        .thenReturn(
+            List.of(
+                tickerTimeline(503L, Instant.parse("2026-03-31T16:03:00Z")),
+                tickerTimeline(501L, Instant.parse("2026-03-31T16:02:00Z")),
+                tickerTimeline(502L, Instant.parse("2026-03-31T16:01:00Z"))));
+    when(matchRepo.findAllByIdInWithUsers(List.of(503L, 501L, 502L)))
+        .thenReturn(List.of(firstDisplayed, newestConfirmed, secondDisplayed));
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, null, model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    assertThat((List<LadderConfigController.SessionRecentTickerItem>) model.get("sessionRecentTickerItems"))
+        .extracting(
+            LadderConfigController.SessionRecentTickerItem::matchId,
+            LadderConfigController.SessionRecentTickerItem::confirmedAt)
+        .containsExactly(
+            org.assertj.core.groups.Tuple.tuple(503L, Instant.parse("2026-03-31T16:03:00Z")),
+            org.assertj.core.groups.Tuple.tuple(501L, Instant.parse("2026-03-31T16:02:00Z")),
+            org.assertj.core.groups.Tuple.tuple(502L, Instant.parse("2026-03-31T16:01:00Z")));
+  }
+
+  @Test
+  void show_sessionFallsBackToActiveCompetitionSeasonForInitialStandingsDisplay() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Saturday Open Session");
+    cfg.setOwnerUserId(7L);
+    cfg.setType(LadderConfig.Type.SESSION);
+    cfg.setInviteCode("DINK-7");
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.ADMIN);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    LadderSeason activeCompetitionSeason = new LadderSeason();
+    ReflectionTestUtils.setField(activeCompetitionSeason, "id", 55L);
+    LadderConfig competitionConfig = new LadderConfig();
+    competitionConfig.setId(90L);
+    competitionConfig.setType(LadderConfig.Type.COMPETITION);
+    activeCompetitionSeason.setLadderConfig(competitionConfig);
+    activeCompetitionSeason.setName("Global Competition");
+
+    LadderStanding standing = new LadderStanding();
+    standing.setSeason(activeCompetitionSeason);
+    standing.setUser(currentUser);
+    standing.setDisplayName("Tester");
+    standing.setRank(4);
+    standing.setPoints(27);
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser));
+    when(standingRepo.findBySeasonOrderByRankNoAscWithUser(activeCompetitionSeason))
+        .thenReturn(List.of(standing));
+
+    sessionStandings = List.of(new com.w3llspring.fhpb.web.model.RoundRobinStanding(7L, "Tester"));
+
+    CompetitionSeasonService competitionSeasonService =
+        new CompetitionSeasonService(null, null, null) {
+          @Override
+          public LadderSeason resolveTargetSeason(LadderConfig ladderConfig) {
+            return null;
+          }
+
+          @Override
+          public LadderSeason resolveActiveCompetitionSeason() {
+            return activeCompetitionSeason;
+          }
+        };
+    LadderV2Service ladderV2Service =
+        new LadderV2Service(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            new com.w3llspring.fhpb.web.service.SeasonNameGenerator(),
+            new LadderScoringAlgorithms(
+                java.util.List.of(
+                    new MarginCurveV1LadderScoringAlgorithm(),
+                    new BalancedV1LadderScoringAlgorithm())),
+            null,
+            null,
+            null,
+            null) {
+          @Override
+          public java.util.List<LadderRow> buildDisplayRows(
+              java.util.List<LadderStanding> standings) {
+            LadderRow row = new LadderRow();
+            row.userId = 7L;
+            row.displayName = "Tester";
+            row.rank = 4;
+            row.points = 27;
+            row.bandName = "Division 1";
+            row.momentum = 4;
+            return List.of(row);
+          }
+        };
+
+    ReflectionTestUtils.setField(controller, "competitionSeasonService", competitionSeasonService);
+    ReflectionTestUtils.setField(
+        controller,
+        "seasonStandingsViewService",
+        new SeasonStandingsViewService(standingRepo, ladderV2Service, Optional.empty()));
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    assertThat(model.get("targetSeason")).isEqualTo(activeCompetitionSeason);
+    assertThat((Map<Long, Integer>) model.get("sessionMomentumByUserId")).containsEntry(7L, 4);
+    assertThat((Map<Long, Integer>) model.get("sessionRatingByUserId")).containsEntry(7L, 1027);
   }
 
   @Test
@@ -646,8 +854,6 @@ class LadderConfigControllerShowTest {
         .thenReturn(List.of());
     when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
         .thenReturn(List.of(currentUser));
-    when(matchRepo.findConfirmedBySourceSessionConfigIdOrderByPlayedAtDescWithUsers(42L))
-        .thenReturn(List.of());
 
     CompetitionSeasonService competitionSeasonService =
         new CompetitionSeasonService(null, null, null) {
@@ -987,5 +1193,41 @@ class LadderConfigControllerShowTest {
     assertThat(view).isEqualTo("redirect:/competition");
     assertThat(model.containsAttribute("members")).isFalse();
     assertThat(model.containsAttribute("bannedMembers")).isFalse();
+  }
+
+  private MatchConfirmationRepository.SessionConfirmedMatchTimeline tickerTimeline(
+      Long matchId, Instant confirmedAt) {
+    return new MatchConfirmationRepository.SessionConfirmedMatchTimeline() {
+      @Override
+      public Long getMatchId() {
+        return matchId;
+      }
+
+      @Override
+      public Instant getConfirmedAt() {
+        return confirmedAt;
+      }
+    };
+  }
+
+  private Match tickerMatch(
+      Long matchId,
+      LadderConfig sessionConfig,
+      User a1,
+      User a2,
+      User b1,
+      int scoreA,
+      int scoreB) {
+    Match match = new Match();
+    ReflectionTestUtils.setField(match, "id", matchId);
+    match.setSourceSessionConfig(sessionConfig);
+    match.setA1(a1);
+    match.setA2(a2);
+    match.setB1(b1);
+    match.setB2(null);
+    match.setB2Guest(true);
+    match.setScoreA(scoreA);
+    match.setScoreB(scoreB);
+    return match;
   }
 }

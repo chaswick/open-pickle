@@ -379,10 +379,12 @@ class ThymeleafTemplateTest {
 
         assertThat(result).contains("session-recent-ticker");
         assertThat(result).contains("Eddie &amp; Dave def Young &amp; Guest 11-5");
+        assertThat(result).contains("data-session-recent-ticker-anchor=\"true\"");
         assertThat(result).contains("data-session-recent-ticker=\"true\"");
         assertThat(result).doesNotContain("Session Feed");
         assertThat(result).doesNotContain("Recent matches");
         assertThat(Files.readString(Path.of("src/main/resources/templates/fragments/show/sessionRecentTicker.html")))
+                .contains("item.confirmedAt")
                 .doesNotContain("<a ")
                 .doesNotContain("th:href");
     }
@@ -513,6 +515,7 @@ class ThymeleafTemplateTest {
 
         assertThat(shellTemplate).contains("fragments/show/sessionBody :: sessionBody");
         assertThat(shellTemplate).contains("fragments/show/sessionRecentTicker :: sessionRecentTicker");
+        assertThat(shellTemplate).contains("data-session-recent-ticker-anchor=\"true\"");
         assertThat(shellTemplate).contains("fragments/show/groupBody :: groupBody");
         assertThat(shellTemplate).contains("/js/session-nearby-share.js");
         assertThat(shellTemplate).contains("/js/session-recent-ticker.js");

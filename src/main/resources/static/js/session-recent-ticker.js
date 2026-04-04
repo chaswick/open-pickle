@@ -13,17 +13,39 @@
 
     init: function () {
       document.addEventListener('DOMContentLoaded', function () {
-        var tickers = document.querySelectorAll('[data-session-recent-ticker]');
-        tickers.forEach(function (ticker) {
-          FHPB.SessionRecentTicker.mount(ticker);
-        });
+        FHPB.SessionRecentTicker.mountAll(document);
       });
+    },
+
+    mountAll: function (scope) {
+      var roots = [];
+      var context = scope && typeof scope.querySelectorAll === 'function' ? scope : document;
+      if (scope
+          && scope.getAttribute
+          && scope.getAttribute('data-session-recent-ticker') === 'true') {
+        roots.push(scope);
+      }
+      Array.prototype.push.apply(
+        roots,
+        Array.prototype.slice.call(context.querySelectorAll('[data-session-recent-ticker]')));
+      roots.forEach(function (ticker) {
+        FHPB.SessionRecentTicker.mount(ticker);
+      });
+    },
+
+    unmount: function (root) {
+      if (!root || typeof root._sessionRecentTickerCleanup !== 'function') {
+        return;
+      }
+      root._sessionRecentTickerCleanup();
     },
 
     mount: function (root) {
       if (!root) {
         return;
       }
+
+      FHPB.SessionRecentTicker.unmount(root);
 
       var viewport = root.querySelector('.session-recent-ticker-viewport');
       var source = root.querySelector('[data-session-recent-source]');
@@ -46,6 +68,9 @@
       var cloneSegment = null;
       var segmentWidth = 0;
       var buildAttempts = 0;
+      var resizeObserver = null;
+      var refreshInterval = null;
+      var loadListener = null;
 
       function refreshTimes(scope) {
         FHPB.SessionRecentTicker.refreshTimes(scope);
@@ -129,7 +154,7 @@
       }
 
       if (window.ResizeObserver) {
-        var resizeObserver = new window.ResizeObserver(scheduleRebuild);
+        resizeObserver = new window.ResizeObserver(scheduleRebuild);
         resizeObserver.observe(viewport);
       } else {
         window.addEventListener('resize', scheduleRebuild);
@@ -144,11 +169,50 @@
       }
 
       rebuild();
-      window.addEventListener('load', scheduleRebuild, { once: true });
-      window.setInterval(function () {
+      loadListener = function () {
+        scheduleRebuild();
+      };
+      window.addEventListener('load', loadListener, { once: true });
+      refreshInterval = window.setInterval(function () {
         refreshTimes(source);
         refreshTimes(marqueeElement);
       }, FHPB.SessionRecentTicker.refreshMs);
+
+      root._sessionRecentTickerCleanup = function () {
+        if (resizeHandle !== null) {
+          window.clearTimeout(resizeHandle);
+          resizeHandle = null;
+        }
+        if (buildRetryHandle !== null) {
+          window.clearTimeout(buildRetryHandle);
+          buildRetryHandle = null;
+        }
+        if (refreshInterval !== null) {
+          window.clearInterval(refreshInterval);
+          refreshInterval = null;
+        }
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+          resizeObserver = null;
+        } else {
+          window.removeEventListener('resize', scheduleRebuild);
+        }
+        if (prefersReducedMotionQuery) {
+          if (typeof prefersReducedMotionQuery.removeEventListener === 'function') {
+            prefersReducedMotionQuery.removeEventListener('change', rebuild);
+          } else if (typeof prefersReducedMotionQuery.removeListener === 'function') {
+            prefersReducedMotionQuery.removeListener(rebuild);
+          }
+        }
+        if (loadListener) {
+          window.removeEventListener('load', loadListener);
+          loadListener = null;
+        }
+        marqueeElement.innerHTML = '';
+        marqueeElement.classList.add('d-none');
+        source.removeAttribute('hidden');
+        delete root._sessionRecentTickerCleanup;
+      };
     },
 
     currentPixelsPerSecond: function (prefersReducedMotionQuery) {
