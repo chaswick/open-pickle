@@ -1174,6 +1174,15 @@
         FHPB.Confirmations.showLocalRecalcIndicator(2500);
         FHPB.Confirmations.refreshStandingsAfterConfirm(0);
       }
+      if (window.FHPB
+          && FHPB.SessionStandings
+          && typeof FHPB.SessionStandings.hasActiveRoot === 'function'
+          && FHPB.SessionStandings.hasActiveRoot()) {
+        if (typeof FHPB.SessionStandings.watchForRecentConfirmation === 'function') {
+          FHPB.SessionStandings.watchForRecentConfirmation(15000);
+        }
+        FHPB.SessionStandings.refreshAfterActivity(150);
+      }
 
       window.setTimeout(function() {
         FHPB.Confirmations.syncAfterConfirmationStateChange(matchId, button, skipFragmentRefresh);
@@ -1249,6 +1258,15 @@
           FHPB.Confirmations.showLocalRecalcIndicator(4000);
           if (document.getElementById('ladderStandingsContainer')) {
             FHPB.Confirmations.refreshStandingsAfterConfirm(0);
+          }
+          if (window.FHPB
+              && FHPB.SessionStandings
+              && typeof FHPB.SessionStandings.hasActiveRoot === 'function'
+              && FHPB.SessionStandings.hasActiveRoot()) {
+            if (typeof FHPB.SessionStandings.watchForRecentConfirmation === 'function') {
+              FHPB.SessionStandings.watchForRecentConfirmation(15000);
+            }
+            FHPB.SessionStandings.refreshAfterActivity(150);
           }
           FHPB.Confirmations.syncAfterConfirmationStateChange(matchId, button, skipFragmentRefresh);
         } else {

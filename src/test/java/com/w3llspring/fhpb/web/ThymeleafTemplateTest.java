@@ -579,12 +579,16 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("data-member-section-title");
         assertThat(sessionTemplate).contains("Players who ask to join this session appear here.");
         assertThat(sessionTemplate).contains("class=\"card-body p-0\"");
+        assertThat(sessionTemplate).contains("data-session-standings-root=\"true\"");
         assertThat(sessionTemplate).contains("session-roster-list");
         assertThat(sessionTemplate).contains("list-group-flush");
         assertThat(sessionTemplate).contains("data-session-standings-list=\"true\"");
         assertThat(sessionTemplate).contains("data-session-stat-toggle=\"rating\"");
         assertThat(sessionTemplate).contains("data-session-stat-toggle=\"wins\"");
         assertThat(sessionTemplate).contains("data-session-stat-toggle=\"points-for\"");
+        assertThat(sessionTemplate).doesNotContain("data-session-replay-banner");
+        assertThat(sessionTemplate).doesNotContain("data-session-replay-trigger");
+        assertThat(sessionTemplate).contains("data-session-row-user-id=${s.userId}");
         assertThat(sessionTemplate).contains("data-session-rating-label=${ratingLabel}");
         assertThat(sessionTemplate).contains("sessionMomentumByUserId");
         assertThat(sessionTemplate).contains("session-roster-form-col");
@@ -594,8 +598,6 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("session-roster-form");
         assertThat(sessionTemplate).contains("ladder-momentum");
         assertThat(sessionTemplate).contains("data-session-row-rank");
-        assertThat(sessionTemplate).contains("function setHiddenState(element, hidden)");
-        assertThat(sessionTemplate).doesNotContain("toggleAttribute(");
         assertThat(sessionTemplate).contains("Session rank");
         assertThat(sessionTemplate).contains("current-user-row");
         assertThat(sessionTemplate).contains("data-default-caption=\"\"");
@@ -651,6 +653,7 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("session-roster-stat-cell");
         assertThat(sessionTemplate).doesNotContain("th:href=\"@{/competition}\"");
         assertThat(shellTemplate).contains("data-bs-target=\"#sessionConfirmationsInboxModal\"");
+        assertThat(shellTemplate).contains("/js/session-standings.js");
         assertThat(sessionTemplate).contains("id=\"sessionConfirmationsInboxModal\"");
         assertThat(sessionTemplate).contains("data-session-standings-pending=${sessionStandingsRecalculationPending}");
         assertThat(sessionTemplate).contains("Recent Rating Changes");

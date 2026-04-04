@@ -238,6 +238,10 @@
       column-gap: 0.4rem;
     }
 
+    .session-roster-list {
+      position: relative;
+    }
+
     .session-roster-list .session-roster-form-col {
       justify-self: center;
       text-align: center;
@@ -314,6 +318,12 @@
       align-items: center;
     }
 
+    .session-standings-header-tools {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
     .session-roster-list .session-roster-form {
       display: inline-flex;
       align-items: center;
@@ -348,6 +358,127 @@
       justify-self: end;
       text-align: end;
       white-space: nowrap;
+    }
+
+    .session-standings-replay-banner {
+      margin: 0.75rem 0.75rem 0;
+      padding: 0.65rem 0.85rem;
+      border-radius: 0.95rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #ffffff;
+      background: linear-gradient(135deg, #12447a 0%, #0d2f55 100%);
+      box-shadow: 0 0.7rem 1.6rem rgba(13, 47, 85, 0.18);
+    }
+
+    .session-roster-row {
+      position: relative;
+    }
+
+    .session-roster-list > .session-roster-row.is-session-awaiting-confirmation {
+      animation: sessionAwaitingConfirmPulse 2.35s ease-in-out infinite;
+      transform-origin: center center;
+      overflow: hidden;
+    }
+
+    .session-roster-list > .session-roster-row.is-session-awaiting-confirmation::before {
+      content: "";
+      position: absolute;
+      top: 0.5rem;
+      bottom: 0.5rem;
+      left: 0.42rem;
+      width: 0.24rem;
+      border-radius: 999px;
+      background: rgba(182, 124, 19, 0.5);
+      opacity: 0.55;
+      transform: scaleY(0.92);
+      animation: sessionAwaitingConfirmMarker 2.35s ease-in-out infinite;
+    }
+
+    .session-roster-list > .session-roster-row.is-session-awaiting-confirmation .session-roster-form,
+    .session-roster-list > .session-roster-row.is-session-awaiting-confirmation .session-roster-rank,
+    .session-roster-list > .session-roster-row.is-session-awaiting-confirmation .session-roster-stat-cell {
+      color: #8a5a00;
+    }
+
+    @keyframes sessionAwaitingConfirmPulse {
+      0%, 100% {
+        background: linear-gradient(180deg, rgba(255, 248, 225, 0.12) 0%, rgba(255, 255, 255, 0) 100%);
+        box-shadow: inset 0 0 0 1px rgba(182, 124, 19, 0.08);
+      }
+      50% {
+        background: linear-gradient(180deg, rgba(255, 244, 204, 0.24) 0%, rgba(255, 255, 255, 0.05) 100%);
+        box-shadow: inset 0 0 0 1px rgba(182, 124, 19, 0.18);
+      }
+    }
+
+    @keyframes sessionAwaitingConfirmMarker {
+      0%, 100% {
+        opacity: 0.48;
+        transform: scaleY(0.88);
+      }
+      50% {
+        opacity: 0.9;
+        transform: scaleY(1);
+      }
+    }
+
+    .session-standings-replay-banner.is-session-replay-up {
+      background: linear-gradient(135deg, #157347 0%, #0f5132 100%);
+    }
+
+    .session-standings-replay-banner.is-session-replay-down {
+      background: linear-gradient(135deg, #b02a37 0%, #842029 100%);
+    }
+
+    .session-roster-row.is-session-replay-hidden {
+      opacity: 0;
+      animation: none;
+    }
+
+    .session-standings-replay-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 6;
+    }
+
+    .session-standings-replay-clone {
+      position: absolute;
+      left: 0;
+      margin: 0;
+      border-radius: 0.95rem !important;
+      background: #ffffff;
+      box-shadow: 0 0.7rem 1.5rem rgba(10, 33, 60, 0.12);
+      border: 1px solid rgba(18, 68, 122, 0.06);
+      overflow: hidden;
+      transform-origin: center center;
+      pointer-events: none;
+      will-change: transform, opacity;
+      opacity: 1;
+    }
+
+    .session-standings-replay-clone.ladder-standing-row:not(.current-user-row):not(.ladder-header-row) {
+      background-color: #ffffff !important;
+    }
+
+    .session-standings-replay-clone.current-user-row {
+      background-color: #fff8e1 !important;
+    }
+
+    .session-standings-replay-clone.is-session-replay-moved {
+      box-shadow: 0 1rem 2rem rgba(10, 33, 60, 0.16);
+    }
+
+    .session-standings-replay-clone.is-session-replay-current-user {
+      box-shadow: 0 1.1rem 2.2rem rgba(10, 33, 60, 0.18);
+      border-color: rgba(18, 68, 122, 0.12);
+    }
+
+    .session-standings-replay-clone .session-rating-trigger {
+      pointer-events: none;
     }
 
     .session-stat-links {
@@ -808,6 +939,9 @@
     <script th:if="${isSessionLadder}"
             th:src="@{/js/session-recent-ticker.js(v=${assetVersion})}"
             src="/js/session-recent-ticker.js"></script>
+    <script th:if="${isSessionLadder}"
+            th:src="@{/js/session-standings.js(v=${assetVersion})}"
+            src="/js/session-standings.js"></script>
     <script>
     (function () {
       (function () {

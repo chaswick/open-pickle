@@ -12,6 +12,7 @@ import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.LadderSeason;
 import com.w3llspring.fhpb.web.model.LadderSecurity;
 import com.w3llspring.fhpb.web.model.Match;
+import com.w3llspring.fhpb.web.model.MatchState;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.model.UserDisplayNameAudit;
 import com.w3llspring.fhpb.web.service.CompetitionDisplayNameModerationService;
@@ -877,6 +878,44 @@ public class LadderConfigController {
     model.addAttribute("sessionGlobalRankByUserId", globalRankByUserId);
     model.addAttribute("sessionRatingByUserId", ratingByUserId);
     model.addAttribute("sessionMomentumByUserId", momentumByUserId);
+    model.addAttribute(
+        "sessionStandingsAwaitingConfirmationUserIds",
+        findSessionStandingsAwaitingConfirmationUserIds(targetSeason));
+  }
+
+  private Set<Long> findSessionStandingsAwaitingConfirmationUserIds(LadderSeason targetSeason) {
+    if (targetSeason == null || matchRepo == null) {
+      return Set.of();
+    }
+
+    List<Match> seasonMatches = matchRepo.findBySeasonOrderByPlayedAtDescWithUsers(targetSeason);
+    if (seasonMatches == null || seasonMatches.isEmpty()) {
+      return Set.of();
+    }
+
+    LinkedHashSet<Long> userIds = new LinkedHashSet<>();
+    for (Match match : seasonMatches) {
+      if (match == null
+          || match.isConfirmationLocked()
+          || match.getState() == MatchState.CONFIRMED
+          || match.getState() == MatchState.FLAGGED
+          || match.getState() == MatchState.NULLIFIED) {
+        continue;
+      }
+
+      addSessionStandingsAwaitingConfirmationUserId(userIds, match.getA1());
+      addSessionStandingsAwaitingConfirmationUserId(userIds, match.getA2());
+      addSessionStandingsAwaitingConfirmationUserId(userIds, match.getB1());
+      addSessionStandingsAwaitingConfirmationUserId(userIds, match.getB2());
+    }
+    return userIds;
+  }
+
+  private void addSessionStandingsAwaitingConfirmationUserId(Set<Long> userIds, User user) {
+    if (userIds == null || user == null || user.getId() == null) {
+      return;
+    }
+    userIds.add(user.getId());
   }
 
   private void applySessionRecentTickerModel(Model model, LadderConfig sessionConfig) {

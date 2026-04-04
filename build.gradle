@@ -161,3 +161,24 @@ subprojects {
 		}
 	}
 }
+
+def npmExecutable = System.getProperty('os.name').toLowerCase().contains('windows') ? 'npm.cmd' : 'npm'
+
+tasks.register('npmInstall', Exec) {
+	workingDir = projectDir
+	inputs.files('package.json', 'package-lock.json')
+	outputs.dir('node_modules')
+	commandLine npmExecutable, 'ci', '--no-audit', '--no-fund'
+}
+
+tasks.register('frontendTest', Exec) {
+	dependsOn tasks.named('npmInstall')
+	workingDir = projectDir
+	inputs.files('package.json', 'package-lock.json', 'src/main/resources/static/js/session-standings.js')
+	inputs.dir('src/test/frontend')
+	commandLine npmExecutable, 'run', 'test:ui'
+}
+
+tasks.named('test') {
+	dependsOn tasks.named('frontendTest')
+}

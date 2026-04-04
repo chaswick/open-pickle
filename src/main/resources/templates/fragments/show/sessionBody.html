@@ -118,14 +118,20 @@
   </div>
 
   <div class="card mb-3"
-       th:attr="data-session-standings-pending=${sessionStandingsRecalculationPending}">
+       data-session-standings-root="true"
+       th:attr="data-session-standings-pending=${sessionStandingsRecalculationPending},
+                data-session-ladder-id=${ladder != null ? ladder.id : null},
+                data-session-season-id=${targetSeason != null ? targetSeason.id : null},
+                data-session-current-user-id=${currentUserId}">
     <div class="card-header card-header-title d-flex justify-content-between align-items-center">
       <span>Session Standings</span>
-      <span class="standings-recalc-indicator"
-            th:if="${sessionStandingsRecalculationPending}">
-        <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
-        Updating
-      </span>
+      <div class="session-standings-header-tools">
+        <span class="standings-recalc-indicator"
+              th:if="${sessionStandingsRecalculationPending}">
+          <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+          Updating
+        </span>
+      </div>
     </div>
     <div class="card-body p-0">
       <div class="px-3 pt-3 pb-3"
@@ -199,11 +205,14 @@
              class="list-group-item ladder-standing-row session-roster-row"
              data-session-row
              th:attr="data-session-original-rank=${iter.index + 1},
+                      data-session-row-user-id=${s.userId},
                       data-session-rating-label=${ratingLabel},
                       data-session-sort-rating=${ratingValue},
                       data-session-sort-wins=${s.wins},
-                      data-session-sort-points-for=${s.pointsFor}"
-             th:classappend="${currentUserId != null and s.userId == currentUserId} ? ' current-user-row' : null">
+                      data-session-sort-points-for=${s.pointsFor},
+                      data-session-awaiting-confirmation=${sessionStandingsAwaitingConfirmationUserIds != null and s.userId != null and sessionStandingsAwaitingConfirmationUserIds.contains(s.userId)}"
+             th:classappend="${(currentUserId != null and s.userId == currentUserId ? ' current-user-row' : '')
+                              + (sessionStandingsAwaitingConfirmationUserIds != null and s.userId != null and sessionStandingsAwaitingConfirmationUserIds.contains(s.userId) ? ' is-session-awaiting-confirmation' : '')}">
           <div class="ladder-row-inner session-roster-row-inner">
             <span class="session-roster-form-col">
               <span class="ladder-momentum session-roster-form"
@@ -586,102 +595,6 @@
       </div>
     </div>
   </div>
-
-  <script>
-    (function () {
-      const list = document.querySelector('[data-session-standings-list="true"]');
-      const statButtons = Array.from(document.querySelectorAll('[data-session-stat-toggle]'));
-      if (!list || !statButtons.length) {
-        return;
-      }
-
-      const rows = Array.from(list.querySelectorAll('[data-session-row]'));
-      if (!rows.length) {
-        return;
-      }
-
-      function updateStatControls(statKey) {
-        statButtons.forEach(function (button) {
-          const isActive = button.getAttribute('data-session-stat-toggle') === statKey;
-          button.classList.toggle('is-active', isActive);
-          button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-        });
-      }
-
-      function sortRows(statKey) {
-        const sorted = rows.slice().sort(function (a, b) {
-          const aValue = Number(a.getAttribute('data-session-sort-' + statKey) || '0');
-          const bValue = Number(b.getAttribute('data-session-sort-' + statKey) || '0');
-          if (bValue !== aValue) {
-            return bValue - aValue;
-          }
-
-          const aRank = Number(a.getAttribute('data-session-original-rank') || '0');
-          const bRank = Number(b.getAttribute('data-session-original-rank') || '0');
-          return aRank - bRank;
-        });
-
-        sorted.forEach(function (row) {
-          list.appendChild(row);
-        });
-      }
-
-      function renumberRows() {
-        Array.from(list.querySelectorAll('[data-session-row]')).forEach(function (row, index) {
-          const rankCell = row.querySelector('[data-session-row-rank]');
-          if (rankCell) {
-            rankCell.textContent = String(index + 1);
-          }
-        });
-      }
-
-      function setHiddenState(element, hidden) {
-        if (!element) {
-          return;
-        }
-        if (hidden) {
-          element.setAttribute('hidden', 'hidden');
-          return;
-        }
-        element.removeAttribute('hidden');
-      }
-
-      function updateStatColumn(statKey) {
-        updateStatControls(statKey);
-        rows.forEach(function (row) {
-          const ratingTrigger = row.querySelector('[data-session-rating-trigger]');
-          const ratingTriggerText = row.querySelector('[data-session-rating-trigger-text]');
-          const statText = row.querySelector('[data-session-stat-text]');
-          const nextValue = row.getAttribute('data-session-sort-' + statKey) || '';
-          const ratingLabel = row.getAttribute('data-session-rating-label') || nextValue;
-          const showingClickableRating = statKey === 'rating' && !!ratingTrigger;
-
-          if (statText) {
-            statText.textContent = statKey === 'rating' ? ratingLabel : nextValue;
-          }
-          if (ratingTrigger) {
-            setHiddenState(ratingTrigger, !showingClickableRating);
-            if (ratingTriggerText) {
-              ratingTriggerText.textContent = ratingLabel;
-            }
-          }
-          if (statText) {
-            setHiddenState(statText, showingClickableRating);
-          }
-        });
-        sortRows(statKey);
-        renumberRows();
-      }
-
-      statButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
-          updateStatColumn(button.getAttribute('data-session-stat-toggle') || 'rating');
-        });
-      });
-
-      updateStatColumn('rating');
-    })();
-  </script>
 
   <script th:if="${targetSeason != null}"
           src="/js/match-log-voice.js"
