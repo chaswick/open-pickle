@@ -168,7 +168,11 @@
     </div>
   </div>
 
-  <div class="card mb-3" th:if="${sessionRoundRobinTask != null}">
+  <div class="card mb-3"
+       th:if="${sessionRoundRobinTask != null}"
+       data-session-round-robin-root="true"
+       th:attr="data-session-round-robin-id=${sessionRoundRobinTask.roundRobinId},
+                data-session-round-robin-current-round=${sessionRoundRobinTask.currentRound}">
     <div class="card-header card-header-title text-center">Your Round Robin</div>
     <div class="card-body d-grid gap-3">
       <div class="text-center">

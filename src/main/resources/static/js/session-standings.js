@@ -45,6 +45,55 @@
       return context.querySelector('[data-session-standings-root="true"]');
     },
 
+    getRoundRobinCard: function (scope) {
+      var context = scope && typeof scope.querySelector === 'function' ? scope : document;
+      return context.querySelector('[data-session-round-robin-root="true"]');
+    },
+
+    getRoundRobinCardSignature: function (card) {
+      if (!card) {
+        return '';
+      }
+
+      return (card.outerHTML || card.innerHTML || '').trim();
+    },
+
+    shouldReplaceRoundRobinCard: function (currentCard, freshCard) {
+      return FHPB.SessionStandings.getRoundRobinCardSignature(currentCard)
+        !== FHPB.SessionStandings.getRoundRobinCardSignature(freshCard);
+    },
+
+    syncRoundRobinCard: function (currentRoot, freshScope) {
+      if (!currentRoot || !currentRoot.parentNode) {
+        return false;
+      }
+
+      var currentCard = FHPB.SessionStandings.getRoundRobinCard();
+      var freshCard = FHPB.SessionStandings.getRoundRobinCard(freshScope);
+      if (!currentCard && !freshCard) {
+        return false;
+      }
+
+      if (!FHPB.SessionStandings.shouldReplaceRoundRobinCard(currentCard, freshCard)) {
+        return false;
+      }
+
+      if (!freshCard) {
+        if (currentCard && currentCard.parentNode) {
+          currentCard.parentNode.removeChild(currentCard);
+        }
+        return true;
+      }
+
+      if (currentCard && currentCard.parentNode) {
+        currentCard.parentNode.replaceChild(freshCard, currentCard);
+        return true;
+      }
+
+      currentRoot.parentNode.insertBefore(freshCard, currentRoot);
+      return true;
+    },
+
     getTickerAnchor: function (scope) {
       var context = scope && typeof scope.querySelector === 'function' ? scope : document;
       return context.querySelector('[data-session-recent-ticker-anchor="true"]');
@@ -392,18 +441,25 @@
             signature: freshSnapshot.signature,
             statusSignature: freshSnapshot.statusSignature
           };
+          var roundRobinChanged = FHPB.SessionStandings.shouldReplaceRoundRobinCard(
+            FHPB.SessionStandings.getRoundRobinCard(),
+            FHPB.SessionStandings.getRoundRobinCard(doc));
           if (freshState.pending) {
+            if (!FHPB.SessionStandings.isConfirmationOverlayOpen()) {
+              FHPB.SessionStandings.syncRoundRobinCard(currentRoot, doc);
+            }
             FHPB.SessionStandings.refreshQueued = true;
             FHPB.SessionStandings.refreshQueuedDelayMs = FHPB.SessionStandings.pendingRefreshMs;
             return;
           }
-          if (!FHPB.SessionStandings.shouldReplace(currentState, freshState)) {
+          var shouldReplaceStandings = FHPB.SessionStandings.shouldReplace(currentState, freshState);
+          if (!shouldReplaceStandings && !roundRobinChanged) {
             return;
           }
 
           var replayOverride = null;
           var shouldAnimate = currentState.signature !== freshState.signature;
-          if (currentState.signature !== freshState.signature) {
+          if (shouldReplaceStandings && currentState.signature !== freshState.signature) {
             if (shouldAnimate) {
               replayOverride = FHPB.SessionStandings.buildReplay(
                 currentSnapshot,
@@ -419,6 +475,14 @@
 
           if (FHPB.SessionStandings.isReplayActive(currentRoot)) {
             FHPB.SessionStandings.queueRefresh(0);
+            return;
+          }
+
+          if (roundRobinChanged) {
+            FHPB.SessionStandings.syncRoundRobinCard(currentRoot, doc);
+          }
+
+          if (!shouldReplaceStandings) {
             return;
           }
 

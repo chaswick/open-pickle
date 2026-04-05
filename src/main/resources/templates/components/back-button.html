@@ -4,7 +4,7 @@
     <div class="container">
       <a th:href="${href ?: '/home'}" 
          class="btn btn-nav-secondary back-button-standard">
-        <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+        <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
         <span th:text="${text ?: 'Back'}">Back</span>
       </a>
     </div>
@@ -17,7 +17,7 @@
     <div class="container d-flex justify-content-between align-items-center">
       <a th:href="${href ?: '/home'}" 
          class="btn btn-nav-secondary back-button-standard">
-        <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
+        <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
         <span th:text="${text ?: 'Back'}">Back</span>
       </a>
       <span class="back-button-breadcrumb" th:if="${pageTitle}" th:text="${pageTitle}">Page Title</span>

@@ -108,6 +108,35 @@ function renderTickerAnchor(items = []) {
     </div>`;
 }
 
+function renderRoundRobinCard(roundRobin) {
+  if (!roundRobin) {
+    return '';
+  }
+
+  const maxRoundMarkup = roundRobin.maxRound
+    ? ` <span>of <span>${roundRobin.maxRound}</span></span>`
+    : '';
+  const statusMarkup = roundRobin.status
+    ? `<div class="small text-muted mt-1">${roundRobin.status}</div>`
+    : '';
+
+  return `
+    <div class="card mb-3"
+         data-session-round-robin-root="true"
+         data-session-round-robin-id="${roundRobin.roundRobinId || '88'}"
+         data-session-round-robin-current-round="${roundRobin.currentRound}">
+      <div class="card-header card-header-title text-center">Your Round Robin</div>
+      <div class="card-body d-grid gap-3">
+        <div class="text-center">
+          <div class="fw-semibold">
+            Round <span>${roundRobin.currentRound}</span>${maxRoundMarkup}
+          </div>
+          ${statusMarkup}
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderStandingsCard(players, options = {}) {
   const currentUserId = String(options.currentUserId || players[0]?.userId || '1');
   const activeStat = options.activeStat || 'rating';
@@ -159,7 +188,7 @@ function renderStandingsCard(players, options = {}) {
   return `
     <div class="card mb-3"
          data-session-standings-root="true"
-         data-session-standings-pending="false"
+         data-session-standings-pending="${options.pending ? 'true' : 'false'}"
          data-session-ladder-id="7"
          data-session-season-id="11"
          data-session-current-user-id="${currentUserId}">
@@ -254,7 +283,9 @@ function configureReplayTimings() {
 
 function mountCurrent(players, options = {}) {
   document.body.innerHTML =
-    renderTickerAnchor(options.tickerItems || []) + renderStandingsCard(players, options);
+    renderTickerAnchor(options.tickerItems || [])
+    + renderRoundRobinCard(options.roundRobin || null)
+    + renderStandingsCard(players, options);
   const root = window.FHPB.SessionStandings.getRoot();
   installLayoutMetrics(root);
   window.FHPB.SessionStandings.mount(root);
@@ -265,7 +296,7 @@ function mountCurrent(players, options = {}) {
 }
 
 function buildDocumentHtml(players, options = {}) {
-  return `<!doctype html><html><body>${renderTickerAnchor(options.tickerItems || [])}${renderStandingsCard(players, options)}</body></html>`;
+  return `<!doctype html><html><body>${renderTickerAnchor(options.tickerItems || [])}${renderRoundRobinCard(options.roundRobin || null)}${renderStandingsCard(players, options)}</body></html>`;
 }
 
 async function flushMicrotasks() {
@@ -309,6 +340,10 @@ function getRow(root, userId) {
 
 function getTickerAnchor(scope = document) {
   return scope.querySelector('[data-session-recent-ticker-anchor="true"]');
+}
+
+function getRoundRobinCard(scope = document) {
+  return scope.querySelector('[data-session-round-robin-root="true"]');
 }
 
 function getRankText(scope) {
@@ -477,6 +512,71 @@ describe('session standings replay', () => {
     expect(getTickerAnchor().textContent).toContain('Eve & Frank def Gail & Hank 11-6');
     expect(window.FHPB.SessionStandings.getRoot()).toBe(currentRoot);
     expect(getLayer(currentRoot)).toBeNull();
+  });
+
+  it('updates the round-robin card when the round changes even if standings stay the same', async () => {
+    const players = [
+      createPlayer(1, 'Alice', 1500, 5, 44, '+4 form', 'ladder-momentum session-roster-form text-success', 'bi bi-triangle-half', 1),
+      createPlayer(2, 'Bob', 1400, 3, 38, '0 form', 'ladder-momentum session-roster-form text-muted', 'bi bi-dash-circle', 2)
+    ];
+
+    mountCurrent(players, {
+      currentUserId: '1',
+      roundRobin: {
+        currentRound: 1,
+        maxRound: 3,
+        status: 'This is your next assigned match.'
+      }
+    });
+    const currentRoot = window.FHPB.SessionStandings.getRoot();
+    const originalCard = getRoundRobinCard();
+
+    await refreshTo(players, {
+      currentUserId: '1',
+      roundRobin: {
+        currentRound: 2,
+        maxRound: 3,
+        status: 'Confirmed. Check the next round when it opens.'
+      }
+    });
+
+    expect(window.FHPB.SessionStandings.getRoot()).toBe(currentRoot);
+    expect(getLayer(currentRoot)).toBeNull();
+    expect(getRoundRobinCard()).not.toBe(originalCard);
+    expect(getRoundRobinCard().textContent).toContain('Round 2');
+    expect(getRoundRobinCard().textContent).toContain('Check the next round when it opens.');
+  });
+
+  it('updates the round-robin card even while standings are marked pending', async () => {
+    const players = [
+      createPlayer(1, 'Alice', 1500, 5, 44, '+4 form', 'ladder-momentum session-roster-form text-success', 'bi bi-triangle-half', 1),
+      createPlayer(2, 'Bob', 1400, 3, 38, '0 form', 'ladder-momentum session-roster-form text-muted', 'bi bi-dash-circle', 2)
+    ];
+
+    mountCurrent(players, {
+      currentUserId: '1',
+      roundRobin: {
+        currentRound: 1,
+        maxRound: 3,
+        status: 'This is your next assigned match.'
+      }
+    });
+    const currentRoot = window.FHPB.SessionStandings.getRoot();
+
+    await refreshTo(players, {
+      currentUserId: '1',
+      pending: true,
+      roundRobin: {
+        currentRound: 2,
+        maxRound: 3,
+        status: 'Bye this round.'
+      }
+    });
+
+    expect(window.FHPB.SessionStandings.getRoot()).toBe(currentRoot);
+    expect(currentRoot.getAttribute('data-session-standings-pending')).toBe('false');
+    expect(getRoundRobinCard().textContent).toContain('Round 2');
+    expect(getRoundRobinCard().textContent).toContain('Bye this round.');
   });
 
   it('does not restart the ticker on repeated polls when the underlying ticker items have not changed', async () => {

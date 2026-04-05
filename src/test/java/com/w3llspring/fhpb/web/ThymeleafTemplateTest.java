@@ -704,6 +704,7 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("Your Session Controls");
         assertThat(sessionTemplate).contains("btn btn-nav-secondary w-100");
         assertThat(sessionTemplate).contains("th:if=\"${sessionRoundRobinTask != null}\"");
+        assertThat(sessionTemplate).contains("data-session-round-robin-root=\"true\"");
         assertThat(sessionTemplate.indexOf("Your Round Robin"))
             .isLessThan(sessionTemplate.indexOf("Session Standings"));
         assertThat(sessionTemplate.indexOf("Your Session Controls"))
@@ -921,6 +922,20 @@ class ThymeleafTemplateTest {
     }
 
     @Test
+    void publicBackButtonsUseBootstrapArrowIcons() throws Exception {
+        String termsTemplate = Files.readString(Path.of("src/main/resources/templates/public/terms.html"));
+        String privacyTemplate = Files.readString(Path.of("src/main/resources/templates/public/privacy.html"));
+        String backButtonTemplate = Files.readString(Path.of("src/main/resources/templates/components/back-button.html"));
+
+        assertThat(termsTemplate).contains("bi bi-arrow-left me-2");
+        assertThat(privacyTemplate).contains("bi bi-arrow-left me-2");
+        assertThat(backButtonTemplate).contains("bi bi-arrow-left me-2");
+        assertThat(termsTemplate).doesNotContain("fas fa-arrow-left");
+        assertThat(privacyTemplate).doesNotContain("fas fa-arrow-left");
+        assertThat(backButtonTemplate).doesNotContain("fas fa-arrow-left");
+    }
+
+    @Test
     void homeAndNavigationTemplatesUseFourAreaLauncherAndDedicatedHubPages() throws Exception {
         String homeTemplate = Files.readString(Path.of("src/main/resources/templates/auth/home.html"));
         String navigationTemplate = Files.readString(Path.of("src/main/resources/templates/components/navigation.html"));
@@ -934,7 +949,9 @@ class ThymeleafTemplateTest {
         assertThat(homeTemplate).contains("Quick Tour");
         assertThat(homeTemplate).contains("Congratulations, you have set up your");
         assertThat(homeTemplate).contains("Only one member of your group needs to create a session.");
-        assertThat(homeTemplate).contains("one player from the opposing team confirms it from the match dashboard");
+        assertThat(homeTemplate).contains("it will sit in Outbox until the other team confirms it.");
+        assertThat(homeTemplate).contains("Check Inbox To Confirm");
+        assertThat(homeTemplate).contains("one player from the opposing team confirms it from Inbox");
         assertThat(homeTemplate).contains("That Is The Whole PicklBuddies Flow");
         assertThat(homeTemplate).contains("data-home-intro-next");
         assertThat(homeTemplate).contains("data-home-intro-finish");
