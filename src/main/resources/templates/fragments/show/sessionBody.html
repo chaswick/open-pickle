@@ -1,6 +1,9 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sessionBody">
-  <div class="card mb-3" th:if="${currentUserIsAdmin and inviteActive}">
-    <div class="card-header card-header-title text-center">Invite Buddies</div>
+  <div class="card mb-3"
+       th:if="${currentUserIsAdmin and (inviteActive
+               or (canStartSessionRoundRobin != null and canStartSessionRoundRobin)
+               or (pendingSessionJoinRequests != null and !#lists.isEmpty(pendingSessionJoinRequests)))}">
+    <div class="card-header card-header-title text-center">Your Session Controls</div>
     <div class="card-body d-flex flex-column gap-3">
       <div th:if="${inviteActive}"
            th:with="inviteLink=${ladderInviteLink}"
@@ -72,9 +75,6 @@
                    data-nearby-status
                    role="status"
                    aria-live="polite"></div>
-              <p class="text-muted small mb-0 w-100 text-start">
-                This nearby-sharing check-in does not save a court name.
-              </p>
             </div>
           </section>
           <section class="session-share-panel d-flex flex-column gap-3 text-center"
@@ -112,6 +112,57 @@
                       data-copy-target="inviteLinkInput">Copy link</button>
             </div>
           </section>
+        </div>
+      </div>
+      <div class="d-grid gap-3"
+           th:if="${currentUserIsAdmin}"
+           th:classappend="${inviteActive ? ' border-top pt-3' : ''}">
+        <div class="small text-uppercase text-muted fw-semibold mb-0 text-center">Pending Join Requests</div>
+        <p class="text-muted mb-0">
+          Players who ask to join this session appear here. Approve or deny each request.
+        </p>
+        <div id="sessionJoinRequestsPanel" th:attr="data-session-id=${ladder.id}">
+          <div class="text-muted"
+               data-empty-state
+               th:classappend="${#lists.isEmpty(pendingSessionJoinRequests)} ? '' : ' d-none'">
+            No pending join requests.
+          </div>
+          <ul class="list-group"
+              data-request-list
+              th:classappend="${#lists.isEmpty(pendingSessionJoinRequests)} ? ' d-none' : ''">
+            <li class="list-group-item"
+                th:each="request : ${pendingSessionJoinRequests}"
+                th:attr="data-request-id=${request.id}">
+              <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div class="flex-grow-1 min-w-0">
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <strong th:text="${request.requesterDisplayName}">Player</strong>
+                    <span class="badge bg-light text-dark border"
+                          th:if="${request.requesterPublicCode != null and !#strings.isEmpty(request.requesterPublicCode)}"
+                          th:text="${request.requesterPublicCode}">CODE</span>
+                  </div>
+                  <div class="small text-muted"
+                       th:text="'Requested ' + ${@fhpbTime.displayDateTime24(request.requestedAt, authPrincipal)}">
+                    Requested 2026-03-29 10:00
+                  </div>
+                  <div class="small text-muted join-request-status" data-request-status></div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-action-success btn-inline" data-request-action="approve">Allow</button>
+                  <button type="button" class="btn btn-nav-secondary btn-inline" data-request-action="deny">Deny</button>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="d-grid"
+           th:if="${canStartSessionRoundRobin != null and canStartSessionRoundRobin}">
+        <div class="session-toolbar-group">
+          <a class="btn btn-nav-secondary w-100"
+             th:href="@{/round-robin/list(ladderId=${ladder.id})}">
+            Start Round Robin
+          </a>
         </div>
       </div>
     </div>
@@ -219,22 +270,9 @@
       </div>
     </div>
     <div class="card-body p-0">
-      <div class="px-3 pt-3 pb-3"
-           th:if="${canStartSessionRoundRobin != null and canStartSessionRoundRobin}">
-        <div class="session-toolbar">
-          <div class="session-toolbar-group">
-          <a class="btn btn-nav-secondary"
-             th:href="@{/round-robin/list(ladderId=${ladder.id})}">
-            Start Round Robin
-          </a>
-          </div>
-        </div>
-      </div>
-
       <div th:if="${targetSeason != null and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}"
            id="logMatchVoiceCaption"
-           class="small text-muted px-3 pb-3 d-none"
-           th:classappend="${(canStartSessionRoundRobin != null and canStartSessionRoundRobin) ? '' : ' pt-3'}"
+           class="small text-muted px-3 pt-3 pb-3 d-none"
            aria-live="polite"
            data-default-caption=""></div>
 
@@ -411,7 +449,7 @@
   </script>
 
   <div class="card mb-3" th:if="${currentUserIsAdmin}">
-    <div class="card-header card-header-title text-center">Players</div>
+    <div class="card-header card-header-title text-center">Manage Invited Buddies</div>
     <div class="card-body d-grid gap-3"
          id="sessionMembersPanel"
          th:attr="data-session-id=${ladder.id},
@@ -458,47 +496,6 @@
           </div>
         </li>
       </ul>
-
-      <div class="border-top pt-3" th:if="${currentUserIsAdmin}">
-        <div class="small text-uppercase text-muted fw-semibold mb-2 text-center">Pending Join Requests</div>
-        <p class="text-muted mb-3">
-          Players who ask to join this session appear here. Approve or deny each request.
-        </p>
-        <div id="sessionJoinRequestsPanel" th:attr="data-session-id=${ladder.id}">
-          <div class="text-muted"
-               data-empty-state
-               th:classappend="${#lists.isEmpty(pendingSessionJoinRequests)} ? '' : ' d-none'">
-            No pending join requests.
-          </div>
-          <ul class="list-group"
-              data-request-list
-              th:classappend="${#lists.isEmpty(pendingSessionJoinRequests)} ? ' d-none' : ''">
-            <li class="list-group-item"
-                th:each="request : ${pendingSessionJoinRequests}"
-                th:attr="data-request-id=${request.id}">
-              <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
-                <div class="flex-grow-1 min-w-0">
-                  <div class="d-flex flex-wrap align-items-center gap-2">
-                    <strong th:text="${request.requesterDisplayName}">Player</strong>
-                    <span class="badge bg-light text-dark border"
-                          th:if="${request.requesterPublicCode != null and !#strings.isEmpty(request.requesterPublicCode)}"
-                          th:text="${request.requesterPublicCode}">CODE</span>
-                  </div>
-                  <div class="small text-muted"
-                       th:text="'Requested ' + ${@fhpbTime.displayDateTime24(request.requestedAt, authPrincipal)}">
-                    Requested 2026-03-29 10:00
-                  </div>
-                  <div class="small text-muted join-request-status" data-request-status></div>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                  <button type="button" class="btn btn-action-success btn-inline" data-request-action="approve">Allow</button>
-                  <button type="button" class="btn btn-nav-secondary btn-inline" data-request-action="deny">Deny</button>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
     </div>
   </div>
 

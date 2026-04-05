@@ -200,6 +200,44 @@ class MatchDashboardServiceTest {
         assertThat(dashboard.links()).extracting(link -> link.getMatch().getId()).containsExactly(500L);
     }
 
+    @Test
+    void countInboxForUser_countsConfirmationsAndRemovalApprovalsButNotOutboxItems() {
+        User viewer = user(7L, "Viewer");
+        User opponent = user(8L, "Opponent");
+
+        Match confirmable = match(600L, viewer, opponent, Instant.parse("2026-03-16T18:00:00Z"));
+        Match approvable = match(700L, viewer, opponent, Instant.parse("2026-03-16T19:00:00Z"));
+        approvable.setState(MatchState.CONFIRMED);
+        Match waiting = match(800L, viewer, opponent, Instant.parse("2026-03-16T20:00:00Z"));
+
+        MatchConfirmation pending = new MatchConfirmation();
+        pending.setMatch(confirmable);
+        pending.setPlayer(viewer);
+        pending.setTeam("A");
+
+        when(confirmationService.pendingForUser(7L)).thenReturn(List.of(pending));
+        when(matchRepo.findByParticipantWithUsers(viewer)).thenReturn(List.of(confirmable, approvable, waiting));
+        when(confirmationRepository.findByMatchIdIn(List.of(600L, 700L, 800L))).thenReturn(List.of(confirmed(waiting, viewer, "A")));
+        when(nullificationRequestRepository.findActiveByMatchIdIn(anyList(), any()))
+                .thenReturn(List.of());
+        when(linkRepo.findByMatchIds(anyList())).thenReturn(List.of(link(confirmable), link(approvable), link(waiting)));
+
+        MatchRowModel baseModel = new MatchRowModel(
+                Set.of(600L),
+                Map.of(),
+                Map.of(),
+                Map.of(600L, true),
+                Map.of(800L, true),
+                Map.of(600L, false, 700L, false, 800L, false),
+                Map.of(),
+                Map.of(),
+                Map.of(700L, true),
+                Map.of(800L, true));
+        MatchDashboardService service = service(baseModel);
+
+        assertThat(service.countInboxForUser(viewer)).isEqualTo(2);
+    }
+
     private MatchDashboardService service(MatchRowModel baseModel) {
         MatchRowModelBuilder builder = new MatchRowModelBuilder(null, null, null) {
             @Override

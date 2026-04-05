@@ -62,6 +62,14 @@ public class MatchDashboardService {
         return buildPendingForUserInSeason(viewer, null);
     }
 
+    public int countInboxForUser(User viewer) {
+        return countInboxForUserInSeason(viewer, null);
+    }
+
+    public int countInboxForUserInSeason(User viewer, LadderSeason season) {
+        return inboxCount(buildPendingForUserInSeason(viewer, season).matchRowModel());
+    }
+
     public DashboardModel buildPendingForUserInSeason(User viewer, LadderSeason season) {
         if (viewer == null || viewer.getId() == null) {
             return empty();
@@ -248,6 +256,24 @@ public class MatchDashboardService {
         return new DashboardModel(List.of(),
                 new MatchRowModel(Set.of(), java.util.Map.of(), java.util.Map.of(), java.util.Map.of(),
                         java.util.Map.of(), java.util.Map.of(), java.util.Map.of()));
+    }
+
+    private int inboxCount(MatchRowModel rowModel) {
+        if (rowModel == null) {
+            return 0;
+        }
+        Set<Long> inboxMatchIds = new LinkedHashSet<>();
+        if (rowModel.getConfirmableMatchIds() != null) {
+            inboxMatchIds.addAll(rowModel.getConfirmableMatchIds());
+        }
+        if (rowModel.getNullifyApprovableByMatchId() != null) {
+            rowModel.getNullifyApprovableByMatchId().forEach((matchId, approvable) -> {
+                if (Boolean.TRUE.equals(approvable) && matchId != null) {
+                    inboxMatchIds.add(matchId);
+                }
+            });
+        }
+        return inboxMatchIds.size();
     }
 
     private Set<Long> findConfirmedNullifyRelevantMatchIds(User viewer, LadderSeason season) {

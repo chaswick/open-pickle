@@ -117,7 +117,7 @@
             <form method="post" th:action="@{/groups/start-session}" class="m-0"
                   data-session-start-form="true"
                   data-session-start-storage-key="fhpb.session-start-confirmed"
-                  th:if="${!competitionUnavailable}">
+                  th:if="${!competitionUnavailable and canCreateCompetitionSession}">
                 <input type="hidden" name="returnTo" value="/competition/sessions">
                 <button type="submit"
                         class="app-action-tile app-action-groups w-100 text-start border-0">

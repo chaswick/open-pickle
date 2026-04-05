@@ -5,6 +5,7 @@ import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.CompetitionAutoModerationService;
 import com.w3llspring.fhpb.web.service.LadderConfigService;
+import com.w3llspring.fhpb.web.service.MatchDashboardService;
 import com.w3llspring.fhpb.web.service.user.UserAccountSettingsService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import com.w3llspring.fhpb.web.util.UserPublicName;
@@ -42,6 +43,7 @@ public class GlobalModelAttributes {
   private final int competitionAutoModWarningTwoThreshold;
   private final int competitionAutoModBlockThreshold;
   private LadderConfigService ladderConfigService;
+  private MatchDashboardService matchDashboardService;
   private CompetitionAutoModerationService competitionAutoModerationService;
   private UserAccountSettingsService userAccountSettingsService;
 
@@ -49,6 +51,7 @@ public class GlobalModelAttributes {
   public GlobalModelAttributes(
       UserRepository userRepository,
       LadderConfigService ladderConfigService,
+      MatchDashboardService matchDashboardService,
       CompetitionAutoModerationService competitionAutoModerationService,
       UserAccountSettingsService userAccountSettingsService,
       @Value("${fhpb.ladder.max-members:20}") int ladderMaxMembers,
@@ -70,6 +73,7 @@ public class GlobalModelAttributes {
           int competitionAutoModBlockThreshold) {
     this.userRepository = userRepository;
     this.ladderConfigService = ladderConfigService;
+    this.matchDashboardService = matchDashboardService;
     this.competitionAutoModerationService = competitionAutoModerationService;
     this.userAccountSettingsService = userAccountSettingsService;
     this.ladderMaxMembers = ladderMaxMembers;
@@ -110,6 +114,7 @@ public class GlobalModelAttributes {
           int competitionAutoModBlockThreshold) {
     this(
         userRepository,
+        null,
         null,
         null,
         null,
@@ -155,6 +160,7 @@ public class GlobalModelAttributes {
     model.addAttribute("activeCompetitionSessionCount", 0);
     model.addAttribute("showCompetitionSessionChooser", false);
     model.addAttribute("navigationSessionConfigs", List.of());
+    model.addAttribute("navigationInboxCount", 0);
     model.addAttribute(
         "competitionAutoModWarningOneThreshold", resolveCompetitionAutoModWarningOneThreshold());
     model.addAttribute(
@@ -177,6 +183,7 @@ public class GlobalModelAttributes {
       model.addAttribute("currentUserId", user.getId());
       model.addAttribute("pwaInstallEligible", isPwaInstallEligible(user));
       populateReusableSessionAttributes(model, user);
+      populateNavigationInboxAttributes(model, user);
       populateCompetitionAutoModerationAttributes(model, user);
       return;
     }
@@ -203,6 +210,13 @@ public class GlobalModelAttributes {
     model.addAttribute("activeCompetitionSessionCount", launchState.activeSessionCount());
     model.addAttribute("showCompetitionSessionChooser", launchState.chooserRequired());
     model.addAttribute("navigationSessionConfigs", launchState.activeSessions());
+  }
+
+  private void populateNavigationInboxAttributes(Model model, User user) {
+    if (matchDashboardService == null || user == null || user.getId() == null) {
+      return;
+    }
+    model.addAttribute("navigationInboxCount", matchDashboardService.countInboxForUser(user));
   }
 
   private void populateCompetitionAutoModerationAttributes(Model model, User user) {

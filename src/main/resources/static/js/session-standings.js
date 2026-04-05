@@ -12,7 +12,7 @@
     replayStaticScale: 0.992,
     replayMoveScale: 0.985,
     replayBounceScale: 1.022,
-    replayStaggerMs: 500,
+    replayStaggerMs: 200,
     refreshTimer: null,
     refreshInFlight: false,
     refreshQueued: false,

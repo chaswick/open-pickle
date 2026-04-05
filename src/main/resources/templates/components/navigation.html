@@ -23,6 +23,15 @@
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 <li class="nav-item d-lg-none"
+                    sec:authorize="isAuthenticated()"
+                    th:if="${navigationInboxCount != null and navigationInboxCount > 0}">
+                    <a class="nav-link d-flex align-items-center gap-2 fw-semibold"
+                       th:href="@{/confirm-matches}">
+                        <i class="bi bi-inbox" aria-hidden="true"></i>
+                        <span th:text="${'Inbox (' + navigationInboxCount + ')'}">Inbox (1)</span>
+                    </a>
+                </li>
+                <li class="nav-item d-lg-none"
                     th:if="${navigationSessionConfigs != null and !#lists.isEmpty(navigationSessionConfigs)}">
                     <span class="nav-link disabled text-uppercase small">Open Sessions</span>
                 </li>

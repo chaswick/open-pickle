@@ -160,7 +160,7 @@ class ThymeleafTemplateTest {
         assertThat(result).contains("data-nearby-start");
         assertThat(result).contains("data-nearby-results");
         assertThat(result).contains("Use My Current Location");
-        assertThat(result).contains("It will not ask you to save a court name.");
+        assertThat(result).contains("This only shares your location at the moment you tap the button.");
         assertThat(result).contains("Shared Code");
         assertThat(result).doesNotContain("data-nearby-name-card");
         assertThat(result).doesNotContain("Confirm the location name below or enter your own.");
@@ -193,16 +193,20 @@ class ThymeleafTemplateTest {
         variables.put("userById", Map.of());
         variables.put("courtNameByUser", Map.of());
         variables.put("sessionStandings", List.of());
+        variables.put("canStartSessionRoundRobin", true);
         variables.put("leaveConfirmMessage", "Leave this session?");
         variables.put("links", List.of());
         variables.put("improvementAdvice", null);
 
         String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
-        assertThat(result).contains("Invite Buddies");
+        assertThat(result).contains("Your Session Controls");
         assertThat(result).contains("Session Standings");
-        assertThat(result).contains("Players");
+        assertThat(result).contains("Manage Invited Buddies");
+        assertThat(result).contains("Pending Join Requests");
+        assertThat(result).contains("Start Round Robin");
         assertThat(result).contains("Choose how you want to share this session");
+        assertThat(result.indexOf("Pending Join Requests")).isLessThan(result.indexOf("Start Round Robin"));
         assertThat(result).contains("No players have joined this session yet.");
         assertThat(result).doesNotContain("data-session-sort=\"");
         assertThat(result).doesNotContain("id=\"sessionStatSelect\"");
@@ -243,9 +247,52 @@ class ThymeleafTemplateTest {
 
         String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
-        assertThat(result).doesNotContain("Invite Buddies");
+        assertThat(result).doesNotContain("Your Session Controls");
         assertThat(result).doesNotContain("Choose how you want to share this session");
-        assertThat(result).contains("Players");
+        assertThat(result).contains("Manage Invited Buddies");
+    }
+
+    @Test
+    void sessionShowFragmentKeepsSessionControlsVisibleWhenRoundRobinCanStartWithoutSharing() {
+        LadderConfig ladder = new LadderConfig();
+        ladder.setId(42L);
+        ladder.setTitle("Saturday Open");
+        ladder.setType(LadderConfig.Type.SESSION);
+        ladder.setInviteCode("DINK-7");
+        ladder.setExpiresAt(Instant.parse("2026-03-30T18:00:00Z"));
+
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("ladder", ladder);
+        variables.put("currentUserIsAdmin", true);
+        variables.put("inviteActive", false);
+        variables.put("canStartSessionRoundRobin", true);
+        variables.put("ladderInviteLink", "https://example.test/groups/join?inviteCode=DINK-7");
+        variables.put("checkInEnabled", false);
+        variables.put("pendingSessionJoinRequests", List.of());
+        variables.put("authPrincipal", null);
+        variables.put("sessionDateTimePattern", "EEEE, MMM d, h:mm a");
+        variables.put("sessionStandingsRecalculationPending", false);
+        variables.put("memberSectionTitle", "Members");
+        variables.put("members", List.of());
+        variables.put("sort", "joined");
+        variables.put("currentUserId", 7L);
+        variables.put("ownerUserId", 7L);
+        variables.put("userById", Map.of());
+        variables.put("courtNameByUser", Map.of());
+        variables.put("sessionStandings", List.of());
+        variables.put("leaveConfirmMessage", "Leave this session?");
+        variables.put("links", List.of());
+        variables.put("improvementAdvice", null);
+
+        String result = renderWebTemplate("fragments/show/sessionBody", variables);
+
+        assertThat(result).contains("Your Session Controls");
+        assertThat(result).contains("Pending Join Requests");
+        assertThat(result).contains("Start Round Robin");
+        assertThat(result).doesNotContain("Choose how you want to share this session");
+        assertThat(result.indexOf("Pending Join Requests")).isLessThan(result.indexOf("Start Round Robin"));
+        assertThat(result.indexOf("Your Session Controls"))
+                .isLessThan(result.indexOf("Session Standings"));
     }
 
     @Test
@@ -329,7 +376,7 @@ class ThymeleafTemplateTest {
         assertThat(result).contains("href=\"/competition/sessions\"");
         assertThat(result).doesNotContain("League Config");
         assertThat(result).doesNotContain("Banned Members");
-        assertThat(result).doesNotContain("Invite Buddies");
+        assertThat(result).doesNotContain("Your Session Controls");
         assertThat(result).doesNotContain("Leave Session Early");
     }
 
@@ -424,7 +471,7 @@ class ThymeleafTemplateTest {
 
         assertThat(result).contains("Invite Code");
         assertThat(result).contains("League Config");
-        assertThat(result).doesNotContain("Invite Buddies");
+        assertThat(result).doesNotContain("Your Session Controls");
         assertThat(result).doesNotContain("Who's Here");
         assertThat(result).doesNotContain("Session expires at");
     }
@@ -493,7 +540,7 @@ class ThymeleafTemplateTest {
         String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
         assertThat(result).contains("Session Standings");
-        assertThat(result).contains("Players");
+        assertThat(result).contains("Manage Invited Buddies");
         assertThat(result).contains("Partner");
         assertThat(result).contains("Center Court");
         assertThat(result).contains("data-session-stat-toggle=\"rating\"");
@@ -525,6 +572,12 @@ class ThymeleafTemplateTest {
         assertThat(shellTemplate).contains("data-session-tour-value=${sessionTourVariant}");
         assertThat(shellTemplate).contains("Your Session Is Ready");
         assertThat(shellTemplate).contains("You Are In The Session");
+        assertThat(shellTemplate).contains("Use Your Session Controls for the shared code, QR, nearby sharing, and starting a round robin.");
+        assertThat(shellTemplate).contains("Yellow-highlighted rows mean that player is tied to a logged result that still needs a confirmation.");
+        assertThat(shellTemplate).contains("Use Your Session Controls for pending approvals, and Manage Invited Buddies for removals.");
+        assertThat(shellTemplate).contains("Inbox shows matches waiting on your team.");
+        assertThat(shellTemplate).contains("Outbox shows what your group logged and is still waiting on from the other team.");
+        assertThat(shellTemplate).contains("Use Inbox To Confirm");
         assertThat(shellTemplate).contains("data-session-tour-next");
         assertThat(shellTemplate).contains("data-session-tour-finish");
         assertThat(shellTemplate).contains("body: 'tour=' + encodeURIComponent(tourValue)");
@@ -567,14 +620,14 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("data-nearby-start");
         assertThat(sessionTemplate).contains("Use My Current Location");
         assertThat(sessionTemplate).contains("Refresh Nearby Court");
-        assertThat(sessionTemplate).contains("This nearby-sharing check-in does not save a court name.");
         assertThat(sessionTemplate).doesNotContain("data-nearby-name-card");
         assertThat(sessionTemplate).doesNotContain("Confirm the location name below or enter your own.");
         assertThat(sessionTemplate).contains("sessionInviteActiveUntil");
         assertThat(sessionTemplate).contains("Code auto-disables");
-        assertThat(sessionTemplate).contains("Invite Buddies");
+        assertThat(sessionTemplate).contains("Your Session Controls");
         assertThat(sessionTemplate).contains("courtNameByUser");
-        assertThat(sessionTemplate).contains("Players");
+        assertThat(sessionTemplate).contains("Manage Invited Buddies");
+        assertThat(sessionTemplate).contains("Pending Join Requests");
         assertThat(sessionTemplate).contains("Session Standings");
         assertThat(sessionTemplate).contains("id=\"sessionMembersPanel\"");
         assertThat(sessionTemplate).contains("data-members-list");
@@ -648,8 +701,18 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("competition: true");
         assertThat(sessionTemplate).contains("th:href=\"@{/round-robin/list(ladderId=${ladder.id})}\"");
         assertThat(sessionTemplate).contains("Start Round Robin");
+        assertThat(sessionTemplate).contains("Your Session Controls");
+        assertThat(sessionTemplate).contains("btn btn-nav-secondary w-100");
         assertThat(sessionTemplate).contains("th:if=\"${sessionRoundRobinTask != null}\"");
         assertThat(sessionTemplate.indexOf("Your Round Robin"))
+            .isLessThan(sessionTemplate.indexOf("Session Standings"));
+        assertThat(sessionTemplate.indexOf("Your Session Controls"))
+            .isLessThan(sessionTemplate.indexOf("Session Standings"));
+        assertThat(sessionTemplate.indexOf("Pending Join Requests"))
+            .isLessThan(sessionTemplate.indexOf("Start Round Robin"));
+        assertThat(sessionTemplate.indexOf("Choose how you want to share this session"))
+            .isLessThan(sessionTemplate.indexOf("Start Round Robin"));
+        assertThat(sessionTemplate.indexOf("Start Round Robin"))
             .isLessThan(sessionTemplate.indexOf("Session Standings"));
         assertThat(sessionTemplate).contains("Log This Match");
         assertThat(sessionTemplate).contains("session-round-nav");
@@ -889,9 +952,14 @@ class ThymeleafTemplateTest {
         assertThat(navigationTemplate).contains("href=\"/competition/sessions\"");
         assertThat(navigationTemplate).contains("href=\"/private-groups\"");
         assertThat(navigationTemplate).contains("href=\"/account-menu\"");
+        assertThat(navigationTemplate).contains("th:href=\"@{/confirm-matches}\"");
+        assertThat(navigationTemplate).contains("navigationInboxCount");
+        assertThat(navigationTemplate).contains("Inbox (");
         assertThat(navigationTemplate).contains("Open Sessions");
         assertThat(navigationTemplate).contains("navigationSessionConfigs");
         assertThat(navigationTemplate).contains("th:href=\"@{/groups/{id}(id=${sessionConfig.id})}\"");
+        assertThat(navigationTemplate.indexOf("@{/confirm-matches}"))
+                .isLessThan(navigationTemplate.indexOf("Open Sessions"));
         assertThat(navigationTemplate).contains("Global Competition");
         assertThat(navigationTemplate).contains("Private Leagues");
         assertThat(navigationTemplate).contains("User Account");
@@ -900,6 +968,7 @@ class ThymeleafTemplateTest {
         assertThat(sessionPickerTemplate).contains("Global Competition");
         assertThat(sessionPickerTemplate).contains("class=\"app-action-grid\"");
         assertThat(sessionPickerTemplate).contains("Start Session");
+        assertThat(sessionPickerTemplate).contains("canCreateCompetitionSession");
         assertThat(sessionPickerTemplate).contains("Join Session");
         assertThat(sessionPickerTemplate).contains("View Standings");
         assertThat(sessionPickerTemplate).contains("@{/groups/join(returnTo='/competition/sessions')}");
@@ -948,6 +1017,7 @@ class ThymeleafTemplateTest {
         Map<String, Object> variables = authenticatedShowLayoutVariables();
         variables.put("currentUserId", 7L);
         variables.put("competitionUnavailable", false);
+        variables.put("canCreateCompetitionSession", false);
         variables.put("sessionMemberships", List.of(ownedMembership));
         variables.put("activeCompetitionSessionId", 42L);
 
@@ -955,7 +1025,27 @@ class ThymeleafTemplateTest {
 
         assertThat(result).contains("Saturday Open");
         assertThat(result).contains("aria-label=\"End Session\"");
-        assertThat(result.indexOf("Saturday Open")).isLessThan(result.indexOf("Start Session"));
+        assertThat(result).doesNotContain("Start Session");
+        assertThat(result.indexOf("Saturday Open")).isLessThan(result.indexOf("Join Session"));
+    }
+
+    @Test
+    void competitionSessionPickerShowsStartSessionOnlyWhenUserCanCreateOne() {
+        Map<String, Object> hiddenVariables = authenticatedShowLayoutVariables();
+        hiddenVariables.put("competitionUnavailable", false);
+        hiddenVariables.put("canCreateCompetitionSession", false);
+
+        String hiddenResult = renderWebTemplate("auth/competition-session-picker", hiddenVariables);
+
+        assertThat(hiddenResult).doesNotContain("Start Session");
+
+        Map<String, Object> visibleVariables = authenticatedShowLayoutVariables();
+        visibleVariables.put("competitionUnavailable", false);
+        visibleVariables.put("canCreateCompetitionSession", true);
+
+        String visibleResult = renderWebTemplate("auth/competition-session-picker", visibleVariables);
+
+        assertThat(visibleResult).contains("Start Session");
     }
 
     @Test
