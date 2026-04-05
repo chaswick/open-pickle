@@ -1151,6 +1151,20 @@ class ThymeleafTemplateTest {
     }
 
     @Test
+    void errorPageRendersWithoutCsrfTokenInModel() {
+        Map<String, Object> variables = authenticatedShowLayoutVariables();
+        variables.remove("_csrf");
+        variables.put("message", "Please try again.");
+
+        String result = renderWebTemplate("error", variables);
+
+        assertThat(result).contains("Something went wrong");
+        assertThat(result).contains("Please try again.");
+        assertThat(result).doesNotContain("name=\"_csrf\"");
+        assertThat(result).doesNotContain("name=\"_csrf_header\"");
+    }
+
+    @Test
     void checkInTemplateShowsOverallAndPrivateGroupCounts() throws Exception {
         String template = Files.readString(Path.of("src/main/resources/templates/auth/check-in.html"));
 
