@@ -6,6 +6,7 @@ out/
 bin/
 dist/
 target/
+node_modules/
 
 ### Gradle wrapper
 !gradle/wrapper/gradle-wrapper.jar
