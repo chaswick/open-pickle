@@ -194,7 +194,11 @@ public class LadderConfigService {
             || (preferredSession != null
                 && !Objects.equals(preferredSession.getOwnerUserId(), userId));
     return new SessionLaunchState(
-        preferredSession, activeSessions.size(), hasOwnedSession, chooserRequired);
+        preferredSession,
+        List.copyOf(activeSessions),
+        activeSessions.size(),
+        hasOwnedSession,
+        chooserRequired);
   }
 
   private String resolveSeasonName(String requested, LocalDate startDate) {
@@ -375,11 +379,12 @@ public class LadderConfigService {
 
   public record SessionLaunchState(
       LadderConfig preferredSession,
+      List<LadderConfig> activeSessions,
       int activeSessionCount,
       boolean hasOwnedSession,
       boolean chooserRequired) {
     public static SessionLaunchState empty() {
-      return new SessionLaunchState(null, 0, false, false);
+      return new SessionLaunchState(null, List.of(), 0, false, false);
     }
   }
 

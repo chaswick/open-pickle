@@ -478,4 +478,56 @@ describe('session standings replay', () => {
     expect(window.FHPB.SessionStandings.getRoot()).toBe(currentRoot);
     expect(getLayer(currentRoot)).toBeNull();
   });
+
+  it('does not restart the ticker on repeated polls when the underlying ticker items have not changed', async () => {
+    const players = [
+      createPlayer(1, 'Alice', 1500, 5, 44, '+4 form', 'ladder-momentum session-roster-form text-success', 'bi bi-triangle-half', 1),
+      createPlayer(2, 'Bob', 1400, 3, 38, '0 form', 'ladder-momentum session-roster-form text-muted', 'bi bi-dash-circle', 2)
+    ];
+    const tickerItems = [
+      {
+        ageLabel: 'Just now',
+        summary: 'Alice & Bob def Carol & Dave 11-8',
+        confirmedAt: '2026-03-31T15:55:00Z'
+      }
+    ];
+
+    mountCurrent(players, {
+      currentUserId: '1',
+      tickerItems
+    });
+
+    const anchor = getTickerAnchor();
+    const marquee = anchor.querySelector('[data-session-recent-marquee]');
+    marquee.innerHTML = `
+      <span class="session-recent-ticker-track">
+        <span class="session-recent-ticker-segment">
+          <span class="session-recent-ticker-item" data-session-recent-item>
+            <span class="session-recent-ticker-age"
+                  data-session-recent-age
+                  data-utc-time="2026-03-31T15:55:00Z"
+                  data-time-format="relative-change">Just now</span>
+            <span class="session-recent-ticker-separator" aria-hidden="true">:</span>
+            <span class="session-recent-ticker-copy">Alice & Bob def Carol & Dave 11-8</span>
+          </span>
+          <span class="session-recent-ticker-item" data-session-recent-item>
+            <span class="session-recent-ticker-age"
+                  data-session-recent-age
+                  data-utc-time="2026-03-31T15:55:00Z"
+                  data-time-format="relative-change">Just now</span>
+            <span class="session-recent-ticker-separator" aria-hidden="true">:</span>
+            <span class="session-recent-ticker-copy">Alice & Bob def Carol & Dave 11-8</span>
+          </span>
+        </span>
+      </span>`;
+
+    await refreshTo(players, {
+      currentUserId: '1',
+      tickerItems
+    });
+
+    expect(window.FHPB.SessionRecentTicker.unmount).not.toHaveBeenCalled();
+    expect(window.FHPB.SessionRecentTicker.mountAll).not.toHaveBeenCalled();
+    expect(getTickerAnchor().textContent).toContain('Alice & Bob def Carol & Dave 11-8');
+  });
 });

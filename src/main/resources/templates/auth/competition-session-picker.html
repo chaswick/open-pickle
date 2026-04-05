@@ -8,6 +8,7 @@
         .competition-session-card {
             display: flex;
             flex-direction: column;
+            position: relative;
             padding: 0;
             overflow: hidden;
         }
@@ -23,7 +24,7 @@
             align-items: flex-start;
             gap: 1rem;
             flex: 1 1 auto;
-            padding: 1.25rem 1.4rem 0.9rem;
+            padding: 1.25rem 3.5rem 1rem 1.4rem;
             text-decoration: none;
             color: inherit;
         }
@@ -41,23 +42,22 @@
             color: inherit;
         }
 
-        .competition-session-footer {
-            display: flex;
-            justify-content: flex-end;
-            padding: 0.7rem 1.4rem 1rem;
-            border-top: 1px solid rgba(13, 59, 102, 0.08);
+        .competition-session-dismiss-form {
+            position: absolute;
+            top: 0.85rem;
+            right: 0.9rem;
+            z-index: 2;
         }
 
-        .competition-session-leave-btn {
-            padding: 0.1rem 0;
-            color: #5b6b7a;
-            font-size: 0.88rem;
-            text-decoration: none;
+        .competition-session-dismiss-btn {
+            opacity: 0.55;
+            transition: opacity 0.18s ease, transform 0.18s ease;
         }
 
-        .competition-session-leave-btn:hover,
-        .competition-session-leave-btn:focus-visible {
-            color: #314e6b;
+        .competition-session-dismiss-btn:hover,
+        .competition-session-dismiss-btn:focus-visible {
+            opacity: 0.9;
+            transform: scale(1.08);
         }
     </style>
 </head>
@@ -82,6 +82,38 @@
         </div>
 
         <section class="app-action-grid">
+            <div class="competition-session-card app-action-tile app-action-standings"
+                 th:if="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)}"
+                 th:each="membership : ${sessionMemberships}"
+                 th:with="sessionConfig=${membership.ladderConfig},
+                          owned=${membership.userId != null and sessionConfig != null and membership.userId == sessionConfig.ownerUserId},
+                          suggested=${activeCompetitionSessionId != null and sessionConfig != null and activeCompetitionSessionId == sessionConfig.id},
+                          leaveLabel=${owned ? 'End Session' : 'Leave Session'},
+                          leaveConfirm=${owned ? 'End this session? Everyone will be removed immediately.' : 'Leave this session?'}">
+                <form method="post"
+                      class="competition-session-dismiss-form m-0"
+                      th:if="${membership.id != null and sessionConfig != null}"
+                      th:action="@{'/groups/' + ${sessionConfig.id} + '/leave/' + ${membership.id}}"
+                      th:attr="onsubmit=|return handleConfirmForm(this, '${leaveConfirm}')|">
+                    <button type="submit"
+                            class="btn-close competition-session-dismiss-btn"
+                            th:attr="aria-label=${leaveLabel},title=${leaveLabel}">
+                    </button>
+                </form>
+                <a class="competition-session-link"
+                   th:href="@{/groups/{id}(id=${membership.ladderConfig.id})}">
+                    <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                    <div>
+                        <span class="app-action-callout app-action-callout-top" th:if="${suggested}">Suggested</span>
+                        <div class="app-action-title" th:text="${sessionConfig != null ? sessionConfig.title : 'Session'}">Session</div>
+                        <div class="app-action-subtitle"
+                             th:text="${owned ? 'You own this session. Open it to invite players, manage the roster, and log competition matches.' : 'You joined this session. Open it to jump back into that roster and log competition matches.'}">
+                            Open this match session.
+                        </div>
+                    </div>
+                </a>
+            </div>
+
             <form method="post" th:action="@{/groups/start-session}" class="m-0"
                   data-session-start-form="true"
                   data-session-start-storage-key="fhpb.session-start-confirmed"
@@ -114,40 +146,6 @@
                     <div class="app-action-subtitle">Open the current global competition standings.</div>
                 </div>
             </a>
-
-            <div class="competition-session-card app-action-tile app-action-standings"
-                 th:if="${sessionMemberships != null and !#lists.isEmpty(sessionMemberships)}"
-                 th:each="membership : ${sessionMemberships}"
-                 th:with="sessionConfig=${membership.ladderConfig},
-                          owned=${membership.userId != null and sessionConfig != null and membership.userId == sessionConfig.ownerUserId},
-                          suggested=${activeCompetitionSessionId != null and sessionConfig != null and activeCompetitionSessionId == sessionConfig.id},
-                          leaveLabel=${owned ? 'End Session' : 'Leave Session'},
-                          leaveConfirm=${owned ? 'End this session? Everyone will be removed immediately.' : 'Leave this session?'}">
-                <a class="competition-session-link"
-                   th:href="@{/groups/{id}(id=${membership.ladderConfig.id})}">
-                    <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
-                    <div>
-                        <span class="app-action-callout app-action-callout-top" th:if="${suggested}">Suggested</span>
-                        <div class="app-action-title" th:text="${sessionConfig != null ? sessionConfig.title : 'Session'}">Session</div>
-                        <div class="app-action-subtitle"
-                             th:text="${owned ? 'You own this session. Open it to invite players, manage the roster, and log competition matches.' : 'You joined this session. Open it to jump back into that roster and log competition matches.'}">
-                            Open this match session.
-                        </div>
-                    </div>
-                </a>
-                <div class="competition-session-footer" th:if="${membership.id != null and sessionConfig != null}">
-                    <form method="post"
-                          class="m-0"
-                          th:action="@{'/groups/' + ${sessionConfig.id} + '/leave/' + ${membership.id}}"
-                          th:attr="onsubmit=|return handleConfirmForm(this, '${leaveConfirm}')|">
-                        <button type="submit"
-                                class="btn btn-link btn-sm competition-session-leave-btn"
-                                th:text="${leaveLabel}">
-                            Leave Session
-                        </button>
-                    </form>
-                </div>
-            </div>
         </section>
     </div>
 

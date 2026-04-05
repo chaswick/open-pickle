@@ -649,6 +649,8 @@ class ThymeleafTemplateTest {
         assertThat(sessionTemplate).contains("th:href=\"@{/round-robin/list(ladderId=${ladder.id})}\"");
         assertThat(sessionTemplate).contains("Start Round Robin");
         assertThat(sessionTemplate).contains("th:if=\"${sessionRoundRobinTask != null}\"");
+        assertThat(sessionTemplate.indexOf("Your Round Robin"))
+            .isLessThan(sessionTemplate.indexOf("Session Standings"));
         assertThat(sessionTemplate).contains("Log This Match");
         assertThat(sessionTemplate).contains("session-round-nav");
         assertThat(sessionTemplate).contains("th:if=\"${canStartSessionRoundRobin != null and canStartSessionRoundRobin}\"");
@@ -887,6 +889,9 @@ class ThymeleafTemplateTest {
         assertThat(navigationTemplate).contains("href=\"/competition/sessions\"");
         assertThat(navigationTemplate).contains("href=\"/private-groups\"");
         assertThat(navigationTemplate).contains("href=\"/account-menu\"");
+        assertThat(navigationTemplate).contains("Open Sessions");
+        assertThat(navigationTemplate).contains("navigationSessionConfigs");
+        assertThat(navigationTemplate).contains("th:href=\"@{/groups/{id}(id=${sessionConfig.id})}\"");
         assertThat(navigationTemplate).contains("Global Competition");
         assertThat(navigationTemplate).contains("Private Leagues");
         assertThat(navigationTemplate).contains("User Account");
@@ -906,19 +911,70 @@ class ThymeleafTemplateTest {
         assertThat(sessionPickerTemplate).contains("The owner will approve your request.");
         assertThat(sessionPickerTemplate).contains("competition-session-card app-action-tile app-action-standings");
         assertThat(sessionPickerTemplate).contains("class=\"competition-session-link\"");
-        assertThat(sessionPickerTemplate).contains("competition-session-footer");
-        assertThat(sessionPickerTemplate).contains("competition-session-leave-btn");
+        assertThat(sessionPickerTemplate).contains("competition-session-dismiss-form");
+        assertThat(sessionPickerTemplate).contains("competition-session-dismiss-btn");
+        assertThat(sessionPickerTemplate).contains("class=\"btn-close competition-session-dismiss-btn\"");
         assertThat(sessionPickerTemplate).contains("Leave Session");
         assertThat(sessionPickerTemplate).contains("End Session");
         assertThat(sessionPickerTemplate).contains("'/leave/' + ${membership.id}");
         assertThat(sessionPickerTemplate).contains("href=\"/home\"");
+        assertThat(sessionPickerTemplate.indexOf("<div class=\"competition-session-card app-action-tile app-action-standings\""))
+                .isLessThan(sessionPickerTemplate.indexOf("<form method=\"post\" th:action=\"@{/groups/start-session}\""));
 
         assertThat(accountMenuTemplate).contains("User Account");
         assertThat(accountMenuTemplate).contains("href=\"/home\"");
+        assertThat(accountMenuTemplate).contains("navigationSessionConfigs");
+        assertThat(accountMenuTemplate).contains("Jump back into an active session you joined.");
+        assertThat(accountMenuTemplate).contains("Open your active session to manage players, invites, and match logging.");
         assertThat(accountMenuTemplate).contains("Account Settings");
         assertThat(accountMenuTemplate).contains("Trophies");
         assertThat(accountMenuTemplate).contains("Stats");
         assertThat(accountMenuTemplate).contains("Logout");
+    }
+
+    @Test
+    void competitionSessionPickerRendersActiveSessionsBeforePrimaryActions() {
+        LadderConfig ownedSession = new LadderConfig();
+        ownedSession.setId(42L);
+        ownedSession.setTitle("Saturday Open");
+        ownedSession.setType(LadderConfig.Type.SESSION);
+        ownedSession.setOwnerUserId(7L);
+
+        LadderMembership ownedMembership = new LadderMembership();
+        ownedMembership.setId(101L);
+        ownedMembership.setUserId(7L);
+        ownedMembership.setLadderConfig(ownedSession);
+
+        Map<String, Object> variables = authenticatedShowLayoutVariables();
+        variables.put("currentUserId", 7L);
+        variables.put("competitionUnavailable", false);
+        variables.put("sessionMemberships", List.of(ownedMembership));
+        variables.put("activeCompetitionSessionId", 42L);
+
+        String result = renderWebTemplate("auth/competition-session-picker", variables);
+
+        assertThat(result).contains("Saturday Open");
+        assertThat(result).contains("aria-label=\"End Session\"");
+        assertThat(result.indexOf("Saturday Open")).isLessThan(result.indexOf("Start Session"));
+    }
+
+    @Test
+    void accountMenuRendersActiveSessionsBeforeAccountActions() {
+        LadderConfig joinedSession = new LadderConfig();
+        joinedSession.setId(44L);
+        joinedSession.setTitle("Weeknight Rally");
+        joinedSession.setType(LadderConfig.Type.SESSION);
+        joinedSession.setOwnerUserId(9L);
+
+        Map<String, Object> variables = authenticatedShowLayoutVariables();
+        variables.put("currentUserId", 7L);
+        variables.put("navigationSessionConfigs", List.of(joinedSession));
+
+        String result = renderWebTemplate("auth/account-menu", variables);
+
+        assertThat(result).contains("Weeknight Rally");
+        assertThat(result).contains("Jump back into an active session you joined.");
+        assertThat(result.indexOf("Weeknight Rally")).isLessThan(result.indexOf("Account Settings"));
     }
 
     @Test

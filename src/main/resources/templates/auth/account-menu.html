@@ -12,7 +12,7 @@
             <div class="app-hero-card">
                 <h1 class="app-hero-title">User Account</h1>
                 <p class="app-hero-subtitle">
-                    Open your settings, trophies, stats, or sign out from one place.
+                    Open active sessions, settings, trophies, stats, or sign out from one place.
                 </p>
             </div>
         </section>
@@ -22,6 +22,24 @@
         </div>
 
         <section class="app-action-grid">
+            <a class="app-action-tile app-action-groups"
+               th:if="${navigationSessionConfigs != null and !#lists.isEmpty(navigationSessionConfigs)}"
+               th:each="sessionConfig : ${navigationSessionConfigs}"
+               th:with="owned=${currentUserId != null and sessionConfig != null and currentUserId == sessionConfig.ownerUserId}"
+               th:href="@{/groups/{id}(id=${sessionConfig.id})}">
+                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                <div>
+                    <span class="app-action-callout app-action-callout-top"
+                          th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
+                    <div class="app-action-title"
+                         th:text="${sessionConfig != null ? sessionConfig.title : 'Open Session'}">Open Session</div>
+                    <div class="app-action-subtitle"
+                         th:text="${owned ? 'Open your active session to manage players, invites, and match logging.' : 'Jump back into an active session you joined.'}">
+                        Open your active session.
+                    </div>
+                </div>
+            </a>
+
             <a class="app-action-tile app-action-account" th:href="@{/account}">
                 <div class="app-action-icon"><i class="bi bi-gear" aria-hidden="true"></i></div>
                 <div>

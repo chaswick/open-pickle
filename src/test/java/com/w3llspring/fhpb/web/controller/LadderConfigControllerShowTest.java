@@ -805,6 +805,201 @@ class LadderConfigControllerShowTest {
   }
 
   @Test
+  void show_sessionRoundRobinRoundsIncludeDisplayNamesFromOtherRounds() {
+    User currentUser = new User();
+    currentUser.setId(7L);
+    currentUser.setNickName("Tester");
+
+    User roundOnePartner = new User();
+    roundOnePartner.setId(8L);
+    roundOnePartner.setNickName("RoundOnePartner");
+
+    User roundOneOpponentOne = new User();
+    roundOneOpponentOne.setId(9L);
+    roundOneOpponentOne.setNickName("RoundOneOpponentOne");
+
+    User roundOneOpponentTwo = new User();
+    roundOneOpponentTwo.setId(10L);
+    roundOneOpponentTwo.setNickName("RoundOneOpponentTwo");
+
+    User roundTwoPartner = new User();
+    roundTwoPartner.setId(11L);
+    roundTwoPartner.setNickName("RoundTwoPartner");
+
+    User roundTwoOpponentOne = new User();
+    roundTwoOpponentOne.setId(12L);
+    roundTwoOpponentOne.setNickName("RoundTwoOpponentOne");
+
+    User roundTwoOpponentTwo = new User();
+    roundTwoOpponentTwo.setId(13L);
+    roundTwoOpponentTwo.setNickName("RoundTwoOpponentTwo");
+
+    LadderConfig cfg = new LadderConfig();
+    cfg.setId(42L);
+    cfg.setTitle("Saturday Open Session");
+    cfg.setOwnerUserId(7L);
+    cfg.setType(LadderConfig.Type.SESSION);
+
+    LadderMembership currentMembership = new LadderMembership();
+    currentMembership.setId(101L);
+    currentMembership.setLadderConfig(cfg);
+    currentMembership.setUserId(7L);
+    currentMembership.setRole(LadderMembership.Role.ADMIN);
+    currentMembership.setState(LadderMembership.State.ACTIVE);
+    currentMembership.setJoinedAt(Instant.now().minusSeconds(200));
+
+    LadderSeason targetSeason = new LadderSeason();
+    ReflectionTestUtils.setField(targetSeason, "id", 55L);
+    targetSeason.setLadderConfig(cfg);
+
+    com.w3llspring.fhpb.web.model.RoundRobin rr = new com.w3llspring.fhpb.web.model.RoundRobin();
+    ReflectionTestUtils.setField(rr, "id", 88L);
+    rr.setSessionConfig(cfg);
+    rr.setSeason(targetSeason);
+
+    com.w3llspring.fhpb.web.model.RoundRobinEntry roundOneEntry =
+        new com.w3llspring.fhpb.web.model.RoundRobinEntry();
+    ReflectionTestUtils.setField(roundOneEntry, "id", 66L);
+    roundOneEntry.setRoundRobin(rr);
+    roundOneEntry.setRoundNumber(1);
+    roundOneEntry.setA1(roundOnePartner);
+    roundOneEntry.setA2(roundOneOpponentOne);
+    roundOneEntry.setB1(currentUser);
+    roundOneEntry.setB2(roundOneOpponentTwo);
+
+    com.w3llspring.fhpb.web.model.RoundRobinEntry roundTwoEntry =
+        new com.w3llspring.fhpb.web.model.RoundRobinEntry();
+    ReflectionTestUtils.setField(roundTwoEntry, "id", 67L);
+    roundTwoEntry.setRoundRobin(rr);
+    roundTwoEntry.setRoundNumber(2);
+    roundTwoEntry.setA1(currentUser);
+    roundTwoEntry.setA2(roundTwoPartner);
+    roundTwoEntry.setB1(roundTwoOpponentOne);
+    roundTwoEntry.setB2(roundTwoOpponentTwo);
+
+    when(configs.findById(42L)).thenReturn(Optional.of(cfg));
+    when(seasons.findByLadderConfigIdOrderByStartDateDesc(42L)).thenReturn(List.of());
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.ACTIVE))
+        .thenReturn(List.of(currentMembership));
+    when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            42L, LadderMembership.State.BANNED))
+        .thenReturn(List.of());
+    when(userRepo.findAllById(org.mockito.ArgumentMatchers.anyIterable()))
+        .thenReturn(List.of(currentUser));
+
+    CompetitionSeasonService competitionSeasonService =
+        new CompetitionSeasonService(null, null, null) {
+          @Override
+          public LadderSeason resolveTargetSeason(LadderConfig ladderConfig) {
+            return targetSeason;
+          }
+        };
+    MatchDashboardService dashboardService =
+        new MatchDashboardService(null, null, null, null, null) {
+          @Override
+          public DashboardModel buildPendingForUserInSeason(User viewer, LadderSeason season) {
+            return new DashboardModel(
+                List.of(),
+                new MatchRowModel(
+                    java.util.Set.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of(),
+                    java.util.Map.of()));
+          }
+        };
+    RoundRobinService roundRobinServiceStub =
+        new RoundRobinService(null, null, null, null, null, null, null) {
+          @Override
+          public List<com.w3llspring.fhpb.web.model.RoundRobinStanding> computeStandingsForSession(
+              LadderConfig sessionConfig) {
+            return List.of();
+          }
+
+          @Override
+          public Optional<ActiveSessionAssignment> findActiveSessionAssignment(
+              LadderConfig sessionConfig, Long userId) {
+            return Optional.of(new ActiveSessionAssignment(rr, roundOneEntry, null, 1, 2));
+          }
+
+          @Override
+          public List<com.w3llspring.fhpb.web.model.RoundRobinEntry> getEntriesForRound(
+              Long rrId, int roundNumber) {
+            if (roundNumber == 1) {
+              return List.of(roundOneEntry);
+            }
+            if (roundNumber == 2) {
+              return List.of(roundTwoEntry);
+            }
+            return List.of();
+          }
+
+          @Override
+          public Optional<Match> findLoggedMatchForEntry(
+              com.w3llspring.fhpb.web.model.RoundRobin roundRobin,
+              com.w3llspring.fhpb.web.model.RoundRobinEntry entry,
+              Instant createdAtHint) {
+            return Optional.empty();
+          }
+
+          @Override
+          public Map<Long, String> buildDisplayNameMap(
+              java.util.Collection<Long> userIds, Long ladderConfigId) {
+            Map<Long, String> names = new java.util.LinkedHashMap<>();
+            if (userIds.contains(7L)) {
+              names.put(7L, "Court-Tester");
+            }
+            if (userIds.contains(8L)) {
+              names.put(8L, "Court-RoundOnePartner");
+            }
+            if (userIds.contains(9L)) {
+              names.put(9L, "Court-RoundOneOpponentOne");
+            }
+            if (userIds.contains(10L)) {
+              names.put(10L, "Court-RoundOneOpponentTwo");
+            }
+            if (userIds.contains(11L)) {
+              names.put(11L, "Court-RoundTwoPartner");
+            }
+            if (userIds.contains(12L)) {
+              names.put(12L, "Court-RoundTwoOpponentOne");
+            }
+            if (userIds.contains(13L)) {
+              names.put(13L, "Court-RoundTwoOpponentTwo");
+            }
+            return names;
+          }
+        };
+
+    ReflectionTestUtils.setField(controller, "competitionSeasonService", competitionSeasonService);
+    ReflectionTestUtils.setField(controller, "matchDashboardService", dashboardService);
+    ReflectionTestUtils.setField(
+        controller, "matchDashboardViewService", new MatchDashboardViewService());
+    ReflectionTestUtils.setField(controller, "roundRobinService", roundRobinServiceStub);
+
+    UsernamePasswordAuthenticationToken auth =
+        new UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(currentUser), null, List.of());
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/groups/42");
+
+    String view = controller.show(42L, "joined", model, auth, request);
+
+    assertThat(view).isEqualTo("auth/show");
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> rounds = (List<Map<String, Object>>) model.get("sessionRoundRobinRounds");
+    assertThat(rounds).hasSize(2);
+    assertThat(rounds.get(1))
+        .containsEntry("a1Name", "Court-Tester")
+        .containsEntry("a2Name", "Court-RoundTwoPartner")
+        .containsEntry("b1Name", "Court-RoundTwoOpponentOne")
+        .containsEntry("b2Name", "Court-RoundTwoOpponentTwo");
+  }
+
+  @Test
   void show_sessionRoutesNullifyApprovalsIntoInboxAndNullifyWaitsIntoOutbox() {
     User currentUser = new User();
     currentUser.setId(7L);

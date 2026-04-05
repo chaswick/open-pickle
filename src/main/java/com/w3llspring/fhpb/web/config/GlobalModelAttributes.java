@@ -11,6 +11,7 @@ import com.w3llspring.fhpb.web.util.UserPublicName;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -153,6 +154,7 @@ public class GlobalModelAttributes {
     model.addAttribute("googleAdsId", googleAdsId);
     model.addAttribute("activeCompetitionSessionCount", 0);
     model.addAttribute("showCompetitionSessionChooser", false);
+    model.addAttribute("navigationSessionConfigs", List.of());
     model.addAttribute(
         "competitionAutoModWarningOneThreshold", resolveCompetitionAutoModWarningOneThreshold());
     model.addAttribute(
@@ -200,6 +202,7 @@ public class GlobalModelAttributes {
         "activeCompetitionSessionTitle", sessionConfig != null ? sessionConfig.getTitle() : null);
     model.addAttribute("activeCompetitionSessionCount", launchState.activeSessionCount());
     model.addAttribute("showCompetitionSessionChooser", launchState.chooserRequired());
+    model.addAttribute("navigationSessionConfigs", launchState.activeSessions());
   }
 
   private void populateCompetitionAutoModerationAttributes(Model model, User user) {

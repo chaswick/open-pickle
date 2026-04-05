@@ -1232,12 +1232,8 @@ public class LadderConfigController {
       return;
     }
 
-    java.util.LinkedHashSet<Long> userIds = new java.util.LinkedHashSet<>();
-    collectSessionRoundRobinUserId(assignment.entry().getA1(), userIds);
-    collectSessionRoundRobinUserId(assignment.entry().getA2(), userIds);
-    collectSessionRoundRobinUserId(assignment.entry().getB1(), userIds);
-    collectSessionRoundRobinUserId(assignment.entry().getB2(), userIds);
-    Map<Long, String> displayNames = roundRobinService.buildDisplayNameMap(userIds, sessionConfig.getId());
+    Map<Long, String> displayNames =
+        buildSessionRoundRobinDisplayNames(sessionConfig, currentUser.getId(), assignment);
 
     java.util.LinkedHashMap<String, Object> task = new java.util.LinkedHashMap<>();
     task.put("roundRobinId", assignment.roundRobin().getId());
@@ -1446,11 +1442,58 @@ public class LadderConfigController {
     userIds.add(user.getId());
   }
 
+  private Map<Long, String> buildSessionRoundRobinDisplayNames(
+      LadderConfig sessionConfig,
+      Long currentUserId,
+      RoundRobinService.ActiveSessionAssignment assignment) {
+    java.util.LinkedHashSet<Long> userIds = new java.util.LinkedHashSet<>();
+    if (assignment == null || assignment.entry() == null) {
+      return Map.of();
+    }
+
+    collectSessionRoundRobinEntryUserIds(assignment.entry(), userIds);
+    if (sessionConfig == null || currentUserId == null || roundRobinService == null) {
+      return Map.of();
+    }
+
+    if (assignment.roundRobin() != null && assignment.roundRobin().getId() != null) {
+      try {
+        int maxRound =
+            assignment.maxRound() > 0
+                ? assignment.maxRound()
+                : roundRobinService.getMaxRound(assignment.roundRobin().getId());
+        for (int roundNumber = 1; roundNumber <= maxRound; roundNumber++) {
+          collectSessionRoundRobinEntryUserIds(
+              findSessionRoundRobinEntryForUser(
+                  roundRobinService.getEntriesForRound(assignment.roundRobin().getId(), roundNumber),
+                  currentUserId),
+              userIds);
+        }
+      } catch (RuntimeException ex) {
+        // Fall back to the current-round names if the broader round data is unavailable.
+      }
+    }
+
+    return roundRobinService.buildDisplayNameMap(userIds, sessionConfig.getId());
+  }
+
+  private void collectSessionRoundRobinEntryUserIds(
+      com.w3llspring.fhpb.web.model.RoundRobinEntry entry, java.util.Set<Long> userIds) {
+    if (entry == null || userIds == null) {
+      return;
+    }
+    collectSessionRoundRobinUserId(entry.getA1(), userIds);
+    collectSessionRoundRobinUserId(entry.getA2(), userIds);
+    collectSessionRoundRobinUserId(entry.getB1(), userIds);
+    collectSessionRoundRobinUserId(entry.getB2(), userIds);
+  }
+
   private String sessionRoundRobinName(User user, Map<Long, String> displayNames) {
     if (user == null || user.getId() == null) {
       return null;
     }
-    return displayNames.get(user.getId());
+    String displayName = displayNames != null ? displayNames.get(user.getId()) : null;
+    return StringUtils.hasText(displayName) ? displayName : UserPublicName.forUser(user);
   }
 
   private Long sessionRoundRobinQuickLogValue(Long currentUserId, com.w3llspring.fhpb.web.model.RoundRobinEntry entry, String slot) {

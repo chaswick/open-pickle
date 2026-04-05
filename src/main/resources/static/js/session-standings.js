@@ -6,7 +6,7 @@
   FHPB.SessionStandings = {
     idleRefreshMs: 7000,
     pendingRefreshMs: 1000,
-    replayMoveMs: 5000,
+    replayMoveMs: 4000,
     replayInitialDelayMs: 200,
     replayStaticLiftPx: 12,
     replayStaticScale: 0.992,
@@ -55,7 +55,9 @@
         return '';
       }
 
-      return Array.prototype.slice.call(anchor.querySelectorAll('[data-session-recent-item]'))
+      var source = anchor.querySelector('[data-session-recent-source]') || anchor;
+
+      return Array.prototype.slice.call(source.querySelectorAll('[data-session-recent-item]'))
         .map(function (item) {
           var age = item.querySelector('[data-session-recent-age]');
           var copy = item.querySelector('.session-recent-ticker-copy');

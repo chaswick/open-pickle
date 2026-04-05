@@ -36,8 +36,10 @@ class LadderConfigServiceSessionLaunchTest {
         .thenReturn(List.of(joinedMembership, ownedMembership));
 
     LadderConfig reusable = service.findReusableSessionConfig(7L);
+    LadderConfigService.SessionLaunchState launchState = service.resolveSessionLaunchState(7L);
 
     assertThat(reusable).isSameAs(ownedSession);
+    assertThat(launchState.activeSessions()).containsExactly(ownedSession, joinedSession);
   }
 
   @Test
@@ -53,6 +55,7 @@ class LadderConfigServiceSessionLaunchTest {
 
     assertThat(reusable).isNull();
     assertThat(launchState.preferredSession()).isSameAs(joinedSession);
+    assertThat(launchState.activeSessions()).containsExactly(joinedSession);
     assertThat(launchState.chooserRequired()).isTrue();
     assertThat(launchState.hasOwnedSession()).isFalse();
   }

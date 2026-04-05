@@ -411,6 +411,11 @@ class HomeControllerTest {
     assertThat(model.get("sessionMemberships"))
         .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST)
         .hasSize(2);
+    assertThat(
+            ((List<LadderMembership>) model.get("sessionMemberships")).stream()
+                .map(membership -> membership.getLadderConfig().getId())
+                .toList())
+        .containsExactly(9L, 8L);
     assertThat(model.get("showCompetitionSessionChooser")).isEqualTo(true);
     assertThat(model.get("activeCompetitionSessionCount")).isEqualTo(2);
     assertThat(model.get("activeCompetitionSessionId")).isEqualTo(9L);
