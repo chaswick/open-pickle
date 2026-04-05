@@ -1578,8 +1578,24 @@ public class RoundRobinService {
   public int endOpenRoundRobinsForSeason(LadderSeason season) {
     if (season == null) return 0;
 
+    return endOpenRoundRobins(rrRepo.findBySeason(season));
+  }
+
+  /**
+   * End any open round-robins owned by the provided session. A round-robin is considered open when
+   * currentRound <= max configured round.
+   *
+   * @return number of round-robins that were ended.
+   */
+  @Transactional
+  public int endOpenRoundRobinsForSession(LadderConfig sessionConfig) {
+    if (sessionConfig == null || !sessionConfig.isSessionType()) return 0;
+
+    return endOpenRoundRobins(rrRepo.findBySessionConfig(sessionConfig));
+  }
+
+  private int endOpenRoundRobins(List<RoundRobin> roundRobins) {
     int ended = 0;
-    List<RoundRobin> roundRobins = rrRepo.findBySeason(season);
     for (RoundRobin rr : roundRobins) {
       if (rr == null) continue;
       List<RoundRobinEntry> all = rrEntryRepo.findByRoundRobinOrderByRoundNumberAsc(rr);

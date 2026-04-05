@@ -19,6 +19,7 @@ import com.w3llspring.fhpb.web.model.LadderSecurity;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.competition.GroupAdministrationService;
 import com.w3llspring.fhpb.web.service.competition.SessionLifecycleService;
+import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -37,6 +38,7 @@ class LadderConfigServiceLeaveBehaviorTest {
   @Mock private LadderSeasonRepository seasonRepo;
   @Mock private LadderMembershipRepository membershipRepo;
   @Mock private UserRepository userRepo;
+  @Mock private RoundRobinService roundRobinService;
 
   private LadderInviteGenerator inviteGenerator;
   private SeasonNameGenerator seasonNameGenerator;
@@ -65,7 +67,7 @@ class LadderConfigServiceLeaveBehaviorTest {
             10,
             userRepo,
             seasonNameGenerator);
-    sessionLifecycleService = new SessionLifecycleService(configRepo, membershipRepo);
+    sessionLifecycleService = new SessionLifecycleService(configRepo, membershipRepo, roundRobinService);
     groupAdministrationService =
         new GroupAdministrationService(
             configRepo,

@@ -4,6 +4,7 @@ import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.LadderMembership;
+import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -14,11 +15,15 @@ public class SessionLifecycleService {
 
   private final LadderConfigRepository configs;
   private final LadderMembershipRepository memberships;
+  private final RoundRobinService roundRobinService;
 
   public SessionLifecycleService(
-      LadderConfigRepository configs, LadderMembershipRepository memberships) {
+      LadderConfigRepository configs,
+      LadderMembershipRepository memberships,
+      RoundRobinService roundRobinService) {
     this.configs = configs;
     this.memberships = memberships;
+    this.roundRobinService = roundRobinService;
   }
 
   @Transactional
@@ -50,6 +55,7 @@ public class SessionLifecycleService {
       membership.setLeftAt(effectiveArchivedAt);
       memberships.save(membership);
     }
+    roundRobinService.endOpenRoundRobinsForSession(session);
     return true;
   }
 }

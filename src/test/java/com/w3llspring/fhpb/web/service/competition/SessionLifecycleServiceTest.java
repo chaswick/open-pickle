@@ -4,12 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.model.LadderMembership;
+import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,12 +25,13 @@ class SessionLifecycleServiceTest {
 
   @Mock private LadderConfigRepository configRepo;
   @Mock private LadderMembershipRepository membershipRepo;
+  @Mock private RoundRobinService roundRobinService;
 
   private SessionLifecycleService sessionLifecycleService;
 
   @BeforeEach
   void setUp() {
-    sessionLifecycleService = new SessionLifecycleService(configRepo, membershipRepo);
+    sessionLifecycleService = new SessionLifecycleService(configRepo, membershipRepo, roundRobinService);
   }
 
   @Test
@@ -71,6 +74,7 @@ class SessionLifecycleServiceTest {
     verify(configRepo).save(session);
     verify(membershipRepo).save(ownerMembership);
     verify(membershipRepo).save(memberMembership);
+    verify(roundRobinService).endOpenRoundRobinsForSession(session);
   }
 
   @Test
@@ -92,6 +96,7 @@ class SessionLifecycleServiceTest {
     verify(configRepo, never()).save(session);
     verify(membershipRepo, never()).findByLadderConfigIdAndStateOrderByJoinedAtAsc(
         sessionId, LadderMembership.State.ACTIVE);
+    verifyNoInteractions(roundRobinService);
   }
 
   @Test
@@ -108,5 +113,6 @@ class SessionLifecycleServiceTest {
     assertThatThrownBy(() -> sessionLifecycleService.archiveSession(ladderId, Instant.now()))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("match sessions");
+    verifyNoInteractions(roundRobinService);
   }
 }

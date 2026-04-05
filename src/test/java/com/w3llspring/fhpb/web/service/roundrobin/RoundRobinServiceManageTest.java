@@ -421,6 +421,38 @@ class RoundRobinServiceManageTest {
   }
 
   @Test
+  void endOpenRoundRobinsForSession_endsOnlyOpenRoundRobins() throws Exception {
+    LadderConfig sessionConfig = new LadderConfig();
+    sessionConfig.setId(77L);
+    sessionConfig.setType(LadderConfig.Type.SESSION);
+
+    RoundRobin open = new RoundRobin();
+    setId(open, 2101L);
+    open.setSessionConfig(sessionConfig);
+    open.setCurrentRound(1);
+
+    RoundRobin closed = new RoundRobin();
+    setId(closed, 2102L);
+    closed.setSessionConfig(sessionConfig);
+    closed.setCurrentRound(3);
+
+    when(rrRepo.findBySessionConfig(sessionConfig)).thenReturn(List.of(open, closed));
+    when(rrEntryRepo.findByRoundRobinOrderByRoundNumberAsc(open))
+        .thenReturn(List.of(entryForRound(open, 3101L, 1), entryForRound(open, 3102L, 2)));
+    when(rrEntryRepo.findByRoundRobinOrderByRoundNumberAsc(closed))
+        .thenReturn(List.of(entryForRound(closed, 3103L, 1), entryForRound(closed, 3104L, 2)));
+    when(rrRepo.save(any(RoundRobin.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    int ended = service.endOpenRoundRobinsForSession(sessionConfig);
+
+    assertThat(ended).isEqualTo(1);
+    assertThat(open.getCurrentRound()).isEqualTo(3);
+    assertThat(closed.getCurrentRound()).isEqualTo(3);
+    verify(rrRepo).save(open);
+    verify(rrRepo, never()).save(closed);
+  }
+
+  @Test
   void updateEntryParticipants_reassignsPlayersAndClearsBye() throws Exception {
     RoundRobin rr = roundRobinWithSeason(1L, 77L);
     RoundRobinEntry entry = entryForRound(rr, 5L, 1);
