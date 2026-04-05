@@ -2,26 +2,6 @@
   <div class="accordion" id="helpAccordion">
 
     <div class="accordion-item">
-      <h2 class="accordion-header" id="competitionWhyHeading">
-        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#competitionWhyHelp" aria-expanded="true" aria-controls="competitionWhyHelp"
-          th:text="|Why compete in the ${branding.appName} Global Competition?|">
-          Why compete in the Global Competition?
-        </button>
-      </h2>
-      <div id="competitionWhyHelp" class="accordion-collapse collapse show" aria-labelledby="competitionWhyHeading" data-bs-parent="#helpAccordion">
-        <div class="accordion-body">
-          <p><strong>Global Competition</strong> is not trying to replace DUPR or Elo. Those systems are built to estimate long-term player skill. This is built to measure something different: <strong>who is performing best over a defined stretch of time against the people they actually play.</strong></p>
-          <ul>
-            <li><strong>Recent performance, not abstract skill:</strong> It reflects how well you are playing right now, not just your underlying level over months or years.</li>
-            <li><strong>Built around real play patterns:</strong> It compares results from your normal sessions, groups, and opponents.</li>
-            <li><strong>Bad-faith gaming is limited:</strong> Like any system, honest logging matters. But the system is designed to be resilient: you choose who you play, only confirmed results count, bogus provisional logs can be disputed, confirmed mistakes can be removed only if both teams agree, repeated missed confirmations in Global Competition can trigger season warnings and lockout, and the standings model rewards broader recent variety.</li>
-          </ul>
-          <p class="mb-0"><small class="text-muted">Think of it as a season-long performance race, not a universal skill rating.</small></p>
-        </div>
-      </div>
-    </div>
-
-    <div class="accordion-item">
       <h2 class="accordion-header" id="groupsHeading">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#groupsHelp" aria-expanded="false" aria-controls="groupsHelp">
           Groups and Sessions
@@ -277,6 +257,26 @@
             <li><strong>Global Competition fair-play thresholds:</strong> First warning at <strong th:text="${competitionAutoModWarningOneThreshold}">3</strong> missed required confirmations in one season, final warning at <strong th:text="${competitionAutoModWarningTwoThreshold}">5</strong>, and competition lockout at <strong th:text="${competitionAutoModBlockThreshold}">7</strong>.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">These limits may change over time as the app evolves.</small></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="competitionWhyHeading">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#competitionWhyHelp" aria-expanded="false" aria-controls="competitionWhyHelp"
+          th:text="|Why compete in the ${branding.appName} Global Competition?|">
+          Why compete in the Global Competition?
+        </button>
+      </h2>
+      <div id="competitionWhyHelp" class="accordion-collapse collapse" aria-labelledby="competitionWhyHeading" data-bs-parent="#helpAccordion">
+        <div class="accordion-body">
+          <p><strong>Global Competition</strong> is not trying to replace DUPR or Elo. Those systems are built to estimate long-term player skill. This is built to measure something different: <strong>who is performing best over a defined stretch of time against the people they actually play.</strong></p>
+          <ul>
+            <li><strong>Recent performance, not abstract skill:</strong> It reflects how well you are playing right now, not just your underlying level over months or years.</li>
+            <li><strong>Built around real play patterns:</strong> It compares results from your normal sessions, groups, and opponents.</li>
+            <li><strong>Bad-faith gaming is limited:</strong> Like any system, honest logging matters. But the system is designed to be resilient: you choose who you play, only confirmed results count, bogus provisional logs can be disputed, confirmed mistakes can be removed only if both teams agree, repeated missed confirmations in Global Competition can trigger season warnings and lockout, and the standings model rewards broader recent variety.</li>
+          </ul>
+          <p class="mb-0"><small class="text-muted">Think of it as a season-long performance race, not a universal skill rating.</small></p>
         </div>
       </div>
     </div>

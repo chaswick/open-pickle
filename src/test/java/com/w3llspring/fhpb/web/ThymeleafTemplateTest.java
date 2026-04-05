@@ -913,6 +913,15 @@ class ThymeleafTemplateTest {
     }
 
     @Test
+    void helpContentMovesWhyCompeteSectionToTheEnd() throws Exception {
+        String template = Files.readString(Path.of("src/main/resources/templates/fragments/helpContent.html"));
+
+        assertThat(template).contains("Why compete in the ${branding.appName} Global Competition?");
+        assertThat(template.indexOf("Current Limitations"))
+                .isLessThan(template.indexOf("Why compete in the ${branding.appName} Global Competition?"));
+    }
+
+    @Test
     void loginTemplateDoesNotRenderInlineTermsAcceptancePrompt() throws Exception {
         String template = Files.readString(Path.of("src/main/resources/templates/public/login.html"));
 
