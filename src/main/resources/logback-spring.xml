@@ -94,11 +94,8 @@
     <appender-ref ref="PERF_FILE" />
   </logger>
 
-  <!-- Ensure web exceptions are logged with full stack traces -->
-  <logger name="org.springframework.web" level="DEBUG"/>
-  <logger name="org.springframework.web.servlet.DispatcherServlet" level="DEBUG"/>
-  <logger name="org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver" level="DEBUG"/>
-  <logger name="org.springframework.boot.web.servlet.error" level="DEBUG"/>
+  <!-- Framework web logs stay at the root INFO level by default.
+       Opt into DEBUG via application properties when actively debugging request flow. -->
 
   <!-- Enable debug logging for our web controllers so controller-level debug statements appear -->
   <logger name="com.w3llspring.fhpb.web.controller" level="DEBUG"/>

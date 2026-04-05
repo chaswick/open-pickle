@@ -12,12 +12,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.Principal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
@@ -26,10 +28,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.AccessDeniedHandlerImpl;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
@@ -111,10 +116,27 @@ public class WebSecurityConfig {
   }
 
   @Bean
+  public AccessDeniedHandler loggingAccessDeniedHandler() {
+    AccessDeniedHandlerImpl delegate = new AccessDeniedHandlerImpl();
+    return (request, response, accessDeniedException) -> {
+      log.warn(
+          "Denied request: status=403 cause={} principal={} method={} uri={} remote={} detail={}",
+          accessDeniedCause(accessDeniedException),
+          principalName(request),
+          request.getMethod(),
+          requestTarget(request),
+          request.getRemoteAddr(),
+          sanitizeForLog(accessDeniedException.getMessage()));
+      delegate.handle(request, response, accessDeniedException);
+    };
+  }
+
+  @Bean
   public SecurityFilterChain filterChain(
       HttpSecurity http,
       AuthenticationSuccessHandler termsAcknowledgementAuthenticationSuccessHandler,
       TermsAwareAuthenticationFailureHandler termsAwareAuthenticationFailureHandler,
+      AccessDeniedHandler loggingAccessDeniedHandler,
       TermsAcceptanceEnforcementFilter termsAcceptanceEnforcementFilter)
       throws Exception {
     http.headers(
@@ -179,6 +201,7 @@ public class WebSecurityConfig {
                     .failureHandler(termsAwareAuthenticationFailureHandler)
                     .successHandler(termsAcknowledgementAuthenticationSuccessHandler)
                     .permitAll())
+        .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(loggingAccessDeniedHandler))
         .requestCache(cache -> cache.requestCache(requestCache()))
         .logout(logout -> logout.invalidateHttpSession(true).logoutSuccessUrl("/").permitAll())
         .anonymous(Customizer.withDefaults());
@@ -204,6 +227,33 @@ public class WebSecurityConfig {
     AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
     auth.authenticationProvider(authenticationProvider());
     return auth.build();
+  }
+
+  private static String accessDeniedCause(AccessDeniedException exception) {
+    if (exception instanceof CsrfException) {
+      return "csrf";
+    }
+    return exception.getClass().getSimpleName();
+  }
+
+  private static String principalName(HttpServletRequest request) {
+    Principal principal = request.getUserPrincipal();
+    return principal == null ? "anonymous" : principal.getName();
+  }
+
+  private static String requestTarget(HttpServletRequest request) {
+    String target = request.getRequestURI();
+    if (StringUtils.hasText(request.getQueryString())) {
+      target += "?" + request.getQueryString();
+    }
+    return target;
+  }
+
+  private static String sanitizeForLog(String value) {
+    if (!StringUtils.hasText(value)) {
+      return "-";
+    }
+    return value.replaceAll("[\\r\\n\\t]+", " ").trim();
   }
 
   private static final class CsrfCookieFilter extends OncePerRequestFilter {

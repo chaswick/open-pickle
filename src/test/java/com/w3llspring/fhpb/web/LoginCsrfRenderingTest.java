@@ -15,11 +15,15 @@ import jakarta.servlet.http.Cookie;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
+@ExtendWith(OutputCaptureExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 class LoginCsrfRenderingTest {
@@ -81,6 +85,26 @@ class LoginCsrfRenderingTest {
         .perform(post("/logout").with(user(new CustomUserDetails(user))).with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/"));
+  }
+
+  @Test
+  void logoutWithoutCsrfLogsDeniedRequestWithOriginalUri(CapturedOutput output)
+      throws Exception {
+    User user = new User();
+    user.setId(123L);
+    user.setEmail("tester@example.com");
+    user.setNickName("Tester");
+    user.setPassword("ignored");
+    user.setAcknowledgedTermsAt(java.time.Instant.now());
+
+    mockMvc
+        .perform(post("/logout").with(user(new CustomUserDetails(user))))
+        .andExpect(status().isForbidden());
+
+    assertThat(output.getAll()).contains("Denied request: status=403");
+    assertThat(output.getAll()).contains("cause=csrf");
+    assertThat(output.getAll()).contains("method=POST");
+    assertThat(output.getAll()).contains("uri=/logout");
   }
 
   @Test
