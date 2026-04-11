@@ -108,6 +108,32 @@ class LoginCsrfRenderingTest {
   }
 
   @Test
+  void logoutWithoutCsrfLogsForwardedClientIpFromTrustedProxy(CapturedOutput output)
+      throws Exception {
+    User user = new User();
+    user.setId(124L);
+    user.setEmail("proxytester@example.com");
+    user.setNickName("ProxyTester");
+    user.setPassword("ignored");
+    user.setAcknowledgedTermsAt(java.time.Instant.now());
+
+    mockMvc
+        .perform(
+            post("/logout")
+                .with(user(new CustomUserDetails(user)))
+                .header("X-Forwarded-For", "198.51.100.24")
+                .with(
+                    request -> {
+                      request.setRemoteAddr("127.0.0.1");
+                      return request;
+                    }))
+        .andExpect(status().isForbidden());
+
+    assertThat(output.getAll()).contains("remote=198.51.100.24");
+    assertThat(output.getAll()).doesNotContain("remote=127.0.0.1");
+  }
+
+  @Test
   void registerPageRendersCsrfProtectionWithoutIssuingJsessionId() throws Exception {
     var response =
         mockMvc.perform(get("/register")).andExpect(status().isOk()).andReturn().getResponse();

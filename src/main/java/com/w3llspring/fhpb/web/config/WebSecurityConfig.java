@@ -3,6 +3,7 @@ package com.w3llspring.fhpb.web.config;
 import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.filter.TermsAcceptanceEnforcementFilter;
 import com.w3llspring.fhpb.web.service.auth.AuthenticatedUserService;
+import com.w3llspring.fhpb.web.service.auth.ClientIpResolver;
 import com.w3llspring.fhpb.web.service.auth.CustomUserDetailsService;
 import com.w3llspring.fhpb.web.service.user.UserAccountSettingsService;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
@@ -49,9 +50,11 @@ public class WebSecurityConfig {
   private static final Logger log = LoggerFactory.getLogger(WebSecurityConfig.class);
 
   private final UserRepository userRepository;
+  private final ClientIpResolver clientIpResolver;
 
-  public WebSecurityConfig(UserRepository userRepository) {
+  public WebSecurityConfig(UserRepository userRepository, ClientIpResolver clientIpResolver) {
     this.userRepository = userRepository;
+    this.clientIpResolver = clientIpResolver;
   }
 
   @Value("${fhpb.security.h2-console-access:false}")
@@ -125,7 +128,7 @@ public class WebSecurityConfig {
           principalName(request),
           request.getMethod(),
           requestTarget(request),
-          request.getRemoteAddr(),
+          clientIpResolver.resolve(request),
           sanitizeForLog(accessDeniedException.getMessage()));
       delegate.handle(request, response, accessDeniedException);
     };
