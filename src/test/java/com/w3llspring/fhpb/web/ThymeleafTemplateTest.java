@@ -752,6 +752,8 @@ class ThymeleafTemplateTest {
         assertThat(pageTemplate).contains("fetch(picker.getAttribute('action')");
         assertThat(StringUtils.countOccurrencesOf(fragmentTemplate, "data-card-collapse-default=\"closed\"")).isEqualTo(4);
         assertThat(recentMatchesTemplate).contains("data-card-collapse-default=\"closed\"");
+        assertThat(fragmentTemplate).contains("Your Name(s)");
+        assertThat(fragmentTemplate).contains("placeholder=\"Add a name\"");
         assertThat(badgeSection).contains("Use Equip or Hide to save your selection immediately.");
         assertThat(badgeSection).doesNotContain(">Save</button>");
     }
@@ -880,6 +882,8 @@ class ThymeleafTemplateTest {
         assertThat(template).contains("value=\"COURT_NAME\"");
         assertThat(template).contains("value=\"MEMBER_ID\"");
         assertThat(template).contains("value=\"APP_NAME\"");
+        assertThat(template).contains("Filter by player name, member ID, or display name");
+        assertThat(template).contains(">Player name</option>");
         assertThat(template).contains("data-public-code=${u.publicCode}");
         assertThat(template).contains("data-court-name=${courtNames != null and courtNames.containsKey(u.id) ? courtNames[u.id] : ''}");
         assertThat(template).contains("data-app-name=${u.nickName != null ? u.nickName : ''}");
@@ -910,6 +914,7 @@ class ThymeleafTemplateTest {
         assertThat(template).contains("Nobody can erase a confirmed loss alone.");
         assertThat(template).contains("Nullified</strong> label");
         assertThat(template).contains("Use confirmed-match removal only after both sides already confirmed");
+        assertThat(template).contains("Player Names:");
     }
 
     @Test
@@ -1311,6 +1316,7 @@ class ThymeleafTemplateTest {
         assertThat(logMatchTemplate).contains("data-picker-recent");
         assertThat(logMatchTemplate).contains("player-picker-section-label");
         assertThat(logMatchTemplate).contains("name=\"expectedVersion\"");
+        assertThat(logMatchTemplate).contains("Search by player name, display name, or member ID");
     }
 
     @Test

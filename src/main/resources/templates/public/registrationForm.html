@@ -38,15 +38,15 @@
               </div>
 
               <div class="mb-3 text-start">
-                <label class="form-label" for="courtNamesInput">Court Name(s):</label>
+                <label class="form-label" for="courtNamesInput">Your Name(s):</label>
                 <input type="text" class="form-control"
                        placeholder="Mikey, Eddie B, Lyssa" autocomplete="off" th:attr="maxlength=${displayNameMaxLength * 3}"
                        th:field="*{courtNamesInput}" required />
                 <div class="form-text small text-muted">
-                  Enter the names people call you on the court, separated by commas. We will also use one as your display name, and you can change it later.
+                  Enter the names people call you when you play, separated by commas. We will also use one as your display name, and you can change it later.
                 </div>
-                <p class="text-danger small mb-0" th:if="${#fields.hasErrors('courtNames')}" th:errors="*{courtNames}">Court Names Error</p>
-                <p class="text-danger small mb-0" th:if="${#fields.hasErrors('courtNamesInput')}" th:errors="*{courtNamesInput}">Court Names Error</p>
+                <p class="text-danger small mb-0" th:if="${#fields.hasErrors('courtNames')}" th:errors="*{courtNames}">Name Error</p>
+                <p class="text-danger small mb-0" th:if="${#fields.hasErrors('courtNamesInput')}" th:errors="*{courtNamesInput}">Name Error</p>
               </div>
 
               <div class="mb-3 text-start">

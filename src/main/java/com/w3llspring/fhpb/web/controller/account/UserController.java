@@ -260,7 +260,7 @@ public class UserController {
     if (parsedCourtNames.isEmpty()) {
       if (!bindingResult.hasFieldErrors("courtNamesInput")) {
         bindingResult.addError(
-            new FieldError("User", "courtNamesInput", "Enter at least one court name."));
+            new FieldError("User", "courtNamesInput", "Enter at least one name people call you."));
       }
     } else {
       user.setCourtNamesInput(String.join(", ", parsedCourtNames));
@@ -349,7 +349,7 @@ public class UserController {
                 new FieldError(
                     "User",
                     "courtNamesInput",
-                    "We couldn't generate a unique nickname. Please try different court names."));
+                    "We couldn't generate a unique nickname. Please try different names."));
             break;
           }
           String newNick = ensureUniqueNick(nickSeed, nicknameRetries);

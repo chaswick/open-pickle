@@ -64,7 +64,7 @@ public final class InputValidation {
   }
 
   public static String requireCourtName(String value) {
-    return requirePlainText(value, "Court name", UserCourtName.MAX_ALIAS_LENGTH);
+    return requirePlainText(value, "Name", UserCourtName.MAX_ALIAS_LENGTH);
   }
 
   public static List<String> parseCourtNames(String value) {

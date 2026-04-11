@@ -241,18 +241,18 @@
 	</div>
 
 	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
-	<div class="card-header card-header-title text-center">Court Names</div>
+	<div class="card-header card-header-title text-center">Your Name(s)</div>
 	<div class="card-body">
 		<div th:if="${courtNameMessage}" th:text="${courtNameMessage}" th:class="'alert mb-3 text-start ' +
 			(${courtNameStatus} == 'success' ? 'alert-success' :
 			(${courtNameStatus} == 'info' ? 'alert-info' : 'alert-danger'))"></div>
 		<p class="text-muted small mb-4">
-			What people call you on the court. "John", "Bike Mike", etc. For example,
+			What people call you when you play. "John", "Bike Mike", etc. For example,
 			"Me and Juan beat Amy and Ryan 11 to 9."</p>
-		<p class="text-muted small mb-4">If certain private leagues call you different names, you can assign court names to specific leagues below.</p>
+		<p class="text-muted small mb-4">If certain private leagues call you different names, you can save league-specific names below.</p>
 		<div class="mt-4">
 			<p class="text-muted small" th:if="${#lists.isEmpty(courtNames)}">
-				You haven't added any court names yet.
+				You haven't added any names yet.
 			</p>
 			<div th:each="row : ${courtNames}" class="card border-0 shadow-sm mb-3">
 				<div class="card-body">
@@ -260,7 +260,7 @@
 						class="row g-2 align-items-center">
 						<input type="hidden" name="id" th:value="${row.id}" />
 						<div class="col-12 col-lg-5">
-							<label class="visually-hidden" th:for="|courtAlias-${row.id}|">Court name</label>
+							<label class="visually-hidden" th:for="|courtAlias-${row.id}|">Your name</label>
 							<input type="text" class="form-control" th:id="|courtAlias-${row.id}|" name="alias" th:value="${row.alias}"
 								autocomplete="off" th:attr="maxlength=${courtNameMaxLength}" />
 						</div>
@@ -285,7 +285,7 @@
 					</div>
 					
 					<form method="post" th:action="@{/account/court-names/delete}" class="mt-2 text-center"
-						th:onsubmit="|return handleConfirmForm(this, this.dataset.confirmMessage);|" th:attr="data-confirm-message=${#strings.isEmpty(row.alias) ? 'Remove this court name?' : 'Remove ' + row.alias + ' from your court names?'}">
+						th:onsubmit="|return handleConfirmForm(this, this.dataset.confirmMessage);|" th:attr="data-confirm-message=${#strings.isEmpty(row.alias) ? 'Remove this name?' : 'Remove ' + row.alias + ' from your names?'}">
 						<input type="hidden" name="id" th:value="${row.id}" />
 						<button class="btn btn-action-danger btn-sm" type="submit">Remove</button>
 					</form>
@@ -294,8 +294,8 @@
 		</div>
 		<form method="post" th:action="@{/account/court-names/add}" class="row g-2 align-items-center">
 			<div class="col-12 col-lg-5">
-				<label class="visually-hidden" for="newCourtAlias">Court name</label>
-				<input type="text" class="form-control" id="newCourtAlias" name="alias" placeholder="Add a court name" autocomplete="off"
+				<label class="visually-hidden" for="newCourtAlias">Your name</label>
+				<input type="text" class="form-control" id="newCourtAlias" name="alias" placeholder="Add a name" autocomplete="off"
 					th:attr="maxlength=${courtNameMaxLength}" />
 			</div>
 			<div class="col-12 col-lg-5">

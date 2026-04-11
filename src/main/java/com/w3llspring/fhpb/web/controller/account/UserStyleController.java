@@ -593,7 +593,7 @@ public class UserStyleController {
 	if (duplicate.isPresent()) {
 	    redirectAttributes.addFlashAttribute("toastLevel", "info");
 	    redirectAttributes.addFlashAttribute("toastMessage",
-		    "You already have that court name for the selected ladder.");
+		    "You already have that name for the selected league.");
 			return redirectToUserDetails(currentUser, redirectAttributes);
 		}
 		if (hasReachedCourtNameScopeLimit(currentUser, ladderConfig)) {
@@ -612,7 +612,7 @@ public class UserStyleController {
 		userCourtNameRepo.save(record);
 
 		redirectAttributes.addFlashAttribute("toastLevel", "success");
-		redirectAttributes.addFlashAttribute("toastMessage", "Court name saved.");
+		redirectAttributes.addFlashAttribute("toastMessage", "Name saved.");
 		return redirectToUserDetails(currentUser, redirectAttributes);
 	}
 
@@ -628,7 +628,7 @@ public class UserStyleController {
 		Optional<UserCourtName> recordOpt = userCourtNameRepo.findByIdAndUser_Id(recordId, currentUser.getId());
 		if (recordOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("toastLevel", "danger");
-			redirectAttributes.addFlashAttribute("toastMessage", "Court name not found.");
+			redirectAttributes.addFlashAttribute("toastMessage", "Name not found.");
 			return redirectToUserDetails(currentUser, redirectAttributes);
 		}
 
@@ -655,7 +655,7 @@ public class UserStyleController {
 	if (duplicate.isPresent() && !duplicate.get().getId().equals(record.getId())) {
 	    redirectAttributes.addFlashAttribute("toastLevel", "danger");
 	    redirectAttributes.addFlashAttribute("toastMessage",
-		    "Another court name already uses that alias for the selected ladder.");
+		    "Another saved name already uses that value for the selected league.");
 			return redirectToUserDetails(currentUser, redirectAttributes);
 		}
 
@@ -680,7 +680,7 @@ public class UserStyleController {
 		userCourtNameRepo.save(record);
 
 		redirectAttributes.addFlashAttribute("toastLevel", "success");
-		redirectAttributes.addFlashAttribute("toastMessage", "Court name updated.");
+		redirectAttributes.addFlashAttribute("toastMessage", "Name updated.");
 		return redirectToUserDetails(currentUser, redirectAttributes);
 	}
 
@@ -693,13 +693,13 @@ public class UserStyleController {
 		Optional<UserCourtName> recordOpt = userCourtNameRepo.findByIdAndUser_Id(recordId, currentUser.getId());
 		if (recordOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("toastLevel", "danger");
-			redirectAttributes.addFlashAttribute("toastMessage", "Court name not found.");
+			redirectAttributes.addFlashAttribute("toastMessage", "Name not found.");
 			return redirectToUserDetails(currentUser, redirectAttributes);
 		}
 
 		userCourtNameRepo.delete(recordOpt.get());
 		redirectAttributes.addFlashAttribute("toastLevel", "success");
-		redirectAttributes.addFlashAttribute("toastMessage", "Court name removed.");
+		redirectAttributes.addFlashAttribute("toastMessage", "Name removed.");
 		return redirectToUserDetails(currentUser, redirectAttributes);
 	}
 
@@ -823,7 +823,7 @@ public class UserStyleController {
 				? "'" + ladderConfig.getTitle() + "'"
 				: "all ladders";
 		return "You can save up to " + UserCourtName.MAX_ALIASES_PER_SCOPE
-				+ " court names for " + scope + ". Remove one before adding another.";
+				+ " names for " + scope + ". Remove one before adding another.";
 	}
 
 	private LadderResolution resolveLadderSelection(String ladderConfigIdParam, User currentUser) {
@@ -843,7 +843,7 @@ public class UserStyleController {
 				.map(LadderMembership::getLadderConfig)
 				.map(LadderResolution::specific)
 				.orElseGet(() -> LadderResolution
-						.error("You can only attach a court name to ladders you're actively a member of."));
+						.error("You can only attach a name to leagues you're actively a member of."));
 	}
 
 	private String safeName(User u) {
