@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +36,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.validation.BeanPropertyBindingResult;
 
+@ExtendWith(OutputCaptureExtension.class)
 class UserControllerTest {
 
   private RecordingUserAccountSettingsService userAccountSettingsService;
@@ -149,6 +153,64 @@ class UserControllerTest {
 
     assertThat(viewName).isEqualTo("redirect:/home");
     assertThat(bindingResult.hasErrors()).isFalse();
+  }
+
+  @Test
+  void processRegisterLogsRejectedValidationReasons(CapturedOutput output) {
+    UserRepository userRepository = mock(UserRepository.class);
+    RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
+    GlobalLadderBootstrapService globalLadderBootstrapService = mock(GlobalLadderBootstrapService.class);
+    AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
+
+    RegistrationFormTokenService registrationFormTokenService =
+        new RegistrationFormTokenService("test-secret", "", 360);
+    PasswordPolicyService passwordPolicyService = new PasswordPolicyService();
+    DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
+
+    ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
+    ReflectionTestUtils.setField(
+        controller, "registrationFormTokenService", registrationFormTokenService);
+    ReflectionTestUtils.setField(controller, "passwordPolicyService", passwordPolicyService);
+    ReflectionTestUtils.setField(
+        controller, "displayNameModerationService", displayNameModerationService);
+    ReflectionTestUtils.setField(
+        controller, "globalLadderBootstrapService", globalLadderBootstrapService);
+    ReflectionTestUtils.setField(controller, "authenticationManager", authenticationManager);
+    ReflectionTestUtils.setField(controller, "defaultMaxOwnedLadders", 10);
+
+    when(registrationAbuseGuard.resolveClientIp(any())).thenReturn("198.51.100.24");
+    when(registrationAbuseGuard.evaluate(eq("198.51.100.24"), isNull(), anyLong()))
+        .thenReturn(RegistrationAbuseGuard.Decision.allow());
+    when(userRepository.findByEmail("new@example.com")).thenReturn(null);
+
+    User user = new User();
+    user.setEmail("new@example.com");
+    user.setPassword("ValidPass1");
+    user.setCourtNamesInput("Center Court");
+    user.setAcceptTerms(false);
+
+    BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(user, "user");
+    ExtendedModelMap model = new ExtendedModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("POST", "/register");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    String viewName =
+        controller.processRegister(
+            user,
+            bindingResult,
+            model,
+            "ValidPass1",
+            null,
+            registrationFormTokenService.issueToken(),
+            request,
+            response);
+
+    assertThat(viewName).isEqualTo("public/registrationForm");
+    assertThat(output.getAll()).contains("Registration rejected:");
+    assertThat(output.getAll()).contains("ip=198.51.100.24");
+    assertThat(output.getAll()).contains("reasons=acceptTerms");
+    assertThat(output.getAll()).contains("emailDomain=example.com");
   }
 
   private static class RecordingUserAccountSettingsService extends UserAccountSettingsService {

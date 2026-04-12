@@ -97,7 +97,7 @@ public class WebSecurityConfig {
 
   @Bean
   public TermsAwareAuthenticationFailureHandler termsAwareAuthenticationFailureHandler() {
-    return new TermsAwareAuthenticationFailureHandler();
+    return new TermsAwareAuthenticationFailureHandler(clientIpResolver);
   }
 
   @Bean

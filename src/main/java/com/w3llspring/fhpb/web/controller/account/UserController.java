@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -235,6 +236,7 @@ public class UserController {
     String rawPassword = user != null ? user.getPassword() : null;
 
     if (user == null) {
+      log.info("Registration rejected: ip={} emailDomain={} reasons={}", clientIp, "-", "invalidUser");
       bindingResult.addError(new FieldError("User", "", "Invalid user submission."));
       prepareRegistrationForm(model);
       return "public/registrationForm";
@@ -298,6 +300,11 @@ public class UserController {
     }
 
     if (bindingResult.hasErrors()) {
+      log.info(
+          "Registration rejected: ip={} emailDomain={} reasons={}",
+          clientIp,
+          emailDomain(user.getEmail()),
+          summarizeBindingErrors(bindingResult));
       user.setPassword(null);
       prepareRegistrationForm(model);
       return "public/registrationForm";
@@ -373,10 +380,22 @@ public class UserController {
       }
     }
     if (bindingResult.hasErrors()) {
+      log.info(
+          "Registration rejected: ip={} emailDomain={} reasons={}",
+          clientIp,
+          emailDomain(user.getEmail()),
+          summarizeBindingErrors(bindingResult));
       user.setPassword(null);
       prepareRegistrationForm(model);
       return "public/registrationForm";
     }
+
+    log.info(
+        "Registration created: userId={} ip={} emailDomain={} aliasCount={}",
+        user.getId(),
+        clientIp,
+        emailDomain(user.getEmail()),
+        parsedCourtNames.size());
 
     try {
       globalLadderBootstrapService.enrollUserIfConfigured(user);
@@ -402,7 +421,11 @@ public class UserController {
       }
       return "redirect:/home";
     } catch (Exception ex) {
-      log.warn("Auto-login after registration failed: {}", ex.toString());
+      log.warn(
+          "Auto-login after registration failed: userId={} ip={} reason={}",
+          user.getId(),
+          clientIp,
+          ex.toString());
       model.addAttribute("message", "You have been registered! Log in below.");
       return "public/login";
     }
@@ -414,6 +437,35 @@ public class UserController {
 
   private void prepareRegistrationForm(Model model) {
     model.addAttribute("registrationFormToken", registrationFormTokenService.issueToken());
+  }
+
+  private String summarizeBindingErrors(BindingResult bindingResult) {
+    if (bindingResult == null || !bindingResult.hasErrors()) {
+      return "-";
+    }
+    return bindingResult.getAllErrors().stream()
+        .map(
+            error -> {
+              if (error instanceof FieldError fieldError) {
+                return fieldError.getField();
+              }
+              return error.getObjectName();
+            })
+        .filter(StringUtils::hasText)
+        .distinct()
+        .limit(8)
+        .collect(Collectors.joining(","));
+  }
+
+  private String emailDomain(String email) {
+    if (!StringUtils.hasText(email)) {
+      return "-";
+    }
+    int at = email.indexOf('@');
+    if (at < 0 || at == email.length() - 1) {
+      return "-";
+    }
+    return email.substring(at + 1).trim().toLowerCase(Locale.US);
   }
 
   private String assignNickName(User user, List<String> parsedCourtNames) {
