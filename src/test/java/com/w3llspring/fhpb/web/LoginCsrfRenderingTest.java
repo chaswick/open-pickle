@@ -139,6 +139,10 @@ class LoginCsrfRenderingTest {
         mockMvc.perform(get("/register")).andExpect(status().isOk()).andReturn().getResponse();
 
     assertThat(response.getContentAsString()).contains("name=\"formToken\"");
+    assertThat(response.getContentAsString()).contains("name=\"signupCode\"");
+    assertThat(response.getContentAsString()).doesNotContain("name=\"company\"");
+    assertThat(response.getContentAsString()).contains("autocomplete=\"username\"");
+    assertThat(response.getContentAsString()).contains("autocomplete=\"new-password\"");
     assertThat(response.getContentAsString()).contains("name=\"_csrf\"");
     assertThat(response.getContentAsString()).contains("<meta name=\"_csrf\"");
     assertThat(response.getCookies()).extracting(Cookie::getName).doesNotContain("JSESSIONID");

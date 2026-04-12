@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Controller
@@ -218,15 +219,17 @@ public class UserController {
       BindingResult bindingResult,
       Model model,
       @RequestParam("confirm_password") String confirmPassword,
-      @RequestParam(value = "company", required = false) String company,
+      @RequestParam(value = "signupCode", required = false) String signupCode,
+      @RequestParam(value = "company", required = false) String legacyCompany,
       @RequestParam(value = "formToken", required = false) String formToken,
       HttpServletRequest request,
       HttpServletResponse response) {
     Long formServedAt = registrationFormTokenService.resolveIssuedAt(formToken);
+    String honeypotValue = StringUtils.hasText(signupCode) ? signupCode : legacyCompany;
 
     String clientIp = registrationAbuseGuard.resolveClientIp(request);
     RegistrationAbuseGuard.Decision guardDecision =
-        registrationAbuseGuard.evaluate(clientIp, company, formServedAt);
+        registrationAbuseGuard.evaluate(clientIp, honeypotValue, formServedAt);
     if (!guardDecision.allowed()) {
       log.warn("Blocked registration attempt ip={} reason={}", clientIp, guardDecision.reason());
       // Intentionally do not reveal the reason to the client.
