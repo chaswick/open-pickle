@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.w3llspring.fhpb.web.controller.account.UserController;
@@ -289,6 +291,68 @@ class UserControllerTest {
     assertThat(viewName).isEqualTo("redirect:/home");
     assertThat(output.getAll()).contains("Registration suspicious but allowed");
     assertThat(output.getAll()).contains("reason=honeypot");
+  }
+
+  @Test
+  void processRegisterBlocksHoneypotWhenVisibleProfileLooksMachineGenerated(
+      CapturedOutput output) {
+    UserRepository userRepository = mock(UserRepository.class);
+    RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
+    GlobalLadderBootstrapService globalLadderBootstrapService =
+        mock(GlobalLadderBootstrapService.class);
+    AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
+
+    RegistrationFormTokenService registrationFormTokenService =
+        new RegistrationFormTokenService("test-secret", "", 360);
+    PasswordPolicyService passwordPolicyService = new PasswordPolicyService();
+    DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
+
+    ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
+    ReflectionTestUtils.setField(
+        controller, "registrationFormTokenService", registrationFormTokenService);
+    ReflectionTestUtils.setField(controller, "passwordPolicyService", passwordPolicyService);
+    ReflectionTestUtils.setField(
+        controller, "displayNameModerationService", displayNameModerationService);
+    ReflectionTestUtils.setField(
+        controller, "globalLadderBootstrapService", globalLadderBootstrapService);
+    ReflectionTestUtils.setField(controller, "authenticationManager", authenticationManager);
+    ReflectionTestUtils.setField(controller, "defaultMaxOwnedLadders", 10);
+
+    when(registrationAbuseGuard.resolveClientIp(any())).thenReturn("198.51.100.77");
+    when(registrationAbuseGuard.evaluate(eq("198.51.100.77"), eq("filled"), anyLong()))
+        .thenReturn(RegistrationAbuseGuard.Decision.allow("honeypot"));
+    when(userRepository.findByEmail("ug.o.w.u.y.o.t.a.xa449@gmail.com")).thenReturn(null);
+
+    User user = new User();
+    user.setEmail("ug.o.w.u.y.o.t.a.xa449@gmail.com");
+    user.setPassword("ValidPass1");
+    user.setCourtNamesInput("Hoxumhpkomqlylchk");
+    user.setAcceptTerms(true);
+
+    BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(user, "user");
+    ExtendedModelMap model = new ExtendedModelMap();
+    RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("POST", "/register");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    String viewName =
+        controller.processRegister(
+            user,
+            bindingResult,
+            model,
+            "ValidPass1",
+            null,
+            "filled",
+            registrationFormTokenService.issueToken(),
+            redirectAttributes,
+            request,
+            response);
+
+    assertThat(viewName).isEqualTo("redirect:/registration-success");
+    verify(userRepository, never()).saveAndFlush(any(User.class));
+    assertThat(output.getAll()).contains("Blocked registration attempt");
+    assertThat(output.getAll()).contains("reason=honeypot_suspicious_profile");
   }
 
   @Test

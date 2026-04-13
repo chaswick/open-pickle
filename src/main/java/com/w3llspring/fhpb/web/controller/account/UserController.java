@@ -289,6 +289,15 @@ public class UserController {
           new FieldError("User", "acceptTerms", "You must agree to the terms to register."));
     }
 
+    if (shouldBlockSuspiciousHoneypotRegistration(
+        guardDecision,
+        user.getEmail(),
+        parsedCourtNames,
+        user.getCourtNamesInput())) {
+      log.warn("Blocked registration attempt ip={} reason={}", clientIp, "honeypot_suspicious_profile");
+      return "redirect:/registration-success";
+    }
+
     // Time zone is optional; blank means "default Eastern".
     // If provided, it must be a valid IANA ZoneId string (e.g. "America/Los_Angeles").
     if (user.getTimeZone() != null) {
@@ -609,5 +618,88 @@ public class UserController {
   private boolean isNickTaken(String nick) {
     User existing = userRepo.findByNickName(nick);
     return existing != null;
+  }
+
+  private boolean shouldBlockSuspiciousHoneypotRegistration(
+      RegistrationAbuseGuard.Decision guardDecision,
+      String email,
+      List<String> parsedCourtNames,
+      String rawCourtNamesInput) {
+    if (guardDecision == null || !"honeypot".equals(guardDecision.reason())) {
+      return false;
+    }
+    String primaryName =
+        !parsedCourtNames.isEmpty()
+            ? parsedCourtNames.get(0)
+            : (rawCourtNamesInput == null ? "" : rawCourtNamesInput.trim());
+    return looksMachineGeneratedEmail(email) || looksMachineGeneratedName(primaryName);
+  }
+
+  private boolean looksMachineGeneratedEmail(String email) {
+    if (!StringUtils.hasText(email)) {
+      return false;
+    }
+    int at = email.indexOf('@');
+    if (at <= 0) {
+      return false;
+    }
+    String localPart = email.substring(0, at).toLowerCase(Locale.US);
+    String[] parts = localPart.split("[._%+-]+");
+    int singleCharParts = 0;
+    for (String part : parts) {
+      if (part.length() == 1) {
+        singleCharParts++;
+      }
+    }
+    if (singleCharParts >= 4) {
+      return true;
+    }
+    return looksMachineGeneratedToken(localPart);
+  }
+
+  private boolean looksMachineGeneratedName(String value) {
+    if (!StringUtils.hasText(value)) {
+      return false;
+    }
+    if (value.indexOf(' ') >= 0) {
+      return false;
+    }
+    return looksMachineGeneratedToken(value);
+  }
+
+  private boolean looksMachineGeneratedToken(String value) {
+    if (!StringUtils.hasText(value)) {
+      return false;
+    }
+    int letters = 0;
+    int vowels = 0;
+    int consonantRun = 0;
+    int maxConsonantRun = 0;
+    for (int i = 0; i < value.length(); i++) {
+      char ch = Character.toLowerCase(value.charAt(i));
+      if (ch < 'a' || ch > 'z') {
+        consonantRun = 0;
+        continue;
+      }
+      letters++;
+      if (isAsciiVowel(ch)) {
+        vowels++;
+        consonantRun = 0;
+      } else {
+        consonantRun++;
+        if (consonantRun > maxConsonantRun) {
+          maxConsonantRun = consonantRun;
+        }
+      }
+    }
+    if (letters < 12) {
+      return false;
+    }
+    double vowelRatio = letters == 0 ? 0.0 : (double) vowels / (double) letters;
+    return maxConsonantRun >= 6 || vowelRatio < 0.25;
+  }
+
+  private boolean isAsciiVowel(char ch) {
+    return ch == 'a' || ch == 'e' || ch == 'i' || ch == 'o' || ch == 'u';
   }
 }
