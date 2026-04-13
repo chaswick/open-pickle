@@ -52,11 +52,7 @@ public class RegistrationAbuseGuard {
 
   public Decision evaluate(String clientIp, String honeypotValue, Long formServedAtEpochMs) {
     String ipKey = normalizeIp(clientIp);
-
-    // Honeypot: if any value supplied, almost certainly a bot.
-    if (StringUtils.hasText(honeypotValue)) {
-      return Decision.block("honeypot");
-    }
+    boolean honeypotTriggered = StringUtils.hasText(honeypotValue);
 
     // Time-to-submit: bots often post instantly.
     if (!minSubmitDelay.isZero()) {
@@ -82,7 +78,7 @@ public class RegistrationAbuseGuard {
       return Decision.block("rate_limit_day");
     }
 
-    return Decision.allow();
+    return honeypotTriggered ? Decision.allow("honeypot") : Decision.allow();
   }
 
   private String normalizeIp(String ip) {
@@ -99,6 +95,10 @@ public class RegistrationAbuseGuard {
   public record Decision(boolean allowed, String reason) {
     public static Decision allow() {
       return new Decision(true, null);
+    }
+
+    public static Decision allow(String reason) {
+      return new Decision(true, reason);
     }
 
     public static Decision block(String reason) {

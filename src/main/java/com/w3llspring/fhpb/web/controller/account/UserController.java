@@ -235,6 +235,9 @@ public class UserController {
       // Intentionally do not reveal the reason to the client.
       return "redirect:/registration-success";
     }
+    if (StringUtils.hasText(guardDecision.reason())) {
+      log.info("Registration suspicious but allowed ip={} reason={}", clientIp, guardDecision.reason());
+    }
 
     String rawPassword = user != null ? user.getPassword() : null;
 

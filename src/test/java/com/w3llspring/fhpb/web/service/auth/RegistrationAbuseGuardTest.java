@@ -7,6 +7,17 @@ import org.junit.jupiter.api.Test;
 class RegistrationAbuseGuardTest {
 
   @Test
+  void filledHoneypotIsSuspiciousButAllowedWhenOtherChecksPass() {
+    RegistrationAbuseGuard guard = new RegistrationAbuseGuard(5, 20, 0);
+
+    RegistrationAbuseGuard.Decision decision =
+        guard.evaluate("198.51.100.7", "autofill-noise", null);
+
+    assertThat(decision.allowed()).isTrue();
+    assertThat(decision.reason()).isEqualTo("honeypot");
+  }
+
+  @Test
   void blocksWhenFormTokenIsMissingAndDelayIsEnabled() {
     RegistrationAbuseGuard guard = new RegistrationAbuseGuard(5, 20, 2);
 

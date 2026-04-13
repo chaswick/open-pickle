@@ -216,7 +216,7 @@ class UserControllerTest {
   }
 
   @Test
-  void processRegisterAcceptsLegacyCompanyHoneypotParameterDuringRollout() {
+  void processRegisterAllowsLegacyCompanyHoneypotSignalDuringRollout(CapturedOutput output) {
     UserRepository userRepository = mock(UserRepository.class);
     RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
     GlobalLadderBootstrapService globalLadderBootstrapService = mock(GlobalLadderBootstrapService.class);
@@ -241,7 +241,20 @@ class UserControllerTest {
 
     when(registrationAbuseGuard.resolveClientIp(any())).thenReturn("127.0.0.1");
     when(registrationAbuseGuard.evaluate(eq("127.0.0.1"), eq("filled"), anyLong()))
-        .thenReturn(RegistrationAbuseGuard.Decision.block("honeypot"));
+        .thenReturn(RegistrationAbuseGuard.Decision.allow("honeypot"));
+    when(userRepository.findByEmail("new@example.com")).thenReturn(null);
+    when(userRepository.findByNickName(any())).thenReturn(null);
+    when(userRepository.saveAndFlush(any(User.class)))
+        .thenAnswer(
+            invocation -> {
+              User saved = invocation.getArgument(0);
+              saved.setId(77L);
+              return saved;
+            });
+    when(authenticationManager.authenticate(any()))
+        .thenReturn(
+            new UsernamePasswordAuthenticationToken(
+                "new@example.com", "ValidPass1", List.of()));
 
     User user = new User();
     user.setEmail("new@example.com");
@@ -266,7 +279,9 @@ class UserControllerTest {
             request,
             response);
 
-    assertThat(viewName).isEqualTo("redirect:/registration-success");
+    assertThat(viewName).isEqualTo("redirect:/home");
+    assertThat(output.getAll()).contains("Registration suspicious but allowed");
+    assertThat(output.getAll()).contains("reason=honeypot");
   }
 
   private static class RecordingUserAccountSettingsService extends UserAccountSettingsService {
