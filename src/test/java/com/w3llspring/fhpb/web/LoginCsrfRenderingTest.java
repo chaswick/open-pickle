@@ -48,6 +48,26 @@ class LoginCsrfRenderingTest {
     // Exactly one hidden input per page for unauthenticated /login (the logout form isn't rendered)
     assertThat(countOccurrences(html, Pattern.compile("<input[^>]+name=\\\"_csrf\\\"")))
         .isEqualTo(1);
+    assertThat(html).contains("autocomplete=\"username\"");
+    assertThat(html).contains("autocomplete=\"current-password\"");
+    assertThat(html).doesNotContain("autocomplete=\"off\"");
+  }
+
+  @Test
+  void resetPasswordPageUsesNewPasswordAutocompleteTokens() throws Exception {
+    String html =
+        mockMvc
+            .perform(get("/reset-password").param("token", "invalid-token"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    assertThat(html).contains("name=\"password\"");
+    assertThat(html).contains("name=\"confirm_password\"");
+    assertThat(countOccurrences(html, Pattern.compile("autocomplete=\\\"new-password\\\"")))
+        .isGreaterThanOrEqualTo(2);
+    assertThat(html).doesNotContain("autocomplete=\"off\"");
   }
 
   @Test
@@ -143,6 +163,14 @@ class LoginCsrfRenderingTest {
     assertThat(response.getContentAsString()).doesNotContain("name=\"company\"");
     assertThat(response.getContentAsString()).contains("autocomplete=\"username\"");
     assertThat(response.getContentAsString()).contains("autocomplete=\"new-password\"");
+    assertThat(response.getContentAsString()).contains("data-lpignore=\"true\"");
+    assertThat(response.getContentAsString()).contains("data-1p-ignore=\"true\"");
+    assertThat(response.getContentAsString())
+        .contains("type=\"email\" id=\"email\" class=\"form-control\"");
+    assertThat(response.getContentAsString())
+        .contains("id=\"password\" type=\"password\" name=\"password\" class=\"form-control\"");
+    assertThat(response.getContentAsString())
+        .contains("id=\"confirm_password\" type=\"password\" name=\"confirm_password\" class=\"form-control\"");
     assertThat(response.getContentAsString()).contains("name=\"_csrf\"");
     assertThat(response.getContentAsString()).contains("<meta name=\"_csrf\"");
     assertThat(response.getCookies()).extracting(Cookie::getName).doesNotContain("JSESSIONID");
