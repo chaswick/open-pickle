@@ -29,8 +29,9 @@
 
                                 <div class="mb-3 text-start">
                                     <label class="form-label" for="user">E-mail:</label>
-                                    <input type="text" id="user" name="user" class="form-control"
-                                           placeholder="Username" required autofocus autocomplete="username" maxlength="30" />
+                                    <input type="email" id="user" name="user" class="form-control"
+                                           placeholder="E-mail address" required autofocus autocomplete="username"
+                                           maxlength="45" th:value="${prefillUser}" />
                                 </div>
 
                                 <div class="mb-3 text-start">

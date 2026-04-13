@@ -43,8 +43,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class UserController {
@@ -222,6 +222,7 @@ public class UserController {
       @RequestParam(value = "signupCode", required = false) String signupCode,
       @RequestParam(value = "company", required = false) String legacyCompany,
       @RequestParam(value = "formToken", required = false) String formToken,
+      RedirectAttributes redirectAttributes,
       HttpServletRequest request,
       HttpServletResponse response) {
     Long formServedAt = registrationFormTokenService.resolveIssuedAt(formToken);
@@ -432,8 +433,9 @@ public class UserController {
           user.getId(),
           clientIp,
           ex.toString());
-      model.addAttribute("message", "You have been registered! Log in below.");
-      return "public/login";
+      redirectAttributes.addFlashAttribute("message", "Your account was created. Log in below.");
+      redirectAttributes.addFlashAttribute("prefillUser", user.getEmail());
+      return "redirect:/login";
     }
   }
 

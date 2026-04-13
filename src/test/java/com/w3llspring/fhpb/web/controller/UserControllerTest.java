@@ -35,6 +35,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 @ExtendWith(OutputCaptureExtension.class)
 class UserControllerTest {
@@ -137,6 +138,7 @@ class UserControllerTest {
 
     BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(user, "user");
     ExtendedModelMap model = new ExtendedModelMap();
+    RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
     MockHttpServletRequest request = new MockHttpServletRequest("POST", "/register");
     MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -149,6 +151,7 @@ class UserControllerTest {
             null,
             null,
             registrationFormTokenService.issueToken(),
+            redirectAttributes,
             request,
             response);
 
@@ -193,6 +196,7 @@ class UserControllerTest {
 
     BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(user, "user");
     ExtendedModelMap model = new ExtendedModelMap();
+    RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
     MockHttpServletRequest request = new MockHttpServletRequest("POST", "/register");
     MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -205,6 +209,7 @@ class UserControllerTest {
             null,
             null,
             registrationFormTokenService.issueToken(),
+            redirectAttributes,
             request,
             response);
 
@@ -264,6 +269,7 @@ class UserControllerTest {
 
     BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(user, "user");
     ExtendedModelMap model = new ExtendedModelMap();
+    RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
     MockHttpServletRequest request = new MockHttpServletRequest("POST", "/register");
     MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -276,12 +282,86 @@ class UserControllerTest {
             null,
             "filled",
             registrationFormTokenService.issueToken(),
+            redirectAttributes,
             request,
             response);
 
     assertThat(viewName).isEqualTo("redirect:/home");
     assertThat(output.getAll()).contains("Registration suspicious but allowed");
     assertThat(output.getAll()).contains("reason=honeypot");
+  }
+
+  @Test
+  void processRegisterRedirectsToLoginWithPrefilledEmailWhenAutoLoginFails(CapturedOutput output) {
+    UserRepository userRepository = mock(UserRepository.class);
+    RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
+    GlobalLadderBootstrapService globalLadderBootstrapService =
+        mock(GlobalLadderBootstrapService.class);
+    AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
+
+    RegistrationFormTokenService registrationFormTokenService =
+        new RegistrationFormTokenService("test-secret", "", 360);
+    PasswordPolicyService passwordPolicyService = new PasswordPolicyService();
+    DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
+
+    ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
+    ReflectionTestUtils.setField(
+        controller, "registrationFormTokenService", registrationFormTokenService);
+    ReflectionTestUtils.setField(controller, "passwordPolicyService", passwordPolicyService);
+    ReflectionTestUtils.setField(
+        controller, "displayNameModerationService", displayNameModerationService);
+    ReflectionTestUtils.setField(
+        controller, "globalLadderBootstrapService", globalLadderBootstrapService);
+    ReflectionTestUtils.setField(controller, "authenticationManager", authenticationManager);
+    ReflectionTestUtils.setField(controller, "defaultMaxOwnedLadders", 10);
+
+    when(registrationAbuseGuard.resolveClientIp(any())).thenReturn("127.0.0.1");
+    when(registrationAbuseGuard.evaluate(eq("127.0.0.1"), isNull(), anyLong()))
+        .thenReturn(RegistrationAbuseGuard.Decision.allow());
+    when(userRepository.findByEmail("new@example.com")).thenReturn(null);
+    when(userRepository.findByNickName(any())).thenReturn(null);
+    when(userRepository.saveAndFlush(any(User.class)))
+        .thenAnswer(
+            invocation -> {
+              User saved = invocation.getArgument(0);
+              saved.setId(77L);
+              return saved;
+            });
+    when(authenticationManager.authenticate(any()))
+        .thenThrow(new IllegalStateException("auth backend unavailable"));
+
+    User user = new User();
+    user.setEmail("new@example.com");
+    user.setPassword("ValidPass1");
+    user.setCourtNamesInput("Center Court");
+    user.setAcceptTerms(true);
+
+    BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(user, "user");
+    ExtendedModelMap model = new ExtendedModelMap();
+    RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+    MockHttpServletRequest request = new MockHttpServletRequest("POST", "/register");
+    MockHttpServletResponse response = new MockHttpServletResponse();
+
+    String viewName =
+        controller.processRegister(
+            user,
+            bindingResult,
+            model,
+            "ValidPass1",
+            null,
+            null,
+            registrationFormTokenService.issueToken(),
+            redirectAttributes,
+            request,
+            response);
+
+    assertThat(viewName).isEqualTo("redirect:/login");
+    assertThat(redirectAttributes.getFlashAttributes().get("prefillUser"))
+        .isEqualTo("new@example.com");
+    assertThat(redirectAttributes.getFlashAttributes().get("message"))
+        .isEqualTo("Your account was created. Log in below.");
+    assertThat(output.getAll()).contains("Auto-login after registration failed:");
   }
 
   private static class RecordingUserAccountSettingsService extends UserAccountSettingsService {

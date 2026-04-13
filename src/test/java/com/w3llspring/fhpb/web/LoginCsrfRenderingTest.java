@@ -51,6 +51,21 @@ class LoginCsrfRenderingTest {
     assertThat(html).contains("autocomplete=\"username\"");
     assertThat(html).contains("autocomplete=\"current-password\"");
     assertThat(html).doesNotContain("autocomplete=\"off\"");
+    assertThat(html).contains("maxlength=\"45\"");
+  }
+
+  @Test
+  void loginPageCanPrefillUsernameAfterRegistrationFallback() throws Exception {
+    String html =
+        mockMvc
+            .perform(get("/login").flashAttr("prefillUser", "new@example.com"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+    assertThat(html).contains("value=\"new@example.com\"");
+    assertThat(html).contains("autocomplete=\"username\"");
   }
 
   @Test
