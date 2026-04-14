@@ -44,6 +44,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   List<User> findByPublicCodeIsNull(Pageable pageable);
 
+  long countByLastSeenAtGreaterThanEqual(Instant cutoff);
+
+  long countByRegisteredAtGreaterThanEqual(Instant cutoff);
+
+  List<User> findByLastSeenAtGreaterThanEqualOrderByLastSeenAtDesc(
+      Instant cutoff, Pageable pageable);
+
+  List<User> findByRegisteredAtGreaterThanEqualOrderByRegisteredAtDesc(
+      Instant cutoff, Pageable pageable);
+
   @Query(
       """
                         select u

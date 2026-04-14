@@ -5,9 +5,11 @@ import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface LadderConfigRepository extends JpaRepository<LadderConfig, Long> {
   Optional<LadderConfig> findByInviteCode(String inviteCode);
@@ -43,17 +45,51 @@ public interface LadderConfigRepository extends JpaRepository<LadderConfig, Long
   long countByOwnerUserIdAndTypeAndCreatedAtAfter(
       Long ownerUserId, LadderConfig.Type type, Instant cutoff);
 
+  long countByTypeAndCreatedAtGreaterThanEqual(LadderConfig.Type type, Instant cutoff);
+
+  List<LadderConfig> findByTypeAndCreatedAtGreaterThanEqualOrderByCreatedAtDesc(
+      LadderConfig.Type type, Instant cutoff, Pageable pageable);
+
   Optional<LadderConfig> findFirstByOwnerUserIdAndTypeOrderByIdAsc(
       Long ownerUserId, LadderConfig.Type type);
 
   List<LadderConfig> findByTypeAndStatusAndExpiresAtBefore(
       LadderConfig.Type type, LadderConfig.Status status, Instant cutoff);
 
-  List<LadderConfig> findByTypeAndStatusAndNearbyShareLocationIdAndInviteCodeIsNotNullAndExpiresAtAfterOrderByUpdatedAtDesc(
-      LadderConfig.Type type,
-      LadderConfig.Status status,
-      Long nearbyShareLocationId,
-      Instant cutoff);
+  List<LadderConfig>
+      findByTypeAndStatusAndNearbyShareLocationIdAndInviteCodeIsNotNullAndExpiresAtAfterOrderByUpdatedAtDesc(
+          LadderConfig.Type type,
+          LadderConfig.Status status,
+          Long nearbyShareLocationId,
+          Instant cutoff);
+
+  @Query(
+      """
+      select count(l)
+      from LadderConfig l
+      where l.type = :type
+          and l.status = :status
+          and (l.expiresAt is null or l.expiresAt > :cutoff)
+      """)
+  long countActiveByType(
+      @Param("type") LadderConfig.Type type,
+      @Param("status") LadderConfig.Status status,
+      @Param("cutoff") Instant cutoff);
+
+  @Query(
+      """
+      select l
+      from LadderConfig l
+      where l.type = :type
+          and l.status = :status
+          and (l.expiresAt is null or l.expiresAt > :cutoff)
+      order by l.updatedAt desc, l.id desc
+      """)
+  List<LadderConfig> findActiveByTypeOrderByUpdatedAtDesc(
+      @Param("type") LadderConfig.Type type,
+      @Param("status") LadderConfig.Status status,
+      @Param("cutoff") Instant cutoff,
+      Pageable pageable);
 
   Optional<LadderConfig> findFirstByTypeOrderByIdAsc(LadderConfig.Type type);
 }

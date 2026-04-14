@@ -9,7 +9,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableConfigurationProperties({
   com.w3llspring.fhpb.web.config.BrandingProperties.class,
-  com.w3llspring.fhpb.web.config.OperatorProperties.class
+  com.w3llspring.fhpb.web.config.OperatorProperties.class,
+  com.w3llspring.fhpb.web.config.OpsRecentActivityProperties.class
 })
 @EnableJpaRepositories(basePackages = "com.w3llspring.fhpb.web.db")
 @EntityScan(basePackages = "com.w3llspring.fhpb.web.model")
