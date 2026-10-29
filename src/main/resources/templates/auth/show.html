@@ -785,8 +785,9 @@
       <div class="card-body text-start">
         <h2 class="h5" th:text="${sessionTourVariant == 'owner' ? 'Your Session Is Ready' : 'You Are In The Session'}">Your Session Is Ready</h2>
         <p th:if="${sessionTourVariant == 'owner'}">Share the code, QR, or link below so your friends can join this session.</p>
-        <p th:if="${sessionTourVariant == 'joiner'}">Play with the people in this session. One player logs each score using the match buttons above.</p>
-        <p>One opponent confirms each result from Inbox. Confirmed matches update the standings.</p>
+        <p th:if="${sessionTourVariant == 'joiner' and ladder.matchupSession}">Your matchups and results are below.</p>
+        <p th:if="${sessionTourVariant == 'joiner' and !ladder.matchupSession}">Use <strong>Log Match</strong> to record a game with the people in this session.</p>
+        <p th:unless="${ladder.organizerScored}">One opponent confirms each result from Inbox. Confirmed matches update the standings.</p>
         <button type="button" class="btn btn-nav-secondary btn-sm" data-onboarding-dismiss>Dismiss tips</button>
         <p class="small text-danger mb-0 mt-2" data-onboarding-error role="status" hidden></p>
       </div>

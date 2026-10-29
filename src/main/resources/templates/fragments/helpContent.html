@@ -14,12 +14,12 @@
             <li><strong>Start:</strong> From Home, choose <strong>Start a session with friends</strong>, then <strong>Make matchups</strong> or <strong>Log games as we go</strong>. Only one person needs to start.</li>
             <li><strong>Invite:</strong> Share the session code, show the QR, or copy the invite link. Requests to join with a code appear under <strong>Invite friends</strong> for you to approve.</li>
             <li><strong>Join:</strong> Choose <strong>Join with a code</strong> from Home, scan your friend's QR, or open their invite link.</li>
-            <li><strong>Play:</strong> One player logs each score. One opponent confirms it from Inbox, then standings update. If the session uses organizer scoring, the organizer records scores and they are confirmed automatically.</li>
+            <li><strong>Play:</strong> When players record scores, one opponent confirms each result from Inbox. With organizer scoring, the organizer records scores and results are confirmed automatically.</li>
             <li><strong>Return:</strong> Your active sessions appear on Home so you can pick up where you left off.</li>
             <li><strong>Finish:</strong> Leave the session when you're done. The host can end it for everyone, and sessions also expire automatically. Your confirmed match history stays saved.</li>
             <li><strong>Start another:</strong> If you’re hosting a session, use its <strong>×</strong> (<strong>End Session</strong>) on <a th:href="@{/home}">Home</a> before creating a new one. This also closes any remaining matchups and keeps your recorded scores. You can still join other people’s sessions.</li>
           </ul>
-          <p class="mb-0"><small class="text-muted">Season standings show your results alongside the opponents you have played this season.</small></p>
+          <p class="mb-0"><small class="text-muted">Session standings default to wins (W), with points for (PF) and then rating (Rtg) breaking ties. Tap W, PF, or Rtg to sort by that stat.</small></p>
         </div>
       </div>
     </div>
@@ -54,12 +54,12 @@
       </h2>
       <div id="logMatchesHelp" class="accordion-collapse collapse" aria-labelledby="logMatchesHeading" data-bs-parent="#helpAccordion">
         <div class="accordion-body">
-          <p><strong>Manual Logging:</strong> Prefer the classic form? Use the pencil option from the Log Match page. Both methods create the same match record and update standings.</p>
+          <p><strong>Manual Logging:</strong> In a <strong>Log games as we go</strong> session, use <strong>Log Match</strong> to enter a game. For scheduled games, use <strong>Enter score</strong> beside the matchup.</p>
           <p class="mb-2"><strong>Guests:</strong> If someone doesn&rsquo;t have an account (or you don&rsquo;t want to select them), choose <strong>Guest</strong> for that player slot.</p>
           <ul>
             <li><strong>Guests never appear in Standings</strong> and do not receive points / rating changes.</li>
-            <li><strong>Matches with guests still count</strong> for the real players, but the same score-margin curve is scaled down for fairness: 1 guest = <strong>60%</strong>, 2 guests = <strong>40%</strong>.</li>
-            <li><strong>Edit later if they join:</strong> You can log a match with a guest today, then edit that match later and replace the guest with their user account after they join.</li>
+            <li><strong>Rating changes with guests:</strong> 1 guest = <strong>60%</strong>, 2 guests = <strong>40%</strong>. Session games with an entirely guest team are saved in history but do not affect season standings.</li>
+            <li><strong>If a guest joins later:</strong> For a manually logged match, you can replace a guest with their account if <strong>Edit</strong> is available. In matchups, <strong>Players &rarr; Replace</strong> changes only games without a recorded score.</li>
             <li><strong>Guests never get rating changes</strong>, so only the registered players on the match receive the scaled result.</li>
           </ul>
           <p><strong>Voice Logging:</strong> Speak naturally to log matches hands-free. Try: &ldquo;Pam and I beat Ryan and Amy 11-8.&rdquo;</p>
@@ -68,7 +68,7 @@
             <li><strong>Player Names:</strong> Use nicknames or real names; the system recognizes both. Update your saved names in <strong>Account Settings</strong>.</li>
             <li><strong>Data Collection:</strong> The app does not send raw audio to our servers. Your browser's speech-recognition feature converts speech to text, which may use your device or browser provider. We send only the transcript to our server to interpret the match.</li>
           </ul>          
-          <p><strong>View &amp; Export:</strong> Use &ldquo;View All Matches&rdquo; from the group standings area to see season history, or visit your user page to download your match history.</p>
+          <p><strong>View &amp; Export:</strong> Open <a th:href="@{/account} + '#recent-matches'">Recent matches</a> in your account to review your games or use <strong>Download CSV</strong>. <strong>Your recent matches</strong> on the Season standings page takes you there too.</p>
         </div>
       </div>
     </div>
@@ -81,16 +81,16 @@
       </h2>
       <div id="confirmationHelp" class="accordion-collapse collapse" aria-labelledby="confirmationHeading" data-bs-parent="#helpAccordion">
         <div class="accordion-body">
-          <p><strong>Standard Mode:</strong> When a match is logged, the opposing team receives a confirmation request. Only one member of the opposing team needs to confirm.</p>
+          <p><strong>Players record and confirm:</strong> When a match is logged, the opposing team receives a confirmation request. Only one member of the opposing team needs to confirm.</p>
           <ul>
             <li><strong>Confirm:</strong> Accept the result as logged.</li>
             <li><strong>Edit:</strong> The side currently responsible for confirmation can edit a provisional match. Editing keeps the editor&rsquo;s side attested and makes every other unrepresented side review again.</li>
             <li><strong>Dispute:</strong> Use this on a provisional match you should not confirm, such as a match you never played.</li>
-            <li><strong>48-hour window:</strong> In Standard Mode, if the match is still unconfirmed after <strong>48 hours</strong>, it is <strong>nullified</strong> and will not count in standings.</li>
+            <li><strong>48-hour window:</strong> If a required opponent confirmation is still missing after <strong>48 hours</strong>, the match is <strong>nullified</strong> and will not count in standings.</li>
             <li><strong>No Cherry Picking:</strong> Selectively confirming only wins can trigger visible season warnings and eventually remove you from competition matches for the rest of that season.</li>
           </ul>
-          <p><strong>Casual Mode:</strong> In trusted groups, match loggers can immediately confirm their own entries after reviewing for errors.</p>
-          <p class="mb-0"><small class="text-muted">Admins can change the confirmation mode in League Config.</small></p>
+          <p><strong>Organizer records scores:</strong> Only the organizer enters scores, and results are confirmed automatically. The organizer can use <strong>Correct score</strong> on a recorded game. Players do not need to confirm each result.</p>
+          <p class="mb-0"><small class="text-muted">Choose <strong>Organizer records scores</strong> inside <strong>Make matchups</strong> when creating the session, or under <strong>Scores</strong> before starting the first matchups. This setting cannot change once matchups have started.</small></p>
         </div>
       </div>
     </div>
@@ -125,13 +125,13 @@
       </h2>
       <div id="rankingsHelp" class="accordion-collapse collapse" aria-labelledby="rankingsHeading" data-bs-parent="#helpAccordion">
         <div class="accordion-body">
-          <p>Rankings use a simple score-margin curve:</p>
+          <p>Season ratings use a simple score-margin curve:</p>
           <ul>
             <li><strong>1000 baseline:</strong> Ratings display from a familiar 1000 starting point.</li>
             <li><strong>Dominance, not format:</strong> A shutout like 9-0 or 11-0 moves rating the most.</li>
             <li><strong>Closer scores move less:</strong> The curve looks at how one-sided the game was across the total points played, so 11-9, 12-10, and 22-20 are all small swings compared with 11-2.</li>
             <li><strong>Recent variety and streaks matter too:</strong> After the margin sets the base rating change, the last 5 matches can boost winning results when you mix with more unique real partners and opponents. Reusing the same small pod in different partner/opponent roles still counts for some variety. Guest seats still reduce the bonus, and win-streaks award bonuses for 3, 4, and 5+ straight wins.</li>
-            <li><strong>Guest Matches:</strong> Guests don&rsquo;t earn points, and standings-impact matches with guests are weighted less (1 guest = 60%, 2 guests = 40%). If a guest later joins, you can edit the match and replace that guest with their real account. Personal-record matches (guest-only opponents) do not affect standings.</li>
+            <li><strong>Guest Matches:</strong> Guests don&rsquo;t earn points, and standings-impact matches with guests are weighted less (1 guest = 60%, 2 guests = 40%). Personal-record matches (guest-only opponents) do not affect standings.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">Confirmed results replay through the season so standings stay consistent.</small></p>
         </div>
@@ -151,7 +151,7 @@
             <li><strong>Gather:</strong> Create a <strong>Make matchups</strong> session and share its invite. Everyone who joins before the start is included automatically.</li>
             <li><strong>Start:</strong> With at least four players, choose <strong>Mix it up</strong> for rotating partners or <strong>Stay together</strong> for fixed partners, then tap <strong>Start matchups</strong>.</li>
             <li><strong>Play:</strong> Your next game and the full schedule are on the session page. Use the round selector to play ahead when the people in your next game are ready. Other courts and pending confirmations don't hold you back.</li>
-            <li><strong>Scores:</strong> Tap <strong>Enter score</strong> beside the game. Registered players can confirm it afterward.</li>
+            <li><strong>Scores:</strong> With organizer scoring, the organizer uses <strong>Enter score</strong> and results are confirmed automatically. Otherwise, a player enters the score and one opponent confirms it from Inbox.</li>
             <li><strong>Replace:</strong> Late joiners are available replacements. The host opens <strong>Players</strong>, taps <strong>Replace</strong>, and chooses a joined player or enters a guest's name. Only unplayed matchups change; guests don't need an account.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">Use the same session invite to bring your friends into the roster.</small></p>
@@ -169,7 +169,7 @@
         <div class="accordion-body">
           <p>The system encourages clean, honest match results:</p>
           <ul>
-            <li><strong>Log the score</strong> and your opponents have 48 hours to <strong>confirm it</strong>.</li>
+            <li><strong>Required confirmations:</strong> When a result needs an opponent&rsquo;s confirmation, they have <strong>48 hours</strong> to confirm it.</li>
             <li><strong>Confirm or dispute promptly:</strong> Only confirmed results count. If a provisional match is wrong, update it. Your opponents will have the opportunity to confirm your changes. If a provisional match is bogus, dispute it. If a confirmed result should come out entirely, use confirmed-match removal and let the other team approve it.</li>
             <li><strong>Season fair play:</strong> Repeated missed confirmations can trigger visible warnings and eventually lock you out of session matches until the next season. Logging multiple disputed matches may have the same consequence.</li>
           </ul>
@@ -244,7 +244,7 @@
       </h2>
       <div id="competitionWhyHelp" class="accordion-collapse collapse" aria-labelledby="competitionWhyHeading" data-bs-parent="#helpAccordion">
         <div class="accordion-body">
-          <p>Season standings include you and the opponents you have played this season. Confirmed results update your rating and place in that playing circle.</p>
+          <p>Season standings are ordered by rating and include you and the opponents you have played this season. Confirmed results update your rating.</p>
           <p>Ratings start from 1000 each season. Use your own match history to follow score changes, and keep playing with your friends to build up a season of results.</p>
           <p class="mb-0"><small class="text-muted">The rating calculations are the same for everyone. The standings you see focus on the people you actually play.</small></p>
         </div>
