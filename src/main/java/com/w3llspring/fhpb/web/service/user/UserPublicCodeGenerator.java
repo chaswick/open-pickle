@@ -19,7 +19,7 @@ public final class UserPublicCodeGenerator {
     "lift", "link", "loop", "luck", "mark", "mint", "pace", "path",
     "play", "race", "ride", "rise", "roll", "rung", "rush", "save"
   };
-  private static final Pattern CURRENT_FORMAT = Pattern.compile("^PB-[a-z]{4}-[a-z]{3,4}-\\d{3}$");
+  private static final Pattern CURRENT_FORMAT = Pattern.compile("^PB-[a-z]{3,4}-[a-z]{3,4}-\\d{3}$");
   private static final SecureRandom RANDOM = new SecureRandom();
 
   private UserPublicCodeGenerator() {}
