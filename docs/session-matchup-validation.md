@@ -49,6 +49,35 @@ Session standings default to Wins, with Points For and then season Rating breaki
 
 Home shows a visible note inside the “Let’s Pickle!” card only for a player hosting an active session. Each active session card has an ×: the host ends the session, and a participant leaves it. Both actions return Home. Ending a session also ends its unfinished matchups through the existing session lifecycle, removes active memberships, and keeps recorded games. The matchup page uses the same End Session action in Session options; there is no separate End matchups step when finishing for the day. The session page’s Back button returns Home.
 
+## Planning a session
+
+Session creation offers **Now** or **Later**. Later requires a date within the next 90 days.
+The organizer's account timezone (Eastern when unset) is saved with the session. Its planned
+boundary is the start of that date in that timezone, including daylight-saving transitions.
+Changing account timezones does not move a planned session. Existing sessions keep their current expiry.
+
+Friends can join upcoming sessions immediately. Matchup and scheduled open-play invitations stay
+available until the session expires.
+Join requests for dated sessions remain pending until that expiry, allowing organizers to approve
+advance signups later; undated live sessions retain their existing short request window.
+Current sessions appear before upcoming ones on Home;
+upcoming sessions are ordered by their playing date. The creation link stays available while
+hosting a current session so the organizer can choose Later. Choosing Now reopens an existing
+current hosted session, and never reuses an upcoming one. The configured session cap applies
+separately to current and upcoming sessions; the existing daily creation cap also remains.
+
+At the planned local midnight the card changes from Upcoming to Today. This does not generate
+matchups or freeze the roster. Starting matchups explicitly records the actual start, including
+an early start, and gives the session its normal 48-hour playing window. An unstarted planned
+session expires 48 hours after its planned boundary; Now sessions expire 48 hours after creation.
+The existing cleanup job archives expired sessions and preserves recorded matches.
+
+`SessionSchedulingIntegrationTest` checks real persistence, independent current/upcoming caps,
+creation while hosting, local-midnight classification, timezone persistence, daylight-saving dates,
+invalid dates, cleanup, and season rollover for scheduled open play. `SessionMatchupServiceTest`
+checks the explicit start and playing window. Browser checks cover signup and organizer approval
+before the playing date, the Now/Later controls, dated Home cards, and existing-session reuse.
+
 ## Initial rendering
 
 Page-specific stylesheets belong in the layout’s head `styles` fragment, before body content and scripts. Use `th:block` for a fragment containing multiple head elements; a literal `div` closes the browser’s head early. Session headers retain the shared card background, and the organizer-scoring choice uses the same card treatment as the play modes. The loading regression check delays both CSS and JavaScript to verify that cards are styled at the first contentful paint and retain their appearance after scripts initialize.

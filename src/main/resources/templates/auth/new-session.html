@@ -13,20 +13,40 @@
     <p class="app-page-subtitle">Start your group here. Friends join with your invite.</p>
   </div></div>
   <form method="post" th:action="@{/groups/create-session}" class="session-intent-form">
+    <section class="session-when-card" aria-labelledby="session-when-title">
+      <h2 id="session-when-title">When are you playing?</h2>
+      <div class="session-when-options" role="radiogroup" aria-labelledby="session-when-title">
+        <label><input type="radio" name="sessionWhen" value="NOW"
+                      th:checked="${sessionWhen != 'LATER'}" th:disabled="${sessionNowAvailable == false}"><span>Now</span></label>
+        <label><input type="radio" name="sessionWhen" value="LATER"
+                      th:checked="${sessionWhen == 'LATER'}"><span>Later</span></label>
+      </div>
+      <p class="small text-muted mb-0" th:if="${sessionNowAvailable == false}">You're hosting a session now. You can plan another for later.</p>
+      <div data-session-date-choice th:hidden="${sessionWhen != 'LATER'}">
+        <label for="session-date" class="form-label">Playing date</label>
+        <input id="session-date" name="sessionDate" type="date" class="form-control"
+               th:value="${sessionDate}" th:min="${sessionMinDate}" th:max="${sessionMaxDate}"
+               th:required="${sessionWhen == 'LATER'}" th:disabled="${sessionWhen != 'LATER'}"
+               aria-describedby="session-date-note">
+        <p id="session-date-note" class="small text-muted mt-2 mb-0">Friends can join ahead of time. Dates use <span th:text="${sessionTimeZone}">your timezone</span>.</p>
+      </div>
+    </section>
     <div class="session-intent-card">
       <label class="session-intent-option">
-        <input type="radio" name="playMode" value="MATCHUPS" checked>
+        <input type="radio" name="playMode" value="MATCHUPS" th:checked="${sessionPlayMode == null or sessionPlayMode.name() == 'MATCHUPS'}">
         <span><strong>Make matchups</strong><span>Invite your players, mix partners or keep teams together, and follow a schedule.</span>
           <small>Great for a group playing together</small></span>
         <i class="bi bi-grid" aria-hidden="true"></i>
       </label>
-      <label class="session-scoring-option" data-organizer-scoring-choice>
-        <input type="checkbox" name="organizerScored" value="true" class="form-check-input mt-1">
+      <label class="session-scoring-option" data-organizer-scoring-choice
+             th:hidden="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
+        <input type="checkbox" name="organizerScored" value="true" class="form-check-input mt-1" th:checked="${sessionOrganizerScored == true}"
+               th:disabled="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
         <span><strong>Organizer records scores</strong><span>Scores are confirmed automatically. Players only need to join and review their results.</span></span>
       </label>
     </div>
     <label class="session-intent-option">
-      <input type="radio" name="playMode" value="OPEN_PLAY">
+      <input type="radio" name="playMode" value="OPEN_PLAY" th:checked="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
       <span><strong>Log games as we go</strong><span>Choose your own pairings and keep track of scores together.</span></span>
       <i class="bi bi-pencil-square" aria-hidden="true"></i>
     </label>

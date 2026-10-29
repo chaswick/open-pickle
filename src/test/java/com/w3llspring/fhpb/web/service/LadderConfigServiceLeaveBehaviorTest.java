@@ -67,7 +67,8 @@ class LadderConfigServiceLeaveBehaviorTest {
             10,
             userRepo,
             seasonNameGenerator);
-    sessionLifecycleService = new SessionLifecycleService(configRepo, membershipRepo, roundRobinService);
+    sessionLifecycleService =
+        new SessionLifecycleService(configRepo, membershipRepo, roundRobinService);
     groupAdministrationService =
         new GroupAdministrationService(
             configRepo,
@@ -426,11 +427,12 @@ class LadderConfigServiceLeaveBehaviorTest {
     LadderSeason competitionSeason = new LadderSeason();
     org.springframework.test.util.ReflectionTestUtils.setField(competitionSeason, "id", 77L);
 
-    when(configRepo.countByOwnerUserIdAndTypeAndStatusAndExpiresAtAfter(
+    when(configRepo.countSessionsByTiming(
             any(Long.class),
             any(LadderConfig.Type.class),
             any(LadderConfig.Status.class),
-            any(Instant.class)))
+            any(Instant.class),
+            org.mockito.ArgumentMatchers.eq(false)))
         .thenReturn(0L);
     when(configRepo.findByInviteCode(any(String.class))).thenReturn(Optional.empty());
     when(configRepo.save(any(LadderConfig.class)))
@@ -461,11 +463,12 @@ class LadderConfigServiceLeaveBehaviorTest {
     owner.setNickName("Tester");
 
     when(userRepo.findById(42L)).thenReturn(Optional.of(owner));
-    when(configRepo.countByOwnerUserIdAndTypeAndStatusAndExpiresAtAfter(
+    when(configRepo.countSessionsByTiming(
             any(Long.class),
             any(LadderConfig.Type.class),
             any(LadderConfig.Status.class),
-            any(Instant.class)))
+            any(Instant.class),
+            org.mockito.ArgumentMatchers.eq(false)))
         .thenReturn(0L);
     when(configRepo.findByInviteCode(any(String.class))).thenReturn(Optional.empty());
     when(configRepo.save(any(LadderConfig.class)))
@@ -486,17 +489,19 @@ class LadderConfigServiceLeaveBehaviorTest {
     LadderSeason competitionSeason = new LadderSeason();
     org.springframework.test.util.ReflectionTestUtils.setField(competitionSeason, "id", 77L);
 
-    when(configRepo.countByOwnerUserIdAndTypeAndStatusAndExpiresAtAfter(
+    when(configRepo.countSessionsByTiming(
             any(Long.class),
             any(LadderConfig.Type.class),
             any(LadderConfig.Status.class),
-            any(Instant.class)))
+            any(Instant.class),
+            org.mockito.ArgumentMatchers.eq(false)))
         .thenReturn(0L);
     when(configRepo.countByOwnerUserIdAndTypeAndCreatedAtAfter(
             any(Long.class), any(LadderConfig.Type.class), any(Instant.class)))
         .thenReturn(10L);
 
-    assertThatThrownBy(() -> service.createSessionConfig(42L, "Saturday Session", competitionSeason))
+    assertThatThrownBy(
+            () -> service.createSessionConfig(42L, "Saturday Session", competitionSeason))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("You can start at most 10 sessions in 24 hours");
 

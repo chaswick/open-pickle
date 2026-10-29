@@ -159,7 +159,10 @@ public class SessionJoinRequestService {
     request.setInviteCodeSnapshot(normalizedCode);
     request.setStatus(SessionJoinRequest.Status.PENDING);
     request.setRequestedAt(now);
-    request.setExpiresAt(now.plus(requestTtl()));
+    request.setExpiresAt(
+        locked.getSessionScheduledAt() != null && locked.getExpiresAt() != null
+            ? locked.getExpiresAt()
+            : now.plus(requestTtl()));
     request.setResolvedAt(null);
     request.setResolvedByUserId(null);
     SessionJoinRequest saved = requests.save(request);
@@ -395,12 +398,19 @@ public class SessionJoinRequestService {
   }
 
   private SessionJoinRequest expireIfNeeded(SessionJoinRequest request, Instant now) {
-    if (request == null
-        || request.getStatus() != SessionJoinRequest.Status.PENDING
-        || request.getExpiresAt() == null
-        || request.getExpiresAt().isAfter(now)) {
+    if (request == null || request.getStatus() != SessionJoinRequest.Status.PENDING) {
       return request;
     }
+    LadderConfig session = request.getLadderConfig();
+    boolean datedSessionClosed =
+        request.getId() != null
+            && session != null
+            && session.getSessionScheduledAt() != null
+            && (session.getStatus() != LadderConfig.Status.ACTIVE
+                || (session.getExpiresAt() != null && !session.getExpiresAt().isAfter(now))
+                || !Objects.equals(session.getInviteCode(), request.getInviteCodeSnapshot()));
+    if (!datedSessionClosed
+        && (request.getExpiresAt() == null || request.getExpiresAt().isAfter(now))) return request;
     request.setStatus(SessionJoinRequest.Status.EXPIRED);
     request.setResolvedAt(now);
     request.setResolvedByUserId(null);

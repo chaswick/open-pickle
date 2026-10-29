@@ -45,6 +45,10 @@ public class CompetitionSessionService {
       if (targetSeason != null
           && targetSeason.getLadderConfig() != null
           && targetSeason.getLadderConfig().isCompetitionType()) {
+        if (sessionConfig.getSessionScheduledAt() != null
+            && targetSeason.getState() != LadderSeason.State.ACTIVE) {
+          return activeCompetitionSeason;
+        }
         return targetSeason;
       }
     }
@@ -61,6 +65,14 @@ public class CompetitionSessionService {
         .filter(membership -> isActiveSessionConfig(membership.getLadderConfig()))
         .sorted(
             Comparator.comparing(
+                    (LadderMembership membership) ->
+                        membership.getLadderConfig().isUpcomingSession())
+                .thenComparing(
+                    membership ->
+                        membership.getLadderConfig().isUpcomingSession()
+                            ? membership.getLadderConfig().getSessionScheduledAt()
+                            : Instant.MIN)
+                .thenComparing(
                     (LadderMembership membership) -> {
                       LadderConfig config = membership.getLadderConfig();
                       return config == null
@@ -119,6 +131,7 @@ public class CompetitionSessionService {
     return sessionMemberships.stream()
         .map(LadderMembership::getLadderConfig)
         .filter(Objects::nonNull)
+        .filter(config -> !config.isUpcomingSession())
         .anyMatch(config -> Objects.equals(config.getOwnerUserId(), currentUserId));
   }
 
@@ -126,7 +139,8 @@ public class CompetitionSessionService {
     if (config == null || !config.isSessionType()) {
       return false;
     }
-    return config.getExpiresAt() == null || config.getExpiresAt().isAfter(Instant.now());
+    return config.getStatus() == LadderConfig.Status.ACTIVE
+        && (config.getExpiresAt() == null || config.getExpiresAt().isAfter(Instant.now()));
   }
 
   public record CompetitionSessionSummary(

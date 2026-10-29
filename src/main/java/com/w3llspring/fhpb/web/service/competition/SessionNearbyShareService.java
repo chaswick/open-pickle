@@ -160,6 +160,7 @@ public class SessionNearbyShareService {
   public boolean hasActiveNearbySharing(LadderConfig session, Instant now) {
     if (session == null
         || !session.isSessionType()
+        || session.isUpcomingSession(now == null ? Instant.now() : now)
         || session.getNearbyShareLocationId() == null
         || session.getStatus() != LadderConfig.Status.ACTIVE
         || session.getExpiresAt() == null

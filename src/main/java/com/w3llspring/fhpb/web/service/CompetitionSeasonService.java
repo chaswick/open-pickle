@@ -52,9 +52,17 @@ public class CompetitionSeasonService {
       return null;
     }
     if (ladderConfig.getTargetSeasonId() != null) {
-      return ladderSeasonRepository
-          .findByIdWithLadderConfig(ladderConfig.getTargetSeasonId())
-          .orElse(null);
+      LadderSeason target =
+          ladderSeasonRepository
+              .findByIdWithLadderConfig(ladderConfig.getTargetSeasonId())
+              .orElse(null);
+      if (ladderConfig.getSessionScheduledAt() != null
+          && target != null
+          && target.getState() != LadderSeason.State.ACTIVE
+          && target.getLadderConfig() != null) {
+        return ladderSeasonRepository.findActive(target.getLadderConfig().getId()).orElse(null);
+      }
+      return target;
     }
     if (ladderConfig.isCompetitionType() && ladderConfig.getId() != null) {
       LadderSeason active = ladderSeasonRepository.findActive(ladderConfig.getId()).orElse(null);

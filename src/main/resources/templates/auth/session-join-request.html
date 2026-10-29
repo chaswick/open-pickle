@@ -30,6 +30,8 @@
                   2026-03-29 10:00
                 </span>
               </div>
+              <p class="fw-semibold mt-2 mb-0" th:if="${inviteSessionDateLabel != null and !#strings.isEmpty(inviteSessionDateLabel)}"
+                 th:text="${inviteSessionDateLabel}">Upcoming · Sat, Nov 7</p>
             </div>
 
             <p th:if="${organizerScoredInvite == true}" class="alert alert-info" data-organizer-scoring-notice>The organizer records and automatically confirms scores. You can review your results without confirming each game.</p>
@@ -41,6 +43,9 @@
                class="mb-3"
                th:text="${joinRequestStatus.message}">
               Waiting for the session host to approve your request.
+            </p>
+            <p class="small text-muted" th:if="${scheduledSessionInvite == true and joinRequestStatus.pending}">
+              Your request is saved. You can leave this page. Once approved, the session will appear on Home.
             </p>
 
             <div class="d-grid gap-2">

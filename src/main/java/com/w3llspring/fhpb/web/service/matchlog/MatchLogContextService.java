@@ -271,6 +271,8 @@ public class MatchLogContextService {
     if (sessionConfig == null || !sessionConfig.isSessionType()) {
       return null;
     }
+    if (sessionConfig.isUpcomingSession()
+        || sessionConfig.getStatus() != LadderConfig.Status.ACTIVE) return null;
     if (sessionConfig.getExpiresAt() != null
         && !sessionConfig.getExpiresAt().isAfter(Instant.now())) {
       return null;
@@ -279,6 +281,14 @@ public class MatchLogContextService {
       return null;
     }
     LadderSeason season = seasonRepository.findById(sessionConfig.getTargetSeasonId()).orElse(null);
+    if (sessionConfig.getSessionScheduledAt() != null
+        && season != null
+        && season.getLadderConfig() != null
+        && season.getLadderConfig().isCompetitionType()
+        && (season.getState() != LadderSeason.State.ACTIVE
+            || !seasonCoversInstant(season, playedAt))) {
+      return resolveSeasonForSubmission(null, season.getLadderConfig().getId(), playedAt);
+    }
     if (season == null || season.getState() != LadderSeason.State.ACTIVE) {
       return null;
     }

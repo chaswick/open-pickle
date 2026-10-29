@@ -25,7 +25,7 @@
                 </p>
                 <p class="app-hero-subtitle mb-0" data-session-hosting-note
                    th:if="${!competitionUnavailable and canCreateCompetitionSession == false}">
-                    To start a new session, end the one you’re hosting with its <strong>×</strong> below. Your games stay saved.
+                    To start another session now, end the one you’re hosting with its <strong>×</strong> below. You can still plan one for later.
                 </p>
             </div>
         </section>
@@ -49,17 +49,19 @@
                             th:attr="aria-label=${leaveLabel},title=${leaveLabel}"></button>
                 </form>
                 <a class="competition-session-link" th:href="@{/groups/{id}(id=${sessionConfig.id})}">
-                    <div class="app-action-icon"><i class="bi bi-play-circle" aria-hidden="true"></i></div>
+                    <div class="app-action-icon"><i th:class="${sessionConfig.upcomingSession ? 'bi bi-calendar-event' : 'bi bi-play-circle'}" aria-hidden="true"></i></div>
                     <div>
                         <span class="app-action-callout app-action-callout-top" th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
                         <div class="app-action-title" th:text="${sessionConfig.title}">Your session</div>
-                        <div class="app-action-subtitle">Jump back in to invite players, log scores, and see your session standings.</div>
+                        <div class="app-action-subtitle fw-semibold" th:if="${sessionConfig.sessionScheduledAt != null}"
+                             th:text="${sessionConfig.sessionDateLabel}">Upcoming · Sat, Nov 7</div>
+                        <div class="app-action-subtitle" th:text="${sessionConfig.upcomingSession ? 'Invite friends and see who’s joining.' : 'Jump back in to invite players, log scores, and see your session standings.'}">Jump back in to invite players, log scores, and see your session standings.</div>
                     </div>
                 </a>
             </div>
 
             <a th:href="@{/groups/new-session}" class="app-action-tile app-action-groups"
-                  th:if="${!competitionUnavailable and canCreateCompetitionSession}">
+                  th:if="${!competitionUnavailable}">
                     <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
                     <div>
                         <div class="app-action-title">Start a session with friends</div>

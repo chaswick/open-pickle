@@ -101,7 +101,7 @@ public final class SessionInviteCodeSupport {
   public static boolean isCurrentlyActive(
       com.w3llspring.fhpb.web.model.LadderConfig session, long activeSeconds, Instant now) {
     if (session == null) return false;
-    if (session.isMatchupSession()) {
+    if (session.isMatchupSession() || session.getSessionScheduledAt() != null) {
       Instant reference = now == null ? Instant.now() : now;
       return session.getInviteCode() != null
           && !session.getInviteCode().isBlank()

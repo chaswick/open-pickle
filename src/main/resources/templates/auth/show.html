@@ -697,6 +697,10 @@
         <h1 class="app-page-title"
             th:text="${isSessionLadder ? (sessionHeroTitle != null and !#strings.isEmpty(sessionHeroTitle) ? sessionHeroTitle : sessionDisplayTitle) : ladder.title}">Group</h1>
         <p class="app-page-subtitle mb-0" th:if="${isSessionLadder}">
+          <span class="d-block" th:if="${ladder.sessionScheduledAt != null}">
+            <span th:text="${ladder.sessionDateLabel}">Upcoming · Sat, Nov 7</span>
+            <small th:text="${' · ' + ladder.sessionTimeZone}"></small>
+          </span>
           <span th:if="${ladder.expiresAt != null}">
             Expires
             <span th:text="${@fhpbTime.pattern(ladder.expiresAt, authPrincipal, sessionDateTimePattern)}">Saturday, Mar 15, 2:00 PM</span>.
@@ -707,7 +711,7 @@
           Invite players, manage members, and adjust league settings.
         </p>
         <div class="session-hero-actions"
-             th:if="${isSessionLadder and !ladder.matchupSession and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}">
+             th:if="${isSessionLadder and !ladder.matchupSession and !ladder.upcomingSession and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}">
           <button th:if="${targetSeason != null}"
                   id="logMatchVoiceBtn"
                   type="button"

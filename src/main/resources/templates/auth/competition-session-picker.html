@@ -50,6 +50,8 @@
                     <div>
                         <span class="app-action-callout app-action-callout-top" th:if="${suggested}">Suggested</span>
                         <div class="app-action-title" th:text="${sessionConfig != null ? sessionConfig.title : 'Session'}">Session</div>
+                        <div class="app-action-subtitle" th:if="${sessionConfig != null and sessionConfig.sessionScheduledAt != null}"
+                             th:text="${sessionConfig.sessionDateLabel}">Upcoming · Sat, Nov 7</div>
                         <div class="app-action-subtitle"
                              th:text="${owned ? 'You own this session. Open it to invite players, manage the roster, and log matches.' : 'You joined this session. Open it to jump back into that roster and log matches.'}">
                             Open this match session.
@@ -59,7 +61,7 @@
             </div>
 
             <a th:href="@{/groups/new-session}" class="app-action-tile app-action-groups"
-                  th:if="${!competitionUnavailable and canCreateCompetitionSession}">
+                  th:if="${!competitionUnavailable}">
                     <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
                     <div>
                         <div class="app-action-title">Start a session with friends</div>

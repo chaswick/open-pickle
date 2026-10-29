@@ -42,6 +42,22 @@ public interface LadderConfigRepository extends JpaRepository<LadderConfig, Long
   long countByOwnerUserIdAndTypeAndStatusAndExpiresAtAfter(
       Long ownerUserId, LadderConfig.Type type, LadderConfig.Status status, Instant cutoff);
 
+  @Query(
+      """
+      select count(l) from LadderConfig l
+      where l.ownerUserId = :ownerUserId and l.type = :type and l.status = :status
+        and (l.expiresAt is null or l.expiresAt > :now)
+        and ((:upcoming = true and l.sessionScheduledAt > :now and l.sessionStartedAt is null)
+          or (:upcoming = false and (l.sessionScheduledAt is null
+            or l.sessionScheduledAt <= :now or l.sessionStartedAt is not null)))
+      """)
+  long countSessionsByTiming(
+      @Param("ownerUserId") Long ownerUserId,
+      @Param("type") LadderConfig.Type type,
+      @Param("status") LadderConfig.Status status,
+      @Param("now") Instant now,
+      @Param("upcoming") boolean upcoming);
+
   long countByOwnerUserIdAndTypeAndCreatedAtAfter(
       Long ownerUserId, LadderConfig.Type type, Instant cutoff);
 

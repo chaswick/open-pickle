@@ -785,7 +785,7 @@ public class LadderConfigController {
     boolean inviteActive = hasActiveInvite(cfg);
     Instant sessionInviteActiveUntil =
         cfg.isSessionType()
-            ? (cfg.isMatchupSession()
+            ? (cfg.isMatchupSession() || cfg.getSessionScheduledAt() != null
                 ? cfg.getExpiresAt()
                 : SessionInviteCodeSupport.activeUntil(
                     cfg.getLastInviteChangeAt(), sessionInviteActiveSeconds))
@@ -1800,6 +1800,7 @@ public class LadderConfigController {
     var cfg = cfgOpt.get();
     model.addAttribute("sessionApprovalMode", cfg.isSessionType() && !autoJoin);
     model.addAttribute("organizerScoredInvite", cfg.isOrganizerScored());
+    model.addAttribute("inviteSessionDateLabel", cfg.getSessionDateLabel());
     model.addAttribute(
         "inviteTargetTitle",
         cfg.isSessionType() ? resolveSessionDisplayTitle(cfg) : cfg.getTitle());
@@ -1921,9 +1922,16 @@ public class LadderConfigController {
         return "redirect:" + status.redirectUrl();
       }
       model.addAttribute("joinRequestStatus", status);
+      LadderConfig requestedSession = configs.findById(status.sessionId()).orElse(null);
       model.addAttribute(
           "organizerScoredInvite",
-          configs.findById(status.sessionId()).map(LadderConfig::isOrganizerScored).orElse(false));
+          requestedSession != null && requestedSession.isOrganizerScored());
+      model.addAttribute(
+          "scheduledSessionInvite",
+          requestedSession != null && requestedSession.getSessionScheduledAt() != null);
+      model.addAttribute(
+          "inviteSessionDateLabel",
+          requestedSession != null ? requestedSession.getSessionDateLabel() : "");
       return "auth/session-join-request";
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);

@@ -2,6 +2,10 @@ package com.w3llspring.fhpb.web.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Entity
 @Table(name = "ladder_config")
@@ -118,6 +122,66 @@ public class LadderConfig {
 
   @Column(name = "expires_at")
   private Instant expiresAt;
+
+  @Column(name = "session_scheduled_at")
+  private Instant sessionScheduledAt;
+
+  @Column(name = "session_time_zone", length = 64)
+  private String sessionTimeZone;
+
+  @Column(name = "session_started_at")
+  private Instant sessionStartedAt;
+
+  public Instant getSessionScheduledAt() {
+    return sessionScheduledAt;
+  }
+
+  public void setSessionScheduledAt(Instant sessionScheduledAt) {
+    this.sessionScheduledAt = sessionScheduledAt;
+  }
+
+  public String getSessionTimeZone() {
+    return sessionTimeZone;
+  }
+
+  public void setSessionTimeZone(String sessionTimeZone) {
+    this.sessionTimeZone = sessionTimeZone;
+  }
+
+  public Instant getSessionStartedAt() {
+    return sessionStartedAt;
+  }
+
+  public void setSessionStartedAt(Instant sessionStartedAt) {
+    this.sessionStartedAt = sessionStartedAt;
+  }
+
+  public boolean isUpcomingSession(Instant now) {
+    return isSessionType()
+        && sessionScheduledAt != null
+        && sessionStartedAt == null
+        && sessionScheduledAt.isAfter(now);
+  }
+
+  public boolean isUpcomingSession() {
+    return isUpcomingSession(Instant.now());
+  }
+
+  public LocalDate getSessionScheduledDate() {
+    return sessionScheduledAt == null
+        ? null
+        : sessionScheduledAt.atZone(ZoneId.of(sessionTimeZone)).toLocalDate();
+  }
+
+  public String getSessionDateLabel() {
+    LocalDate date = getSessionScheduledDate();
+    if (date == null) return "";
+    String prefix =
+        isUpcomingSession()
+            ? "Upcoming · "
+            : date.equals(LocalDate.now(ZoneId.of(sessionTimeZone))) ? "Today · " : "";
+    return prefix + date.format(DateTimeFormatter.ofPattern("EEE, MMM d, yyyy", Locale.US));
+  }
 
   /** === New: Season mode + rolling cadence and anti-spam knob === */
   @Enumerated(EnumType.STRING)

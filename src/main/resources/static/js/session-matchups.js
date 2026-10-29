@@ -144,8 +144,22 @@
     choice.hidden = selected.value !== 'MATCHUPS';
     choice.querySelector('input').disabled = choice.hidden;
   }
-  document.addEventListener('DOMContentLoaded', updateIntentScoring);
+  function updateSessionDate() {
+    var choice = document.querySelector('[data-session-date-choice]');
+    if (!choice) return;
+    var later = document.querySelector('[name=sessionWhen]:checked');
+    later = later && later.value === 'LATER';
+    choice.hidden = !later;
+    var input = choice.querySelector('input');
+    input.disabled = !later;
+    input.required = !!later;
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    updateIntentScoring();
+    updateSessionDate();
+  });
   document.addEventListener('change', function (event) {
+    if (event.target.matches('[name=sessionWhen]')) updateSessionDate();
     if (event.target.matches('[name=playMode]')) updateIntentScoring();
     var root = event.target.closest('[data-session-matchups-root]');
     if (!root) return;

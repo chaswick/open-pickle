@@ -1120,12 +1120,12 @@ class ThymeleafTemplateTest {
     assertThat(result).contains("href=\"/groups/42\"");
     assertThat(result).contains("Saturday with friends");
     assertThat(result).contains("Hosting");
-    assertThat(result).contains("data-session-hosting-note", "Your games stay saved.");
+    assertThat(result).contains("data-session-hosting-note", "You can still plan one for later.");
     assertThat(result)
         .doesNotContain("data-session-hosting-toggle", "homeSessionHostingInfo", "Manage sessions");
     assertThat(result).contains("action=\"/groups/42/leave/101\"", "aria-label=\"End Session\"");
     assertThat(result).contains("action=\"/groups/43/leave/102\"", "aria-label=\"Leave Session\"");
-    assertThat(result).doesNotContain("href=\"/groups/new-session\"");
+    assertThat(result).contains("href=\"/groups/new-session\"");
     assertThat(result).doesNotContain("Your first session");
   }
 
@@ -1204,7 +1204,7 @@ class ThymeleafTemplateTest {
     assertThat(sessionPickerTemplate).contains("Play with friends");
     assertThat(sessionPickerTemplate).contains("class=\"app-action-grid\"");
     assertThat(sessionPickerTemplate).contains("Start a session with friends");
-    assertThat(sessionPickerTemplate).contains("canCreateCompetitionSession");
+    assertThat(sessionPickerTemplate).contains("sessionDateLabel");
     assertThat(sessionPickerTemplate).contains("Join with a code");
     assertThat(sessionPickerTemplate).contains("Season standings");
     assertThat(sessionPickerTemplate).contains("@{/groups/join(returnTo='/competition/sessions')}");
@@ -1261,19 +1261,19 @@ class ThymeleafTemplateTest {
 
     assertThat(result).contains("Saturday Open");
     assertThat(result).contains("aria-label=\"End Session\"");
-    assertThat(result).doesNotContain("Start a session with friends");
+    assertThat(result).contains("Start a session with friends");
     assertThat(result.indexOf("Saturday Open")).isLessThan(result.indexOf("Join with a code"));
   }
 
   @Test
-  void competitionSessionPickerShowsStartSessionOnlyWhenUserCanCreateOne() {
+  void competitionSessionPickerAllowsPlanningLaterWhileHostingNow() {
     Map<String, Object> hiddenVariables = authenticatedShowLayoutVariables();
     hiddenVariables.put("competitionUnavailable", false);
     hiddenVariables.put("canCreateCompetitionSession", false);
 
     String hiddenResult = renderWebTemplate("auth/competition-session-picker", hiddenVariables);
 
-    assertThat(hiddenResult).doesNotContain("Start a session with friends");
+    assertThat(hiddenResult).contains("Start a session with friends");
 
     Map<String, Object> visibleVariables = authenticatedShowLayoutVariables();
     visibleVariables.put("competitionUnavailable", false);

@@ -31,6 +31,21 @@ beforeAll(() => window.eval(source));
 afterEach(() => { document.body.innerHTML = ''; document.body.classList.remove('modal-open'); });
 
 describe('Session matchup setup', () => {
+  it('requires a date only when Later is selected and preserves it when switching back', () => {
+    document.body.innerHTML = `<form><input type="radio" name="sessionWhen" value="NOW" checked>
+      <input type="radio" name="sessionWhen" value="LATER">
+      <div data-session-date-choice hidden><input name="sessionDate" type="date" value="2027-01-16" disabled></div></form>`;
+    const date = document.querySelector('[name=sessionDate]');
+    for (const value of ['LATER', 'NOW', 'LATER']) {
+      const radio = document.querySelector(`[name=sessionWhen][value=${value}]`);
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change', { bubbles: true }));
+      expect(date.disabled).toBe(value === 'NOW');
+      expect(date.required).toBe(value === 'LATER');
+      expect(date.parentElement.hidden).toBe(value === 'NOW');
+      expect(date.value).toBe('2027-01-16');
+    }
+  });
   it('swaps selected partners while keeping every joined player in exactly one pair', () => {
     const root = mount(16); fixed(root);
     const selects = root.querySelectorAll('[data-pair-list] select');

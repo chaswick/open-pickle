@@ -13,6 +13,7 @@ import com.w3llspring.fhpb.web.util.InputValidation;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Comparator;
@@ -24,6 +25,17 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class LadderConfigService {
+
+  public static final int MAX_SESSION_ADVANCE_DAYS = 90;
+
+  public static ZoneId sessionZone(User owner) {
+    try {
+      return ZoneId.of(
+          owner != null && owner.getTimeZone() != null ? owner.getTimeZone() : "America/New_York");
+    } catch (java.time.DateTimeException ex) {
+      return ZoneId.of("America/New_York");
+    }
+  }
 
   private static final int MAX_INVITE_GENERATION_ATTEMPTS = 32;
 
@@ -154,8 +166,12 @@ public class LadderConfigService {
     if (ownerUserId == null) {
       return false;
     }
-    return configs.countByOwnerUserIdAndTypeAndStatusAndExpiresAtAfter(
-            ownerUserId, LadderConfig.Type.SESSION, LadderConfig.Status.ACTIVE, Instant.now())
+    return configs.countSessionsByTiming(
+            ownerUserId,
+            LadderConfig.Type.SESSION,
+            LadderConfig.Status.ACTIVE,
+            Instant.now(),
+            false)
         >= maxSessionsPerUser;
   }
 
@@ -165,7 +181,11 @@ public class LadderConfigService {
 
   public LadderConfig findReusableSessionConfig(Long userId) {
     SessionLaunchState launchState = resolveSessionLaunchState(userId);
-    return launchState.hasOwnedSession() ? launchState.preferredSession() : null;
+    return launchState.activeSessions().stream()
+        .filter(config -> Objects.equals(config.getOwnerUserId(), userId))
+        .filter(config -> !config.isUpcomingSession())
+        .findFirst()
+        .orElse(null);
   }
 
   public SessionLaunchState resolveSessionLaunchState(Long userId) {
@@ -188,7 +208,10 @@ public class LadderConfigService {
 
     LadderConfig preferredSession = activeSessions.get(0);
     boolean hasOwnedSession =
-        activeSessions.stream().anyMatch(config -> Objects.equals(config.getOwnerUserId(), userId));
+        activeSessions.stream()
+            .anyMatch(
+                config ->
+                    Objects.equals(config.getOwnerUserId(), userId) && !config.isUpcomingSession());
     boolean chooserRequired =
         activeSessions.size() > 1
             || (preferredSession != null
@@ -264,20 +287,39 @@ public class LadderConfigService {
   @Transactional(dontRollbackOn = IllegalStateException.class)
   public LadderConfig createSessionConfig(
       Long ownerUserId, String title, LadderSeason targetSeason) {
+    return createSessionConfig(ownerUserId, title, targetSeason, null);
+  }
+
+  @Transactional(dontRollbackOn = {IllegalStateException.class, IllegalArgumentException.class})
+  public LadderConfig createSessionConfig(
+      Long ownerUserId, String title, LadderSeason targetSeason, LocalDate scheduledDate) {
     if (ownerUserId == null) {
       throw new IllegalArgumentException("Owner is required");
     }
     if (targetSeason == null || targetSeason.getId() == null) {
       throw new IllegalStateException("Competition season is unavailable.");
     }
-    if (hasReachedSessionLimit(ownerUserId)) {
+    Instant now = Instant.now();
+    ZoneId zone = sessionZone(userRepo.findById(ownerUserId).orElse(null));
+    if (scheduledDate != null
+        && (!scheduledDate.isAfter(now.atZone(zone).toLocalDate())
+            || scheduledDate.isAfter(
+                now.atZone(zone).toLocalDate().plusDays(MAX_SESSION_ADVANCE_DAYS)))) {
+      throw new IllegalArgumentException("Choose a date within the next 90 days.");
+    }
+    boolean limitReached =
+        scheduledDate == null
+            ? hasReachedSessionLimit(ownerUserId)
+            : configs.countSessionsByTiming(
+                    ownerUserId, LadderConfig.Type.SESSION, LadderConfig.Status.ACTIVE, now, true)
+                >= maxSessionsPerUser;
+    if (limitReached) {
       throw new IllegalStateException(
           String.format(
-              "You can have at most %d active match sessions at a time.",
-              allowedSessionsPerUser()));
+              "You can have at most %d %s sessions at a time.",
+              allowedSessionsPerUser(), scheduledDate == null ? "current" : "upcoming"));
     }
 
-    Instant now = Instant.now();
     enforceSessionCreateDailyCap(ownerUserId, now);
     LadderConfig cfg = new LadderConfig();
     cfg.setOwnerUserId(ownerUserId);
@@ -290,7 +332,11 @@ public class LadderConfigService {
     cfg.setAllowGuestOnlyPersonalMatches(false);
     cfg.setStoryModeDefaultEnabled(false);
     cfg.setTargetSeasonId(targetSeason.getId());
-    cfg.setExpiresAt(now.plusSeconds(Math.max(1, defaultSessionLifetimeHours) * 3600L));
+    Instant windowStart =
+        scheduledDate == null ? now : scheduledDate.atStartOfDay(zone).toInstant();
+    cfg.setSessionScheduledAt(scheduledDate == null ? null : windowStart);
+    cfg.setSessionTimeZone(scheduledDate == null ? null : zone.getId());
+    cfg.setExpiresAt(windowStart.plusSeconds(Math.max(1, defaultSessionLifetimeHours) * 3600L));
     LadderConfig savedCfg = configs.save(cfg);
 
     LadderMembership ownerMembership = new LadderMembership();
@@ -357,6 +403,13 @@ public class LadderConfigService {
 
   private Comparator<LadderMembership> preferredSessionMembershipComparator(Long userId) {
     return Comparator.comparing(
+            (LadderMembership membership) -> membership.getLadderConfig().isUpcomingSession())
+        .thenComparing(
+            membership ->
+                membership.getLadderConfig().isUpcomingSession()
+                    ? membership.getLadderConfig().getSessionScheduledAt()
+                    : Instant.MIN)
+        .thenComparing(
             (LadderMembership membership) -> {
               LadderConfig config = membership.getLadderConfig();
               return config == null || !Objects.equals(config.getOwnerUserId(), userId);

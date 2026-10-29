@@ -33,6 +33,8 @@
                           th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
                     <div class="app-action-title"
                          th:text="${sessionConfig != null ? sessionConfig.title : 'Open Session'}">Open Session</div>
+                    <div class="app-action-subtitle" th:if="${sessionConfig != null and sessionConfig.sessionScheduledAt != null}"
+                         th:text="${sessionConfig.sessionDateLabel}">Upcoming · Sat, Nov 7</div>
                     <div class="app-action-subtitle"
                          th:text="${owned ? 'Open your active session to manage players, invites, and match logging.' : 'Jump back into an active session you joined.'}">
                         Open your active session.

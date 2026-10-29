@@ -24,6 +24,8 @@
             </div>
             <div class="card-header card-header-title" th:unless="${sessionApprovalMode == true or sessionJoinContext == true}">Invite Code</div>
             <div class="card-body">
+              <p class="fw-semibold" th:if="${inviteSessionDateLabel != null and !#strings.isEmpty(inviteSessionDateLabel)}"
+                 th:text="${inviteSessionDateLabel}">Upcoming · Sat, Nov 7</p>
               <label class="form-label"
                      th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Pick the two words and number' : 'Enter the invite code (words-digits)'">
                 Enter the invite code (words-digits)

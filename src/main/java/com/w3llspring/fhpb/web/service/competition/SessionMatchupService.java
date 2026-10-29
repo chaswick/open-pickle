@@ -292,7 +292,9 @@ public class SessionMatchupService {
     rr.setSessionFlow(true);
     schedules.save(rr);
     // Preparation can happen days ahead. The live session gets its full playing window at start.
-    session.setExpiresAt(Instant.now().plusSeconds(Math.max(1, liveSessionHours) * 3600L));
+    Instant startedAt = Instant.now();
+    if (session.getSessionStartedAt() == null) session.setSessionStartedAt(startedAt);
+    session.setExpiresAt(startedAt.plusSeconds(Math.max(1, liveSessionHours) * 3600L));
     sessions.save(session);
     return rr;
   }

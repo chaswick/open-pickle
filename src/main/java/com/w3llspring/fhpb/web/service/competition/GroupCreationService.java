@@ -145,6 +145,27 @@ public class GroupCreationService {
     }
   }
 
+  public boolean canStartSessionNow(Long userId) {
+    return ladderConfigService.findReusableSessionConfig(userId) == null;
+  }
+
+  public GroupCreationOutcome createOrReuseSession(
+      Long currentUserId, String title, LadderSeason competitionSeason, LocalDate scheduledDate) {
+    if (scheduledDate == null) return createOrReuseSession(currentUserId, title, competitionSeason);
+    if (competitionSeason == null) {
+      return GroupCreationOutcome.failure(
+          "Sessions are unavailable right now. Please try again later.", "danger");
+    }
+    try {
+      LadderConfig session =
+          ladderConfigService.createSessionConfig(
+              currentUserId, title, competitionSeason, scheduledDate);
+      return GroupCreationOutcome.success(session.getId(), "Session created.", "light", false);
+    } catch (IllegalStateException | IllegalArgumentException ex) {
+      return GroupCreationOutcome.failure(ex.getMessage(), "danger");
+    }
+  }
+
   private boolean storyModeFeatureEnabled() {
     return storyModeService == null || storyModeService.isFeatureEnabled();
   }

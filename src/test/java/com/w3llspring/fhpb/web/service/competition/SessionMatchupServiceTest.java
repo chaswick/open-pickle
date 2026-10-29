@@ -130,6 +130,27 @@ class SessionMatchupServiceTest {
   }
 
   @Test
+  void manuallyStartingAnUpcomingSessionBeginsItsPlayingWindowWithoutChangingThePlannedDate() {
+    when(schedules.findBySessionConfig(session)).thenReturn(List.of());
+    when(seasons.resolveActiveCompetitionSeason()).thenReturn(rr.getSeason());
+    when(roundRobins.createAndStart(
+            anyLong(), isNull(), anyList(), anyInt(), anyLong(), any(), anyList()))
+        .thenReturn(rr);
+    Instant planned = Instant.now().plusSeconds(7 * 86400L);
+    session.setSessionScheduledAt(planned);
+    session.setSessionTimeZone("America/New_York");
+    session.setExpiresAt(planned.plusSeconds(48 * 3600L));
+    assertThat(session.isUpcomingSession()).isTrue();
+    Instant before = Instant.now();
+    service.start(7L, host, RoundRobin.Format.ROTATING_PARTNERS, 6, List.of());
+    assertThat(session.getSessionStartedAt()).isBetween(before, Instant.now());
+    assertThat(session.getExpiresAt())
+        .isEqualTo(session.getSessionStartedAt().plusSeconds(48 * 3600L));
+    assertThat(session.getSessionScheduledAt()).isEqualTo(planned);
+    assertThat(session.isUpcomingSession()).isFalse();
+  }
+
+  @Test
   void startRejectsMoreThanThirtyTwoPlayersBeforeGeneratingMatchups() {
     when(schedules.findBySessionConfig(session)).thenReturn(List.of());
     for (long id = 6; id <= 33; id++) people.put(id, user(id));
