@@ -16,7 +16,7 @@
   display:grid;
   gap:16px;
 }
-.session-intent-option {
+.session-intent-option,.session-intent-card {
   display:flex;
   align-items:flex-start;
   gap:14px;
@@ -27,28 +27,29 @@
   text-align:left;
   cursor:pointer;
 }
-.session-intent-option:has(input:checked) {
+.session-intent-form>.session-intent-option:has(input:checked),
+.session-intent-card:has(> .session-intent-option > input:checked) {
   border-color:#087f64;
   background:#f0faf6;
   box-shadow:0 0 0 1px #087f64;
 }
-.session-intent-option input {
+.session-intent-option input,.session-scoring-option input {
   margin-top:7px;
   accent-color:#087f64;
   width:19px;
   height:19px;
   flex-shrink:0;
 }
-.session-intent-option>span {
+.session-intent-option>span,.session-scoring-option>span {
   flex:1;
   min-width:0;
 }
-.session-intent-option strong {
+.session-intent-option strong,.session-scoring-option strong {
   display:block;
   font-size:1.15rem;
   margin-bottom:5px;
 }
-.session-intent-option span span {
+.session-intent-option span span,.session-scoring-option span span {
   display:block;
   color:#516874;
   line-height:1.5;
@@ -61,6 +62,27 @@
 .session-intent-option>i {
   font-size:1.4rem;
   color:#477183;
+}
+.session-intent-card {
+  display:block;
+  padding:0;
+}
+.session-intent-card>.session-intent-option {
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+.session-scoring-option {
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  margin:0 22px 22px;
+  padding-top:16px;
+  border-top:1px solid var(--matchups-border);
+  cursor:pointer;
+}
+.session-intent-card:not(:has(> .session-intent-option > input:checked)) [data-organizer-scoring-choice] {
+  display:none!important;
 }
 .session-scoring-option strong {
   font-size:1rem;

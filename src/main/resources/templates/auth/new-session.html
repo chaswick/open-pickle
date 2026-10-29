@@ -13,20 +13,22 @@
     <p class="app-page-subtitle">Start your group here. Friends join with your invite.</p>
   </div></div>
   <form method="post" th:action="@{/groups/create-session}" class="session-intent-form">
-    <label class="session-intent-option">
-      <input type="radio" name="playMode" value="MATCHUPS" checked>
-      <span><strong>Make matchups</strong><span>Invite your players, mix partners or keep teams together, and follow a schedule.</span>
-        <small>Great for a group playing together</small></span>
-      <i class="bi bi-grid" aria-hidden="true"></i>
-    </label>
+    <div class="session-intent-card">
+      <label class="session-intent-option">
+        <input type="radio" name="playMode" value="MATCHUPS" checked>
+        <span><strong>Make matchups</strong><span>Invite your players, mix partners or keep teams together, and follow a schedule.</span>
+          <small>Great for a group playing together</small></span>
+        <i class="bi bi-grid" aria-hidden="true"></i>
+      </label>
+      <label class="session-scoring-option" data-organizer-scoring-choice>
+        <input type="checkbox" name="organizerScored" value="true" class="form-check-input mt-1">
+        <span><strong>Organizer records scores</strong><span>Scores are confirmed automatically. Players only need to join and review their results.</span></span>
+      </label>
+    </div>
     <label class="session-intent-option">
       <input type="radio" name="playMode" value="OPEN_PLAY">
       <span><strong>Log games as we go</strong><span>Choose your own pairings and keep track of scores together.</span></span>
       <i class="bi bi-pencil-square" aria-hidden="true"></i>
-    </label>
-    <label class="session-intent-option session-scoring-option" data-organizer-scoring-choice>
-      <input type="checkbox" name="organizerScored" value="true" class="form-check-input mt-1">
-      <span><strong>Organizer records scores</strong><span>Scores are confirmed automatically. Players only need to join and review their results.</span></span>
     </label>
     <button type="submit" class="btn btn-action-primary w-100">Create session</button>
     <a th:href="@{/home}" class="btn btn-link w-100">Back</a>
