@@ -12,9 +12,9 @@ public class BrandingProperties {
   private static final String DEFAULT_FOOTER_TAGLINE =
       "Open-source pickleball group and match tracker";
   private static final String DEFAULT_LANDING_PAGE_TITLE =
-      "Free Global Pickleball Competition";
+      "Make your next pickleball session count.";
   private static final String DEFAULT_LANDING_META_DESCRIPTION =
-      "Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private leagues, round robins, and season trophies.";
+      "Free pickleball sessions for friends and clubs. Share an invite, log scores, and track standings, round robins, and trophies together.";
   private static final String DEFAULT_LANDING_KICKER = "Community-driven Pickleball";
   private static final String DEFAULT_MANIFEST_THEME_COLOR = "#2d4a3b";
   private static final String DEFAULT_MANIFEST_BACKGROUND_COLOR = "#2d4a3b";
@@ -76,9 +76,9 @@ public class BrandingProperties {
   }
 
   public String getLandingCopy() {
-    return "Compete globally in a seasonal pickleball competition where your rating resets. "
+    return "Playing with friends? Start a session, share the code, and track your scores and standings together. "
         + getAppName()
-        + " automates the standings, keeps match logging easy, and supports private leagues, round robins, trophies to track your finishes, and more.";
+        + " is free to use, whether you play with the same four people or a whole club.";
   }
 
   public String getSocialImagePath() {

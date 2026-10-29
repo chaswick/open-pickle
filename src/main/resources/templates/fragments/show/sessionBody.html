@@ -3,7 +3,7 @@
        th:if="${currentUserIsAdmin and (inviteActive
                or (canStartSessionRoundRobin != null and canStartSessionRoundRobin)
                or (pendingSessionJoinRequests != null and !#lists.isEmpty(pendingSessionJoinRequests)))}">
-    <div class="card-header card-header-title text-center">Your Session Controls</div>
+    <div class="card-header card-header-title text-center">Invite friends</div>
     <div class="card-body d-flex flex-column gap-3">
       <div th:if="${inviteActive}"
            th:with="inviteLink=${ladderInviteLink}"
@@ -11,121 +11,78 @@
         <div class="invite-share d-flex flex-column gap-3 align-items-center text-center">
           <input type="hidden" id="inviteCodeInput" th:value="${ladder.inviteCode}" />
           <input type="hidden" id="inviteLinkInput" th:value="${inviteLink}" />
-          <div class="text-muted small">Choose how you want to share this session</div>
-          <div class="session-share-methods"
-               data-session-share-root
-               role="tablist"
-               aria-label="Choose how you want to share this session">
-            <button type="button"
-                    class="btn session-share-method"
-                    th:if="${checkInEnabled}"
-                    data-session-share-tab="nearby"
-                    th:classappend="${checkInEnabled} ? ' is-active' : ''"
-                    th:attr="aria-pressed=${checkInEnabled ? 'true' : 'false'}">
-              Nearby
-            </button>
-            <button type="button"
-                    class="btn session-share-method"
-                    data-session-share-tab="code"
-                    th:classappend="${!checkInEnabled} ? ' is-active' : ''"
-                    th:attr="aria-pressed=${!checkInEnabled ? 'true' : 'false'}">
-              Shared code
-            </button>
-            <button type="button"
-                    class="btn session-share-method"
-                    data-session-share-tab="qr"
-                    aria-pressed="false">
-              QR / link
-            </button>
-          </div>
-          <section class="session-share-panel d-flex flex-column gap-3 text-center"
-                   th:if="${checkInEnabled}"
-                   data-session-share-panel="nearby">
-            <div class="session-share-panel-intro"
-                 th:if="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
-              Nearby sharing is on for <span th:text="${ladder.nearbyShareLocationName}">Lakeside Courts</span>.
-            </div>
-            <div class="session-share-panel-intro"
-                 th:if="${(ladder.nearbyShareLocationName == null or #strings.isEmpty(ladder.nearbyShareLocationName)) and ladder.nearbyShareLocationId != null}">
-              Nearby sharing is on for your current court.
-            </div>
-            <div class="session-share-panel-intro"
-                 th:unless="${ladder.nearbyShareLocationId != null}">
-              Recommended for players already at the same courts.
-            </div>
-            <p class="text-muted small mb-0"
-               th:if="${ladder.nearbyShareLocationId != null}">
-              Player can find nearby sessions and request to join.
-            </p>
-            <p class="text-muted small mb-0"
-               th:unless="${ladder.nearbyShareLocationId != null}">
-              Access your phone's location to let nearby checked-in players discover this session and request to join.
-            </p>
-            <div class="d-flex flex-column gap-3 align-items-center"
-                 th:attr="data-session-nearby-host=${true}, data-session-id=${ladder.id}">
-              <div class="session-share-panel-actions d-grid gap-2">
-                <button class="btn btn-action-primary w-100"
-                        type="button"
-                        data-nearby-start
-                        th:text="${ladder.nearbyShareLocationId != null} ? 'Refresh Nearby Court' : 'Use My Current Location'">
-                  Use My Current Location
-                </button>
-              </div>
-              <div class="alert d-none mt-0 mb-0 w-100 text-start"
-                   data-nearby-status
-                   role="status"
-                   aria-live="polite"></div>
-            </div>
-          </section>
-          <section class="session-share-panel d-flex flex-column gap-3 text-center"
-                   data-session-share-panel="code"
-                   th:attr="hidden=${checkInEnabled ? 'hidden' : null}">
-            <div class="session-share-panel-intro">Just tell your buddy the code and they'll be able to join.</div>
-            <div class="d-flex flex-column align-items-center gap-2">
+          <p class="text-muted mb-0">Invite the people you play with. They can join this session with the code, QR, or link.</p>
+          <div class="session-invite-grid w-100">
+            <section class="session-share-panel d-flex flex-column gap-3 text-center" aria-label="Shared code">
+              <h2 class="h6 mb-0">Share this code</h2>
               <div class="session-code-chip font-monospace" th:text="${ladder.inviteCode}">DINK-7</div>
-              <!-- Hide right now to reduce information overload
-              <div class="small text-muted"
-                   th:if="${sessionInviteActiveUntil != null}"
-                   th:attr="data-utc-time=${sessionInviteActiveUntil}, data-time-format='datetime'">
-                Code auto-disables at 2:30 PM.
-              </div> -->
-            </div>
-          </section>
-          <section class="session-share-panel d-flex flex-column gap-3 text-center"
-                   data-session-share-panel="qr"
-                   hidden>
-            <div class="session-share-panel-intro">Your buddies can scan this QR code with their camera app to join.</div>
-            <div class="invite-share-qr d-flex flex-column align-items-center gap-2">
-              <div class="invite-qr-wrapper border rounded bg-white p-2 shadow-sm"
-                   id="inviteQrCode"
-                   role="img"
-                   aria-label="QR code for group invite link">
-                <div class="text-muted small">Loading...</div>
+              <p class="text-muted small mb-0">Friends enter it under Join with a code. You'll approve their requests here.</p>
+              <button class="btn btn-nav-secondary" type="button" data-copy-target="inviteCodeInput">Copy code</button>
+            </section>
+            <section class="session-share-panel d-flex flex-column gap-3 text-center" aria-label="QR and invite link">
+              <h2 class="h6 mb-0">Scan or send an invite</h2>
+              <div class="invite-share-qr d-flex flex-column gap-2 align-items-center">
+                <div class="invite-qr-wrapper border rounded bg-white p-2 shadow-sm" id="inviteQrCode"
+                     role="img" aria-label="QR code for session invite link">
+                  <div class="text-muted small">Loading...</div>
+                </div>
+                <p class="text-muted small mb-0">Scan with a phone camera, or send the link to your friends.</p>
               </div>
-              <div class="text-muted small">
-                Or copy and send the url via text/email.
+              <button class="btn btn-action-primary" type="button" data-copy-target="inviteLinkInput">Copy invite link</button>
+            </section>
+          </div>
+          <details class="session-nearby-options w-100 text-start" th:if="${checkInEnabled}">
+            <summary class="fw-semibold">Find players at your courts with nearby sharing</summary>
+            <section class="session-share-panel d-flex flex-column gap-3 text-center"
+                     aria-label="Nearby sharing">
+              <div class="session-share-panel-intro"
+                   th:if="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
+                Nearby sharing is on for <span th:text="${ladder.nearbyShareLocationName}">Lakeside Courts</span>.
               </div>
-            </div>
-            <div class="session-share-panel-actions d-grid gap-2">
-              <button class="btn btn-outline-contrast w-100"
-                      type="button"
-                      data-copy-target="inviteLinkInput">Copy link</button>
-            </div>
-          </section>
+              <div class="session-share-panel-intro"
+                   th:if="${(ladder.nearbyShareLocationName == null or #strings.isEmpty(ladder.nearbyShareLocationName)) and ladder.nearbyShareLocationId != null}">
+                Nearby sharing is on for your current court.
+              </div>
+              <div class="session-share-panel-intro"
+                   th:unless="${ladder.nearbyShareLocationId != null}">
+                Let other players at your courts find this session.
+              </div>
+              <p class="text-muted small mb-0"
+                 th:if="${ladder.nearbyShareLocationId != null}">
+                Player can find nearby sessions and request to join.
+              </p>
+              <p class="text-muted small mb-0"
+                 th:unless="${ladder.nearbyShareLocationId != null}">
+                Access your phone's location to let nearby checked-in players discover this session and request to join.
+              </p>
+              <div class="d-flex flex-column gap-3 align-items-center"
+                   th:attr="data-session-nearby-host=${true}, data-session-id=${ladder.id}">
+                <div class="session-share-panel-actions d-grid gap-2">
+                  <button class="btn btn-action-primary w-100"
+                          type="button"
+                          data-nearby-start
+                          th:text="${ladder.nearbyShareLocationId != null} ? 'Refresh Nearby Court' : 'Use My Current Location'">
+                    Use My Current Location
+                  </button>
+                </div>
+                <div class="alert d-none mt-0 mb-0 w-100 text-start"
+                     data-nearby-status
+                     role="status"
+                     aria-live="polite"></div>
+              </div>
+            </section>
+          </details>
         </div>
       </div>
       <div class="d-grid gap-3"
            th:if="${currentUserIsAdmin}"
            th:classappend="${inviteActive ? ' border-top pt-3' : ''}">
         <div class="small text-uppercase text-muted fw-semibold mb-0 text-center">Pending Join Requests</div>
-        <p class="text-muted mb-0">
-          Players who ask to join this session appear here. Approve or deny each request.
-        </p>
         <div id="sessionJoinRequestsPanel" th:attr="data-session-id=${ladder.id}">
           <div class="text-muted"
                data-empty-state
                th:classappend="${#lists.isEmpty(pendingSessionJoinRequests)} ? '' : ' d-none'">
-            No pending join requests.
+            Requests to join with your code will appear here.
           </div>
           <ul class="list-group"
               data-request-list
@@ -324,10 +281,8 @@
         </div>
         <div th:each="s,iter : ${sessionStandings}"
              th:with="ratingValue=${sessionRatingByUserId != null and sessionRatingByUserId[s.userId] != null ? sessionRatingByUserId[s.userId] : 1000},
-                      globalRank=${sessionGlobalRankByUserId != null and sessionGlobalRankByUserId[s.userId] != null ? sessionGlobalRankByUserId[s.userId] : null},
                       momentumValue=${s.userId != null and sessionMomentumByUserId != null and sessionMomentumByUserId[s.userId] != null ? sessionMomentumByUserId[s.userId] : 0},
-                      globalRankSuffix=${globalRank == null ? '' : ((globalRank % 100 >= 11 and globalRank % 100 <= 13) ? 'th' : (globalRank % 10 == 1 ? 'st' : (globalRank % 10 == 2 ? 'nd' : (globalRank % 10 == 3 ? 'rd' : 'th'))))},
-                      ratingLabel=${globalRank != null ? ratingValue + ' (' + globalRank + globalRankSuffix + ')' : ratingValue + ''},
+                      ratingLabel=${ratingValue + ''},
                       clickableRating=${currentUserId != null and s.userId == currentUserId and improvementAdvice != null and improvementAdvice.recentChanges != null and !#lists.isEmpty(improvementAdvice.recentChanges)}"
              class="list-group-item ladder-standing-row session-roster-row"
              data-session-row
@@ -414,12 +369,12 @@
                         data-bs-target="#sessionRatingDetailsModal">
                   <span class="session-roster-number"
                         data-session-rating-trigger-text
-                        th:text="${ratingLabel}">1000 (4th)</span>
+                        th:text="${ratingLabel}">1000</span>
                 </button>
                 <span class="session-roster-number session-roster-stat-value"
                       data-session-stat-text
                       th:text="${ratingLabel}">
-                  1000 (4th)
+                  1000
                 </span>
               </span>
             </span>

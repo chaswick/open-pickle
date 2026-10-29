@@ -39,7 +39,9 @@ import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -90,6 +92,13 @@ public class UserController {
   @Autowired private RegistrationFormTokenService registrationFormTokenService;
 
   @Autowired private AuthenticationManager authenticationManager;
+
+  @InitBinder("user")
+  public void bindRegistrationFields(WebDataBinder binder) {
+    // The public signup form must never bind entity identity, privileges, quotas,
+    // reset tokens, or other account state controlled by the server.
+    binder.setAllowedFields("email", "password", "courtNamesInput", "acceptTerms", "timeZone");
+  }
 
   @ModelAttribute("displayNameMaxLength")
   public int displayNameMaxLength() {

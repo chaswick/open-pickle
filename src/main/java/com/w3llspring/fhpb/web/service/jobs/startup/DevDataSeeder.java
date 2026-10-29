@@ -23,6 +23,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
@@ -89,6 +90,7 @@ import com.w3llspring.fhpb.web.service.user.UserPublicCodeGenerator;
  */
 @Component
 @Profile({"dev", "docker"})
+@ConditionalOnProperty(name = "fhpb.dev.seed-data.enabled", havingValue = "true")
 public class DevDataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(DevDataSeeder.class);
@@ -189,7 +191,7 @@ public class DevDataSeeder {
             JdbcTemplate jdbc,
             @Value("${fhpb.dev.seed-confirmations:false}") boolean seedConfirmations,
             @Value("${fhpb.ladder.max-per-user:10}") int defaultMaxOwnedLadders,
-            @Value("${fhpb.dev.reset-data-on-startup:true}") boolean alwaysResetData,
+            @Value("${fhpb.dev.reset-data-on-startup:false}") boolean alwaysResetData,
             @Value("${fhpb.dev.reset-schema-on-startup:false}") boolean resetSchemaOnStartup,
             @Value("${fhpb.dev.seed-future-matches:false}") boolean seedFutureMatches) {
         this.userRepo = userRepo;

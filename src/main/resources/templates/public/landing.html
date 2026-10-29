@@ -5,10 +5,10 @@
       layout:decorate="~{layouts/public}">
 
 <head>
-    <title layout:fragment="title" th:text="${branding.landingPageTitle}">Free Global Pickleball Competition</title>
+    <title layout:fragment="title" th:text="${branding.landingPageTitle}">Make your next pickleball session count.</title>
 
     <th:block layout:fragment="styles">
-          <meta name="description" content="Free global pickleball competition with 6-week seasons, rating resets, automated standings, easy match logging, private leagues, round robins, and season trophies."
+          <meta name="description" content="Free pickleball sessions for friends and clubs. Share an invite, log scores, and track standings, round robins, and trophies together."
               th:content="${branding.landingMetaDescription}">
         <link rel="preload" as="image" href="/images/landing/openPickleScreenshot.png" th:href="@{${branding.snapshotPath}}">
     </th:block>
@@ -42,8 +42,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <h1 class="landing-title" th:text="${branding.landingPageTitle}">Free Global Pickleball Competition</h1>
-                                <p class="landing-copy" th:text="${branding.landingCopy}">Compete globally in a seasonal pickleball competition where your rating resets. Open-Pickle automates the standings, keeps match logging easy, and supports private leagues, round robins, trophies to track your finishes, and more.</p>
+                                <h1 class="landing-title" th:text="${branding.landingPageTitle}">Make your next pickleball session count.</h1>
+                                <p class="landing-copy" th:text="${branding.landingCopy}">Playing with friends? Start a session, share the code, and track your scores and standings together. Free to use with your regular crew or a whole club.</p>
                                 <div class="landing-proof-mark landing-proof-mark-cta">
                                     <img src="/images/landing/notamoneygrab.png"
                                          th:src="@{/images/landing/notamoneygrab.png}"
@@ -54,20 +54,16 @@
                                          fetchpriority="low">
                                 </div>
                                 <div class="landing-cta-row">
-                                    <a th:href="@{/register}" class="btn btn-action-success btn-lg">Register free</a>
+                                    <a th:href="@{/register}" class="btn btn-action-success btn-lg">Play with friends</a>
                                     <a th:href="@{/login}" class="btn btn-action-primary btn-lg">Sign in</a>
                                 </div>
                                 <ul class="landing-checklist">
-                                    <li>Free to join and play.</li>
-                                    <li>Released as <a href="https://github.com/chaswick/open-pickle" target="_blank">open-source software.</a></li>
-                                    <li>Short seasons with rating resets.</li>
-                                    <li>Automated standings after every confirmed match.</li>
-                                    <li>One click to get started in the global competition.</li>
-                                    <li>Private leagues and round robins for your regular crew.</li>
-                                    <li>Earn season trophies and rating bands based on your performance.</li>
-                                    <li>Community-supported, not paywalled.</li>
-                                    <li>Built with direct community feedback from active players.</li>
-                                    <li>And you help decide what to work on next!</li>
+                                    <li>Start with the people you already play with.</li>
+                                    <li>Invite friends with a code, QR, or link.</li>
+                                    <li>Log scores and see standings after each confirmed match.</li>
+                                    <li>Mix up your games with rotating partners or fixed-team round robins.</li>
+                                    <li>Earn season trophies and track your progress.</li>
+                                    <li>Free, community-supported, and <a href="https://github.com/chaswick/open-pickle" target="_blank" rel="noopener">open source.</a></li>
                                 </ul>
                                 <div class="landing-voices-inline" id="testimonial-strip" aria-live="polite">
                                     <p class="landing-voices-label">Player voices</p>
@@ -93,7 +89,7 @@
                                              decoding="async"
                                              fetchpriority="high">
                                     </div>
-                                    <figcaption class="landing-snapshot-caption">Live standings after every confirmed match, with movement you can feel all season long.</figcaption>
+                                    <figcaption class="landing-snapshot-caption">Your games, scores, and progress together, with standings that update after each confirmed match.</figcaption>
                                 </figure>
                             </div>
                         </div>
@@ -106,22 +102,22 @@
             <div class="container">
                 <div class="landing-section-header">
                     <p class="landing-section-kicker">Why use it</p>
-                    <h2 class="landing-section-title">This is not trying to replace Elo or DUPR.</h2>
-                    <p class="landing-section-copy">Those systems are built to estimate long-term player skill. This is built to measure something different: <strong>who is performing best over a defined stretch of time against the people they actually play.</strong></p>
+                    <h2 class="landing-section-title">A little more fun for the games you already play.</h2>
+                    <p class="landing-section-copy">Bring your friends, play your games, and keep the results in one place. <strong>Your own group is enough to get started.</strong></p>
                 </div>
                 <div class="landing-benefit-grid">
                     <article class="landing-benefit-card">
-                        <div class="landing-benefit-tag">One season, two ways to compete</div>
-                        <p>Track your place on the global leaderboard and your standing against the players you actually play. So even if the overall top spot is far away, your season still has real stakes.</p>
+                        <div class="landing-benefit-tag">A session for your crew</div>
+                        <p>One person starts the session and shares the invite. Everyone plays together, one player logs each result, and an opponent confirms it.</p>
                     </article>
                     <article class="landing-benefit-card">
                         <div class="landing-benefit-tag">Season trophies and ratings bands</div>
-                        <p>Earn trophies at the end of the season based on how you did against the players you actually competed with, as well as over all.</p>
+                        <p>Keep track of your progress with activity achievements, season trophies, and standings against the people you play.</p>
                         <button type="button" class="btn btn-outline-dark d-block w-auto mx-auto" data-bs-toggle="modal" data-bs-target="#achievementsModal">Preview trophies</button>
                     </article>
                     <article class="landing-benefit-card">
-                        <div class="landing-benefit-tag">Measures performance</div>
-                        <p>Built around real play patterns, it tells you how well you are playing right now, not from a cherry-picked set of matches.</p>
+                        <div class="landing-benefit-tag">Room to keep playing</div>
+                        <p>Mix things up with a round robin, follow your season standings, or look back at your match history. Start with what suits your group.</p>
                     </article>
                 </div>
             </div>
@@ -130,10 +126,10 @@
         <section class="landing-bottom-cta">
             <div class="container">
                 <div class="landing-bottom-panel">
-                    <h2>Ready to start a new season?</h2>
-                    <p>Create an account, invite your players, and run global competition, private leagues, and round robins with standings that stay current automatically.</p>
+                    <h2>Who are you playing with next?</h2>
+                    <p>Create a free account, start a session, and send the invite to your friends. Your next game is all you need to get started.</p>
                     <div class="landing-bottom-actions">
-                        <a th:href="@{/register}" class="btn btn-light btn-lg">Register free</a>
+                        <a th:href="@{/register}" class="btn btn-light btn-lg">Play with friends</a>
                         <a th:href="@{/login}" class="btn btn-action-primary btn-lg">Sign in</a>
                     </div>
                 </div>

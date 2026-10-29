@@ -1664,3 +1664,41 @@ body.app-home-tour-open {
 .roundrobin-standings-table .roundrobin-standings-last-col {
   padding-right: 1rem;
 }
+
+/* Keep first-use help beside the action without blocking the page. */
+[data-onboarding-guide][hidden] {
+  display: none !important;
+}
+
+.quick-start-guide {
+  border: 1px solid rgba(18, 68, 122, 0.15);
+  background: #f8fbff;
+}
+
+.quick-start-guide li + li {
+  margin-top: 0.4rem;
+}
+
+.session-invite-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.session-invite-grid > section {
+  min-width: 0;
+}
+
+.session-nearby-options summary {
+  cursor: pointer;
+}
+
+.session-nearby-options[open] summary {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 575.98px) {
+  .session-invite-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

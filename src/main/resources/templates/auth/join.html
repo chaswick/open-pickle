@@ -3,43 +3,17 @@
 
 <head>
   <title layout:fragment="title"
-         th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join Session' : 'Join Group'">Join Group</title>
+         th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join with a code' : 'Join Group'">Join Group</title>
   <meta layout:fragment="meta-tags">
 </head>
 
 <body>
   <main layout:fragment="content" class="container pt-4 pb-5 mt-4 text-center">
     <h4 class="mb-3"
-        th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join Session' : 'Join Group'">Join Group</h4>
+        th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join with a code' : 'Join Group'">Join Group</h4>
 
     <div class="row justify-content-center">
       <div class="col-12 col-lg-6 mx-auto card-stack-col">
-        <div class="card mb-3 text-start"
-             th:if="${sessionJoinContext == true and sessionApprovalMode != true and checkInEnabled}">
-          <div class="card-header card-header-title text-center">Find Nearby Sessions</div>
-          <div class="card-body">
-            <p class="text-muted small mb-3">
-              Recommended when you are already at the courts. Use your current location to see nearby sessions, then the host can approve you in-app.
-            </p>
-            <div class="d-grid gap-3" data-session-nearby-join="true">
-              <button class="btn btn-action-primary btn-lg"
-                      type="button"
-                      data-nearby-start>
-                Use My Current Location
-              </button>
-              <div class="alert d-none mt-0 mb-0 text-start" data-nearby-status role="status" aria-live="polite"></div>
-              <p class="text-muted small mb-0 text-start">
-                This only shares your location at the moment you tap the button.
-              </p>
-              <div class="card shadow-sm border-0 d-none text-start" data-nearby-results>
-                <div class="card-body">
-                  <div class="fw-semibold mb-2" data-nearby-results-summary>Sessions near your current location</div>
-                  <div class="list-group" data-nearby-results-list></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
         <form method="post" action="/groups/join" th:action="@{/groups/join}" id="joinLadderForm" class="text-start">
           <input type="hidden" name="returnTo" th:if="${returnToPath != null}" th:value="${returnToPath}">
 
@@ -58,11 +32,11 @@
               </p>
               <p class="text-muted small mb-3"
                  th:if="${sessionApprovalMode != true and sessionJoinContext == true and checkInEnabled}">
-                Ask the session owner for the shared code. Use this if nearby discovery is unavailable or you would rather type the code.
+                Ask your friend for the shared code. You can also scan their QR or open their invite link.
               </p>
               <p class="text-muted small mb-3"
                  th:if="${sessionApprovalMode != true and sessionJoinContext == true and !checkInEnabled}">
-                Ask the session owner for the shared code. Manual code joins stay inside Open-Pickle.
+                Ask your friend for the shared code, or open their invite link.
               </p>
 
               <div th:if="${sessionApprovalMode == true or sessionJoinContext == true}" class="d-grid gap-2 mb-3">
@@ -137,6 +111,33 @@
             </div>
           </div>
         </form>
+        <details class="card mb-3 text-start"
+             th:if="${sessionJoinContext == true and sessionApprovalMode != true and checkInEnabled}">
+          <summary class="p-3 fw-semibold">Find Nearby Sessions</summary>
+          <div class="card-body">
+            <p class="text-muted small mb-3">
+              Recommended when you are already at the courts. Use your current location to see nearby sessions, then the host can approve you in-app.
+            </p>
+            <div class="d-grid gap-3" data-session-nearby-join="true">
+              <button class="btn btn-action-primary btn-lg"
+                      type="button"
+                      data-nearby-start>
+                Use My Current Location
+              </button>
+              <div class="alert d-none mt-0 mb-0 text-start" data-nearby-status role="status" aria-live="polite"></div>
+              <p class="text-muted small mb-0 text-start">
+                This only shares your location at the moment you tap the button.
+              </p>
+              <div class="card shadow-sm border-0 d-none text-start" data-nearby-results>
+                <div class="card-body">
+                  <div class="fw-semibold mb-2" data-nearby-results-summary>Sessions near your current location</div>
+                  <div class="list-group" data-nearby-results-list></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
       </div>
     </div>
   </main>

@@ -1,11 +1,6 @@
 package com.w3llspring.fhpb.web.controller.competition;
 
-import com.w3llspring.fhpb.web.db.LadderConfigRepository;
-import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
-import com.w3llspring.fhpb.web.db.MatchRepository;
-import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.model.User;
-import com.w3llspring.fhpb.web.service.StoryModeService;
 import com.w3llspring.fhpb.web.service.user.UserStatsService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.lang.management.ManagementFactory;
@@ -24,29 +19,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class LadderController {
 
-  private final UserRepository userRepository;
-  private final LadderConfigRepository ladderConfigRepository;
-  private final MatchRepository matchRepository;
-  private final LadderSeasonRepository seasonRepository;
   private final UserStatsService userStatsService;
-  private final StoryModeService storyModeService;
   private final Instant appStartInstant;
   private final DateTimeFormatter timestampFormatter;
 
   public LadderController(
-      UserRepository userRepository,
-      LadderConfigRepository ladderConfigRepository,
-      MatchRepository matchRepository,
-      LadderSeasonRepository seasonRepository,
       UserStatsService userStatsService,
-      StoryModeService storyModeService,
       ObjectProvider<BuildProperties> buildPropertiesProvider) {
-    this.userRepository = userRepository;
-    this.ladderConfigRepository = ladderConfigRepository;
-    this.matchRepository = matchRepository;
-    this.seasonRepository = seasonRepository;
     this.userStatsService = userStatsService;
-    this.storyModeService = storyModeService;
     BuildProperties buildProperties = buildPropertiesProvider.getIfAvailable();
     Instant runtimeStart =
         Instant.ofEpochMilli(ManagementFactory.getRuntimeMXBean().getStartTime());
@@ -64,18 +44,10 @@ public class LadderController {
   public String showStats(Model model) {
     User currentUser = AuthenticatedUserSupport.currentUser();
 
-    // Community stats
     Map<String, Object> stats = new HashMap<>();
-    stats.put("userCount", userRepository.count());
-    stats.put("ladderCount", ladderConfigRepository.count());
-    stats.put("matchCount", matchRepository.count());
-    stats.put("activeSeasonCount", seasonRepository.countActive());
     stats.put("generatedAt", timestampFormatter.format(Instant.now()));
     stats.put("uptime", formatDuration(Duration.between(appStartInstant, Instant.now())));
     model.addAttribute("stats", stats);
-    if (storyModeService != null && storyModeService.isFeatureEnabled()) {
-      model.addAttribute("storyStats", storyModeService.buildCommunityStats(6));
-    }
 
     // User stats
     if (currentUser != null) {

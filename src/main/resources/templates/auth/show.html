@@ -65,38 +65,6 @@
       text-transform: uppercase;
     }
 
-    .session-share-methods {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-      gap: 0.5rem;
-      width: 100%;
-      max-width: 34rem;
-      margin: 0 auto;
-    }
-
-    .session-share-method {
-      border: 1px solid rgba(18, 68, 122, 0.16);
-      border-radius: 0.9rem;
-      background: #ffffff;
-      color: #23405e;
-      font-weight: 700;
-      transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
-    }
-
-    .session-share-method:hover,
-    .session-share-method:focus-visible {
-      border-color: rgba(18, 68, 122, 0.34);
-      color: #163757;
-    }
-
-    .session-share-method.is-active,
-    .session-share-method[aria-pressed="true"] {
-      background: #12447a;
-      border-color: #12447a;
-      color: #ffffff;
-      box-shadow: 0 10px 24px rgba(18, 68, 122, 0.16);
-    }
-
     .session-share-panel {
       border: 1px solid rgba(18, 68, 122, 0.12);
       border-radius: 1rem;
@@ -721,120 +689,6 @@
            data-session-recent-ticker-anchor="true">
         <div th:replace="~{fragments/show/sessionRecentTicker :: sessionRecentTicker}"></div>
       </div>
-    <div class="app-home-tour"
-         th:if="${isSessionLadder and sessionTourVariant != null}"
-         hidden
-         data-session-tour-root="true"
-         th:attr="data-session-tour-complete-url=@{/groups/session-tour-complete},
-                  data-session-tour-value=${sessionTourVariant}">
-      <div class="app-home-tour-backdrop"></div>
-      <div class="app-home-tour-dialog" role="dialog" aria-modal="true" aria-label="Session quick tour">
-        <div class="app-home-tour-card">
-          <div class="app-home-tour-progress">
-            <div class="app-home-tour-kicker">Session Tour</div>
-            <div class="app-home-tour-counter" data-session-tour-counter>1 of 4</div>
-          </div>
-
-          <th:block th:if="${sessionTourVariant == 'owner'}">
-            <section class="app-home-tour-step is-active" data-session-tour-step aria-hidden="false">
-              <h2 class="app-home-tour-title">Your Session Is Ready</h2>
-              <p class="app-home-tour-copy">
-                You started this session, so you are the one who shares it with everyone else.
-              </p>
-              <p class="app-home-tour-copy">
-                Use Your Session Controls for the shared code, QR, nearby sharing, and starting a round robin.
-              </p>
-            </section>
-
-            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
-              <h2 class="app-home-tour-title">Watch The Standings</h2>
-              <p class="app-home-tour-copy">
-                The standings card doubles as your live roster, so you can see who is in and how the session is going at a glance.
-              </p>
-              <p class="app-home-tour-copy">
-                Yellow-highlighted rows mean that player is tied to a logged result that still needs a confirmation. Use Your Session Controls for pending approvals, and Manage Invited Buddies for removals.
-              </p>
-            </section>
-
-            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
-              <h2 class="app-home-tour-title">Log Matches And Check The Mail</h2>
-              <p class="app-home-tour-copy">
-                The match buttons in the session header are where your group logs results and opens Inbox or Outbox to see what needs attention.
-              </p>
-              <p class="app-home-tour-copy">
-                Inbox shows matches waiting on your team. Outbox shows what your group logged and is still waiting on from the other team.
-              </p>
-            </section>
-
-            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
-              <h2 class="app-home-tour-title">End The Session When Play Is Over</h2>
-              <p class="app-home-tour-copy">
-                When you are done, use the leave button to end the session. As the starter, that closes it out for everyone.
-              </p>
-              <p class="app-home-tour-copy">
-                Until then, keep the invite handy and use Inbox, Outbox, and the yellow standings highlights to clean up any unconfirmed results.
-              </p>
-            </section>
-          </th:block>
-
-          <th:block th:if="${sessionTourVariant == 'joiner'}">
-            <section class="app-home-tour-step is-active" data-session-tour-step aria-hidden="false">
-              <h2 class="app-home-tour-title">You Are In The Session</h2>
-              <p class="app-home-tour-copy">
-                The session starter already handled setup, so your job is to play and use this page for the match flow.
-              </p>
-              <p class="app-home-tour-copy">
-                You do not need to create another session for the same set of games.
-              </p>
-            </section>
-
-            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
-              <h2 class="app-home-tour-title">One Player Logs The Match</h2>
-              <p class="app-home-tour-copy">
-                After each game, one player from the match should use the match buttons in the session header to log the result.
-              </p>
-              <p class="app-home-tour-copy">
-                Voice log or classic log both work. Only one person needs to enter the score, and that result will sit in Outbox until the other team confirms it.
-              </p>
-            </section>
-
-            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
-              <h2 class="app-home-tour-title">Use Inbox To Confirm</h2>
-              <p class="app-home-tour-copy">
-                If the other team logs the result first, one player from your team confirms it from Inbox.
-              </p>
-              <p class="app-home-tour-copy">
-                Yellow-highlighted rows in the standings mean there is still a logged match waiting on confirmation, so you can confirm right away or clear the inbox before you leave.
-              </p>
-            </section>
-
-            <section class="app-home-tour-step" data-session-tour-step aria-hidden="true">
-              <h2 class="app-home-tour-title">Watch The Standings And Leave When Done</h2>
-              <p class="app-home-tour-copy">
-                The standings card shows who is in the session, where you sit in the session results, and your global rank when it exists.
-              </p>
-              <p class="app-home-tour-copy">
-                When you are finished playing, leave the session here. Your confirmed results still count toward the competition season.
-              </p>
-            </section>
-          </th:block>
-
-          <div class="app-home-tour-footer">
-            <div class="app-home-tour-dots" aria-hidden="true">
-              <span class="app-home-tour-dot is-active" data-session-tour-dot></span>
-              <span class="app-home-tour-dot" data-session-tour-dot></span>
-              <span class="app-home-tour-dot" data-session-tour-dot></span>
-              <span class="app-home-tour-dot" data-session-tour-dot></span>
-            </div>
-            <div class="app-home-tour-actions">
-              <button type="button" class="btn btn-nav-secondary d-none" data-session-tour-back>Back</button>
-              <button type="button" class="btn btn-action-primary" data-session-tour-next>Next</button>
-              <button type="button" class="btn btn-action-primary d-none" data-session-tour-finish>Got it</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
     <div class="app-page-header">
       <div>
         <h1 class="app-page-title"
@@ -921,6 +775,19 @@
         </div>
       </div>
     </div>
+    <aside class="card quick-start-guide mb-3"
+           th:if="${isSessionLadder and sessionTourVariant != null}"
+           data-onboarding-guide
+           th:attr="data-onboarding-url=@{/groups/session-tour-complete}, data-onboarding-tour=${sessionTourVariant}">
+      <div class="card-body text-start">
+        <h2 class="h5" th:text="${sessionTourVariant == 'owner' ? 'Your Session Is Ready' : 'You Are In The Session'}">Your Session Is Ready</h2>
+        <p th:if="${sessionTourVariant == 'owner'}">Share the code, QR, or link below so your friends can join this session.</p>
+        <p th:if="${sessionTourVariant == 'joiner'}">Play with the people in this session. One player logs each score using the match buttons above.</p>
+        <p>One opponent confirms each result from Inbox. Confirmed matches update the standings.</p>
+        <button type="button" class="btn btn-nav-secondary btn-sm" data-onboarding-dismiss>Dismiss tips</button>
+        <p class="small text-danger mb-0 mt-2" data-onboarding-error role="status" hidden></p>
+      </div>
+    </aside>
     <div class="app-page-back">
       <a class="btn btn-nav-secondary btn-lg w-100"
          th:href="${isSessionLadder} ? @{/competition/sessions} : (${isCompetitionLadder} ? @{/competition} : @{/private-groups/{ladderId}(ladderId=${ladder.id},seasonId=${season != null ? season.id : null})})">Back</a>
@@ -944,97 +811,9 @@
     <script th:if="${isSessionLadder}"
             th:src="@{/js/session-standings.js(v=${assetVersion})}"
             src="/js/session-standings.js"></script>
+    <script th:src="@{/js/onboarding.js(v=${assetVersion})}" src="/js/onboarding.js"></script>
     <script>
     (function () {
-      (function () {
-        const root = document.querySelector('[data-session-tour-root="true"]');
-        if (!root) return;
-
-        const completeUrl = root.getAttribute('data-session-tour-complete-url');
-        const tourValue = root.getAttribute('data-session-tour-value');
-        const steps = Array.from(root.querySelectorAll('[data-session-tour-step]'));
-        const dots = Array.from(root.querySelectorAll('[data-session-tour-dot]'));
-        const counter = root.querySelector('[data-session-tour-counter]');
-        const backButton = root.querySelector('[data-session-tour-back]');
-        const nextButton = root.querySelector('[data-session-tour-next]');
-        const finishButton = root.querySelector('[data-session-tour-finish]');
-        let activeIndex = 0;
-
-        if (!steps.length || !tourValue) return;
-
-        const hideTour = function () {
-          root.setAttribute('hidden', 'hidden');
-          document.body.classList.remove('app-home-tour-open');
-        };
-
-        const showTour = function () {
-          root.removeAttribute('hidden');
-          document.body.classList.add('app-home-tour-open');
-        };
-
-        const completeTour = function () {
-          if (!completeUrl || !window.fetch) {
-            hideTour();
-            return;
-          }
-
-          const headers =
-              window.FHPB && window.FHPB.Csrf && typeof window.FHPB.Csrf.headers === 'function'
-                  ? window.FHPB.Csrf.headers({
-                      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                    })
-                  : { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' };
-          window.fetch(completeUrl, {
-            method: 'POST',
-            headers: headers,
-            body: 'tour=' + encodeURIComponent(tourValue)
-          }).then(function () {
-            hideTour();
-          }).catch(function () {
-            hideTour();
-          });
-        };
-
-        const renderStep = function () {
-          const lastIndex = steps.length - 1;
-
-          steps.forEach(function (step, index) {
-            const isActive = index === activeIndex;
-            step.classList.toggle('is-active', isActive);
-            step.setAttribute('aria-hidden', isActive ? 'false' : 'true');
-          });
-
-          dots.forEach(function (dot, index) {
-            dot.classList.toggle('is-active', index === activeIndex);
-          });
-
-          if (counter) {
-            counter.textContent = (activeIndex + 1) + ' of ' + steps.length;
-          }
-
-          backButton.classList.toggle('d-none', activeIndex === 0);
-          nextButton.classList.toggle('d-none', activeIndex === lastIndex);
-          finishButton.classList.toggle('d-none', activeIndex !== lastIndex);
-        };
-
-        showTour();
-        renderStep();
-
-        backButton.addEventListener('click', function () {
-          activeIndex = Math.max(0, activeIndex - 1);
-          renderStep();
-        });
-
-        nextButton.addEventListener('click', function () {
-          activeIndex = Math.min(steps.length - 1, activeIndex + 1);
-          renderStep();
-        });
-
-        finishButton.addEventListener('click', function () {
-          completeTour();
-        });
-      })();
-
       ['banToast', 'unbanToast', 'inviteDisabledToast', 'joinedToast', 'leftToast', 'passwordChangedToast', 'matchLoggedToast'].forEach(function (id) {
         const el = document.getElementById(id);
         if (el && typeof bootstrap !== 'undefined' && bootstrap.Toast) {
@@ -1056,44 +835,6 @@
           });
         });
       }
-
-      (function () {
-        const shareRoot = document.querySelector('[data-session-share-root]');
-        if (!shareRoot) return;
-
-        const buttons = Array.from(shareRoot.querySelectorAll('[data-session-share-tab]'));
-        const panels = Array.from(document.querySelectorAll('[data-session-share-panel]'));
-        if (!buttons.length || !panels.length) return;
-
-        const activate = function (target) {
-          if (!target) return;
-          buttons.forEach(function (button) {
-            const active = button.getAttribute('data-session-share-tab') === target;
-            button.classList.toggle('is-active', active);
-            button.setAttribute('aria-pressed', active ? 'true' : 'false');
-          });
-          panels.forEach(function (panel) {
-            const active = panel.getAttribute('data-session-share-panel') === target;
-            if (active) {
-              panel.removeAttribute('hidden');
-            } else {
-              panel.setAttribute('hidden', 'hidden');
-            }
-          });
-        };
-
-        buttons.forEach(function (button) {
-          button.addEventListener('click', function () {
-            activate(button.getAttribute('data-session-share-tab'));
-          });
-        });
-
-        const initialButton =
-            buttons.find(function (button) {
-              return button.getAttribute('aria-pressed') === 'true';
-            }) || buttons[0];
-        activate(initialButton ? initialButton.getAttribute('data-session-share-tab') : null);
-      })();
 
       const copyButtons = document.querySelectorAll('[data-copy-target]');
       copyButtons.forEach(function (btn) {

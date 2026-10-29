@@ -32,6 +32,19 @@
   <th:block layout:fragment="scripts">
     <script>
       document.addEventListener('DOMContentLoaded', function () {
+        if (window.location.hash === '#recent-matches') {
+          var recentMatches = document.getElementById('recent-matches');
+          if (recentMatches) {
+            var collapse = recentMatches.querySelector('.collapse');
+            if (collapse) {
+              FHPB.CollapseState.applyExpandedState(collapse, true, document);
+            }
+            window.requestAnimationFrame(function () {
+              recentMatches.scrollIntoView({ block: 'start' });
+            });
+          }
+        }
+
         var picker = document.querySelector('[data-badge-picker]');
         if (!picker) {
           return;

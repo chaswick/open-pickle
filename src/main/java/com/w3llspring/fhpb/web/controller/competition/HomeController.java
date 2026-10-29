@@ -304,7 +304,7 @@ public class HomeController {
       @RequestParam(value = "matchId", required = false) Long matchId,
       @RequestParam(value = "standingsPage", required = false) Integer standingsPage,
       @RequestParam(value = "standingsSize", required = false) Integer standingsSize,
-      @RequestParam(value = "view", required = false, defaultValue = "all") String view,
+      @RequestParam(value = "view", required = false, defaultValue = "played") String view,
       @RequestParam(value = "findMe", required = false, defaultValue = "false") boolean findMe,
       Model model) {
     User currentUser = resolveCurrentUser();
@@ -354,14 +354,11 @@ public class HomeController {
         seasonStandingsViewService.load(season);
     var standings = standingsView.standings();
     model.addAttribute("standings", standings);
-    String normalizedCompetitionView = normalizeCompetitionStandingsView(view);
-    var filteredCompetitionRows = standingsView.rows();
-    if ("played".equalsIgnoreCase(normalizedCompetitionView)) {
-      Set<Long> visibleUserIds = new LinkedHashSet<>(playedAgainstUserIds);
-      visibleUserIds.add(currentUser.getId());
-      filteredCompetitionRows =
-          standingsPageService.filterToVisibleUsers(standingsView.rows(), visibleUserIds);
-    }
+    // Legacy view parameters cannot switch the score tracker back to a public leaderboard.
+    Set<Long> visibleUserIds = new LinkedHashSet<>(playedAgainstUserIds);
+    visibleUserIds.add(currentUser.getId());
+    var filteredCompetitionRows =
+        standingsPageService.filterToVisibleUsers(standingsView.rows(), visibleUserIds);
     int resolvedStandingsPageSize =
         standingsPageService.parsePageSize(
             standingsSize, standingsPageSizeDefault, MAX_STANDINGS_PAGE_SIZE);
@@ -381,8 +378,18 @@ public class HomeController {
             resolvedStandingsPageSize,
             standingsPageSizeDefault,
             MAX_STANDINGS_PAGE_SIZE);
+    // Pagination copies the rows, so these presentation changes leave stored ratings and
+    // the shared season standings unchanged. Ranks belong to this player's playing circle.
+    for (int i = 0; i < competitionSlice.rows().size(); i++) {
+      var row = competitionSlice.rows().get(i);
+      row.rank = competitionSlice.pageNumber() * competitionSlice.pageSize() + i + 1;
+      row.bandName = null;
+      row.bandLabel = null;
+      row.bandCssClass = "";
+      row.showBandHeader = false;
+    }
     standingsPageService.applyToModel(model, competitionSlice);
-    model.addAttribute("competitionStandingsView", normalizedCompetitionView);
+    model.addAttribute("competitionStandingsView", "played");
     model.addAttribute("competitionFindMeActive", findMe);
     model.addAttribute(
         "reportedCompetitionUserIds",
@@ -1162,13 +1169,6 @@ public class HomeController {
       return "/private-groups";
     }
     return null;
-  }
-
-  private String normalizeCompetitionStandingsView(String view) {
-    if ("played".equalsIgnoreCase(view)) {
-      return "played";
-    }
-    return "all";
   }
 
   private MatchDashboardService.DashboardModel buildDashboardModel(

@@ -11,7 +11,7 @@
     <div class="app-page-header">
       <div>
         <h1 class="app-page-title">Stats</h1>
-        <p class="app-page-subtitle">Your pickleball numbers and a live community snapshot.</p>
+        <p class="app-page-subtitle">Your matches, progress, and results with the people you play.</p>
       </div>
     </div>
 
@@ -27,6 +27,11 @@
             Your Stats
           </div>
           <div class="card-body p-4 p-md-5">
+            <div class="alert alert-info" th:if="${userStats.totalMatches == 0}">
+              <p class="mb-2">Your stats start with your first confirmed match. Start a session with friends, or join theirs.</p>
+              <a class="btn btn-action-primary" th:href="@{/competition/sessions}">Play with friends</a>
+            </div>
+            <div th:if="${userStats.totalMatches > 0}">
             <h5 class="fw-semibold mb-3 text-center">Performance Stats</h5>
             <div class="row gy-3 mb-4">
               <div class="col-6 col-md-4">
@@ -226,6 +231,7 @@
             <hr class="my-4">
 
             
+            </div>
             <h5 class="fw-semibold mb-3 text-center">Site Activity</h5>
             <div class="row gy-3">
               <div class="col-6 col-md-4">
@@ -233,18 +239,6 @@
                   <h6 class="fw-semibold mb-1">Account Age</h6>
                   <p class="h4 mb-0" th:text="${userStats.accountAgeDays}">0</p>
                   <small class="text-muted">days</small>
-                </div>
-              </div>
-              <div class="col-6 col-md-4">
-                <div class="stat-tile">
-                  <h6 class="fw-semibold mb-1">Active Groups</h6>
-                  <p class="h4 mb-0" th:text="${userStats.activeLadders}">0</p>
-                </div>
-              </div>
-              <div class="col-6 col-md-4">
-                <div class="stat-tile">
-                  <h6 class="fw-semibold mb-1">Groups as Admin</h6>
-                  <p class="h4 mb-0" th:text="${userStats.laddersAsAdmin}">0</p>
                 </div>
               </div>
               <div class="col-6 col-md-4">
@@ -258,12 +252,6 @@
                 <div class="stat-tile">
                   <h6 class="fw-semibold mb-1">Matches Corrected</h6>
                   <p class="h4 mb-0" th:text="${userStats.matchesCorrected}">0</p>
-                </div>
-              </div>
-              <div class="col-6 col-md-4">
-                <div class="stat-tile">
-                  <h6 class="fw-semibold mb-1">Best Current Rank</h6>
-                  <p class="h4 mb-0" th:text="${userStats.bestCurrentRank}">-</p>
                 </div>
               </div>
               <div class="col-6 col-md-4">
@@ -284,95 +272,8 @@
 
         
         <div class="card">
-          <div class="card-header card-header-title text-center">
-            Community Snapshot
-          </div>
+          <div class="card-header card-header-title text-center">Report details</div>
           <div class="card-body p-4 p-md-5">
-            <p class="text-muted text-center mb-4">
-              Anonymous stats refreshed whenever you open this page.
-            </p>
-
-            <div class="row gy-4">
-              <div class="col-12 col-sm-6">
-                <div class="stat-tile">
-                  <h4 class="fw-semibold mb-1">Registered Players</h4>
-                  <p class="display-6 mb-0" th:text="${stats.userCount}">0</p>
-                  <small class="text-muted">Unique accounts created</small>
-                </div>
-              </div>
-
-              <div class="col-12 col-sm-6">
-                <div class="stat-tile">
-                  <h4 class="fw-semibold mb-1">Active Groups</h4>
-                  <p class="display-6 mb-0" th:text="${stats.ladderCount}">0</p>
-                  <small class="text-muted">Groups currently organizing play</small>
-                </div>
-              </div>
-
-              <div class="col-12 col-sm-6">
-                <div class="stat-tile">
-                  <h4 class="fw-semibold mb-1">Matches Logged</h4>
-                  <p class="display-6 mb-0" th:text="${stats.matchCount}">0</p>
-                  <small class="text-muted">Scorecards tracked so far</small>
-                </div>
-              </div>
-
-              <div class="col-12 col-sm-6">
-                <div class="stat-tile">
-                  <h4 class="fw-semibold mb-1">Current Seasons</h4>
-                  <p class="display-6 mb-0" th:text="${stats.activeSeasonCount}">0</p>
-                  <small class="text-muted">Groups with an active season right now</small>
-                </div>
-              </div>
-            </div>
-            <!-- Story not ready for prime time yet
-            <div class="row gy-4 mt-1" th:if="${storyStats != null}">
-              <div class="col-12 col-sm-6">
-                <div class="stat-tile">
-                  <h4 class="fw-semibold mb-1">Story Finishes</h4>
-                  <p class="display-6 mb-0" th:text="${storyStats.finishedCount}">0</p>
-                  <small class="text-muted">Story-mode seasons where Pat completed the full trip</small>
-                </div>
-              </div>
-              <div class="col-12 col-sm-6">
-                <div class="stat-tile">
-                  <h4 class="fw-semibold mb-1">Story Seasons Ended</h4>
-                  <p class="display-6 mb-0" th:text="${storyStats.endedStorySeasons}">0</p>
-                  <small class="text-muted">Ended story-mode seasons tracked so far</small>
-                </div>
-              </div>
-            </div>
-            -->
-
-            <div class="mt-4" th:if="${storyStats != null and storyStats.recentResults != null and !#lists.isEmpty(storyStats.recentResults)}">
-              <h5 class="fw-semibold mb-3 text-center">Recent Story Finishes</h5>
-              <div class="list-group">
-                <div class="list-group-item" th:each="result : ${storyStats.recentResults}">
-                  <div class="d-flex flex-column gap-2">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                      <div>
-                        <strong th:text="${result.ladderTitle}">Group</strong>
-                        <span class="text-muted">|</span>
-                        <span th:text="${result.seasonName}">Season</span>
-                      </div>
-                      <span class="text-muted small"
-                            th:if="${result.endedAt != null}"
-                            th:attr="data-utc-time=${result.endedAt},data-time-format='datetime'"></span>
-                    </div>
-                    <div class="small text-muted" th:text="${result.summary}">Pat finished the trip.</div>
-                    <div class="d-flex flex-wrap gap-3 small">
-                      <span th:text="'Route: ' + ${result.travelMode}">Route: Drive</span>
-                      <span th:text="'Mood: ' + ${result.mood}">Mood: organized and unstoppable</span>
-                      <span th:text="'Matches: ' + ${result.totalMatches}">Matches: 0</span>
-                      <span th:text="'Contributors: ' + ${result.contributorCount}">Contributors: 0</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <hr class="my-4">
-
             <div class="row gy-3">
               <div class="col-12 col-md-6">
                 <div class="stat-tile">

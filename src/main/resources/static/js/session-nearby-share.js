@@ -359,7 +359,7 @@
         if (payload.sessions && payload.sessions.length) {
           setStatus(root, 'Choose a nearby session below. The host will still approve your request.', 'info');
         } else {
-          setStatus(root, 'No nearby sessions found. You can still use the shared code below.', 'warning');
+          setStatus(root, 'No nearby sessions found. Enter a shared code above, or start a session with your friends from Home.', 'warning');
         }
       },
       {

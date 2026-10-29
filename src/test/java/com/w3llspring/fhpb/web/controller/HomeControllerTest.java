@@ -930,6 +930,8 @@ class HomeControllerTest {
 
     activeCompetitionSeason = season;
     when(standingRepo.findBySeasonOrderByRankNoAscWithUser(season)).thenReturn(List.of(standing));
+    when(matchRepo.findBySeasonOrderByPlayedAtDescWithUsers(season))
+        .thenReturn(matchesAgainst(viewer, season, List.of(target.getId())));
     competitionDisplayNameModerationService.reportedTargetUserIds = Set.of(456L);
     competitionDisplayNameModerationService.applyHandler =
         (rows, ignoredStandings) -> {
@@ -1115,6 +1117,9 @@ class HomeControllerTest {
     activeCompetitionSeason = season;
     when(standingRepo.findBySeasonOrderByRankNoAscWithUser(season))
         .thenReturn(List.of(new LadderStanding()));
+    when(matchRepo.findBySeasonOrderByPlayedAtDescWithUsers(season))
+        .thenReturn(matchesAgainst(viewer, season,
+            java.util.stream.LongStream.range(1000, 1030).boxed().toList()));
 
     ExtendedModelMap model = new ExtendedModelMap();
 
@@ -1212,6 +1217,9 @@ class HomeControllerTest {
     activeCompetitionSeason = season;
     when(standingRepo.findBySeasonOrderByRankNoAscWithUser(season))
         .thenReturn(List.of(new LadderStanding()));
+    when(matchRepo.findBySeasonOrderByPlayedAtDescWithUsers(season))
+        .thenReturn(matchesAgainst(viewer, season,
+            java.util.stream.LongStream.range(1000, 1030).boxed().toList()));
 
     ExtendedModelMap model = new ExtendedModelMap();
 
@@ -1334,8 +1342,10 @@ class HomeControllerTest {
     assertThat(rows).extracting(row -> row.userId).contains(123L);
   }
 
-  @Test
-  void competitionPagePlayedOnlyFilterKeepsVisiblePlayersInCorrectDivisions() {
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.NullAndEmptySource
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"played", "all", "unknown"})
+  void competitionPageAlwaysShowsPlayingCircleWithoutGlobalRanks(String requestedView) {
     User viewer = new User();
     viewer.setId(123L);
     viewer.setNickName("Tester");
@@ -1373,6 +1383,8 @@ class HomeControllerTest {
     secondMatch.setA1(viewer);
     secondMatch.setB1(silverOpponent);
 
+    List<com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow> sourceRows =
+        new java.util.ArrayList<>();
     ladderService =
         new com.w3llspring.fhpb.web.service.LadderV2Service(
             null,
@@ -1396,7 +1408,8 @@ class HomeControllerTest {
           public java.util.List<com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow>
               buildDisplayRows(java.util.List<LadderStanding> standings) {
             java.util.List<com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow> rows =
-                new java.util.ArrayList<>();
+                sourceRows;
+            rows.clear();
 
             rows.add(buildCompetitionRow(1, 123L, "Tester", "Gold Division", "ladder-band-1"));
             rows.add(
@@ -1429,7 +1442,7 @@ class HomeControllerTest {
 
     ExtendedModelMap model = new ExtendedModelMap();
 
-    String view = controller.competition(null, null, null, 0, 25, "played", false, model);
+    String view = controller.competition(null, null, null, 0, 25, requestedView, false, model);
 
     assertThat(view).isEqualTo("auth/competition");
     @SuppressWarnings("unchecked")
@@ -1437,26 +1450,25 @@ class HomeControllerTest {
         (List<com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow>)
             model.get("ladderDisplay");
     assertThat(rows).extracting(row -> row.userId).containsExactly(123L, 456L, 789L);
-    assertThat(rows)
-        .extracting(row -> row.bandName)
-        .containsExactly("Gold Division", "Gold Division", "Silver Division");
-    assertThat(rows.get(0).showBandHeader).isTrue();
-    assertThat(rows.get(1).showBandHeader).isFalse();
-    assertThat(rows.get(2).showBandHeader).isTrue();
-  }
+    assertThat(rows).extracting(row -> row.rank).containsExactly(1, 2, 3);
+    assertThat(rows).allSatisfy(row -> {
+      assertThat(row.showBandHeader).isFalse();
+      assertThat(row.bandName).isNull();
+    });
+    assertThat(model.get("competitionStandingsView")).isEqualTo("played");
+    assertThat(sourceRows.get(3).rank).isEqualTo(21);
+    assertThat(sourceRows.get(3).bandName).isEqualTo("Silver Division");
+    assertThat(sourceRows.get(3).showBandHeader).isTrue();
 
-  private com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow buildCompetitionRow(
-      int rank, long userId, String displayName, String bandName, String bandCssClass) {
-    com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow row =
-        new com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow();
-    row.rank = rank;
-    row.userId = userId;
-    row.displayName = displayName;
-    row.bandName = bandName;
-    row.bandLabel = bandName;
-    row.bandCssClass = bandCssClass;
-    row.points = 200 - rank;
-    return row;
+    // A player with no opponents sees their own standing, never the public table.
+    when(matchRepo.findBySeasonOrderByPlayedAtDescWithUsers(season)).thenReturn(List.of());
+    ExtendedModelMap emptyCircleModel = new ExtendedModelMap();
+    controller.competition(null, null, null, 0, 25, requestedView, false, emptyCircleModel);
+    @SuppressWarnings("unchecked")
+    var ownRows = (List<com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow>)
+        emptyCircleModel.get("ladderDisplay");
+    assertThat(ownRows).extracting(row -> row.userId).containsExactly(123L);
+    assertThat(ownRows.get(0).rank).isEqualTo(1);
   }
 
   @Test
@@ -1702,4 +1714,30 @@ class HomeControllerTest {
       return reportOutcome;
     }
   }
+  private com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow buildCompetitionRow(
+      int rank, long userId, String displayName, String bandName, String bandCssClass) {
+    com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow row =
+        new com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow();
+    row.rank = rank;
+    row.userId = userId;
+    row.displayName = displayName;
+    row.bandName = bandName;
+    row.bandLabel = bandName;
+    row.bandCssClass = bandCssClass;
+    row.points = 200 - rank;
+    return row;
+  }
+
+  private List<Match> matchesAgainst(User viewer, LadderSeason season, List<Long> opponentIds) {
+    return opponentIds.stream().map(id -> {
+      User opponent = new User();
+      opponent.setId(id);
+      Match match = new Match();
+      match.setSeason(season);
+      match.setA1(viewer);
+      match.setB1(opponent);
+      return match;
+    }).toList();
+  }
+
 }

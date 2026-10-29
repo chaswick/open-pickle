@@ -1,10 +1,13 @@
 {
   "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
-    "test:ui": "vitest run src/test/frontend/session-standings.test.js"
+    "test:ui": "vitest run src/test/frontend"
   },
   "devDependencies": {
     "jsdom": "^26.1.0",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.12"
   }
 }

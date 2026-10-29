@@ -1,12 +1,13 @@
 # Open-Pickle
 
-Open-Pickle is a Spring Boot web application for running a free global pickleball competition plus private groups, sessions, round robins, trophies, and voice-assisted match logging.
+Open-Pickle is a Spring Boot web application for playing pickleball with friends and clubs: invite players to a session, log results, and track standings together. It also supports seasonal standings, round robins, trophies, and voice-assisted match logging.
+
+The home page offers session creation, code-based joining, and links back to active sessions. First-use guidance stays inline, session codes and QR invites are visible immediately, and season standings focus on the opponents you have played. Community totals and private-league entry points are hidden from the main experience; existing league data and routes are retained for compatibility.
 
 Current product surface:
 
-- global competition seasons
-- private groups and invite-based group membership
-- competition sessions
+- sessions with shared codes, QR invites, and invite links
+- season standings for your playing circle
 - classic and voice-assisted match logging
 - match confirmation, dispute, nullify, and reopen flows
 - round robin scheduling and management
@@ -54,6 +55,7 @@ The standard for code in this repo is not whether AI produced part of it. The st
 
 - Docker
 - Java 25 for local build/test work
+- Node.js 22 LTS (22.12 or newer) and npm for frontend tests
 
 The app targets Java 25 and the repo is set up to build and test cleanly on Java 25. See [`build-java25-notes.md`](./docs/build-java25-notes.md).
 
@@ -75,6 +77,17 @@ The local Docker stack uses:
 - the app on `localhost:8090`
 - `config/local-secrets.env` as the only local secrets file
 
+Demo accounts and fixtures are disabled by default. For an isolated development database,
+set `FHPB_DEV_SEED_DATA_ENABLED=true` to create them. Demo fixtures include accounts with
+publicly known passwords; keep this disabled on hosted deployments. Data and schema resets
+also default to off. A deliberate schema reset requires both
+`FHPB_DEV_RESET_SCHEMA_ON_STARTUP=true` and `FHPB_FLYWAY_CLEAN_DISABLED=false`.
+
+For a fresh deployment without demo fixtures, enable `FHPB_BOOTSTRAP_GLOBAL_LADDER_ENABLED`
+and `FHPB_BOOTSTRAP_GLOBAL_LADDER_AUTO_ENROLL_NEW`, and configure
+`FHPB_BOOTSTRAP_ADMIN_EMAIL` and a strong `FHPB_BOOTSTRAP_ADMIN_PASSWORD`.
+This initializes the shared season used by sessions and enrolls new players.
+
 ## Running Tests
 
 Use the same command CI runs so local results match GitHub as closely as possible:
@@ -90,6 +103,7 @@ Focused test slices are used heavily during refactors, but the full suite is exp
 This public repo includes local Docker support, but it does not include the maintainer's private production deployment bundle, server notes, or host-specific operations config.
 
 If you self-host, treat this repo as the application source and create your own deployment configuration around it.
+Build release images with `docker compose build --pull` to refresh the Java base images.
 Operator-specific legal text, support links, analytics IDs, and donation links have been replaced with neutral defaults or placeholders and should be customized in your own deployment.
 
 ## Live Service
