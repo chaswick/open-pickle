@@ -10,75 +10,21 @@ import java.util.stream.IntStream;
 
 public final class SessionInviteCodeSupport {
 
-  private static final Pattern CANONICAL_PATTERN = Pattern.compile("^([A-Z]+)-([A-Z]+)-(\\d{1,3})$");
+  private static final Pattern CANONICAL_PATTERN =
+      Pattern.compile("^([A-Z]+)-([A-Z]+)-(\\d{1,3})$");
 
   public static final List<String> WORD_ONE_OPTIONS =
       List.of(
-          "AMBER",
-          "APPLE",
-          "BOLD",
-          "BRISK",
-          "CANYON",
-          "CEDAR",
-          "CITRUS",
-          "CLEAR",
-          "CLOVER",
-          "COPPER",
-          "CRISP",
-          "DELTA",
-          "EAGER",
-          "EMBER",
-          "FRESH",
-          "GOLD",
-          "GROVE",
-          "HARBOR",
-          "IVORY",
-          "JADE",
-          "KINETIC",
-          "LUCKY",
-          "MAPLE",
-          "MINT",
-          "NOVA",
-          "OAK",
-          "PEPPER",
-          "PINE",
-          "QUICK",
-          "RIVER",
-          "SOLAR",
-          "SPRUCE",
-          "SUNNY",
-          "TIDAL",
-          "UNION",
-          "VIVID",
-          "WILD",
-          "YONDER",
-          "ZEST");
+          "AMBER", "APPLE", "BOLD", "BRISK", "CANYON", "CEDAR", "CITRUS", "CLEAR", "CLOVER",
+          "COPPER", "CRISP", "DELTA", "EAGER", "EMBER", "FRESH", "GOLD", "GROVE", "HARBOR", "IVORY",
+          "JADE", "KINETIC", "LUCKY", "MAPLE", "MINT", "NOVA", "OAK", "PEPPER", "PINE", "QUICK",
+          "RIVER", "SOLAR", "SPRUCE", "SUNNY", "TIDAL", "UNION", "VIVID", "WILD", "YONDER", "ZEST");
 
   public static final List<String> WORD_TWO_OPTIONS =
       List.of(
-          "ACE",
-          "BALL",
-          "COURT",
-          "DINK",
-          "DRIVE",
-          "DROP",
-          "GAME",
-          "GLIDE",
-          "LOB",
-          "MATCH",
-          "NET",
-          "PADDLE",
-          "PICKLE",
-          "POINT",
-          "RALLY",
-          "RETURN",
-          "SERVE",
-          "SHOT",
-          "SLICE",
-          "SPIN",
-          "VOLLEY",
-          "WIN",
-          "ZONE");
+          "ACE", "BALL", "COURT", "DINK", "DRIVE", "DROP", "GAME", "GLIDE", "LOB", "MATCH", "NET",
+          "PADDLE", "PICKLE", "POINT", "RALLY", "RETURN", "SERVE", "SHOT", "SLICE", "SPIN",
+          "VOLLEY", "WIN", "ZONE");
 
   public static final List<String> NUMBER_OPTIONS =
       IntStream.rangeClosed(10, 99).mapToObj(Integer::toString).toList();
@@ -98,7 +44,8 @@ public final class SessionInviteCodeSupport {
       return null;
     }
     String normalized =
-        value.trim()
+        value
+            .trim()
             .toUpperCase(Locale.ROOT)
             .replaceAll("[^A-Z0-9]+", "-")
             .replaceAll("^-+", "")
@@ -151,12 +98,25 @@ public final class SessionInviteCodeSupport {
     return reference.isBefore(expiresAt);
   }
 
+  public static boolean isCurrentlyActive(
+      com.w3llspring.fhpb.web.model.LadderConfig session, long activeSeconds, Instant now) {
+    if (session == null) return false;
+    if (session.isMatchupSession()) {
+      Instant reference = now == null ? Instant.now() : now;
+      return session.getInviteCode() != null
+          && !session.getInviteCode().isBlank()
+          && session.getStatus() == com.w3llspring.fhpb.web.model.LadderConfig.Status.ACTIVE
+          && (session.getExpiresAt() == null || session.getExpiresAt().isAfter(reference));
+    }
+    return isCurrentlyActive(
+        session.getInviteCode(), session.getLastInviteChangeAt(), activeSeconds, now);
+  }
+
   private static String normalizeWord(String value) {
     if (value == null) {
       return null;
     }
-    String normalized =
-        value.trim().toUpperCase(Locale.ROOT).replaceAll("[^A-Z]+", "");
+    String normalized = value.trim().toUpperCase(Locale.ROOT).replaceAll("[^A-Z]+", "");
     return normalized.isBlank() ? null : normalized;
   }
 

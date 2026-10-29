@@ -28,6 +28,19 @@ class MatchFactoryTest {
 
   private MatchFactory matchFactory;
 
+  @Test
+  void sessionGuestOnlyTeamsRemainRecordableWithoutAffectingSeasonRatings() {
+    Match match = buildGuestOnlyOpposingTeamMatch(LadderSecurity.STANDARD, false);
+    LadderConfig session = new LadderConfig();
+    session.setType(LadderConfig.Type.SESSION);
+    match.setSourceSessionConfig(session);
+    match.setB1GuestName("Taylor");
+    Match saved = matchFactory.createMatch(match);
+    assertThat(saved.isExcludeFromStandings()).isTrue();
+    assertThat(saved.getB1GuestName()).isEqualTo("Taylor");
+    verify(matchConfirmationService).createRequests(saved);
+  }
+
   @BeforeEach
   void setUp() {
     matchFactory = new MatchFactory(matchRepository, matchConfirmationService);

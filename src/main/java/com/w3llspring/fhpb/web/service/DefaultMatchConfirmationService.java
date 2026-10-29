@@ -559,7 +559,7 @@ public class DefaultMatchConfirmationService implements MatchConfirmationService
           team,
           MatchConfirmation.ConfirmationMethod.AUTO,
           Instant.now(),
-          true);
+          !match.isOrganizerConfirmed());
       keepPlayerIds.add(autoConfirmer.getId());
     }
   }
@@ -784,6 +784,7 @@ public class DefaultMatchConfirmationService implements MatchConfirmationService
   }
 
   private LadderSecurity resolveSecurityLevel(Match match) {
+    if (match != null && match.isOrganizerConfirmed()) return LadderSecurity.SELF_CONFIRM;
     if (match == null || match.getSeason() == null || match.getSeason().getLadderConfig() == null) {
       return LadderSecurity.STANDARD;
     }

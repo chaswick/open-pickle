@@ -123,7 +123,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
           + "and (m.state is null or m.state <> com.w3llspring.fhpb.web.model.MatchState.NULLIFIED)")
   List<Match> findBySeason(@Param("season") LadderSeason season);
 
-  long countByLoggedBy_IdAndCreatedAtGreaterThanEqual(
+  long countByLoggedBy_IdAndCreatedAtGreaterThanEqualAndOrganizerConfirmedFalse(
       Long loggedById, Instant createdAtStartInclusive);
 
   @Query(
@@ -263,22 +263,16 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
           + "where m.id = :id")
   java.util.Optional<Match> findByIdWithUsers(@Param("id") Long id);
 
+  // Keep the match locked while loading its graph, without acquiring write locks
+  // on season/player rows that concurrent standings replay also needs.
   @Lock(LockModeType.PESSIMISTIC_WRITE)
-  @Query(
-      "select distinct m from Match m "
-          + "left join fetch m.a1 "
-          + "left join fetch m.a2 "
-          + "left join fetch m.b1 "
-          + "left join fetch m.b2 "
-          + "left join fetch m.loggedBy "
-          + "left join fetch m.sourceSessionConfig "
-          + "left join fetch m.editedBy "
-          + "left join fetch m.disputedBy "
-          + "left join fetch m.cosignedBy "
-          + "left join fetch m.season s "
-          + "left join fetch s.ladderConfig "
-          + "where m.id = :id")
-  java.util.Optional<Match> findByIdWithUsersForUpdate(@Param("id") Long id);
+  @Query("select m from Match m where m.id = :id")
+  java.util.Optional<Match> lockRowById(@Param("id") Long id);
+
+  @org.springframework.transaction.annotation.Transactional
+  default java.util.Optional<Match> findByIdWithUsersForUpdate(Long id) {
+    return lockRowById(id).flatMap(locked -> findByIdWithUsers(id));
+  }
 
   @Query(
       "select distinct m from Match m "

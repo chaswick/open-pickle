@@ -139,7 +139,7 @@ function renderRoundRobinCard(roundRobin) {
 
 function renderStandingsCard(players, options = {}) {
   const currentUserId = String(options.currentUserId || players[0]?.userId || '1');
-  const activeStat = options.activeStat || 'rating';
+  const activeStat = options.activeStat || 'wins';
   const includeCollapse = options.includeCollapse !== false;
   const collapseId = options.collapseId || 'sessionStandingsCollapse';
 
@@ -157,26 +157,11 @@ function renderStandingsCard(players, options = {}) {
             <span class="player-cell">Player</span>
             <span class="ladder-rating session-roster-stat-header">
               <div class="session-stat-links">
-                <button type="button"
-                        class="session-stat-link${ratingActive ? ' is-active' : ''}"
-                        data-session-stat-toggle="rating"
-                        aria-pressed="${ratingActive}">
-                  Rtg
-                </button>
+                <button type="button" class="session-stat-link${winsActive ? ' is-active' : ''}" data-session-stat-toggle="wins" aria-pressed="${winsActive}">W</button>
                 <span class="session-stat-divider" aria-hidden="true">/</span>
-                <button type="button"
-                        class="session-stat-link${winsActive ? ' is-active' : ''}"
-                        data-session-stat-toggle="wins"
-                        aria-pressed="${winsActive}">
-                  W
-                </button>
+                <button type="button" class="session-stat-link${pointsActive ? ' is-active' : ''}" data-session-stat-toggle="points-for" aria-pressed="${pointsActive}">PF</button>
                 <span class="session-stat-divider" aria-hidden="true">/</span>
-                <button type="button"
-                        class="session-stat-link${pointsActive ? ' is-active' : ''}"
-                        data-session-stat-toggle="points-for"
-                        aria-pressed="${pointsActive}">
-                  PF
-                </button>
+                <button type="button" class="session-stat-link${ratingActive ? ' is-active' : ''}" data-session-stat-toggle="rating" aria-pressed="${ratingActive}">Rtg</button>
               </div>
             </span>
           </div>
@@ -289,7 +274,7 @@ function mountCurrent(players, options = {}) {
   const root = window.FHPB.SessionStandings.getRoot();
   installLayoutMetrics(root);
   window.FHPB.SessionStandings.mount(root);
-  if (options.displayStat && options.displayStat !== 'rating') {
+  if (options.displayStat) {
     root._sessionStandingsUpdateStat(options.displayStat, { persist: false });
   }
   return root;
@@ -373,6 +358,39 @@ describe('session standings replay', () => {
     document.body.innerHTML = '';
   });
 
+  it('defaults to wins and breaks ties by points for, then rating', () => {
+    const players = [
+      createPlayer(1, 'High rating', 2000, 2, 100, '0 form', '', '', 1),
+      createPlayer(2, 'Less points', 2100, 4, 40, '0 form', '', '', 2),
+      createPlayer(3, 'Lower rating', 1500, 4, 50, '0 form', '', '', 3),
+      createPlayer(4, 'Leader', 1800, 4, 50, '0 form', '', '', 4)
+    ];
+    const root = mountCurrent(players);
+    const order = () => Array.from(root.querySelectorAll('[data-session-row]')).map(r => r.dataset.sessionRowUserId);
+    expect(window.FHPB.SessionStandings.getDisplayStatKey(root)).toBe('wins');
+    expect(root.querySelector('[data-session-stat-toggle=wins]').getAttribute('aria-pressed')).toBe('true');
+    expect(order()).toEqual(['4', '3', '2', '1']);
+    root.querySelector('[data-session-stat-toggle=points-for]').click();
+    expect(order()).toEqual(['1', '4', '3', '2']);
+    root.querySelector('[data-session-stat-toggle=rating]').click();
+    expect(order()).toEqual(['2', '1', '4', '3']);
+    expect(getStatText(getRow(root, '1'))).toBe('2000 (1st)');
+  });
+
+  it('starts with wins after upgrading the old default, then remembers an explicit new choice', () => {
+    const players = [createPlayer(1, 'Alice', 1500, 5, 44, '0 form', '', '', 1)];
+    document.body.innerHTML = renderStandingsCard(players);
+    const root = window.FHPB.SessionStandings.getRoot();
+    const key = window.FHPB.SessionStandings.buildStorageBaseKey(root);
+    sessionStorage.setItem(key + '.stat', 'rating');
+    window.FHPB.SessionStandings.mount(root);
+    expect(window.FHPB.SessionStandings.getDisplayStatKey(root)).toBe('wins');
+    root.querySelector('[data-session-stat-toggle=points-for]').click();
+    const remounted = mountCurrent(players);
+    expect(window.FHPB.SessionStandings.getDisplayStatKey(remounted)).toBe('points-for');
+    expect(getStatText(getRow(remounted, '1'))).toBe('44');
+  });
+
   it('stages old rows immediately after refresh so fresh standings do not flash before replay', async () => {
     const previousPlayers = [
       createPlayer(1, 'Alice', 1500, 5, 44, '+4 form', 'ladder-momentum session-roster-form text-success', 'bi bi-triangle-half', 1),
@@ -383,7 +401,7 @@ describe('session standings replay', () => {
       createPlayer(1, 'Alice', 1490, 5, 44, '+3 form', 'ladder-momentum session-roster-form text-success', 'bi bi-triangle', 2)
     ];
 
-    mountCurrent(previousPlayers, { currentUserId: '1' });
+    mountCurrent(previousPlayers, { currentUserId: '1', displayStat: 'rating' });
     const freshRoot = await refreshTo(freshPlayers, { currentUserId: '1' });
 
     const hiddenRows = Array.from(

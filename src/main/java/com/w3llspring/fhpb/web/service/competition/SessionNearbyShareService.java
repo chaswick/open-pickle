@@ -24,7 +24,11 @@ import org.springframework.util.StringUtils;
 public class SessionNearbyShareService {
 
   public record NearbyShareStatusView(
-      Long sessionId, Long locationId, String locationName, boolean sharingActive, String message) {}
+      Long sessionId,
+      Long locationId,
+      String locationName,
+      boolean sharingActive,
+      String message) {}
 
   public record NearbySessionsView(String locationName, List<NearbySessionView> sessions) {}
 
@@ -84,7 +88,8 @@ public class SessionNearbyShareService {
   public NearbySessionsView listForRequesterFromActiveCheckIn(Long requesterUserId) {
     Instant now = Instant.now();
     PlayLocationCheckIn activeCheckIn = requireActiveCheckIn(requesterUserId, now);
-    Long locationId = activeCheckIn.getLocation() != null ? activeCheckIn.getLocation().getId() : null;
+    Long locationId =
+        activeCheckIn.getLocation() != null ? activeCheckIn.getLocation().getId() : null;
     if (locationId == null) {
       throw new IllegalStateException("Check in first to look for nearby sessions.");
     }
@@ -98,7 +103,8 @@ public class SessionNearbyShareService {
             .toList();
 
     Map<Long, User> owners =
-        userRepo.findAllById(
+        userRepo
+            .findAllById(
                 sessions.stream()
                     .map(LadderConfig::getOwnerUserId)
                     .filter(Objects::nonNull)
@@ -146,7 +152,8 @@ public class SessionNearbyShareService {
       throw new IllegalStateException("This session is not discoverable nearby right now.");
     }
     if (!Objects.equals(session.getNearbyShareLocationId(), requesterLocationId)) {
-      throw new IllegalStateException("This session is not discoverable from your current check-in.");
+      throw new IllegalStateException(
+          "This session is not discoverable from your current check-in.");
     }
   }
 
@@ -160,10 +167,7 @@ public class SessionNearbyShareService {
       return false;
     }
     return SessionInviteCodeSupport.isCurrentlyActive(
-        session.getInviteCode(),
-        session.getLastInviteChangeAt(),
-        sessionInviteActiveSeconds,
-        now != null ? now : Instant.now());
+        session, sessionInviteActiveSeconds, now != null ? now : Instant.now());
   }
 
   private LadderConfig lockSession(Long sessionId) {
@@ -187,11 +191,10 @@ public class SessionNearbyShareService {
   }
 
   private PlayLocationCheckIn requireActiveCheckIn(Long userId, Instant now) {
-    return checkIns
-        .findActiveWithLocationByUserId(userId, now)
-        .stream()
+    return checkIns.findActiveWithLocationByUserId(userId, now).stream()
         .findFirst()
-        .orElseThrow(() -> new IllegalStateException("Check in first to use nearby session sharing."));
+        .orElseThrow(
+            () -> new IllegalStateException("Check in first to use nearby session sharing."));
   }
 
   private String resolveOptionalLocationName(PlayLocationCheckIn activeCheckIn) {

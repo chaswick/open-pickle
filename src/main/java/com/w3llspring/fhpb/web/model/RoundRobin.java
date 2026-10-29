@@ -41,6 +41,29 @@ public class RoundRobin {
   @Column(name = "current_round", nullable = false)
   private int currentRound = 1;
 
+  @Column(name = "ended_at")
+  private Instant endedAt;
+
+  @Column(name = "session_flow", nullable = false)
+  @org.hibernate.annotations.ColumnDefault("false")
+  private boolean sessionFlow;
+
+  public boolean isSessionFlow() {
+    return sessionFlow;
+  }
+
+  public void setSessionFlow(boolean value) {
+    sessionFlow = value;
+  }
+
+  public Instant getEndedAt() {
+    return endedAt;
+  }
+
+  public void setEndedAt(Instant endedAt) {
+    this.endedAt = endedAt;
+  }
+
   @Column(name = "name")
   private String name;
 

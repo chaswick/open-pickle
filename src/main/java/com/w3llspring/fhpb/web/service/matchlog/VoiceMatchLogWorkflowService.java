@@ -570,6 +570,11 @@ public class VoiceMatchLogWorkflowService {
     if (ladderConfig == null || !ladderConfig.isSessionType()) {
       return null;
     }
+    if (ladderConfig.isMatchupSession()) {
+      throw new ResponseStatusException(
+          HttpStatus.CONFLICT,
+          "Enter scores beside the scheduled game on your session's Matchups page.");
+    }
     return ladderConfig;
   }
 

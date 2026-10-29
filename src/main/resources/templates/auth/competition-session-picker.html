@@ -4,62 +4,6 @@
 
 <head>
     <title layout:fragment="title">Play with friends</title>
-    <style layout:fragment="styles">
-        .competition-session-card {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            padding: 0;
-            overflow: hidden;
-        }
-
-        .competition-session-card.app-action-tile > :last-child {
-            display: block;
-            flex: 0 0 auto;
-            min-width: 0;
-        }
-
-        .competition-session-link {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            flex: 1 1 auto;
-            padding: 1.25rem 3.5rem 1rem 1.4rem;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .competition-session-link > :last-child {
-            display: flex;
-            flex: 1 1 auto;
-            flex-direction: column;
-            justify-content: flex-start;
-            min-width: 0;
-        }
-
-        .competition-session-link:hover,
-        .competition-session-link:focus-visible {
-            color: inherit;
-        }
-
-        .competition-session-dismiss-form {
-            position: absolute;
-            top: 0.85rem;
-            right: 0.9rem;
-            z-index: 2;
-        }
-
-        .competition-session-dismiss-btn {
-            opacity: 0.55;
-            transition: opacity 0.18s ease, transform 0.18s ease;
-        }
-
-        .competition-session-dismiss-btn:hover,
-        .competition-session-dismiss-btn:focus-visible {
-            opacity: 0.9;
-            transform: scale(1.08);
-        }
-    </style>
 </head>
 
 <body>
@@ -89,7 +33,7 @@
                           owned=${membership.userId != null and sessionConfig != null and membership.userId == sessionConfig.ownerUserId},
                           suggested=${activeCompetitionSessionId != null and sessionConfig != null and activeCompetitionSessionId == sessionConfig.id},
                           leaveLabel=${owned ? 'End Session' : 'Leave Session'},
-                          leaveConfirm=${owned ? 'End this session? Everyone will be removed immediately.' : 'Leave this session?'}">
+                          leaveConfirm=${owned ? 'End this session and any remaining matchups for everyone? Recorded scores will be saved.' : 'Leave this session?'}">
                 <form method="post"
                       class="competition-session-dismiss-form m-0"
                       th:if="${membership.id != null and sessionConfig != null}"
@@ -114,18 +58,14 @@
                 </a>
             </div>
 
-            <form method="post" th:action="@{/groups/start-session}" class="m-0"
+            <a th:href="@{/groups/new-session}" class="app-action-tile app-action-groups"
                   th:if="${!competitionUnavailable and canCreateCompetitionSession}">
-                <input type="hidden" name="returnTo" value="/competition/sessions">
-                <button type="submit"
-                        class="app-action-tile app-action-groups w-100 text-start border-0">
                     <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
                     <div>
                         <div class="app-action-title">Start a session with friends</div>
-                        <div class="app-action-subtitle">Start your own temporary session for the players and court you have today.</div>
+                        <div class="app-action-subtitle">Make matchups or log games as you go with your group.</div>
                     </div>
-                </button>
-            </form>
+            </a>
 
             <a class="app-action-tile app-action-help"
                th:href="@{/groups/join(returnTo='/competition/sessions')}"

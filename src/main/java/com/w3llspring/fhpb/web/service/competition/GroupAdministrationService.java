@@ -8,8 +8,8 @@ import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.InviteChangeCooldownException;
 import com.w3llspring.fhpb.web.service.LadderInviteGenerator;
-import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
 import com.w3llspring.fhpb.web.util.InputValidation;
+import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
@@ -112,6 +112,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
 
     var existing = memberships.findByLadderConfigIdAndUserId(locked.getId(), userId);
     boolean enforceMemberCap = locked.getType() != LadderConfig.Type.COMPETITION;
+    int memberLimit = locked.isSessionType() ? LadderConfig.MAX_SESSION_MEMBERS : defaultMaxMembers;
     if (existing.isPresent()) {
       LadderMembership membership = existing.get();
       switch (membership.getState()) {
@@ -126,7 +127,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
                     .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
                         locked.getId(), LadderMembership.State.ACTIVE)
                     .size();
-            if (activeCount >= defaultMaxMembers) {
+            if (activeCount >= memberLimit) {
               throw new IllegalStateException("Sorry, that group is full.");
             }
           }
@@ -145,7 +146,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
               .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
                   locked.getId(), LadderMembership.State.ACTIVE)
               .size();
-      if (activeCount >= defaultMaxMembers) {
+      if (activeCount >= memberLimit) {
         throw new IllegalStateException("Sorry, that group is full.");
       }
     }
@@ -279,8 +280,8 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   @Transactional
   public void requireActiveMember(Long configId, Long userId) {
     boolean activeMember =
-        memberships.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
-                configId, LadderMembership.State.ACTIVE)
+        memberships
+            .findByLadderConfigIdAndStateOrderByJoinedAtAsc(configId, LadderMembership.State.ACTIVE)
             .stream()
             .anyMatch(membership -> Objects.equals(membership.getUserId(), userId));
     if (!activeMember) {

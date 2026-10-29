@@ -37,7 +37,18 @@ public interface RoundRobinEntryRepository extends JpaRepository<RoundRobinEntry
       @org.springframework.data.repository.query.Param("roundRobin") RoundRobin roundRobin,
       @org.springframework.data.repository.query.Param("roundNumber") int roundNumber);
 
+  // Lock only the assignment row. Fetch joins with a write lock also lock the
+  // season and players on MySQL, conflicting with standings replay's FK locks.
   @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @org.springframework.data.jpa.repository.Query("select e from RoundRobinEntry e where e.id = :id")
+  Optional<RoundRobinEntry> lockRowById(
+      @org.springframework.data.repository.query.Param("id") Long id);
+
+  @org.springframework.transaction.annotation.Transactional
+  default Optional<RoundRobinEntry> findByIdWithUsersForUpdate(Long id) {
+    return lockRowById(id).flatMap(locked -> findByIdWithUsers(id));
+  }
+
   @org.springframework.data.jpa.repository.Query(
       "select distinct e from RoundRobinEntry e "
           + "left join fetch e.roundRobin rr "
@@ -49,7 +60,7 @@ public interface RoundRobinEntryRepository extends JpaRepository<RoundRobinEntry
           + "left join fetch e.b1 "
           + "left join fetch e.b2 "
           + "where e.id = :id")
-  Optional<RoundRobinEntry> findByIdWithUsersForUpdate(
+  Optional<RoundRobinEntry> findByIdWithUsers(
       @org.springframework.data.repository.query.Param("id") Long id);
 
   @Lock(LockModeType.PESSIMISTIC_WRITE)

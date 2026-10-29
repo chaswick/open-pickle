@@ -148,6 +148,7 @@ public class GlobalModelAttributes {
   public void populateCommonAttributes(
       Model model, Authentication authentication, HttpServletRequest request) {
     model.addAttribute("ladderMaxMembers", ladderMaxMembers);
+    model.addAttribute("sessionMaxMembers", LadderConfig.MAX_SESSION_MEMBERS);
     model.addAttribute("defaultMaxOwnedLadders", defaultMaxOwnedLadders);
     model.addAttribute("assetVersion", assetVersion);
     model.addAttribute("branding", brandingProperties);

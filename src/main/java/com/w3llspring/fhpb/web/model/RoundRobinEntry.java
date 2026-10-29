@@ -40,6 +40,101 @@ public class RoundRobinEntry {
   @Column(name = "bye", nullable = false)
   private boolean bye = false;
 
+  // Stable places in the schedule survive replacements. Player/name fields remain snapshots
+  // for each game, so changing an unplayed game never rewrites an earlier result.
+  @Column(name = "a1_slot_id")
+  private Long a1SlotId;
+
+  @Column(name = "a2_slot_id")
+  private Long a2SlotId;
+
+  @Column(name = "b1_slot_id")
+  private Long b1SlotId;
+
+  @Column(name = "b2_slot_id")
+  private Long b2SlotId;
+
+  @Column(name = "a1_guest_name", length = 80)
+  private String a1GuestName;
+
+  @Column(name = "a2_guest_name", length = 80)
+  private String a2GuestName;
+
+  @Column(name = "b1_guest_name", length = 80)
+  private String b1GuestName;
+
+  @Column(name = "b2_guest_name", length = 80)
+  private String b2GuestName;
+
+  public enum Position {
+    A1,
+    A2,
+    B1,
+    B2
+  }
+
+  public User player(Position position) {
+    return switch (position) {
+      case A1 -> a1;
+      case A2 -> a2;
+      case B1 -> b1;
+      case B2 -> b2;
+    };
+  }
+
+  public Long slotId(Position position) {
+    Long stored =
+        switch (position) {
+          case A1 -> a1SlotId;
+          case A2 -> a2SlotId;
+          case B1 -> b1SlotId;
+          case B2 -> b2SlotId;
+        };
+    User player = player(position);
+    return stored != null ? stored : player != null ? player.getId() : null;
+  }
+
+  public String guestName(Position position) {
+    return switch (position) {
+      case A1 -> a1GuestName;
+      case A2 -> a2GuestName;
+      case B1 -> b1GuestName;
+      case B2 -> b2GuestName;
+    };
+  }
+
+  public void replace(Position position, Long slotId, User player, String guestName) {
+    switch (position) {
+      case A1 -> {
+        a1SlotId = slotId;
+        a1 = player;
+        a1GuestName = guestName;
+      }
+      case A2 -> {
+        a2SlotId = slotId;
+        a2 = player;
+        a2GuestName = guestName;
+      }
+      case B1 -> {
+        b1SlotId = slotId;
+        b1 = player;
+        b1GuestName = guestName;
+      }
+      case B2 -> {
+        b2SlotId = slotId;
+        b2 = player;
+        b2GuestName = guestName;
+      }
+    }
+  }
+
+  @PrePersist
+  public void initializeSlots() {
+    for (Position position : Position.values()) {
+      replace(position, slotId(position), player(position), guestName(position));
+    }
+  }
+
   public Long getId() {
     return id;
   }

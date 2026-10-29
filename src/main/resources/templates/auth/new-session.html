@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layouts/authenticated}">
+<head><title layout:fragment="title">Start a session</title></head>
+<body>
+<div layout:fragment="content" class="app-page session-create-page">
+  <div class="app-page-header"><div>
+    <h1 class="app-page-title">How are you playing?</h1>
+    <p class="app-page-subtitle">Start your group here. Friends join with your invite.</p>
+  </div></div>
+  <form method="post" th:action="@{/groups/create-session}" class="session-intent-form">
+    <label class="session-intent-option">
+      <input type="radio" name="playMode" value="MATCHUPS" checked>
+      <span><strong>Make matchups</strong><span>Invite your players, mix partners or keep teams together, and follow a schedule.</span>
+        <small>Great for a group playing together</small></span>
+      <i class="bi bi-grid" aria-hidden="true"></i>
+    </label>
+    <label class="session-intent-option">
+      <input type="radio" name="playMode" value="OPEN_PLAY">
+      <span><strong>Log games as we go</strong><span>Choose your own pairings and keep track of scores together.</span></span>
+      <i class="bi bi-pencil-square" aria-hidden="true"></i>
+    </label>
+    <label class="matchups-note d-flex gap-2 align-items-start" data-organizer-scoring-choice>
+      <input type="checkbox" name="organizerScored" value="true" class="form-check-input mt-1">
+      <span><strong>Organizer records scores</strong><br>Scores are confirmed automatically. Players only need to join and review their results.</span>
+    </label>
+    <button type="submit" class="btn btn-action-primary w-100">Create session</button>
+    <a th:href="@{/home}" class="btn btn-link w-100">Back</a>
+  </form>
+</div>
+<th:block layout:fragment="scripts"><link rel="stylesheet" th:href="@{/css/session-matchups.css(v=${assetVersion})}"><script th:src="@{/js/session-matchups.js(v=${assetVersion})}"></script></th:block>
+</body></html>

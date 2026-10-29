@@ -9,6 +9,26 @@ import org.junit.jupiter.api.Test;
 
 class MatchWorkflowRulesTest {
 
+  @Test
+  void onlyTheOrganizerCanCorrectAnOrganizerConfirmedResult() {
+    User host = user(1L, "Host"), player = user(2L, "Player"), opponent = user(3L, "Opponent");
+    Match match = provisionalCompetitionMatch(player, opponent, host);
+    LadderConfig session = new LadderConfig();
+    session.setType(LadderConfig.Type.SESSION);
+    session.setOwnerUserId(host.getId());
+    match.setSourceSessionConfig(session);
+    match.markOrganizerConfirmed();
+    match.setState(MatchState.CONFIRMED);
+    assertThat(MatchWorkflowRules.canEdit(match, host, false)).isTrue();
+    assertThat(MatchWorkflowRules.canEdit(match, player, false)).isFalse();
+    assertThat(MatchWorkflowRules.canEdit(match, opponent, false)).isFalse();
+    assertThat(MatchWorkflowRules.requiresOpponentConfirmation(match)).isFalse();
+    match.setState(MatchState.FLAGGED);
+    assertThat(MatchWorkflowRules.canEdit(match, host, false)).isFalse();
+    match.setState(MatchState.NULLIFIED);
+    assertThat(MatchWorkflowRules.canEdit(match, host, false)).isFalse();
+  }
+
   @Nested
   @DisplayName("STANDARD opponent-confirm flow")
   class StandardFlow {

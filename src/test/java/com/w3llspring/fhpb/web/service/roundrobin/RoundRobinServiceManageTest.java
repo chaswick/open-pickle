@@ -11,11 +11,20 @@ import com.w3llspring.fhpb.web.service.user.CourtNameService;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,6 +48,40 @@ class RoundRobinServiceManageTest {
   @Mock private RoundRobinScheduler roundRobinScheduler;
 
   private RoundRobinService service;
+
+  @Test
+  void resolvingSessionProgressDoesNotInferScoresForRepeatGamesOrRewriteTheSchedule()
+      throws Exception {
+    RoundRobin rr = new RoundRobin();
+    setId(rr, 110L);
+    rr.setSessionFlow(true);
+    RoundRobinEntry entry = entryForRound(rr, 111L, 1);
+    entry.setA1(userWithId(101L));
+    entry.setA2(userWithId(102L));
+    entry.setB1(userWithId(103L));
+    entry.setB2(userWithId(104L));
+    when(rrEntryRepo.findByRoundRobinOrderByRoundNumberAscWithUsers(rr)).thenReturn(List.of(entry));
+    RoundRobinService observed = spy(service);
+    assertThat(observed.resolveCurrentRound(rr)).isEqualTo(1);
+    verify(observed, never())
+        .findLoggedMatchForEntry(any(RoundRobin.class), any(RoundRobinEntry.class), any());
+    verify(rrRepo, never()).save(any());
+    verify(rrEntryRepo, never()).save(any());
+  }
+
+  @Test
+  void endingAnUnplayedScheduleSurvivesCurrentRoundRecalculation() throws Exception {
+    RoundRobin rr = new RoundRobin();
+    setId(rr, 100L);
+    rr.setCurrentRound(1);
+    RoundRobinEntry entry = entryForRound(rr, 101L, 1);
+    when(rrRepo.findById(100L)).thenReturn(Optional.of(rr));
+    when(rrEntryRepo.findByRoundRobinOrderByRoundNumberAsc(rr)).thenReturn(List.of(entry));
+    when(rrEntryRepo.findByRoundRobinOrderByRoundNumberAscWithUsers(rr)).thenReturn(List.of(entry));
+    assertThat(service.endRoundRobinEarly(100L)).isTrue();
+    assertThat(rr.getEndedAt()).isNotNull();
+    assertThat(service.resolveCurrentRound(rr)).isEqualTo(2);
+  }
 
   @BeforeEach
   void setUp() {
@@ -183,8 +226,9 @@ class RoundRobinServiceManageTest {
     verify(rrRepo, atLeastOnce()).findBySessionConfig(sessionConfig);
   }
 
-  @Test
-  void createAndStart_fixedTeamsSchedulesTeamsAgainstEachOtherOnce() throws Exception {
+  @ParameterizedTest(name = "{0} players: fixed teams stay together and meet once")
+  @ValueSource(ints = {4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32})
+  void createAndStart_fixedTeamsSchedulesTeamsAgainstEachOtherOnce(int count) throws Exception {
     LadderSeason season = new LadderSeason();
     LadderConfig config = new LadderConfig();
     config.setId(77L);
@@ -207,42 +251,62 @@ class RoundRobinServiceManageTest {
     when(userRepo.findById(anyLong()))
         .thenAnswer(invocation -> Optional.of(userWithId(invocation.getArgument(0))));
 
-    List<List<Long>> fixedTeams = List.of(List.of(11L, 12L), List.of(13L, 14L), List.of(15L, 16L));
+    List<Long> players = LongStream.range(0, count).map(i -> 101 + 17 * i).boxed().toList();
+    List<List<Long>> fixedTeams =
+        IntStream.range(0, count / 2)
+            .mapToObj(i -> List.of(players.get(2 * i), players.get(2 * i + 1)))
+            .toList();
 
     RoundRobin created =
         service.createAndStart(
-            77L,
-            null,
-            List.of(11L, 12L, 13L, 14L, 15L, 16L),
-            99,
-            null,
-            RoundRobin.Format.FIXED_TEAMS,
-            fixedTeams);
+            77L, null, players, 99, null, RoundRobin.Format.FIXED_TEAMS, fixedTeams);
 
     assertThat(created.getFormat()).isEqualTo(RoundRobin.Format.FIXED_TEAMS);
     verify(roundRobinScheduler, never()).generateWithExplanation(anyList(), anyMap(), anyInt());
 
     ArgumentCaptor<RoundRobinEntry> entryCaptor = ArgumentCaptor.forClass(RoundRobinEntry.class);
-    verify(rrEntryRepo, times(6)).save(entryCaptor.capture());
-    assertThat(entryCaptor.getAllValues())
-        .extracting(RoundRobinEntry::getRoundNumber)
-        .containsExactly(1, 1, 2, 2, 3, 3);
-    assertThat(entryCaptor.getAllValues().stream().filter(RoundRobinEntry::isBye).count())
-        .isEqualTo(3L);
-    assertThat(
-            entryCaptor.getAllValues().stream()
-                .filter(entry -> !entry.isBye())
-                .flatMap(
-                    entry ->
-                        java.util.stream.Stream.of(
-                            teamKey(entry.getA1(), entry.getA2()),
-                            teamKey(entry.getB1(), entry.getB2())))
-                .distinct())
-        .containsExactlyInAnyOrder("11-12", "13-14", "15-16");
+    int teamCount = count / 2;
+    int rounds = teamCount % 2 == 0 ? teamCount - 1 : teamCount;
+    verify(rrEntryRepo, times(rounds * ((teamCount + 1) / 2))).save(entryCaptor.capture());
+    Map<Integer, List<Long>> appearances = new HashMap<>();
+    Map<Integer, Integer> gamesPerRound = new HashMap<>();
+    Map<Set<Long>, Integer> byes = new HashMap<>();
+    Set<Set<Long>> expectedTeams = new HashSet<>();
+    Set<Set<Set<Long>>> opponents = new HashSet<>();
+    for (var team : fixedTeams) {
+      expectedTeams.add(Set.copyOf(team));
+      byes.put(Set.copyOf(team), 0);
+    }
+    for (var entry : entryCaptor.getAllValues()) {
+      var present = appearances.computeIfAbsent(entry.getRoundNumber(), k -> new ArrayList<>());
+      Set<Long> teamA = Set.of(entry.getA1().getId(), entry.getA2().getId());
+      assertThat(expectedTeams).contains(teamA);
+      present.addAll(teamA);
+      if (entry.isBye()) {
+        assertThat(entry.getB1()).isNull();
+        assertThat(entry.getB2()).isNull();
+        byes.merge(teamA, 1, Integer::sum);
+      } else {
+        gamesPerRound.merge(entry.getRoundNumber(), 1, Integer::sum);
+        Set<Long> teamB = Set.of(entry.getB1().getId(), entry.getB2().getId());
+        assertThat(expectedTeams).contains(teamB);
+        present.addAll(teamB);
+        assertThat(opponents.add(Set.of(teamA, teamB))).as("duplicate team matchup").isTrue();
+      }
+    }
+    assertThat(appearances).hasSize(rounds);
+    for (var round : appearances.values()) {
+      assertThat(round).containsExactlyInAnyOrderElementsOf(players);
+    }
+    assertThat(gamesPerRound).hasSize(rounds);
+    assertThat(gamesPerRound.values()).allMatch(n -> n == count / 4);
+    assertThat(opponents).hasSize(teamCount * (teamCount - 1) / 2);
+    assertThat(byes.values()).allMatch(n -> n == teamCount % 2);
   }
 
-  @Test
-  void createAndStart_fixedTeamsRejectsOddParticipantCount() {
+  @ParameterizedTest(name = "{0} players: fixed teams require an even roster")
+  @ValueSource(ints = {5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31})
+  void createAndStart_fixedTeamsRejectsOddParticipantCount(int count) {
     LadderSeason season = new LadderSeason();
     LadderConfig config = new LadderConfig();
     config.setId(77L);
@@ -253,12 +317,13 @@ class RoundRobinServiceManageTest {
 
     when(seasonRepo.findActive(77L)).thenReturn(Optional.of(season));
 
+    List<Long> players = LongStream.rangeClosed(1, count).boxed().toList();
     assertThatThrownBy(
             () ->
                 service.createAndStart(
                     77L,
                     null,
-                    List.of(11L, 12L, 13L, 14L, 15L),
+                    players,
                     0,
                     null,
                     RoundRobin.Format.FIXED_TEAMS,
@@ -972,18 +1037,6 @@ class RoundRobinServiceManageTest {
     LadderMembership membership = new LadderMembership();
     membership.setState(LadderMembership.State.ACTIVE);
     return membership;
-  }
-
-  private String teamKey(User first, User second) {
-    java.util.List<Long> ids = new java.util.ArrayList<>();
-    if (first != null && first.getId() != null) {
-      ids.add(first.getId());
-    }
-    if (second != null && second.getId() != null) {
-      ids.add(second.getId());
-    }
-    java.util.Collections.sort(ids);
-    return ids.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining("-"));
   }
 
   private void setId(Object target, Long id) throws Exception {

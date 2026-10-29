@@ -47,13 +47,15 @@
 
     getRoundRobinCard: function (scope) {
       var context = scope && typeof scope.querySelector === 'function' ? scope : document;
-      return context.querySelector('[data-session-round-robin-root="true"]');
+      return context.querySelector('[data-session-matchups-root], [data-session-round-robin-root="true"]');
     },
 
     getRoundRobinCardSignature: function (card) {
       if (!card) {
         return '';
       }
+
+      if (card.hasAttribute('data-session-matchups-root')) return card.getAttribute('data-revision') || '';
 
       return (card.outerHTML || card.innerHTML || '').trim();
     },
@@ -64,6 +66,9 @@
     },
 
     syncRoundRobinCard: function (currentRoot, freshScope) {
+      if (document.querySelector('[data-session-matchups-root]') && FHPB.SessionMatchups) {
+        return FHPB.SessionMatchups.sync(freshScope);
+      }
       if (!currentRoot || !currentRoot.parentNode) {
         return false;
       }
@@ -193,11 +198,12 @@
       var target = event && event.target;
       return !!(target
         && target.getAttribute
-        && target.getAttribute('data-session-confirmation-modal'));
+        && (target.getAttribute('data-session-confirmation-modal')
+          || target.hasAttribute('data-session-editing-modal')));
     },
 
     isConfirmationOverlayOpen: function () {
-      return !!document.querySelector('[data-session-confirmation-modal].show');
+      return !!document.querySelector('[data-session-confirmation-modal].show, [data-session-editing-modal].show');
     },
 
     mount: function (root) {
@@ -266,10 +272,11 @@
 
       function sortRows(statKey) {
         var sorted = rows.slice().sort(function (a, b) {
-          var aValue = Number(a.getAttribute('data-session-sort-' + statKey) || '0');
-          var bValue = Number(b.getAttribute('data-session-sort-' + statKey) || '0');
-          if (bValue !== aValue) {
-            return bValue - aValue;
+          var keys = [statKey].concat(['wins', 'points-for', 'rating'].filter(function (key) { return key !== statKey; }));
+          for (var i = 0; i < keys.length; i++) {
+            var aValue = Number(a.getAttribute('data-session-sort-' + keys[i]) || '0');
+            var bValue = Number(b.getAttribute('data-session-sort-' + keys[i]) || '0');
+            if (bValue !== aValue) return bValue - aValue;
           }
 
           var aRank = Number(a.getAttribute('data-session-original-rank') || '0');
@@ -337,12 +344,12 @@
 
       statButtons.forEach(function (button) {
         button.addEventListener('click', function () {
-          updateStatColumn(button.getAttribute('data-session-stat-toggle') || 'rating');
+          updateStatColumn(button.getAttribute('data-session-stat-toggle') || 'wins');
         });
       });
 
       root._sessionStandingsUpdateStat = updateStatColumn;
-      updateStatColumn(FHPB.SessionStandings.readPreferredStat(root) || 'rating');
+      updateStatColumn(FHPB.SessionStandings.readPreferredStat(root) || 'wins');
     },
 
     refreshAfterActivity: function (delayMs) {
@@ -1336,7 +1343,7 @@
         return null;
       }
 
-      var value = FHPB.SessionStandings.readValue(window.sessionStorage, storageKey + '.stat');
+      var value = FHPB.SessionStandings.readValue(window.sessionStorage, storageKey + '.stat.v2');
       if (value === 'rating' || value === 'wins' || value === 'points-for') {
         return value;
       }
@@ -1345,12 +1352,12 @@
 
     getDisplayStatKey: function (root) {
       if (!root) {
-        return 'rating';
+        return 'wins';
       }
 
       return root._sessionStandingsCurrentStat
         || FHPB.SessionStandings.readPreferredStat(root)
-        || 'rating';
+        || 'wins';
     },
 
     syncStatDisplay: function (root, statKey) {
@@ -1449,7 +1456,7 @@
         return;
       }
 
-      FHPB.SessionStandings.writeValue(window.sessionStorage, storageKey + '.stat', statKey || 'rating');
+      FHPB.SessionStandings.writeValue(window.sessionStorage, storageKey + '.stat.v2', statKey || 'wins');
     },
 
     prefersReducedMotion: function () {

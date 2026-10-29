@@ -29,11 +29,11 @@ import com.w3llspring.fhpb.web.service.StoryModeService;
 import com.w3llspring.fhpb.web.service.competition.GroupAdministrationOperations;
 import com.w3llspring.fhpb.web.service.competition.GroupAdministrationService;
 import com.w3llspring.fhpb.web.service.competition.GroupCreationService;
+import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.service.dashboard.MatchDashboardViewService;
 import com.w3llspring.fhpb.web.service.matchentry.MatchEntryContextService;
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import com.w3llspring.fhpb.web.service.standings.SeasonStandingsViewService;
-import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
@@ -117,6 +117,10 @@ public class LadderConfigController {
   private SeasonStandingsViewService seasonStandingsViewService;
   private CompetitionDisplayNameModerationService competitionDisplayNameModerationService;
   private final SessionJoinRequestService sessionJoinRequestService;
+
+  @Autowired
+  private com.w3llspring.fhpb.web.service.competition.SessionMatchupService sessionMatchupService;
+
   @Autowired private UserOnboardingService userOnboardingService;
   @Autowired private MatchConfirmationRepository matchConfirmationRepository;
 
@@ -625,10 +629,22 @@ public class LadderConfigController {
     SessionConfirmationState sessionConfirmationState = SessionConfirmationState.empty();
     List<com.w3llspring.fhpb.web.model.RoundRobinStanding> sessionBaseStandings = List.of();
     if (cfg.isSessionType() && matchDashboardService != null && matchDashboardViewService != null) {
-      sessionDashboard = matchDashboardService.buildPendingForUserInSeason(currentUser, targetSeason);
+      sessionDashboard =
+          matchDashboardService.buildPendingForUserInSeason(currentUser, targetSeason);
       matchDashboardViewService.applyToModel(model, sessionDashboard);
     }
     if (cfg.isSessionType()) {
+      model.addAttribute(
+          "sessionMatchups",
+          sessionMatchupService != null
+              ? sessionMatchupService.view(
+                  cfg,
+                  currentUser,
+                  sessionDashboard != null
+                      ? sessionDashboard.matchRowModel().getConfirmableMatchIds()
+                      : Set.of(),
+                  "true".equals(request.getParameter("prepareMatchups")))
+              : null);
       applySessionRoundRobinTask(
           model,
           cfg,
@@ -639,7 +655,8 @@ public class LadderConfigController {
       model.addAttribute("canStartSessionRoundRobin", canStartSessionRoundRobin(cfg, currentUser));
       sessionBaseStandings =
           roundRobinService != null
-              ? Objects.requireNonNullElse(roundRobinService.computeStandingsForSession(cfg), List.of())
+              ? Objects.requireNonNullElse(
+                  roundRobinService.computeStandingsForSession(cfg), List.of())
               : List.of();
       model.addAttribute(
           "improvementAdvice",
@@ -732,8 +749,7 @@ public class LadderConfigController {
               .toList();
       model.addAttribute("sessionHeroTitle", resolveSessionDisplayTitle(cfg));
       applySessionRecentTickerModel(model, cfg);
-      applySessionStandingsModel(
-          model, members, userById, targetSeason, sessionBaseStandings);
+      applySessionStandingsModel(model, members, userById, targetSeason, sessionBaseStandings);
       model.addAttribute(
           "voiceLanguage",
           matchEntryContextService != null
@@ -750,7 +766,8 @@ public class LadderConfigController {
     model.addAttribute(
         "memberSectionTitle",
         cfg.isSessionType()
-            ? String.format("Session Members (%d/%d)", activeMemberCount, defaultMaxMembers)
+            ? String.format(
+                "Session Members (%d/%d)", activeMemberCount, LadderConfig.MAX_SESSION_MEMBERS)
             : String.format("Members (%d/%d)", activeMemberCount, defaultMaxMembers));
     model.addAttribute("maxRollingEveryCount", LadderConfig.MAX_ROLLING_EVERY_COUNT);
     model.addAttribute("storyModeFeatureEnabled", storyModeFeatureEnabled());
@@ -768,7 +785,10 @@ public class LadderConfigController {
     boolean inviteActive = hasActiveInvite(cfg);
     Instant sessionInviteActiveUntil =
         cfg.isSessionType()
-            ? SessionInviteCodeSupport.activeUntil(cfg.getLastInviteChangeAt(), sessionInviteActiveSeconds)
+            ? (cfg.isMatchupSession()
+                ? cfg.getExpiresAt()
+                : SessionInviteCodeSupport.activeUntil(
+                    cfg.getLastInviteChangeAt(), sessionInviteActiveSeconds))
             : null;
     model.addAttribute("inviteActive", Boolean.valueOf(inviteActive));
     model.addAttribute("sessionInviteActiveUntil", sessionInviteActiveUntil);
@@ -791,12 +811,12 @@ public class LadderConfigController {
         String basePath = normalizedPath + "/groups/join";
         inviteBuilder =
             org.springframework.web.util.UriComponentsBuilder.fromUriString(
-                    org.springframework.web.servlet.support.ServletUriComponentsBuilder
-                        .fromRequestUri(request)
-                        .replacePath(basePath)
-                        .replaceQuery(null)
-                        .build()
-                        .toUriString());
+                org.springframework.web.servlet.support.ServletUriComponentsBuilder.fromRequestUri(
+                        request)
+                    .replacePath(basePath)
+                    .replaceQuery(null)
+                    .build()
+                    .toUriString());
       }
       inviteBuilder.replaceQueryParam("inviteCode", cfg.getInviteCode());
       if (cfg.isSessionType()) {
@@ -880,6 +900,22 @@ public class LadderConfigController {
       }
     }
 
+    sessionStandings.sort(
+        Comparator.comparingInt(com.w3llspring.fhpb.web.model.RoundRobinStanding::getWins)
+            .reversed()
+            .thenComparing(
+                Comparator.comparingInt(
+                        com.w3llspring.fhpb.web.model.RoundRobinStanding::getPointsFor)
+                    .reversed())
+            .thenComparing(
+                Comparator.comparingInt(
+                        (com.w3llspring.fhpb.web.model.RoundRobinStanding row) ->
+                            ratingByUserId.getOrDefault(row.getUserId(), 1000))
+                    .reversed())
+            .thenComparing(
+                com.w3llspring.fhpb.web.model.RoundRobinStanding::getNickName,
+                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)));
+
     model.addAttribute("sessionStandings", sessionStandings);
     model.addAttribute("sessionGlobalRankByUserId", globalRankByUserId);
     model.addAttribute("sessionRatingByUserId", ratingByUserId);
@@ -895,7 +931,9 @@ public class LadderConfigController {
     }
 
     LadderSeason linkedTargetSeason =
-        competitionSeasonService != null ? competitionSeasonService.resolveTargetSeason(sessionConfig) : null;
+        competitionSeasonService != null
+            ? competitionSeasonService.resolveTargetSeason(sessionConfig)
+            : null;
     if (linkedTargetSeason != null) {
       return linkedTargetSeason;
     }
@@ -958,7 +996,8 @@ public class LadderConfigController {
     }
 
     Map<Long, Match> matchById =
-        matchRepo.findAllByIdInWithUsers(
+        matchRepo
+            .findAllByIdInWithUsers(
                 timelines.stream().map(SessionRecentTickerMatchTimeline::matchId).toList())
             .stream()
             .filter(Objects::nonNull)
@@ -982,16 +1021,15 @@ public class LadderConfigController {
         .toList();
   }
 
-  private List<SessionRecentTickerMatchTimeline> loadSessionRecentTickerTimelines(Long sessionConfigId) {
+  private List<SessionRecentTickerMatchTimeline> loadSessionRecentTickerTimelines(
+      Long sessionConfigId) {
     if (sessionConfigId == null || matchConfirmationRepository == null) {
       return List.of();
     }
 
     List<MatchConfirmationRepository.SessionConfirmedMatchTimeline> projections =
         matchConfirmationRepository.findRecentConfirmedSessionTimelines(
-            sessionConfigId,
-            MatchState.CONFIRMED,
-            PageRequest.of(0, SESSION_RECENT_TICKER_LIMIT));
+            sessionConfigId, MatchState.CONFIRMED, PageRequest.of(0, SESSION_RECENT_TICKER_LIMIT));
     if (projections == null || projections.isEmpty()) {
       return List.of();
     }
@@ -1017,12 +1055,16 @@ public class LadderConfigController {
     boolean teamAWon = match.isTeamAWinner();
     String winners =
         teamAWon
-            ? sessionTickerTeamLabel(match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest())
-            : sessionTickerTeamLabel(match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest());
+            ? sessionTickerTeamLabel(
+                match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest())
+            : sessionTickerTeamLabel(
+                match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest());
     String losers =
         teamAWon
-            ? sessionTickerTeamLabel(match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest())
-            : sessionTickerTeamLabel(match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest());
+            ? sessionTickerTeamLabel(
+                match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest())
+            : sessionTickerTeamLabel(
+                match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest());
     int winnerScore = teamAWon ? match.getScoreA() : match.getScoreB();
     int loserScore = teamAWon ? match.getScoreB() : match.getScoreA();
     return winners + " def " + losers + " " + winnerScore + "-" + loserScore;
@@ -1107,7 +1149,8 @@ public class LadderConfigController {
     return new SessionConfirmationState(
         filterLinksByMatchIds(dashboard, inboxMatchIds),
         filterLinksByMatchIds(dashboard, outboxMatchIds),
-        filterMatchIds(rowModel != null ? rowModel.getConfirmableMatchIds() : Set.of(), inboxMatchIds),
+        filterMatchIds(
+            rowModel != null ? rowModel.getConfirmableMatchIds() : Set.of(), inboxMatchIds),
         filterTrueFlagsByMatchIds(
             rowModel != null ? rowModel.getNullifyApprovableByMatchId() : Map.of(), inboxMatchIds),
         filterTrueFlagsByMatchIds(
@@ -1164,7 +1207,10 @@ public class LadderConfigController {
   }
 
   private Set<Long> filterMatchIds(Set<Long> matchIds, Set<Long> allowedMatchIds) {
-    if (matchIds == null || matchIds.isEmpty() || allowedMatchIds == null || allowedMatchIds.isEmpty()) {
+    if (matchIds == null
+        || matchIds.isEmpty()
+        || allowedMatchIds == null
+        || allowedMatchIds.isEmpty()) {
       return Set.of();
     }
     return matchIds.stream()
@@ -1214,9 +1260,13 @@ public class LadderConfigController {
   }
 
   private void applySessionRoundRobinTask(
-      Model model, LadderConfig sessionConfig, User currentUser, java.util.Set<Long> confirmableMatchIds) {
+      Model model,
+      LadderConfig sessionConfig,
+      User currentUser,
+      java.util.Set<Long> confirmableMatchIds) {
     model.addAttribute("sessionRoundRobinTask", null);
     model.addAttribute("sessionRoundRobinRounds", List.of());
+    if (sessionConfig != null && sessionConfig.isMatchupSession()) return;
     if (model == null
         || sessionConfig == null
         || !sessionConfig.isSessionType()
@@ -1227,7 +1277,9 @@ public class LadderConfigController {
     }
 
     var assignment =
-        roundRobinService.findActiveSessionAssignment(sessionConfig, currentUser.getId()).orElse(null);
+        roundRobinService
+            .findActiveSessionAssignment(sessionConfig, currentUser.getId())
+            .orElse(null);
     if (assignment == null || assignment.entry() == null || assignment.roundRobin() == null) {
       return;
     }
@@ -1243,7 +1295,10 @@ public class LadderConfigController {
     task.put("bye", assignment.entry().isBye());
     task.put("match", assignment.match());
     task.put("matchId", assignment.match() != null ? assignment.match().getId() : null);
-    task.put("confirmed", assignment.match() != null && assignment.match().getState() == com.w3llspring.fhpb.web.model.MatchState.CONFIRMED);
+    task.put(
+        "confirmed",
+        assignment.match() != null
+            && assignment.match().getState() == com.w3llspring.fhpb.web.model.MatchState.CONFIRMED);
     task.put("a1Name", sessionRoundRobinName(assignment.entry().getA1(), displayNames));
     task.put("a2Name", sessionRoundRobinName(assignment.entry().getA2(), displayNames));
     task.put("b1Name", sessionRoundRobinName(assignment.entry().getB1(), displayNames));
@@ -1260,8 +1315,7 @@ public class LadderConfigController {
         assignment.match() != null
             && assignment.match().getState() != com.w3llspring.fhpb.web.model.MatchState.CONFIRMED
             && !canConfirm);
-    task.put(
-        "readyToLog", !assignment.entry().isBye() && assignment.match() == null);
+    task.put("readyToLog", !assignment.entry().isBye() && assignment.match() == null);
 
     Long currentUserId = currentUser.getId();
     task.put("quickLogA1", sessionRoundRobinQuickLogValue(currentUserId, assignment.entry(), "a1"));
@@ -1272,11 +1326,7 @@ public class LadderConfigController {
     model.addAttribute(
         "sessionRoundRobinRounds",
         buildSessionRoundRobinRounds(
-            currentUser,
-            assignment,
-            displayNames,
-            confirmableMatchIds,
-            task));
+            currentUser, assignment, displayNames, confirmableMatchIds, task));
   }
 
   private List<Map<String, Object>> buildSessionRoundRobinRounds(
@@ -1300,7 +1350,8 @@ public class LadderConfigController {
               ? assignment.maxRound()
               : roundRobinService.getMaxRound(assignment.roundRobin().getId());
       if (maxRound <= 0) {
-        return List.of(buildCurrentSessionRoundRobinRound(assignment, displayNames, currentRoundTask));
+        return List.of(
+            buildCurrentSessionRoundRobinRound(assignment, displayNames, currentRoundTask));
       }
 
       List<Map<String, Object>> rounds = new ArrayList<>();
@@ -1342,14 +1393,16 @@ public class LadderConfigController {
         round.put("quickLogB2", currentRound ? currentRoundTask.get("quickLogB2") : null);
         round.put(
             "status",
-            sessionRoundRobinRoundStatus(roundNumber, assignment.currentRound(), entry, linkedMatch));
+            sessionRoundRobinRoundStatus(
+                roundNumber, assignment.currentRound(), entry, linkedMatch));
         rounds.add(round);
       }
       return rounds.isEmpty()
           ? List.of(buildCurrentSessionRoundRobinRound(assignment, displayNames, currentRoundTask))
           : rounds;
     } catch (RuntimeException ex) {
-      return List.of(buildCurrentSessionRoundRobinRound(assignment, displayNames, currentRoundTask));
+      return List.of(
+          buildCurrentSessionRoundRobinRound(assignment, displayNames, currentRoundTask));
     }
   }
 
@@ -1375,7 +1428,10 @@ public class LadderConfigController {
     round.put(
         "status",
         sessionRoundRobinRoundStatus(
-            assignment.currentRound(), assignment.currentRound(), assignment.entry(), assignment.match()));
+            assignment.currentRound(),
+            assignment.currentRound(),
+            assignment.entry(),
+            assignment.match()));
     return round;
   }
 
@@ -1411,7 +1467,9 @@ public class LadderConfigController {
       }
     }
     return roundRobin != null
-        ? roundRobinService.findLoggedMatchForEntry(roundRobin, entry, roundRobin.getCreatedAt()).orElse(null)
+        ? roundRobinService
+            .findLoggedMatchForEntry(roundRobin, entry, roundRobin.getCreatedAt())
+            .orElse(null)
         : null;
   }
 
@@ -1426,13 +1484,16 @@ public class LadderConfigController {
     if (entry.isBye()) {
       return "Bye";
     }
-    if (linkedMatch != null && linkedMatch.getState() == com.w3llspring.fhpb.web.model.MatchState.CONFIRMED) {
+    if (linkedMatch != null
+        && linkedMatch.getState() == com.w3llspring.fhpb.web.model.MatchState.CONFIRMED) {
       return roundRobinService.formatMatchResultForEntry(linkedMatch, entry);
     }
     if (linkedMatch != null) {
       return roundNumber == currentRound ? "Result logged" : "Logged";
     }
-    return roundNumber < currentRound ? "No result logged" : (roundNumber == currentRound ? "Ready" : "Coming up");
+    return roundNumber < currentRound
+        ? "No result logged"
+        : (roundNumber == currentRound ? "Ready" : "Coming up");
   }
 
   private void collectSessionRoundRobinUserId(User user, java.util.Set<Long> userIds) {
@@ -1465,7 +1526,8 @@ public class LadderConfigController {
         for (int roundNumber = 1; roundNumber <= maxRound; roundNumber++) {
           collectSessionRoundRobinEntryUserIds(
               findSessionRoundRobinEntryForUser(
-                  roundRobinService.getEntriesForRound(assignment.roundRobin().getId(), roundNumber),
+                  roundRobinService.getEntriesForRound(
+                      assignment.roundRobin().getId(), roundNumber),
                   currentUserId),
               userIds);
         }
@@ -1496,7 +1558,8 @@ public class LadderConfigController {
     return StringUtils.hasText(displayName) ? displayName : UserPublicName.forUser(user);
   }
 
-  private Long sessionRoundRobinQuickLogValue(Long currentUserId, com.w3llspring.fhpb.web.model.RoundRobinEntry entry, String slot) {
+  private Long sessionRoundRobinQuickLogValue(
+      Long currentUserId, com.w3llspring.fhpb.web.model.RoundRobinEntry entry, String slot) {
     if (entry == null) {
       return null;
     }
@@ -1631,9 +1694,10 @@ public class LadderConfigController {
     }
     if (ladder.isSessionType()) {
       boolean ownerLeaving = Objects.equals(ladder.getOwnerUserId(), currentUser.getId());
-      redirect.addFlashAttribute("toastMessage", ownerLeaving ? "Session ended." : "You left the session.");
+      redirect.addFlashAttribute(
+          "toastMessage", ownerLeaving ? "Session ended." : "You left the session.");
       redirect.addFlashAttribute("toastLevel", "light");
-      return "redirect:/competition/sessions";
+      return "redirect:/home";
     }
 
     // Option A: flash attributes (preferred if your home page reads them)
@@ -1713,9 +1777,7 @@ public class LadderConfigController {
             ? normalizeInviteCodeForLookup(inviteCode)
             : normalizeInviteCodeForLookup(flashedInviteCode));
     String effectiveInviteCode =
-        inviteCode != null && !inviteCode.isBlank()
-            ? inviteCode
-            : flashedInviteCode;
+        inviteCode != null && !inviteCode.isBlank() ? inviteCode : flashedInviteCode;
     if (effectiveInviteCode == null || effectiveInviteCode.isBlank()) {
       return "auth/join";
     }
@@ -1737,8 +1799,10 @@ public class LadderConfigController {
 
     var cfg = cfgOpt.get();
     model.addAttribute("sessionApprovalMode", cfg.isSessionType() && !autoJoin);
+    model.addAttribute("organizerScoredInvite", cfg.isOrganizerScored());
     model.addAttribute(
-        "inviteTargetTitle", cfg.isSessionType() ? resolveSessionDisplayTitle(cfg) : cfg.getTitle());
+        "inviteTargetTitle",
+        cfg.isSessionType() ? resolveSessionDisplayTitle(cfg) : cfg.getTitle());
     if (autoJoin && cfg.isSessionType()) {
       User currentUser = getCurrentUser(auth);
       if (currentUser != null && currentUser.getId() != null) {
@@ -1761,7 +1825,8 @@ public class LadderConfigController {
                 cfg.getId(), LadderMembership.State.ACTIVE)
             .size();
     if ((cfg.getType() == LadderConfig.Type.STANDARD || (cfg.isSessionType() && autoJoin))
-        && activeCount >= defaultMaxMembers) {
+        && activeCount
+            >= (cfg.isSessionType() ? LadderConfig.MAX_SESSION_MEMBERS : defaultMaxMembers)) {
       applyJoinFeedback(model, fullGroupFeedback());
       return "auth/join";
     }
@@ -1835,10 +1900,7 @@ public class LadderConfigController {
   }
 
   public String join(
-      String inviteCode,
-      String returnTo,
-      Authentication auth,
-      RedirectAttributes redirect) {
+      String inviteCode, String returnTo, Authentication auth, RedirectAttributes redirect) {
     return join(inviteCode, null, null, null, returnTo, auth, redirect);
   }
 
@@ -1859,6 +1921,9 @@ public class LadderConfigController {
         return "redirect:" + status.redirectUrl();
       }
       model.addAttribute("joinRequestStatus", status);
+      model.addAttribute(
+          "organizerScoredInvite",
+          configs.findById(status.sessionId()).map(LadderConfig::isOrganizerScored).orElse(false));
       return "auth/session-join-request";
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
@@ -1959,7 +2024,8 @@ public class LadderConfigController {
           "You are banned from this ladder. Please contact the ladder admin.", "danger");
     }
     if ("That invite is no longer active.".equals(message)) {
-      return new JoinFeedback("That session code is no longer active. Ask the host to re-enable it.", "warning");
+      return new JoinFeedback(
+          "That session code is no longer active. Ask the host to re-enable it.", "warning");
     }
     if ("This match session has expired.".equals(message)) {
       return new JoinFeedback("This match session has expired.", "warning");
@@ -2036,8 +2102,12 @@ public class LadderConfigController {
   }
 
   private String resolveSubmittedInviteCode(
-      String inviteCode, String inviteCodeWordOne, String inviteCodeWordTwo, String inviteCodeNumber) {
-    String combined = SessionInviteCodeSupport.compose(inviteCodeWordOne, inviteCodeWordTwo, inviteCodeNumber);
+      String inviteCode,
+      String inviteCodeWordOne,
+      String inviteCodeWordTwo,
+      String inviteCodeNumber) {
+    String combined =
+        SessionInviteCodeSupport.compose(inviteCodeWordOne, inviteCodeWordTwo, inviteCodeNumber);
     if (combined != null && !combined.isBlank()) {
       return combined;
     }
@@ -2079,7 +2149,7 @@ public class LadderConfigController {
       return true;
     }
     return SessionInviteCodeSupport.isCurrentlyActive(
-        cfg.getInviteCode(), cfg.getLastInviteChangeAt(), sessionInviteActiveSeconds, Instant.now());
+        cfg, sessionInviteActiveSeconds, Instant.now());
   }
 
   private String asString(Object value) {
@@ -2212,7 +2282,8 @@ public class LadderConfigController {
       Map<Long, Boolean> outboxNullifyWaitingOnOpponentByMatchId) {
 
     private static SessionConfirmationState empty() {
-      return new SessionConfirmationState(List.of(), List.of(), Set.of(), Map.of(), Map.of(), Map.of());
+      return new SessionConfirmationState(
+          List.of(), List.of(), Set.of(), Map.of(), Map.of(), Map.of());
     }
 
     private int inboxCount() {

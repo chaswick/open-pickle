@@ -41,6 +41,50 @@ public class Match {
   @Column(name = "a1_guest", nullable = false)
   private boolean a1Guest;
 
+  @Column(name = "a1_guest_name", length = 80)
+  private String a1GuestName;
+
+  @Column(name = "a2_guest_name", length = 80)
+  private String a2GuestName;
+
+  @Column(name = "b1_guest_name", length = 80)
+  private String b1GuestName;
+
+  @Column(name = "b2_guest_name", length = 80)
+  private String b2GuestName;
+
+  public String getA1GuestName() {
+    return a1GuestName;
+  }
+
+  public void setA1GuestName(String value) {
+    a1GuestName = value;
+  }
+
+  public String getA2GuestName() {
+    return a2GuestName;
+  }
+
+  public void setA2GuestName(String value) {
+    a2GuestName = value;
+  }
+
+  public String getB1GuestName() {
+    return b1GuestName;
+  }
+
+  public void setB1GuestName(String value) {
+    b1GuestName = value;
+  }
+
+  public String getB2GuestName() {
+    return b2GuestName;
+  }
+
+  public void setB2GuestName(String value) {
+    b2GuestName = value;
+  }
+
   @Column(name = "a1_delta")
   private Integer a1Delta;
 
@@ -123,6 +167,19 @@ public class Match {
 
   @Column(name = "confirmation_locked", nullable = false)
   private boolean confirmationLocked = false;
+
+  @Column(name = "organizer_confirmed", nullable = false)
+  @org.hibernate.annotations.ColumnDefault("false")
+  private boolean organizerConfirmed = false;
+
+  public boolean isOrganizerConfirmed() {
+    return organizerConfirmed;
+  }
+
+  // Intentionally not a bean setter: request binding cannot opt a match into this policy.
+  public void markOrganizerConfirmed() {
+    organizerConfirmed = true;
+  }
 
   @Column(name = "sportsmanship_rebate_applied", nullable = false)
   private boolean sportsmanshipRebateApplied = false;
@@ -563,6 +620,17 @@ public class Match {
     }
 
     return (teamAReal > 0 && teamBReal == 0) || (teamBReal > 0 && teamAReal == 0);
+  }
+
+  @Transient
+  public boolean hasGuestOnlyTeam() {
+    boolean realA =
+        (!a1Guest && a1 != null && a1.getId() != null)
+            || (!a2Guest && a2 != null && a2.getId() != null);
+    boolean realB =
+        (!b1Guest && b1 != null && b1.getId() != null)
+            || (!b2Guest && b2 != null && b2.getId() != null);
+    return !realA || !realB;
   }
 
   /**

@@ -93,10 +93,10 @@
           confirmableSafe=${confirmable != null and confirmable},
           editableSafe=${editable != null and editable},
           deletableSafe=${deletable != null and deletable},
-          aDisplay=${a1Name != null ? a1Name : (match.isA1Guest() ? 'Guest' : (match.a1 != null ? match.a1.nickName : '-'))},
-          aDisplay2=${a2Name != null ? a2Name : (match.isA2Guest() ? 'Guest' : (match.a2 != null ? match.a2.nickName : null))},
-          bDisplay=${b1Name != null ? b1Name : (match.isB1Guest() ? 'Guest' : (match.b1 != null ? match.b1.nickName : '-'))},
-          bDisplay2=${b2Name != null ? b2Name : (match.isB2Guest() ? 'Guest' : (match.b2 != null ? match.b2.nickName : null))},
+          aDisplay=${match.isA1Guest() and match.a1GuestName != null ? match.a1GuestName : (a1Name != null ? a1Name : (match.isA1Guest() ? 'Guest' : (match.a1 != null ? match.a1.nickName : '-')))},
+          aDisplay2=${match.isA2Guest() and match.a2GuestName != null ? match.a2GuestName : (a2Name != null ? a2Name : (match.isA2Guest() ? 'Guest' : (match.a2 != null ? match.a2.nickName : null)))},
+          bDisplay=${match.isB1Guest() and match.b1GuestName != null ? match.b1GuestName : (b1Name != null ? b1Name : (match.isB1Guest() ? 'Guest' : (match.b1 != null ? match.b1.nickName : '-')))},
+          bDisplay2=${match.isB2Guest() and match.b2GuestName != null ? match.b2GuestName : (b2Name != null ? b2Name : (match.isB2Guest() ? 'Guest' : (match.b2 != null ? match.b2.nickName : null)))},
           waitingOnOpponent=${waitingOnOpponentByMatchId != null and waitingOnOpponentByMatchId[match.id] != null and waitingOnOpponentByMatchId[match.id]},
           disputed=${match.state.name() == 'FLAGGED'},
           nullified=${match.state.name() == 'NULLIFIED'},
@@ -163,8 +163,9 @@
     Played at <span
       th:attr="data-utc-time=${playedTime}"
       th:text="${@fhpbTime.display(playedTime, (#authentication != null ? #authentication.principal : null))}">time</span>
+    <span th:if="${match.organizerConfirmed and match.state.name() == 'CONFIRMED'}"> &middot; Organizer confirmed</span>
     <span th:if="${match.state.name() == 'CONFIRMED' and casualAutoConfirmed}"> &middot; Casual mode auto-confirmed</span>
-    <span th:if="${match.state.name() == 'CONFIRMED' and !casualAutoConfirmed and confirmer != null}"> &middot; Confirmed by <span
+    <span th:if="${match.state.name() == 'CONFIRMED' and !match.organizerConfirmed and !casualAutoConfirmed and confirmer != null}"> &middot; Confirmed by <span
         th:text="${confirmer}">-</span></span>
     <span th:if="${match.state.name() == 'FLAGGED' and match.disputedBy != null}">
       &middot; Disputed by <span th:text="${match.disputedBy.nickName ?: 'Unknown'}">user</span>

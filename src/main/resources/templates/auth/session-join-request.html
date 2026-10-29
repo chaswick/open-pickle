@@ -32,6 +32,7 @@
               </div>
             </div>
 
+            <p th:if="${organizerScoredInvite == true}" class="alert alert-info" data-organizer-scoring-notice>The organizer records and automatically confirms scores. You can review your results without confirming each game.</p>
             <div id="sessionJoinRequestSpinner" class="mb-3" th:if="${joinRequestStatus.pending}">
               <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
             </div>

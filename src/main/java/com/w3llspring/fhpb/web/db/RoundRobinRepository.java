@@ -5,6 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RoundRobinRepository extends JpaRepository<RoundRobin, Long> {
 
+  @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+  @org.springframework.data.jpa.repository.Query("select rr from RoundRobin rr where rr.id = :id")
+  java.util.Optional<RoundRobin> findByIdForUpdate(
+      @org.springframework.data.repository.query.Param("id") Long id);
+
   java.util.List<RoundRobin> findBySeason(com.w3llspring.fhpb.web.model.LadderSeason season);
 
   org.springframework.data.domain.Page<RoundRobin> findBySeason(

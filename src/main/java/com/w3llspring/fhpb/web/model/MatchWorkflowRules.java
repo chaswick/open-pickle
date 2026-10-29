@@ -25,6 +25,7 @@ public final class MatchWorkflowRules {
     if (state == MatchState.NULLIFIED) {
       return false;
     }
+    if (canOrganizerCorrect(match, actor) && state != MatchState.FLAGGED) return true;
     if (state == MatchState.CONFIRMED || state == MatchState.FLAGGED) {
       return adminOverride;
     }
@@ -36,6 +37,17 @@ public final class MatchWorkflowRules {
           || canLoggerSelfCorrectVoiceSubmission(match, actor);
     }
     return isParticipant(match, actor);
+  }
+
+  public static boolean canOrganizerCorrect(Match match, User actor) {
+    return match != null
+        && match.isOrganizerConfirmed()
+        && actor != null
+        && actor.getId() != null
+        && match.getSourceSessionConfig() != null
+        && match.getSourceSessionConfig().isSessionType()
+        && (actor.isAdmin()
+            || actor.getId().equals(match.getSourceSessionConfig().getOwnerUserId()));
   }
 
   public static boolean canNonAdminEdit(Match match, User actor) {
@@ -111,6 +123,7 @@ public final class MatchWorkflowRules {
   }
 
   private static LadderSecurity securityLevel(Match match) {
+    if (match != null && match.isOrganizerConfirmed()) return LadderSecurity.SELF_CONFIRM;
     if (match == null || match.getSeason() == null || match.getSeason().getLadderConfig() == null) {
       return null;
     }

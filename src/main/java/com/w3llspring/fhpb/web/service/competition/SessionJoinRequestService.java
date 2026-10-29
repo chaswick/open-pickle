@@ -103,13 +103,7 @@ public class SessionJoinRequestService {
       GroupAdministrationService groupAdministration,
       long joinRequestTtlSeconds) {
     this(
-        configs,
-        memberships,
-        requests,
-        userRepo,
-        groupAdministration,
-        null,
-        joinRequestTtlSeconds);
+        configs, memberships, requests, userRepo, groupAdministration, null, joinRequestTtlSeconds);
   }
 
   @Transactional
@@ -186,7 +180,8 @@ public class SessionJoinRequestService {
             .filter(request -> request.getStatus() == SessionJoinRequest.Status.PENDING)
             .toList();
     Map<Long, User> users =
-        userRepo.findAllById(
+        userRepo
+            .findAllById(
                 activePending.stream()
                     .map(SessionJoinRequest::getRequesterUserId)
                     .distinct()
@@ -230,8 +225,8 @@ public class SessionJoinRequestService {
     }
     List<User> users = userRepo.findAllById(userIds);
     Map<Long, User> usersById =
-        (users != null ? users : List.<User>of()).stream()
-            .collect(Collectors.toMap(User::getId, user -> user));
+        (users != null ? users : List.<User>of())
+            .stream().collect(Collectors.toMap(User::getId, user -> user));
     Map<Long, String> courtNameByUser =
         matchEntryContextService != null
             ? matchEntryContextService.buildCourtNameByUserIds(userIds, sessionId)
@@ -260,7 +255,9 @@ public class SessionJoinRequestService {
     }
 
     LadderMembership membership =
-        memberships.findByLadderConfigIdAndUserId(sessionId, request.getRequesterUserId()).orElse(null);
+        memberships
+            .findByLadderConfigIdAndUserId(sessionId, request.getRequesterUserId())
+            .orElse(null);
     if (membership != null) {
       if (membership.getState() == LadderMembership.State.ACTIVE) {
         markApproved(request, adminUserId, now);
@@ -277,7 +274,8 @@ public class SessionJoinRequestService {
 
     try {
       validateSessionInvite(session, request.getInviteCodeSnapshot());
-      groupAdministration.joinByInvite(request.getInviteCodeSnapshot(), request.getRequesterUserId());
+      groupAdministration.joinByInvite(
+          request.getInviteCodeSnapshot(), request.getRequesterUserId());
       markApproved(request, adminUserId, now);
       requests.save(request);
       return new ReviewOutcome(SessionJoinRequest.Status.APPROVED, "Player joined the session.");
@@ -337,7 +335,9 @@ public class SessionJoinRequestService {
   @Transactional
   public RequestStatusView getStatusForRequester(Long requestId, Long requesterUserId) {
     SessionJoinRequest request =
-        requests.findById(requestId).orElseThrow(() -> new IllegalArgumentException("Join request not found"));
+        requests
+            .findById(requestId)
+            .orElseThrow(() -> new IllegalArgumentException("Join request not found"));
     if (!Objects.equals(request.getRequesterUserId(), requesterUserId)) {
       throw new SecurityException("Join request not found");
     }
@@ -421,7 +421,7 @@ public class SessionJoinRequestService {
       throw new IllegalStateException("This match session has expired.");
     }
     if (!SessionInviteCodeSupport.isCurrentlyActive(
-        session.getInviteCode(), session.getLastInviteChangeAt(), sessionInviteActiveSeconds, Instant.now())) {
+        session, sessionInviteActiveSeconds, Instant.now())) {
       session.setInviteCode(null);
       configs.save(session);
       throw new IllegalStateException("That invite is no longer active.");
@@ -473,7 +473,9 @@ public class SessionJoinRequestService {
 
   private SessionJoinRequest lockRequest(Long requestId, Long sessionId) {
     SessionJoinRequest request =
-        requests.lockById(requestId).orElseThrow(() -> new IllegalArgumentException("Join request not found"));
+        requests
+            .lockById(requestId)
+            .orElseThrow(() -> new IllegalArgumentException("Join request not found"));
     if (request.getLadderConfig() == null
         || !Objects.equals(request.getLadderConfig().getId(), sessionId)) {
       throw new SecurityException("Join request not found");

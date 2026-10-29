@@ -1,6 +1,7 @@
 package com.w3llspring.fhpb.web.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.w3llspring.fhpb.web.controller.competition.LadderConfigController;
@@ -13,10 +14,11 @@ import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -40,8 +42,9 @@ class LadderConfigControllerLeaveTest {
             null, null, null, groupAdministration, configs, null, null, null, null, null, null, 20);
   }
 
-  @Test
-  void leave_sessionRedirectsToCompetitionSessions() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void leave_sessionReturnsHomeForPlayersAndHosts(boolean owner) {
     User user = new User();
     user.setId(5L);
     user.setNickName("Tester");
@@ -51,6 +54,7 @@ class LadderConfigControllerLeaveTest {
     LadderConfig session = new LadderConfig();
     session.setId(99L);
     session.setType(LadderConfig.Type.SESSION);
+    session.setOwnerUserId(owner ? user.getId() : 6L);
 
     when(configs.findById(99L)).thenReturn(Optional.of(session));
 
@@ -58,8 +62,9 @@ class LadderConfigControllerLeaveTest {
 
     String view = controller.leave(99L, 77L, auth, redirectAttributes);
 
-    assertThat(view).isEqualTo("redirect:/competition/sessions");
+    assertThat(view).isEqualTo("redirect:/home");
     assertThat(redirectAttributes.getFlashAttributes().get("toastMessage"))
-        .isEqualTo("You left the session.");
+        .isEqualTo(owner ? "Session ended." : "You left the session.");
+    verify(groupAdministration).leaveMember(99L, 5L, 77L);
   }
 }

@@ -1,11 +1,9 @@
 package com.w3llspring.fhpb.web.controller.competition;
 
-import com.w3llspring.fhpb.web.model.SessionJoinRequest;
+import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,18 +19,9 @@ import org.springframework.web.server.ResponseStatusException;
 public class SessionJoinRequestController {
 
   private final SessionJoinRequestService sessionJoinRequests;
-  private final int defaultMaxMembers;
 
-  @Autowired
-  public SessionJoinRequestController(
-      SessionJoinRequestService sessionJoinRequests,
-      @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers) {
+  public SessionJoinRequestController(SessionJoinRequestService sessionJoinRequests) {
     this.sessionJoinRequests = sessionJoinRequests;
-    this.defaultMaxMembers = defaultMaxMembers;
-  }
-
-  SessionJoinRequestController(SessionJoinRequestService sessionJoinRequests) {
-    this(sessionJoinRequests, 20);
   }
 
   public record PendingJoinRequestResponse(
@@ -94,7 +83,8 @@ public class SessionJoinRequestController {
       List<SessionJoinRequestService.ActiveSessionMemberView> activeMembers =
           sessionJoinRequests.listActiveMembers(sessionId, userId);
       return new SessionMembersResponse(
-          String.format("Session Members (%d/%d)", activeMembers.size(), defaultMaxMembers),
+          String.format(
+              "Session Members (%d/%d)", activeMembers.size(), LadderConfig.MAX_SESSION_MEMBERS),
           activeMembers.size(),
           activeMembers.stream()
               .map(
@@ -121,8 +111,7 @@ public class SessionJoinRequestController {
     try {
       SessionJoinRequestService.ReviewOutcome outcome =
           sessionJoinRequests.approve(sessionId, requestId, userId);
-      HttpStatus status =
-          outcome.pending() ? HttpStatus.CONFLICT : HttpStatus.OK;
+      HttpStatus status = outcome.pending() ? HttpStatus.CONFLICT : HttpStatus.OK;
       return ResponseEntity.status(status)
           .body(new JoinRequestReviewResponse(outcome.status().name(), outcome.message()));
     } catch (IllegalArgumentException ex) {
@@ -173,9 +162,10 @@ public class SessionJoinRequestController {
   }
 
   private Long requireCurrentUserId(Authentication auth) {
-    Long userId = AuthenticatedUserSupport.currentUser(auth) != null
-        ? AuthenticatedUserSupport.currentUser(auth).getId()
-        : null;
+    Long userId =
+        AuthenticatedUserSupport.currentUser(auth) != null
+            ? AuthenticatedUserSupport.currentUser(auth).getId()
+            : null;
     if (userId == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     }

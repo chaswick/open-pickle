@@ -89,7 +89,7 @@ public class MatchStateTransitionService {
         if (match.getState() == MatchState.NULLIFIED) {
             throw new IllegalStateException("This match is no longer editable.");
         }
-        if (match.getState() == MatchState.CONFIRMED && !ladderAdmin) {
+        if (match.getState() == MatchState.CONFIRMED && !ladderAdmin && !MatchWorkflowRules.canOrganizerCorrect(match, command.actor())) {
             throw new SecurityException("Only ladder admins can edit confirmed matches.");
         }
         if (match.getState() == MatchState.FLAGGED && !ladderAdmin) {
@@ -115,6 +115,13 @@ public class MatchStateTransitionService {
             throw new IllegalArgumentException("A player cannot be selected on both teams.");
         }
 
+        if (match.isOrganizerConfirmed() && !ladderAdmin
+                && (!sameSlot(match.getA1(), match.isA1Guest(), command.nextA1(), command.nextA1Guest())
+                    || !sameSlot(match.getA2(), match.isA2Guest(), command.nextA2(), command.nextA2Guest())
+                    || !sameSlot(match.getB1(), match.isB1Guest(), command.nextB1(), command.nextB1Guest())
+                    || !sameSlot(match.getB2(), match.isB2Guest(), command.nextB2(), command.nextB2Guest()))) {
+            throw new IllegalArgumentException("Only the score can be corrected for a recorded matchup.");
+        }
         requireMeaningfulEdit(match, command, ladderAdmin);
 
         if (isTournamentMode(match.getSeason()) && roundRobinService != null) {
@@ -137,7 +144,7 @@ public class MatchStateTransitionService {
         match.setB1Guest(command.nextB1Guest());
         match.setB2Guest(command.nextB2Guest());
 
-        if (!isGuestOnlyPersonalRecordAllowed(match.getSeason()) && match.hasGuestOnlyOpposingTeam()) {
+        if (match.getSourceSessionConfig() == null && !isGuestOnlyPersonalRecordAllowed(match.getSeason()) && match.hasGuestOnlyOpposingTeam()) {
             throw new IllegalArgumentException(
                     "This ladder does not allow personal record matches with all-opponent guests.");
         }

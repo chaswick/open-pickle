@@ -9,6 +9,7 @@ public class LadderConfig {
 
   public static final int MAX_ROLLING_EVERY_COUNT = 12;
   public static final int MAX_TITLE_LENGTH = 80;
+  public static final int MAX_SESSION_MEMBERS = 32;
 
   public enum Status {
     ACTIVE,
@@ -19,6 +20,32 @@ public class LadderConfig {
     STANDARD,
     COMPETITION,
     SESSION
+  }
+
+  public enum SessionPlayMode {
+    MATCHUPS,
+    OPEN_PLAY
+  }
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "session_play_mode", nullable = false, length = 24)
+  @org.hibernate.annotations.ColumnDefault("'OPEN_PLAY'")
+  private SessionPlayMode sessionPlayMode = SessionPlayMode.OPEN_PLAY;
+
+  public SessionPlayMode getSessionPlayMode() {
+    return sessionPlayMode;
+  }
+
+  public void setSessionPlayMode(SessionPlayMode sessionPlayMode) {
+    this.sessionPlayMode = sessionPlayMode == null ? SessionPlayMode.OPEN_PLAY : sessionPlayMode;
+  }
+
+  public boolean isMatchupSession() {
+    return isSessionType() && sessionPlayMode == SessionPlayMode.MATCHUPS;
+  }
+
+  public boolean isOrganizerScored() {
+    return isMatchupSession() && LadderSecurity.normalize(securityLevel).isSelfConfirm();
   }
 
   /** Season mode: rolling cadence or manual start/stop */

@@ -125,6 +125,32 @@ class LadderConfigControllerShowTest {
   }
 
   @Test
+  void sessionStandingsInitiallySortByWinsThenPointsForThenRating() {
+    LadderSeason season = new LadderSeason();
+    ReflectionTestUtils.setField(season, "id", 55L);
+    int[][] values = {{2, 100, 2000}, {4, 40, 2100}, {4, 50, 1500}, {4, 50, 1800}};
+    var rows = new java.util.ArrayList<LadderV2Service.LadderRow>();
+    var standings = new java.util.ArrayList<com.w3llspring.fhpb.web.model.RoundRobinStanding>();
+    for (int i = 0; i < values.length; i++) {
+      var standing = new com.w3llspring.fhpb.web.model.RoundRobinStanding((long) i + 1, "Player" + i);
+      for (int wins = 0; wins < values[i][0]; wins++) standing.incWins();
+      standing.addPointsFor(values[i][1]);
+      standings.add(standing);
+      var rating = new LadderV2Service.LadderRow();
+      rating.userId = (long) i + 1;
+      rating.points = values[i][2] - 1000;
+      rows.add(rating);
+    }
+    var views = org.mockito.Mockito.mock(SeasonStandingsViewService.class);
+    when(views.load(season)).thenReturn(new SeasonStandingsViewService.SeasonStandingsView(List.of(), rows));
+    ReflectionTestUtils.setField(controller, "seasonStandingsViewService", views);
+    ExtendedModelMap model = new ExtendedModelMap();
+    ReflectionTestUtils.invokeMethod(controller, "applySessionStandingsModel", model, List.of(), Map.of(), season, standings);
+    assertThat((List<com.w3llspring.fhpb.web.model.RoundRobinStanding>) model.get("sessionStandings"))
+        .extracting(com.w3llspring.fhpb.web.model.RoundRobinStanding::getUserId).containsExactly(4L, 3L, 2L, 1L);
+  }
+
+  @Test
   void show_populatesMemberSectionTitleFromCounts() {
     User currentUser = new User();
     currentUser.setId(7L);

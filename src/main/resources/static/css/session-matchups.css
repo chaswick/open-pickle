@@ -1,0 +1,572 @@
+.session-create-page,.session-matchups {
+  --matchups-ink:#173c50;
+  --matchups-border:#dce6eb;
+  --matchups-soft:#f4f8fa;
+  color:var(--matchups-ink);
+}
+.session-intent-form {
+  max-width:620px;
+  margin:0 auto;
+  display:grid;
+  gap:16px;
+}
+.session-intent-option {
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  padding:22px;
+  background:#fff;
+  border:2px solid #dce6eb;
+  border-radius:16px;
+  text-align:left;
+  cursor:pointer;
+}
+.session-intent-option:has(input:checked) {
+  border-color:#087f64;
+  background:#f0faf6;
+  box-shadow:0 0 0 1px #087f64;
+}
+.session-intent-option input {
+  margin-top:7px;
+  accent-color:#087f64;
+  width:19px;
+  height:19px;
+  flex-shrink:0;
+}
+.session-intent-option>span {
+  flex:1;
+  min-width:0;
+}
+.session-intent-option strong {
+  display:block;
+  font-size:1.15rem;
+  margin-bottom:5px;
+}
+.session-intent-option span span {
+  display:block;
+  color:#516874;
+  line-height:1.5;
+}
+.session-intent-option small {
+  display:block;
+  color:#087057;
+  margin-top:10px;
+}
+.session-intent-option>i {
+  font-size:1.4rem;
+  color:#477183;
+}
+.session-matchups {
+  display:grid;
+  gap:18px;
+  margin-bottom:20px;
+  scroll-margin-top:85px;
+  text-align:left;
+}
+.matchups-panel {
+  border:1px solid var(--matchups-border);
+  border-radius:16px;
+  background:#fff;
+  padding:22px;
+  box-shadow:0 3px 12px #16384806;
+  min-width:0;
+}
+.matchups-panel h2 {
+  font-size:1.25rem;
+  font-weight:750;
+  line-height:1.3;
+  margin:0 0 10px;
+}
+.matchups-panel h3 {
+  font-size:1rem;
+  font-weight:700;
+  margin:0;
+}
+.matchups-panel p {
+  color:#506775;
+  line-height:1.5;
+}
+.matchups-eyebrow {
+  text-transform:uppercase;
+  font-size:.75rem;
+  letter-spacing:.08em;
+  color:#08795d;
+  font-weight:750;
+  margin-bottom:8px;
+}
+.matchups-roster-heading,.matchups-schedule-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:18px 0 12px;
+}
+.matchups-roster-heading h2,.matchups-schedule-heading h2 {
+  margin:0;
+}
+.matchups-count {
+  display:inline-flex;
+  background:#eaf1f4;
+  color:#345f72;
+  border-radius:20px;
+  padding:3px 9px;
+  margin-left:5px;
+  font-size:.85rem;
+}
+.matchups-player-chips {
+  padding:0;
+  margin:0 0 20px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  list-style:none;
+}
+.matchups-player-chips li {
+  background:#f0f5f7;
+  border-radius:24px;
+  padding:7px 13px;
+  font-size:.9rem;
+  overflow-wrap:anywhere;
+}
+.matchups-format {
+  border:0;
+  padding:0;
+  margin:24px 0 18px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  min-width:0;
+}
+.matchups-format legend {
+  font-size:.95rem;
+  font-weight:700;
+  float:none;
+  margin-bottom:8px;
+}
+.matchups-format label {
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  padding:13px 12px;
+  border:1px solid #cfdee5;
+  border-radius:12px;
+  cursor:pointer;
+  min-width:0;
+}
+.matchups-format label:has(input:checked) {
+  background:#edf9f5;
+  border-color:#16836a;
+}
+.matchups-format input {
+  accent-color:#087f64;
+  margin-top:5px;
+  flex-shrink:0;
+}
+.matchups-format strong,.matchups-format small {
+  display:block;
+}
+.matchups-format strong {
+  font-size:.95rem;
+}
+.matchups-format small {
+  color:#506775;
+  font-size:.8rem;
+  margin-top:3px;
+  line-height:1.3;
+}
+.matchups-round-setting {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  margin:18px 0;
+}
+.matchups-round-setting label {
+  font-weight:650;
+  margin:0;
+}
+.matchups-round-setting input {
+  width:85px;
+  min-height:46px;
+  text-align:center;
+}
+.matchups-setup-summary {
+  background:#f3f7fa;
+  border-radius:10px;
+  padding:12px;
+  font-size:.9rem;
+}
+.matchups-footnote {
+  font-size:.82rem;
+  text-align:center;
+  margin:12px 0 0;
+}
+.matchups-note {
+  background:#f0f7fa;
+  border-radius:10px;
+  padding:12px;
+  font-size:.9rem;
+}
+.matchups-meta {
+  font-size:.9rem;
+  margin:0 0 12px;
+}
+.matchups-meta>span[aria-hidden] {
+  padding:0 5px;
+}
+.matchups-waiting {
+  background:#fff6df;
+  border:1px solid #efddaf;
+  padding:13px;
+  border-radius:10px;
+  font-size:.93rem;
+}
+.matchups-next {
+  border:2px solid #138069;
+  background:#fcfffe;
+}
+.matchups-game-kicker {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  font-size:.8rem;
+  color:#607988;
+  margin-bottom:16px;
+}
+.matchups-game-kicker h2 {
+  margin:0;
+  color:#165b48;
+}
+.matchups-game-kicker>span {
+  flex-shrink:0;
+}
+.matchups-you-badge {
+  color:#08795d;
+  background:#e4f6ee;
+  border-radius:20px;
+  padding:3px 8px;
+  font-size:.73rem;
+  font-weight:700;
+}
+.matchups-teams {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+  margin-bottom:18px;
+}
+.matchups-team {
+  display:grid;
+  gap:6px;
+  font-weight:650;
+  font-size:1rem;
+  min-width:0;
+  text-align:center;
+  overflow-wrap:anywhere;
+  line-height:1.4;
+}
+.matchups-versus {
+  font-size:.8rem;
+  color:#79909c;
+  text-align:center;
+}
+.matchups-schedule-heading {
+  margin-top:0;
+}
+.matchups-round-picker {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  font-size:.85rem;
+  white-space:nowrap;
+}
+.matchups-round-picker select {
+  width:auto;
+  max-width:120px;
+  min-height:42px;
+  font-size:.9rem;
+}
+.matchups-filter {
+  display:flex;
+  gap:5px;
+  background:#edf2f5;
+  border-radius:10px;
+  padding:4px;
+  margin:14px 0 22px;
+}
+.matchups-filter button {
+  flex:1;
+  background:transparent;
+  border:0;
+  border-radius:7px;
+  padding:9px 10px;
+  color:#506775;
+  font-size:.9rem;
+  font-weight:650;
+  min-height:42px;
+}
+.matchups-filter button.is-selected {
+  background:#fff;
+  color:#174c5f;
+  box-shadow:0 1px 5px #18304716;
+}
+.matchups-round>h3 {
+  margin-bottom:12px;
+}
+.matchups-round+.matchups-round {
+  margin-top:24px;
+}
+.matchups-games {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.matchups-game {
+  border:1px solid #dbe5eb;
+  border-radius:12px;
+  padding:16px;
+  min-width:0;
+}
+.matchups-game.is-mine {
+  border-color:#77bba6;
+  background:#f9fdfa;
+}
+.matchups-game-status {
+  font-size:.8rem;
+  text-align:center;
+  margin:0 0 10px;
+}
+.matchups-score {
+  font-size:1.45rem;
+  font-weight:750;
+  text-align:center;
+  margin:0 0 10px;
+}
+.matchups-byes {
+  background:#fff7e7;
+  padding:10px 12px;
+  border-radius:8px;
+  font-size:.85rem;
+  overflow-wrap:anywhere;
+}
+.matchups-no-personal-game {
+  font-size:.9rem;
+}
+.matchups-roster {
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+.matchups-roster li {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  padding:13px 0;
+  border-bottom:1px solid #e7eef2;
+}
+.matchups-roster li:last-child {
+  border-bottom:0;
+}
+.matchups-roster li>div {
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.matchups-roster button {
+  flex-shrink:0;
+  min-height:40px;
+}
+.matchups-player-label {
+  display:block;
+  font-size:.78rem;
+  color:#647c88;
+  margin-top:3px;
+}
+.matchups-available {
+  border-top:1px solid #e1e9ee;
+  padding-top:18px;
+  margin-top:10px;
+}
+.matchups-available h3 {
+  margin-bottom:12px;
+}
+.matchups-available .matchups-player-chips {
+  margin-bottom:10px;
+}
+.matchups-options summary {
+  cursor:pointer;
+  font-size:.9rem;
+  font-weight:650;
+  color:#506775;
+}
+.matchups-score-inputs {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);
+  gap:10px;
+  align-items:end;
+}
+.matchups-score-inputs label {
+  display:grid;
+  gap:12px;
+  min-width:0;
+  text-align:center;
+  font-size:.85rem;
+  overflow-wrap:anywhere;
+}
+.matchups-score-inputs input {
+  font-size:1.7rem;
+  text-align:center;
+  min-height:64px;
+}
+.matchups-score-inputs>span {
+  text-align:center;
+  padding-bottom:18px;
+}
+.session-matchups .modal-content {
+  border-radius:16px;
+}
+.session-matchups .modal-footer {
+  gap:8px;
+}
+.session-matchups .btn {
+  min-height:44px;
+}
+.matchups-pair {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+  margin:10px 0;
+}
+.matchups-pair select {
+  min-width:0;
+  font-size:.9rem;
+  min-height:44px;
+}
+.matchups-pair>span {
+  text-align:center;
+  color:#6c8490;
+}
+.matchups-form-warning {
+  background:#fff6df;
+  padding:12px;
+  border-radius:10px;
+  font-size:.85rem;
+}
+.session-matchups [hidden] {
+  display:none!important;
+}
+.matchups-meta a {
+  display:inline-flex;
+  align-items:center;
+  min-height:44px;
+  color:#125d79;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+body.bg-image:has(.session-matchups),body.bg-image:has(.session-create-page) {
+  background-image:none;
+  background-color:#f4f7f9;
+}
+body:has(.session-matchups) .app-page-header>:not(.app-page-back),.session-create-page .app-page-header>:not(.app-page-back) {
+  background:transparent;
+  border:0;
+  border-radius:0;
+  overflow:visible;
+  box-shadow:none;
+  padding:0 2px;
+}
+body:has(.session-matchups) .app-page-header>:not(.app-page-back)::after,.session-create-page .app-page-header>:not(.app-page-back)::after {
+  display:none;
+}
+body:has(.session-matchups) main.mt-3>.jumbotron,body:has(.session-create-page) main.mt-3>.jumbotron {
+  display:none;
+}
+.session-matchups .btn.btn-outline-primary {
+  color:#125d79;
+  border:1px solid #7eafc0;
+  background:#fff;
+  box-shadow:none;
+}
+.session-matchups .btn.btn-outline-primary:hover {
+  color:#0e4c63;
+  background:#edf6f9;
+  border-color:#397c94;
+}
+.session-matchups .btn.btn-outline-secondary {
+  color:#365767;
+  border:1px solid #a8bac4;
+  background:#fff;
+  box-shadow:none;
+}
+.matchups-player-list summary {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+  list-style:none;
+  font-weight:700;
+  min-height:36px;
+}
+.matchups-player-list summary::-webkit-details-marker {
+  display:none;
+}
+.matchups-player-list summary::before {
+  content:'›';
+  font-size:1.5rem;
+  color:#547487;
+  line-height:1;
+}
+.matchups-player-list[open] summary::before {
+  transform:rotate(90deg);
+}
+.matchups-player-list summary>.small {
+  margin-left:auto;
+  font-size:.8rem;
+  font-weight:500;
+  color:#365767;
+}
+.matchups-available-count {
+  background:#fff4da;
+  color:#755215;
+  padding:4px 8px;
+  border-radius:20px;
+  font-size:.75rem;
+  font-weight:600;
+}
+@media(max-width:600px) {
+  .matchups-panel {
+    padding:17px;
+    border-radius:14px;
+  }
+  .matchups-games {
+    grid-template-columns:1fr;
+  }
+  .matchups-schedule-heading {
+    gap:8px;
+  }
+  .matchups-team {
+    font-size:.95rem;
+  }
+  .matchups-format label {
+    padding:11px 9px;
+  }
+  .matchups-format {
+    gap:8px;
+  }
+  .matchups-intro h2 {
+    font-size:1.3rem;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  .session-matchups * {
+    scroll-behavior:auto!important;
+  }
+}
+
+[data-organizer-scoring-choice][hidden] { display:none !important; }
+
+/* Keep the navigation clearance formerly supplied by the hidden decorative header. */
+body:has(.session-matchups) main.mt-3,
+body:has(.session-create-page) main.mt-3 { padding-top:2rem; }

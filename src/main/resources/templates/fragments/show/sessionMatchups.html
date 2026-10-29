@@ -1,0 +1,178 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<section th:fragment="matchups" th:if="${sessionMatchups != null}" id="matchups"
+         class="session-matchups" data-session-matchups-root
+         th:attr="data-revision=${sessionMatchups.revision},data-initial-round=${sessionMatchups.initialRound}">
+  <th:block th:with="board=${sessionMatchups}">
+    <section class="matchups-panel" th:if="${board.id == null}">
+      <div class="matchups-eyebrow">Gather your players</div>
+      <h2>Your group, ready to play</h2>
+      <p>Everyone who joins before you start is included in the matchups.</p>
+      <p th:if="${board.organizerScored}" class="matchups-note" data-organizer-scoring-notice><strong>Organizer records scores.</strong> Results are confirmed automatically. You can review your games here without confirming each score.</p>
+      <a th:if="${param.prepareMatchups != null}" th:href="@{/groups/{id}(id=${ladder.id})} + '#matchups'" class="small">Back to saved matchups</a>
+      <div class="matchups-roster-heading"><h3>Players <span class="matchups-count" th:text="${#lists.size(board.members)}">4</span></h3>
+        <a th:if="${board.host}" href="#session-invite-panel" class="btn btn-outline-primary btn-sm" data-open-session-invite>Invite friends</a></div>
+      <ul class="matchups-player-chips" aria-label="Players included in matchups">
+        <li th:each="player : ${board.members}" th:text="${player.name}">Player</li>
+      </ul>
+      <p th:if="${board.host and #lists.size(board.members) < 4}" class="matchups-note">Invite at least four players. Your matchup settings will appear here when the group is ready.</p>
+      <form th:if="${board.host and #lists.size(board.members) >= 4}" method="post" th:action="@{/groups/{id}/matchups/start(id=${ladder.id})}"
+            data-matchups-setup th:attr="data-player-count=${#lists.size(board.members)}">
+        <fieldset class="matchups-format" th:if="${board.scoringConfigurable}"><legend>Scores</legend>
+          <label><input type="radio" name="organizerScored" value="false" th:checked="${!board.organizerScored}"><span><strong>Players record and confirm</strong><small>One opponent confirms each score</small></span></label>
+          <label><input type="radio" name="organizerScored" value="true" th:checked="${board.organizerScored}"><span><strong>Organizer records scores</strong><small>Confirmed automatically; everyone else reviews results</small></span></label>
+        </fieldset>
+        <fieldset class="matchups-format"><legend>Partners</legend>
+          <label><input type="radio" name="format" value="ROTATING_PARTNERS" checked><span><strong>Mix it up</strong><small>Rotate partners each game</small></span></label>
+          <label><input type="radio" name="format" value="FIXED_TEAMS"><span><strong>Stay together</strong><small>Keep the same partner</small></span></label>
+        </fieldset>
+        <div data-fixed-pairs hidden>
+          <p class="small">Choose each pair. Everyone on the list plays.</p>
+          <div data-pair-list></div>
+          <p class="matchups-footnote">Changing a partner swaps players between pairs.</p>
+          <input type="hidden" name="fixedTeamsJson" data-fixed-teams>
+        </div>
+        <div class="matchups-round-setting" data-rotating-rounds>
+          <label for="matchup-round-count">How many rounds?</label>
+          <input id="matchup-round-count" name="rounds" type="number" class="form-control" value="6" min="1" max="30" inputmode="numeric">
+        </div>
+        <p class="matchups-setup-summary" data-setup-summary aria-live="polite"></p>
+        <p class="small text-danger" data-setup-error role="status" hidden></p>
+        <button class="btn btn-action-primary w-100" type="submit" th:disabled="${#lists.size(board.members) < 4}">Start matchups</button>
+        <p class="matchups-footnote" th:if="${#lists.size(board.members) < 4}">Invite at least four players to get started.</p>
+        <p class="matchups-footnote">Start when your group is ready. Late joiners can step in as replacements.</p>
+        <script type="application/json" data-matchup-members th:inline="javascript">[[${board.members}]]</script>
+      </form>
+      <p th:unless="${board.host}" class="matchups-note">You're on the list. The session creator will start matchups when your group is ready.</p>
+    </section>
+
+    <th:block th:if="${board.id != null}">
+      <section class="matchups-panel matchups-intro">
+        <div class="matchups-eyebrow" th:text="${board.ended ? 'Matchups ended' : board.complete ? 'All scores recorded' : 'Let’s play'}">Let's play</div>
+        <h2 th:text="${board.format}">Rotating partners</h2>
+        <p class="matchups-meta"><a href="#matchup-players" data-open-matchup-roster th:text="${#lists.size(board.roster) + ' players'}">16 players</a>
+          <span th:if="${!#lists.isEmpty(board.available)}" class="matchups-available-count" th:text="${#lists.size(board.available) + ' available'}">1 available</span>
+          <span aria-hidden="true">·</span>
+          <span th:text="${board.roundCount}">6</span> rounds <span aria-hidden="true">·</span>
+          <span th:text="${board.remaining}">24</span> games left</p>
+        <p th:if="${board.organizerScored}" class="matchups-note" data-organizer-scoring-notice><strong>Organizer records scores.</strong> Results are confirmed automatically. No player confirmation is needed.</p>
+        <p th:if="${!board.organizerScored and !board.ended and !board.complete}" class="matchups-note">Play ahead when the people in your next game are ready. Scores can be confirmed afterward.</p>
+        <p th:if="${board.waiting}" class="matchups-waiting">You're in the session without a place in the current matchups. The organizer can bring you in as a replacement.</p>
+        <p th:if="${board.pending > 0}" class="small mb-0"><span th:text="${board.pending}">1</span> score(s) awaiting confirmation. You can keep playing.</p>
+      </section>
+
+      <section th:if="${board.next != null}" class="matchups-panel matchups-next" aria-labelledby="your-next-game">
+        <div class="matchups-game-kicker"><h2 id="your-next-game">Your next game</h2><span th:text="${'Round ' + board.next.round}">Round 1</span></div>
+        <div th:replace="~{fragments/show/sessionMatchups :: teams(${board.next})}"></div>
+        <button th:if="${board.next.canLog}" type="button" class="btn btn-action-primary w-100" data-log-matchup
+                th:attr="data-entry-id=${board.next.id},data-round=${board.next.round}">Enter score</button>
+      </section>
+      <p th:if="${!board.organizerScored and board.player and board.next == null and !board.ended}" class="matchups-note">You've recorded all your games. You can still view the schedule and confirm scores below.</p>
+
+      <section class="matchups-panel matchups-schedule" aria-labelledby="matchup-schedule-title">
+        <div class="matchups-schedule-heading"><h2 id="matchup-schedule-title">Matchups</h2>
+          <label class="matchups-round-picker">Round<select class="form-select" data-matchup-round aria-label="Show round">
+            <option value="all">All rounds</option>
+            <option th:each="round : ${board.rounds}" th:value="${round.number}" th:text="${round.number}">1</option>
+          </select></label></div>
+        <div class="matchups-filter" role="group" aria-label="Games to show">
+          <button type="button" data-games-filter="all" class="is-selected" aria-pressed="true">All games</button>
+          <button type="button" data-games-filter="mine" aria-pressed="false">My games</button>
+        </div>
+        <div th:each="round : ${board.rounds}" class="matchups-round" th:attr="data-round=${round.number}">
+          <h3 th:text="${'Round ' + round.number}">Round 1</h3>
+          <p class="matchups-byes" th:if="${!#lists.isEmpty(round.byes)}"><strong>Sitting out:</strong> <span th:text="${#strings.listJoin(round.byes, ', ')}"></span></p>
+          <div class="matchups-games">
+            <article th:each="game : ${round.games}" class="matchups-game" th:classappend="${game.mine} ? ' is-mine'"
+                     th:attr="data-game-id=${game.id},data-mine=${game.mine}">
+              <div class="matchups-game-kicker"><span th:text="${'Game ' + game.number}">Game 1</span><span th:if="${game.mine}" class="matchups-you-badge">Your game</span></div>
+              <div th:replace="~{fragments/show/sessionMatchups :: teams(${game})}"></div>
+              <p class="matchups-game-status" th:text="${game.status}">Ready to play</p>
+              <div th:if="${game.match != null}" class="matchups-score" th:text="${game.match.scoreA + ' – ' + game.match.scoreB}">11 – 8</div>
+              <button th:if="${game.canLog}" type="button" class="btn btn-outline-primary w-100" data-log-matchup
+                      th:attr="data-entry-id=${game.id},data-round=${game.round}">Enter score</button>
+              <div th:if="${game.canConfirm}" class="mt-2" data-skip-confirm-fragment-refresh="true"
+                   th:insert="~{fragments/matchRow :: matchRow_confirmation(match=${game.match},pendingForCurrentUser=${true},waitingOnOpponent=${false},deletable=${false})}"></div>
+              <button th:if="${game.canEdit and game.match.organizerConfirmed}" class="btn btn-link btn-sm" type="button" data-log-matchup data-correct-score="true"
+                      th:attr="data-entry-id=${game.id},data-round=${game.round},data-score-a=${game.match.scoreA},data-score-b=${game.match.scoreB},data-version=${game.match.version}">Correct score</button>
+              <a th:if="${game.canEdit and !game.match.organizerConfirmed}" class="btn btn-link btn-sm" th:href="@{/log-match(editMatchId=${game.match.id},returnTo=${'/groups/' + ladder.id + '#matchups'})}">Correct score</a>
+            </article>
+          </div>
+          <p class="matchups-no-personal-game" hidden>You are sitting out this round. Your next game is shown above.</p>
+        </div>
+      </section>
+
+      <details class="matchups-panel matchups-player-list" id="matchup-players" data-matchup-roster>
+        <summary><span>Players <span class="matchups-count" th:text="${#lists.size(board.roster)}">16</span></span>
+          <span th:if="${!#lists.isEmpty(board.available)}" class="matchups-available-count" th:text="${#lists.size(board.available) + ' available'}">1 available</span>
+          <span th:if="${board.host}" class="small">Replace a player</span></summary>
+        <div class="matchups-roster-heading"><h2 id="matchup-players-title">Players</h2>
+          <a th:if="${board.host}" href="#session-invite-panel" class="btn btn-outline-primary btn-sm" data-open-session-invite>Invite friends</a></div>
+        <p class="small" th:if="${board.host and !board.ended}">Someone stepping out? Replace their remaining games with a late joiner or a guest.</p>
+        <ul class="matchups-roster">
+          <li th:each="player : ${board.roster}">
+            <div><strong th:text="${player.name}">Player</strong><span th:if="${player.guest}" class="matchups-player-label">Guest</span>
+              <span th:if="${player.left}" class="matchups-player-label text-danger">Left · needs replacement</span></div>
+            <button th:if="${board.host and !board.ended and player.replaceable}" type="button" class="btn btn-outline-secondary btn-sm"
+                    data-replace-player th:attr="data-slot-id=${player.id},data-player-name=${player.name}">Replace</button>
+          </li>
+        </ul>
+        <div th:if="${!#lists.isEmpty(board.available)}" class="matchups-available">
+          <h3>Available replacements</h3><ul class="matchups-player-chips"><li th:each="player : ${board.available}" th:text="${player.name}">Late joiner</li></ul>
+          <p class="small mb-0">Joining after the start keeps the current matchups in place.</p>
+        </div>
+      </details>
+
+      <details th:if="${board.host}" class="matchups-panel matchups-options"><summary>Session options</summary>
+        <form th:each="membership : ${members}"
+              th:if="${membership.userId == currentUserId and membership.userId == ladder.ownerUserId}"
+              method="post" th:action="@{'/groups/' + ${ladder.id} + '/leave/' + ${membership.id}}"
+              onsubmit="return handleConfirmForm(this, 'End this session and any remaining matchups for everyone? Recorded scores will be saved.');">
+          <p class="small mt-3">Finished for today? End the session and any remaining matchups together. Your recorded scores stay saved.</p>
+          <button class="btn btn-outline-danger" type="submit">End Session</button>
+        </form>
+        <div th:if="${board.ended or board.complete}" class="mt-3">
+          <p class="small">Your games are saved. Make another schedule with everyone currently in the session.</p>
+          <a class="btn btn-outline-primary" th:href="@{/groups/{id}(id=${ladder.id},prepareMatchups=true)} + '#matchups'">Make more matchups</a>
+        </div>
+      </details>
+
+      <div class="modal fade" id="matchupScoreModal" data-session-editing-modal tabindex="-1" aria-labelledby="matchupScoreTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+          <div class="modal-header"><h2 class="modal-title fs-5" id="matchupScoreTitle">Enter score</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+          <form method="post" th:action="@{/groups/{sid}/matchups/{rid}/games/0/score(sid=${ladder.id},rid=${board.id})}" data-matchup-score-form>
+            <input type="hidden" name="expectedVersion" value="">
+            <div class="modal-body">
+              <p class="small text-muted" data-score-round></p>
+              <div class="matchups-score-inputs"><label><span data-score-team-a></span><input class="form-control" name="scoreA" type="number" min="0" max="35" inputmode="numeric" required aria-label="First team's score"></label>
+                <span aria-hidden="true">–</span><label><span data-score-team-b></span><input class="form-control" name="scoreB" type="number" min="0" max="35" inputmode="numeric" required aria-label="Second team's score"></label></div>
+              <p class="small text-muted mt-3 mb-0" th:text="${board.organizerScored ? 'The organizer’s score is confirmed automatically. Players can review the result.' : 'Record this game once. Other players can confirm it afterward.'}">Record this game once.</p>
+            </div><div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-action-primary" type="submit">Save score</button></div>
+          </form>
+        </div></div>
+      </div>
+      <div th:if="${board.host and !board.ended}" class="modal fade" id="matchupReplaceModal" data-session-editing-modal tabindex="-1" aria-labelledby="matchupReplaceTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+          <div class="modal-header"><h2 class="modal-title fs-5" id="matchupReplaceTitle">Replace player</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+          <form method="post" th:action="@{/groups/{sid}/matchups/{rid}/replace(sid=${ladder.id},rid=${board.id})}" data-matchup-replace-form>
+            <input type="hidden" name="slotId">
+            <div class="modal-body">
+              <p data-replacement-description></p>
+              <div th:if="${!#lists.isEmpty(board.available)}" class="mb-3"><label class="form-label" for="replacement-player">Someone who joined</label>
+                <select class="form-select" id="replacement-player" name="replacementId"><option value="">Choose a player</option><option th:each="player : ${board.available}" th:value="${player.id}" th:text="${player.name}">Player</option></select></div>
+              <label class="form-label" for="replacement-guest" th:text="${#lists.isEmpty(board.available) ? 'Guest’s name' : 'Or enter a guest’s name'}">Guest's name</label>
+              <input class="form-control" id="replacement-guest" name="guestName" type="text" maxlength="80" autocomplete="off" placeholder="Who is stepping in?">
+              <p class="small text-muted mt-3 mb-0">Record any finished games first. This replaces the remaining games without a score. Recorded scores stay with the original players. Guests don't need an account.</p>
+            </div><div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-action-primary" type="submit">Save replacement</button></div>
+          </form>
+        </div></div>
+      </div>
+    </th:block>
+  </th:block>
+</section>
+<div th:fragment="teams(game)" class="matchups-teams">
+  <div class="matchups-team" data-team-a><span th:text="${game.a1}">Alex</span><span th:text="${game.a2}">Sam</span></div>
+  <span class="matchups-versus">vs</span>
+  <div class="matchups-team" data-team-b><span th:text="${game.b1}">Morgan</span><span th:text="${game.b2}">Jamie</span></div>
+</div>
+</body></html>

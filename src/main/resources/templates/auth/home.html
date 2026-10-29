@@ -19,8 +19,13 @@
         <section class="app-hero">
             <div class="app-hero-card">
                 <h1 class="app-hero-title">Let's Pickle!</h1>
-                <p class="app-hero-subtitle">
+                <p class="app-hero-subtitle"
+                   th:if="${competitionUnavailable or canCreateCompetitionSession}">
                     Playing with friends? Start a session, invite your players, and keep score together.
+                </p>
+                <p class="app-hero-subtitle mb-0" data-session-hosting-note
+                   th:if="${!competitionUnavailable and canCreateCompetitionSession == false}">
+                    To start a new session, end the one you’re hosting with its <strong>×</strong> below. Your games stay saved.
                 </p>
             </div>
         </section>
@@ -30,30 +35,37 @@
         </div>
 
         <section class="app-action-grid mb-4" aria-label="Start, join, or return to a session">
-            <a class="app-action-tile app-action-standings"
-               th:each="membership : ${competitionSessionMemberships}"
-               th:with="sessionConfig=${membership.ladderConfig}, owned=${membership.userId == sessionConfig.ownerUserId}"
-               th:href="@{/groups/{id}(id=${sessionConfig.id})}">
-                <div class="app-action-icon"><i class="bi bi-play-circle" aria-hidden="true"></i></div>
-                <div>
-                    <span class="app-action-callout app-action-callout-top" th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
-                    <div class="app-action-title" th:text="${sessionConfig.title}">Your session</div>
-                    <div class="app-action-subtitle">Jump back in to invite players, log scores, and see your session standings.</div>
-                </div>
-            </a>
+            <div class="competition-session-card app-action-tile app-action-standings"
+                 th:each="membership : ${competitionSessionMemberships}"
+                 th:with="sessionConfig=${membership.ladderConfig},
+                          owned=${membership.userId == sessionConfig.ownerUserId},
+                          leaveLabel=${owned ? 'End Session' : 'Leave Session'},
+                          leaveConfirm=${owned ? 'End this session and any remaining matchups for everyone? Recorded scores will be saved.' : 'Leave this session?'}">
+                <form method="post" class="competition-session-dismiss-form m-0"
+                      th:if="${membership.id != null}"
+                      th:action="@{'/groups/' + ${sessionConfig.id} + '/leave/' + ${membership.id}}"
+                      th:attr="onsubmit=|return handleConfirmForm(this, '${leaveConfirm}')|">
+                    <button type="submit" class="btn-close competition-session-dismiss-btn"
+                            th:attr="aria-label=${leaveLabel},title=${leaveLabel}"></button>
+                </form>
+                <a class="competition-session-link" th:href="@{/groups/{id}(id=${sessionConfig.id})}">
+                    <div class="app-action-icon"><i class="bi bi-play-circle" aria-hidden="true"></i></div>
+                    <div>
+                        <span class="app-action-callout app-action-callout-top" th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
+                        <div class="app-action-title" th:text="${sessionConfig.title}">Your session</div>
+                        <div class="app-action-subtitle">Jump back in to invite players, log scores, and see your session standings.</div>
+                    </div>
+                </a>
+            </div>
 
-            <form method="post" th:action="@{/groups/start-session}" class="m-0"
+            <a th:href="@{/groups/new-session}" class="app-action-tile app-action-groups"
                   th:if="${!competitionUnavailable and canCreateCompetitionSession}">
-                <input type="hidden" name="returnTo" value="/competition/sessions">
-                <button type="submit" class="app-action-tile app-action-groups w-100 text-start border-0"
-                        th:classappend="${showStartHereCallout} ? ' app-action-start-here' : ''">
                     <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
                     <div>
                         <div class="app-action-title">Start a session with friends</div>
-                        <div class="app-action-subtitle">Get a code, QR, and invite link for the people you play with. Only one person needs to start.</div>
+                        <div class="app-action-subtitle">Make matchups for your group, or log games as you go. Only one person needs to start.</div>
                     </div>
-                </button>
-            </form>
+            </a>
 
             <a class="app-action-tile app-action-help" th:if="${!competitionUnavailable}"
                th:href="@{/groups/join(returnTo='/competition/sessions')}">
@@ -72,7 +84,7 @@
                 <h2 class="h5">Your first session</h2>
                 <ol class="mb-3 ps-3">
                     <li><strong>Start or join.</strong> One person starts a session; friends join with its code, QR, or link.</li>
-                    <li><strong>Play and log.</strong> One player enters the score after each match.</li>
+                    <li><strong>Play your way.</strong> Follow your session's matchups, or choose your own games.</li>
                     <li><strong>Confirm.</strong> One opponent confirms it from Inbox, then standings update.</li>
                 </ol>
                 <button type="button" class="btn btn-nav-secondary btn-sm" data-onboarding-dismiss>Dismiss tips</button>

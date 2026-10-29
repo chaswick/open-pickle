@@ -206,6 +206,12 @@ public class GroupSeasonSettingsService {
       }
     }
 
+    if (ladder.isSessionType()
+        && LadderSecurity.normalize(securityLevel)
+            != LadderSecurity.normalize(ladder.getSecurityLevel())) {
+      throw new IllegalArgumentException(
+          "Choose score confirmation in the session matchup setup before play starts.");
+    }
     ladder.setSecurityLevel(securityLevel);
     ladder.setAllowGuestOnlyPersonalMatches(
         LadderSecurity.normalize(securityLevel).isSelfConfirm() && allowGuestOnlyPersonalMatches);

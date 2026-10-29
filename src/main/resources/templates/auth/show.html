@@ -704,7 +704,7 @@
           Invite players, manage members, and adjust league settings.
         </p>
         <div class="session-hero-actions"
-             th:if="${isSessionLadder and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}">
+             th:if="${isSessionLadder and !ladder.matchupSession and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}">
           <button th:if="${targetSeason != null}"
                   id="logMatchVoiceBtn"
                   type="button"
@@ -790,7 +790,7 @@
     </aside>
     <div class="app-page-back">
       <a class="btn btn-nav-secondary btn-lg w-100"
-         th:href="${isSessionLadder} ? @{/competition/sessions} : (${isCompetitionLadder} ? @{/competition} : @{/private-groups/{ladderId}(ladderId=${ladder.id},seasonId=${season != null ? season.id : null})})">Back</a>
+         th:href="${isSessionLadder} ? @{/home} : (${isCompetitionLadder} ? @{/competition} : @{/private-groups/{ladderId}(ladderId=${ladder.id},seasonId=${season != null ? season.id : null})})">Back</a>
     </div>
     <div class="card-stack-col card-stack-col-desktop-fluid pb-5 text-start">
       <th:block th:if="${isSessionLadder}">
@@ -804,6 +804,8 @@
   </main>
 
   <th:block layout:fragment="scripts">
+    <link th:if="${isSessionLadder}" rel="stylesheet" th:href="@{/css/session-matchups.css(v=${assetVersion})}">
+    <script th:if="${isSessionLadder}" th:src="@{/js/session-matchups.js(v=${assetVersion})}"></script>
     <script th:src="@{/js/session-nearby-share.js(v=${assetVersion})}" src="/js/session-nearby-share.js"></script>
     <script th:if="${isSessionLadder}"
             th:src="@{/js/session-recent-ticker.js(v=${assetVersion})}"

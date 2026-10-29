@@ -20,7 +20,9 @@ class MatchLoggingQuotaServiceTest {
     MatchLoggingQuotaService service = new MatchLoggingQuotaService(repo, true, 100);
     User user = new User();
     ReflectionTestUtils.setField(user, "id", 42L);
-    when(repo.countByLoggedBy_IdAndCreatedAtGreaterThanEqual(eq(42L), any())).thenReturn(99L);
+    when(repo.countByLoggedBy_IdAndCreatedAtGreaterThanEqualAndOrganizerConfirmedFalse(
+            eq(42L), any()))
+        .thenReturn(99L);
 
     var status = service.evaluate(user);
 
@@ -33,7 +35,9 @@ class MatchLoggingQuotaServiceTest {
     MatchLoggingQuotaService service = new MatchLoggingQuotaService(repo, true, 100);
     User user = new User();
     ReflectionTestUtils.setField(user, "id", 42L);
-    when(repo.countByLoggedBy_IdAndCreatedAtGreaterThanEqual(eq(42L), any())).thenReturn(100L);
+    when(repo.countByLoggedBy_IdAndCreatedAtGreaterThanEqualAndOrganizerConfirmedFalse(
+            eq(42L), any()))
+        .thenReturn(100L);
 
     var status = service.evaluate(user);
 

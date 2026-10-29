@@ -170,7 +170,8 @@ public class RoundRobinService {
         continue;
       }
 
-      List<RoundRobinEntry> entries = rrEntryRepo.findByRoundRobinAndRoundNumberWithUsers(rr, currentRound);
+      List<RoundRobinEntry> entries =
+          rrEntryRepo.findByRoundRobinAndRoundNumberWithUsers(rr, currentRound);
       if (entries == null || entries.isEmpty()) {
         continue;
       }
@@ -1067,6 +1068,7 @@ public class RoundRobinService {
   public int resolveCurrentRound(RoundRobin rr) {
     if (rr == null) return 1;
     List<RoundRobinEntry> entries = rrEntryRepo.findByRoundRobinOrderByRoundNumberAscWithUsers(rr);
+    if (rr.isSessionFlow()) return computeEffectiveCurrentRound(rr, entries, false);
     int effectiveRound = computeEffectiveCurrentRound(rr, entries, true);
     if (rr.getCurrentRound() != effectiveRound) {
       rr.setCurrentRound(effectiveRound);
@@ -1098,6 +1100,8 @@ public class RoundRobinService {
       }
     }
     java.util.Map<Long, Match> matchMap = loadMatchesWithParticipants(matchIds);
+
+    if (rr.getEndedAt() != null) return maxRound + 1;
 
     for (int round = 1; round <= maxRound; round++) {
       List<RoundRobinEntry> roundEntries = entriesByRound.get(round);
@@ -1138,6 +1142,9 @@ public class RoundRobinService {
       return loaded;
     }
 
+    // Session score entry links an exact game under a lock. Inferring a link by players
+    // would mistake a later repeat matchup for an earlier, already recorded game.
+    if (rr.isSessionFlow()) return null;
     var maybe = findLoggedMatchForEntry(rr, entry, rr.getCreatedAt());
     if (maybe.isEmpty()) {
       return null;
@@ -1543,6 +1550,13 @@ public class RoundRobinService {
     List<RoundRobinEntry> entries = rrEntryRepo.findByRoundRobinOrderByRoundNumberAsc(rr);
     java.util.Set<Long> ids = new java.util.HashSet<>();
     for (RoundRobinEntry e : entries) {
+      if (rr.isSessionFlow()) {
+        for (RoundRobinEntry.Position position : RoundRobinEntry.Position.values()) {
+          Long slot = e.slotId(position);
+          if (slot != null) ids.add(slot);
+        }
+        continue;
+      }
       if (e.getA1() != null && e.getA1().getId() != null) ids.add(e.getA1().getId());
       if (e.getA2() != null && e.getA2().getId() != null) ids.add(e.getA2().getId());
       if (e.getB1() != null && e.getB1().getId() != null) ids.add(e.getB1().getId());
@@ -1564,6 +1578,7 @@ public class RoundRobinService {
     int maxRound = all.stream().mapToInt(RoundRobinEntry::getRoundNumber).max().orElse(0);
     // move current round to past the last round
     rr.setCurrentRound(maxRound + 1);
+    rr.setEndedAt(java.time.Instant.now());
     rrRepo.save(rr);
     return true;
   }
@@ -1602,6 +1617,7 @@ public class RoundRobinService {
       int maxRound = all.stream().mapToInt(RoundRobinEntry::getRoundNumber).max().orElse(0);
       if (rr.getCurrentRound() > maxRound) continue;
       rr.setCurrentRound(maxRound + 1);
+      rr.setEndedAt(java.time.Instant.now());
       rrRepo.save(rr);
       ended++;
     }
@@ -1618,6 +1634,7 @@ public class RoundRobinService {
     int deleted = 0;
     List<RoundRobin> allRrs = rrRepo.findAll();
     for (RoundRobin rr : allRrs) {
+      if (rr.isSessionFlow()) continue; // Keep the session's saved board and replacement snapshots.
       List<RoundRobinEntry> allEntries = rrEntryRepo.findByRoundRobinOrderByRoundNumberAsc(rr);
       int maxRound = allEntries.stream().mapToInt(RoundRobinEntry::getRoundNumber).max().orElse(0);
       if (rr.getCurrentRound() <= maxRound) continue; // not completed
@@ -2161,6 +2178,9 @@ public class RoundRobinService {
   }
 
   private RoundRobinActivity analyzeRoundRobinActivity(RoundRobin rr) {
+    if (rr.getEndedAt() != null) {
+      return new RoundRobinActivity(false, java.util.Set.of(), java.util.Map.of());
+    }
     List<RoundRobinEntry> entries = rrEntryRepo.findByRoundRobinOrderByRoundNumberAscWithUsers(rr);
     if (entries == null || entries.isEmpty()) {
       return new RoundRobinActivity(false, java.util.Set.of(), java.util.Map.of());
@@ -2252,7 +2272,7 @@ public class RoundRobinService {
       String court = courtNames.get(id);
       String nick = safeNick(user);
       if (court != null && !court.isBlank()) {
-        displayNames.put(id, court + "-" + nick);
+        displayNames.put(id, court.equalsIgnoreCase(nick) ? nick : court + "-" + nick);
       } else {
         displayNames.put(id, nick);
       }
@@ -2449,7 +2469,8 @@ public class RoundRobinService {
     }
 
     String nick = safeNick(u);
-    if (court != null && !court.isBlank()) return court + "-" + nick;
+    if (court != null && !court.isBlank() && !court.equalsIgnoreCase(nick))
+      return court + "-" + nick;
     return nick;
   }
 

@@ -1,5 +1,6 @@
 package com.w3llspring.fhpb.web.controller;
 
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -9,12 +10,14 @@ import com.w3llspring.fhpb.web.controller.competition.SessionJoinRequestControll
 import com.w3llspring.fhpb.web.model.CustomUserDetails;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,23 +32,25 @@ class SessionJoinRequestControllerTest {
 
   private MockMvc mockMvc;
   private Authentication auth;
+  private MockedStatic<AuthenticatedUserSupport> currentUser;
 
   @BeforeEach
   void setUp() {
-    SessionJoinRequestController controller =
-        new SessionJoinRequestController(sessionJoinRequests, 20);
+    SessionJoinRequestController controller = new SessionJoinRequestController(sessionJoinRequests);
     mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
     User user = new User();
     user.setId(123L);
     user.setNickName("Tester");
-    auth =
-        new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of());
+    auth = new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of());
     SecurityContextHolder.getContext().setAuthentication(auth);
+    currentUser = mockStatic(AuthenticatedUserSupport.class);
+    currentUser.when(() -> AuthenticatedUserSupport.currentUser(auth)).thenReturn(user);
   }
 
   @AfterEach
   void tearDown() {
+    currentUser.close();
     SecurityContextHolder.clearContext();
   }
 
@@ -62,7 +67,7 @@ class SessionJoinRequestControllerTest {
     mockMvc
         .perform(get("/api/sessions/42/members").principal(auth))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.memberSectionTitle").value("Session Members (2/20)"))
+        .andExpect(jsonPath("$.memberSectionTitle").value("Session Members (2/32)"))
         .andExpect(jsonPath("$.memberCount").value(2))
         .andExpect(jsonPath("$.members[0].membershipId").value(501))
         .andExpect(jsonPath("$.members[0].displayName").value("Tester"))

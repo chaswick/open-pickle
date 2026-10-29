@@ -31,7 +31,8 @@ public class MatchLoggingQuotaService {
     }
     Instant windowStart = Instant.now().minus(WINDOW);
     long count =
-        matchRepository.countByLoggedBy_IdAndCreatedAtGreaterThanEqual(user.getId(), windowStart);
+        matchRepository.countByLoggedBy_IdAndCreatedAtGreaterThanEqualAndOrganizerConfirmedFalse(
+            user.getId(), windowStart);
     if (count >= weeklyLimit) {
       return QuotaStatus.blocked(weeklyLimit, count);
     }

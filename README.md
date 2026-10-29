@@ -98,6 +98,8 @@ Use the same command CI runs so local results match GitHub as closely as possibl
 
 Focused test slices are used heavily during refactors, but the full suite is expected to be green.
 
+See [session matchup validation](docs/session-matchup-validation.md) for scheduler coverage through 32 players and the current session limits.
+
 ## Hosting And Deployment
 
 This public repo includes local Docker support, but it does not include the maintainer's private production deployment bundle, server notes, or host-specific operations config.

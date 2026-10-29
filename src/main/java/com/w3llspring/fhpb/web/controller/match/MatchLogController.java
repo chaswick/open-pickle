@@ -380,6 +380,10 @@ public class MatchLogController {
       UserSessionState.storeSelectedGroupId(request, ladderId);
     }
 
+    if (context.isSession() && context.getSessionConfig().isMatchupSession()) {
+      return "redirect:/groups/" + context.getSelectionLadderId() + "#matchups";
+    }
+
     RoundRobinService.ActiveSessionAssignment activeSessionRoundRobin =
         resolveActiveSessionRoundRobinAssignment(context, currentUser);
     if (activeSessionRoundRobin != null) {
@@ -789,6 +793,10 @@ public class MatchLogController {
     boolean resolvedB1Guest = isGuest(teamB1);
     boolean resolvedB2Guest = isGuest(teamB2);
 
+    if (context.isSession() && context.getSessionConfig().isMatchupSession()) {
+      return "redirect:/groups/" + context.getSelectionLadderId() + "#matchups";
+    }
+
     RoundRobinService.ActiveSessionAssignment activeSessionRoundRobin =
         resolveActiveSessionRoundRobinAssignment(context, currentUser);
     if (activeSessionRoundRobin != null) {
@@ -828,7 +836,8 @@ public class MatchLogController {
             scoreA,
             scoreB);
         model.addAttribute(
-            "toastMessage", "You’re in an active round robin. Use the assigned pairing shown here.");
+            "toastMessage",
+            "You’re in an active round robin. Use the assigned pairing shown here.");
         model.addAttribute("toastLevel", "warning");
         return "auth/logMatch";
       }
@@ -1245,7 +1254,8 @@ public class MatchLogController {
     return "Your round-robin match is already logged. Confirm it from the session card before logging anything else.";
   }
 
-  private RoundRobinSelection sessionRoundRobinSelection(RoundRobinEntry entry, Long currentUserId) {
+  private RoundRobinSelection sessionRoundRobinSelection(
+      RoundRobinEntry entry, Long currentUserId) {
     if (entry == null) {
       return new RoundRobinSelection(null, null, null, null);
     }
@@ -1277,7 +1287,10 @@ public class MatchLogController {
       }
     }
     return new RoundRobinSelection(
-        userParamValue(orderedA1), userParamValue(orderedA2), userParamValue(orderedB1), userParamValue(orderedB2));
+        userParamValue(orderedA1),
+        userParamValue(orderedA2),
+        userParamValue(orderedB1),
+        userParamValue(orderedB2));
   }
 
   private String userParamValue(User user) {
@@ -1293,11 +1306,18 @@ public class MatchLogController {
     if (entry == null) {
       return false;
     }
-    return teamsMatchUnordered(teamIds(entry.getA1(), entry.getA2()), teamIds(entry.getB1(), entry.getB2()), teamIds(a1, a2), teamIds(b1, b2));
+    return teamsMatchUnordered(
+        teamIds(entry.getA1(), entry.getA2()),
+        teamIds(entry.getB1(), entry.getB2()),
+        teamIds(a1, a2),
+        teamIds(b1, b2));
   }
 
   private boolean teamsMatchUnordered(
-      Set<Long> entryTeamA, Set<Long> entryTeamB, Set<Long> submittedTeamA, Set<Long> submittedTeamB) {
+      Set<Long> entryTeamA,
+      Set<Long> entryTeamB,
+      Set<Long> submittedTeamA,
+      Set<Long> submittedTeamB) {
     return (entryTeamA.equals(submittedTeamA) && entryTeamB.equals(submittedTeamB))
         || (entryTeamA.equals(submittedTeamB) && entryTeamB.equals(submittedTeamA));
   }
@@ -1451,7 +1471,9 @@ public class MatchLogController {
       return "redirect:/home?toast=forbidden";
     }
     // Confirmed matches require ladder admin privileges.
-    if (match.getState() == MatchState.CONFIRMED && !hasSeasonAdminOverride) {
+    if (match.getState() == MatchState.CONFIRMED
+        && !hasSeasonAdminOverride
+        && !MatchWorkflowRules.canOrganizerCorrect(match, currentUser)) {
       log.warn(
           "User {} attempted to edit confirmed match {}",
           currentUser != null ? currentUser.getId() : null,
@@ -1631,7 +1653,9 @@ public class MatchLogController {
       return "redirect:/home?toast=forbidden";
     }
     // Confirmed matches require ladder admin privileges.
-    if (match.getState() == MatchState.CONFIRMED && !hasSeasonAdminOverride) {
+    if (match.getState() == MatchState.CONFIRMED
+        && !hasSeasonAdminOverride
+        && !MatchWorkflowRules.canOrganizerCorrect(match, currentUser)) {
       log.warn(
           "User {} attempted to edit confirmed match {} (submit)",
           currentUser != null ? currentUser.getId() : null,

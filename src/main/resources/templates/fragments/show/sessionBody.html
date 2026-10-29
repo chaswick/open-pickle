@@ -1,7 +1,8 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sessionBody">
-  <div class="card mb-3"
+  <div th:replace="~{fragments/show/sessionMatchups :: matchups}"></div>
+  <div class="card mb-3" id="session-invite-panel"
+       th:data-card-collapse-default="${sessionMatchups != null and sessionMatchups.id != null ? 'closed' : 'open'}"
        th:if="${currentUserIsAdmin and (inviteActive
-               or (canStartSessionRoundRobin != null and canStartSessionRoundRobin)
                or (pendingSessionJoinRequests != null and !#lists.isEmpty(pendingSessionJoinRequests)))}">
     <div class="card-header card-header-title text-center">Invite friends</div>
     <div class="card-body d-flex flex-column gap-3">
@@ -113,20 +114,11 @@
           </ul>
         </div>
       </div>
-      <div class="d-grid"
-           th:if="${canStartSessionRoundRobin != null and canStartSessionRoundRobin}">
-        <div class="session-toolbar-group">
-          <a class="btn btn-nav-secondary w-100"
-             th:href="@{/round-robin/list(ladderId=${ladder.id})}">
-            Start Round Robin
-          </a>
-        </div>
-      </div>
     </div>
   </div>
 
   <div class="card mb-3"
-       th:if="${sessionRoundRobinTask != null}"
+       th:if="${sessionRoundRobinTask != null and sessionMatchups == null}"
        data-session-round-robin-root="true"
        th:attr="data-session-round-robin-id=${sessionRoundRobinTask.roundRobinId},
                 data-session-round-robin-current-round=${sessionRoundRobinTask.currentRound}">
@@ -216,6 +208,7 @@
 
   <div class="card mb-3"
        data-session-standings-root="true"
+       th:data-card-collapse-default="${ladder.matchupSession ? 'closed' : 'open'}"
        th:attr="data-session-standings-pending=${sessionStandingsRecalculationPending},
                 data-session-ladder-id=${ladder != null ? ladder.id : null},
                 data-session-season-id=${targetSeason != null ? targetSeason.id : null},
@@ -252,29 +245,14 @@
             <span class="ladder-rating session-roster-stat-header">
               <span class="visually-hidden">Choose session stat to show</span>
               <div class="session-stat-links">
-                <button type="button"
-                        class="session-stat-link is-active"
-                        data-session-stat-toggle="rating"
-                        aria-label="Sort by rating"
-                        aria-pressed="true">
-                  Rtg
-                </button>
+                <button type="button" class="session-stat-link is-active"
+                        data-session-stat-toggle="wins" aria-label="Sort by wins" aria-pressed="true">W</button>
                 <span class="session-stat-divider" aria-hidden="true">/</span>
-                <button type="button"
-                        class="session-stat-link"
-                        data-session-stat-toggle="wins"
-                        aria-label="Sort by wins"
-                        aria-pressed="false">
-                  W
-                </button>
+                <button type="button" class="session-stat-link"
+                        data-session-stat-toggle="points-for" aria-label="Sort by points for" aria-pressed="false">PF</button>
                 <span class="session-stat-divider" aria-hidden="true">/</span>
-                <button type="button"
-                        class="session-stat-link"
-                        data-session-stat-toggle="points-for"
-                        aria-label="Sort by points for"
-                        aria-pressed="false">
-                  PF
-                </button>
+                <button type="button" class="session-stat-link"
+                        data-session-stat-toggle="rating" aria-label="Sort by rating" aria-pressed="false">Rtg</button>
               </div>
             </span>
           </div>
@@ -373,8 +351,8 @@
                 </button>
                 <span class="session-roster-number session-roster-stat-value"
                       data-session-stat-text
-                      th:text="${ratingLabel}">
-                  1000
+                      th:text="${s.wins}">
+                  0
                 </span>
               </span>
             </span>
@@ -407,7 +385,7 @@
     /*]]>*/
   </script>
 
-  <div class="card mb-3" th:if="${currentUserIsAdmin}">
+  <div class="card mb-3" th:if="${currentUserIsAdmin and !ladder.matchupSession}">
     <div class="card-header card-header-title text-center">Manage Invited Buddies</div>
     <div class="card-body d-grid gap-3"
          id="sessionMembersPanel"
@@ -417,7 +395,7 @@
                   data-current-user-is-admin=${currentUserIsAdmin ? 'true' : 'false'}">
       <div class="small text-muted text-center"
            data-member-section-title
-           th:text="${memberSectionTitle}">Session Members (1/20)</div>
+           th:text="${memberSectionTitle}">Session Members (1/32)</div>
 
       <div class="text-muted text-center"
            data-members-empty-state

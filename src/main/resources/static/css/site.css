@@ -1242,6 +1242,65 @@ body.app-home-tour-open {
   min-width: 0;
 }
 
+.competition-session-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+
+.competition-session-card.app-action-tile > .competition-session-link {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.competition-session-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1 1 auto;
+  padding: 1.25rem 3.5rem 1rem 1.4rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.competition-session-link > :last-child {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.competition-session-link:hover,
+.competition-session-link:focus-visible {
+  color: inherit;
+}
+
+.competition-session-dismiss-form {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.4rem;
+  z-index: 2;
+}
+
+.competition-session-dismiss-btn {
+  box-sizing: border-box;
+  width: 2.75rem;
+  height: 2.75rem;
+  opacity: 0.65;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.competition-session-dismiss-btn:hover,
+.competition-session-dismiss-btn:focus-visible {
+  opacity: 0.9;
+  transform: scale(1.08);
+}
+
 .app-action-start-here {
   position: relative;
   overflow: hidden;

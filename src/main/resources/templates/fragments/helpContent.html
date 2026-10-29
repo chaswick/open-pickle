@@ -11,12 +11,13 @@
         <div class="accordion-body">
           <p>Use one session for the people you are playing with.</p>
           <ul>
-            <li><strong>Start:</strong> From Home, choose <strong>Start a session with friends</strong>. Only one person needs to start.</li>
+            <li><strong>Start:</strong> From Home, choose <strong>Start a session with friends</strong>, then <strong>Make matchups</strong> or <strong>Log games as we go</strong>. Only one person needs to start.</li>
             <li><strong>Invite:</strong> Share the session code, show the QR, or copy the invite link. Requests to join with a code appear under <strong>Invite friends</strong> for you to approve.</li>
             <li><strong>Join:</strong> Choose <strong>Join with a code</strong> from Home, scan your friend's QR, or open their invite link.</li>
-            <li><strong>Play:</strong> One player logs each score. One opponent confirms it from Inbox, then standings update.</li>
+            <li><strong>Play:</strong> One player logs each score. One opponent confirms it from Inbox, then standings update. If the session uses organizer scoring, the organizer records scores and they are confirmed automatically.</li>
             <li><strong>Return:</strong> Your active sessions appear on Home so you can pick up where you left off.</li>
             <li><strong>Finish:</strong> Leave the session when you're done. The host can end it for everyone, and sessions also expire automatically. Your confirmed match history stays saved.</li>
+            <li><strong>Start another:</strong> If you’re hosting a session, use its <strong>×</strong> (<strong>End Session</strong>) on <a th:href="@{/home}">Home</a> before creating a new one. This also closes any remaining matchups and keeps your recorded scores. You can still join other people’s sessions.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">Season standings show your results alongside the opponents you have played this season.</small></p>
         </div>
@@ -140,17 +141,18 @@
     <div class="accordion-item">
       <h2 class="accordion-header" id="roundRobinHeading">
         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#roundRobinHelp" aria-expanded="false" aria-controls="roundRobinHelp">
-          Round Robins
+          Matchups and Round Robins
         </button>
       </h2>
       <div id="roundRobinHelp" class="accordion-collapse collapse" aria-labelledby="roundRobinHeading" data-bs-parent="#helpAccordion">
         <div class="accordion-body">
           <p>Round robins organize matchups for the players in your session, with rotating partners or fixed teams.</p>
           <ul>
-            <li><strong>Start:</strong> The session host uses <strong>Start Round Robin</strong> under the session controls.</li>
-            <li><strong>Smart Pairing:</strong> Matches and court numbers are generated automatically.</li>
-            <li><strong>Track Progress:</strong> See which matches are complete and which are pending.</li>
-            <li><strong>Results:</strong> Log and confirm scores to update the round robin and season standings.</li>
+            <li><strong>Gather:</strong> Create a <strong>Make matchups</strong> session and share its invite. Everyone who joins before the start is included automatically.</li>
+            <li><strong>Start:</strong> With at least four players, choose <strong>Mix it up</strong> for rotating partners or <strong>Stay together</strong> for fixed partners, then tap <strong>Start matchups</strong>.</li>
+            <li><strong>Play:</strong> Your next game and the full schedule are on the session page. Use the round selector to play ahead when the people in your next game are ready. Other courts and pending confirmations don't hold you back.</li>
+            <li><strong>Scores:</strong> Tap <strong>Enter score</strong> beside the game. Registered players can confirm it afterward.</li>
+            <li><strong>Replace:</strong> Late joiners are available replacements. The host opens <strong>Players</strong>, taps <strong>Replace</strong>, and chooses a joined player or enters a guest's name. Only unplayed matchups change; guests don't need an account.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">Use the same session invite to bring your friends into the roster.</small></p>
         </div>
@@ -225,7 +227,7 @@
         <div class="accordion-body">
           <p>Current hard limits in the app:</p>
           <ul>
-            <li><strong>Session size:</strong> Up to <strong th:text="${ladderMaxMembers}">20</strong> active players in a session.</li>
+            <li><strong>Session size:</strong> Up to <strong th:text="${sessionMaxMembers}">32</strong> active players in a session.</li>
             <li><strong>Season fair-play thresholds:</strong> First warning at <strong th:text="${competitionAutoModWarningOneThreshold}">3</strong> missed required confirmations in one season, final warning at <strong th:text="${competitionAutoModWarningTwoThreshold}">5</strong>, and a season lockout at <strong th:text="${competitionAutoModBlockThreshold}">7</strong>.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">These limits may change over time as the app evolves.</small></p>

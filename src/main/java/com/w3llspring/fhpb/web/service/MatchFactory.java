@@ -118,6 +118,7 @@ public class MatchFactory {
 
     boolean isPersonalRecordOnly =
         allowGuestOnlyPersonalRecords && match.hasGuestOnlyOpposingTeam();
-    match.setExcludeFromStandings(isPersonalRecordOnly);
+    boolean sessionGuestRecord = match.getSourceSessionConfig() != null && match.hasGuestOnlyTeam();
+    match.setExcludeFromStandings(isPersonalRecordOnly || sessionGuestRecord);
   }
 }

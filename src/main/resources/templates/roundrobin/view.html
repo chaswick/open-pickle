@@ -26,6 +26,7 @@
                     <h5 class="mb-0">Round <span th:text="${currentRound}"></span>
                         <span th:if="${maxRound != null and maxRound > 0}"> of <span th:text="${maxRound}"></span></span>
                         <span th:if="${roundComplete}" class="badge text-bg-success ms-2">Completed</span>
+                        <span th:if="${roundRobinEnded}" class="badge text-bg-secondary ms-2">Matchups ended</span>
                     </h5>
                 </div>
 

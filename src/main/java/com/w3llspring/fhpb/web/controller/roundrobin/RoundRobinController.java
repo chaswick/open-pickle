@@ -122,6 +122,9 @@ public class RoundRobinController {
         UserSessionState.storeSelectedGroupId(request, ladderId);
       }
       requireActiveLadderMember(ladderId, currentUser);
+      if (selectedLadder != null && selectedLadder.isMatchupSession()) {
+        return "redirect:/groups/" + ladderId + "#matchups";
+      }
       if (!canStartRoundRobin(selectedLadder, currentUser)) {
         return "redirect:/round-robin/list?ladderId=" + ladderId;
       }
@@ -214,6 +217,9 @@ public class RoundRobinController {
           roundRobinFormat,
           submittedFixedTeamsJson);
       return "roundrobin/start";
+    }
+    if (selectedLadder != null && selectedLadder.isMatchupSession()) {
+      return "redirect:/groups/" + ladderId + "#matchups";
     }
     if (!canStartRoundRobin(selectedLadder, actor)) {
       redirectAttributes.addFlashAttribute(
@@ -458,10 +464,26 @@ public class RoundRobinController {
         m.put("a2Id", a2Id);
         m.put("b1Id", b1Id);
         m.put("b2Id", b2Id);
-        m.put("a1Name", a1Id != null ? displayNames.get(a1Id) : null);
-        m.put("a2Name", a2Id != null ? displayNames.get(a2Id) : null);
-        m.put("b1Name", b1Id != null ? displayNames.get(b1Id) : null);
-        m.put("b2Name", b2Id != null ? displayNames.get(b2Id) : null);
+        m.put(
+            "a1Name",
+            a1Id != null
+                ? displayNames.get(a1Id)
+                : e.guestName(com.w3llspring.fhpb.web.model.RoundRobinEntry.Position.A1));
+        m.put(
+            "a2Name",
+            a2Id != null
+                ? displayNames.get(a2Id)
+                : e.guestName(com.w3llspring.fhpb.web.model.RoundRobinEntry.Position.A2));
+        m.put(
+            "b1Name",
+            b1Id != null
+                ? displayNames.get(b1Id)
+                : e.guestName(com.w3llspring.fhpb.web.model.RoundRobinEntry.Position.B1));
+        m.put(
+            "b2Name",
+            b2Id != null
+                ? displayNames.get(b2Id)
+                : e.guestName(com.w3llspring.fhpb.web.model.RoundRobinEntry.Position.B2));
 
         Long matchId = e.getMatchId();
         m.put("matchId", matchId);
@@ -478,7 +500,10 @@ public class RoundRobinController {
         if (e.isBye()) {
           status = "Bye";
         } else if (linked == null) {
-          var maybe = roundRobinService.findLoggedMatchForEntry(rr, e, rr.getCreatedAt());
+          var maybe =
+              rr.isSessionFlow()
+                  ? java.util.Optional.<com.w3llspring.fhpb.web.model.Match>empty()
+                  : roundRobinService.findLoggedMatchForEntry(rr, e, rr.getCreatedAt());
           if (maybe.isPresent()) {
             var found = maybe.get();
             linked = found;
@@ -505,7 +530,7 @@ public class RoundRobinController {
 
         m.put("status", status);
         m.put("linkedMatch", linked);
-        if (!e.isBye() && m.get("matchId") == null) {
+        if (!e.isBye() && m.get("matchId") == null && rr.getEndedAt() == null) {
           java.util.Map<String, String> quickLogSelections =
               buildQuickLogSelections(e, currentUser, canManage);
           if (quickLogSelections != null) {
@@ -584,6 +609,7 @@ public class RoundRobinController {
 
     model.addAttribute("roundRobin", rr);
     model.addAttribute("roundRobinId", id);
+    model.addAttribute("roundRobinEnded", rr.getEndedAt() != null);
     model.addAttribute("currentRound", current);
     model.addAttribute("roundComplete", isRoundComplete(entryViews));
     model.addAttribute("roundRobinComplete", roundRobinComplete);
@@ -1031,6 +1057,7 @@ public class RoundRobinController {
 
   private boolean canManageRoundRobin(RoundRobin rr, User user) {
     if (rr == null || user == null) return false;
+    if (rr.isSessionFlow()) return false; // Session mutations use the locked session endpoints.
     if (user.isAdmin()) return true;
     LadderConfig ladderConfig = ladderConfigForRoundRobin(rr);
     if (ladderConfig != null && ladderConfig.isTournamentMode()) {
@@ -1469,7 +1496,10 @@ public class RoundRobinController {
 
     for (Long participantId : participantIds) {
       pushNotificationService.sendRoundRobinReady(
-          participantId, rr.getSessionConfig().getId(), rr.getSessionConfig().getTitle(), currentRound);
+          participantId,
+          rr.getSessionConfig().getId(),
+          rr.getSessionConfig().getTitle(),
+          currentRound);
     }
   }
 
