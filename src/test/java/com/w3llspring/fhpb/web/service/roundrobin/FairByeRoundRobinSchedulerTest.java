@@ -823,9 +823,12 @@ class FairByeRoundRobinSchedulerTest {
         }
         System.out.println();
         
+        // Use the same draw so only the seasonal context changes.
+        scheduler.setSeedForTests(0L);
         // Generate without seasonal context
         List<List<RoundRobinScheduler.MatchSpec>> scheduleWithout = scheduler.generate(participants, Map.of(), 0);
         
+        scheduler.setSeedForTests(0L);
         // Generate with seasonal context
         List<List<RoundRobinScheduler.MatchSpec>> scheduleWith = scheduler.generate(participants, priorCounts, 0);
         
@@ -1007,14 +1010,25 @@ class FairByeRoundRobinSchedulerTest {
         System.out.println("  Difference:        " + (highCountWithout - highCountWith) + " fewer matches");
         
         // Run multiple trials to see the trend
-        System.out.println("\nMulti-Trial Analysis (10 trials each):");
+        int trials = 100;
+        int totalHighWithout = 0;
+        int totalHighWith = 0;
+        System.out.println("\nMulti-Trial Analysis (" + trials + " paired seeds):");
         int betterCount = 0;
         int worseCount = 0;
         int sameCount = 0;
         
-        for (int trial = 0; trial < 10; trial++) {
+        for (int trial = 0; trial < trials; trial++) {
+            // Reuse the draw to measure the effect of history with the same players,
+            // partnerships, and byes.
+            scheduler.setSeedForTests((long) trial);
             List<List<RoundRobinScheduler.MatchSpec>> trialWithout = scheduler.generate(participants, Map.of(), 0);
+            scheduler.setSeedForTests((long) trial);
             List<List<RoundRobinScheduler.MatchSpec>> trialWith = scheduler.generate(participants, priorCounts, 0);
+            assertEquals(computeByeCounts(trialWithout), computeByeCounts(trialWith),
+                    "Seasonal context must preserve the bye plan for seed " + trial);
+            assertEquals(computePartnerCounts(trialWithout), computePartnerCounts(trialWith),
+                    "Seasonal context must preserve partnerships for seed " + trial);
             
             Map<String, Integer> oppsWithout = new HashMap<>();
             Map<String, Integer> oppsWith = new HashMap<>();
@@ -1049,14 +1063,16 @@ class FairByeRoundRobinSchedulerTest {
                 }
             }
             
+            totalHighWithout += hcWithout;
+            totalHighWith += hcWith;
             if (hcWith < hcWithout) betterCount++;
             else if (hcWith > hcWithout) worseCount++;
             else sameCount++;
         }
         
-        System.out.println("  Better (fewer high-count matches): " + betterCount + "/10");
-        System.out.println("  Same: " + sameCount + "/10");
-        System.out.println("  Worse: " + worseCount + "/10");
+        System.out.println("  Better (fewer high-count matches): " + betterCount + "/" + trials);
+        System.out.println("  Same: " + sameCount + "/" + trials);
+        System.out.println("  Worse: " + worseCount + "/" + trials);
         
         if (betterCount > worseCount) {
             System.out.println("\n✓ SUCCESS: Seasonal balancing trend is POSITIVE - reduces over-matched pairs");
@@ -1069,6 +1085,10 @@ class FairByeRoundRobinSchedulerTest {
         
         System.out.println("\n========================================\n");
         
+        System.out.println("Total high-count meetings: " + totalHighWithout + " without vs " + totalHighWith + " with history");
+        assertTrue(totalHighWith <= totalHighWithout,
+                "Seasonal context must not increase high-count meetings across paired seeds");
+
         // The key assertion: on average we should see some benefit
         assertTrue(betterCount + sameCount >= worseCount, 
                 "Seasonal balancing should not make things worse on average");
