@@ -4,7 +4,8 @@
 <head>
   <title layout:fragment="title" th:text="${isSessionLadder ? (sessionHeroTitle != null ? sessionHeroTitle : sessionDisplayTitle) : ladder.title}">Group</title>
   <meta layout:fragment="meta-tags">
-  <style layout:fragment="styles">
+  <th:block layout:fragment="styles">
+  <style>
     .stack-center {
       max-width: 420px;
       margin: 0 auto;
@@ -680,6 +681,8 @@
       }
     }
   </style>
+    <link th:if="${isSessionLadder}" rel="stylesheet" href="/css/session-matchups.css" th:href="@{/css/session-matchups.css(v=${assetVersion})}">
+  </th:block>
 </head>
 
 <body>
@@ -804,7 +807,6 @@
   </main>
 
   <th:block layout:fragment="scripts">
-    <link th:if="${isSessionLadder}" rel="stylesheet" th:href="@{/css/session-matchups.css(v=${assetVersion})}">
     <script th:if="${isSessionLadder}" th:src="@{/js/session-matchups.js(v=${assetVersion})}"></script>
     <script th:src="@{/js/session-nearby-share.js(v=${assetVersion})}" src="/js/session-nearby-share.js"></script>
     <script th:if="${isSessionLadder}"

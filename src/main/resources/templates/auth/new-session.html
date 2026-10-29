@@ -1,6 +1,11 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layouts/authenticated}">
-<head><title layout:fragment="title">Start a session</title></head>
+<head>
+  <title layout:fragment="title">Start a session</title>
+  <th:block layout:fragment="styles">
+    <link rel="stylesheet" href="/css/session-matchups.css" th:href="@{/css/session-matchups.css(v=${assetVersion})}">
+  </th:block>
+</head>
 <body>
 <div layout:fragment="content" class="app-page session-create-page">
   <div class="app-page-header"><div>
@@ -19,13 +24,13 @@
       <span><strong>Log games as we go</strong><span>Choose your own pairings and keep track of scores together.</span></span>
       <i class="bi bi-pencil-square" aria-hidden="true"></i>
     </label>
-    <label class="matchups-note d-flex gap-2 align-items-start" data-organizer-scoring-choice>
+    <label class="session-intent-option session-scoring-option" data-organizer-scoring-choice>
       <input type="checkbox" name="organizerScored" value="true" class="form-check-input mt-1">
-      <span><strong>Organizer records scores</strong><br>Scores are confirmed automatically. Players only need to join and review their results.</span>
+      <span><strong>Organizer records scores</strong><span>Scores are confirmed automatically. Players only need to join and review their results.</span></span>
     </label>
     <button type="submit" class="btn btn-action-primary w-100">Create session</button>
     <a th:href="@{/home}" class="btn btn-link w-100">Back</a>
   </form>
 </div>
-<th:block layout:fragment="scripts"><link rel="stylesheet" th:href="@{/css/session-matchups.css(v=${assetVersion})}"><script th:src="@{/js/session-matchups.js(v=${assetVersion})}"></script></th:block>
+<th:block layout:fragment="scripts"><script th:src="@{/js/session-matchups.js(v=${assetVersion})}"></script></th:block>
 </body></html>

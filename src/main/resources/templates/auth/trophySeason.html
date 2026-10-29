@@ -8,10 +8,9 @@
 <head>
   <title layout:fragment="title" th:text="${'Trophy Season: ' + (seasonCatalog?.seasonName ?: 'Unknown')}">Trophy Season</title>
   
-  <div layout:fragment="styles">
-    <div th:replace="~{components/head-styles :: core-styles}"></div>
-        <link rel="preload" as="image" href="/images/trophy/TrophyLocked.png" th:href="@{/images/trophy/TrophyLocked.png}">
-  </div>
+  <th:block layout:fragment="styles">
+    <link rel="preload" as="image" href="/images/trophy/TrophyLocked.png" th:href="@{/images/trophy/TrophyLocked.png}">
+  </th:block>
   
 </head>
 

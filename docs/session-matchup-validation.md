@@ -48,3 +48,7 @@ Session standings default to Wins, with Points For and then season Rating breaki
 ### Finishing a session
 
 Home shows a visible note inside the “Let’s Pickle!” card only for a player hosting an active session. Each active session card has an ×: the host ends the session, and a participant leaves it. Both actions return Home. Ending a session also ends its unfinished matchups through the existing session lifecycle, removes active memberships, and keeps recorded games. The matchup page uses the same End Session action in Session options; there is no separate End matchups step when finishing for the day. The session page’s Back button returns Home.
+
+## Initial rendering
+
+Page-specific stylesheets belong in the layout’s head `styles` fragment, before body content and scripts. Use `th:block` for a fragment containing multiple head elements; a literal `div` closes the browser’s head early. Session headers retain the shared card background, and the organizer-scoring choice uses the same card treatment as the play modes. The loading regression check delays both CSS and JavaScript to verify that cards are styled at the first contentful paint and retain their appearance after scripts initialize.

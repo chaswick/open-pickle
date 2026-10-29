@@ -4,7 +4,13 @@
   --matchups-soft:#f4f8fa;
   color:var(--matchups-ink);
 }
+.session-create-page {
+  width:100%;
+  max-width:620px;
+  margin:0 auto;
+}
 .session-intent-form {
+  width:100%;
   max-width:620px;
   margin:0 auto;
   display:grid;
@@ -55,6 +61,9 @@
 .session-intent-option>i {
   font-size:1.4rem;
   color:#477183;
+}
+.session-scoring-option strong {
+  font-size:1rem;
 }
 .session-matchups {
   display:grid;
@@ -469,13 +478,9 @@ body.bg-image:has(.session-matchups),body.bg-image:has(.session-create-page) {
   background-image:none;
   background-color:#f4f7f9;
 }
+/* Keep the shared header card, without clipping its action buttons. */
 body:has(.session-matchups) .app-page-header>:not(.app-page-back),.session-create-page .app-page-header>:not(.app-page-back) {
-  background:transparent;
-  border:0;
-  border-radius:0;
   overflow:visible;
-  box-shadow:none;
-  padding:0 2px;
 }
 body:has(.session-matchups) .app-page-header>:not(.app-page-back)::after,.session-create-page .app-page-header>:not(.app-page-back)::after {
   display:none;

@@ -5,10 +5,9 @@
 <head>
   <title layout:fragment="title">Trophies</title>
 
-  <div layout:fragment="styles">
-    <div th:replace="~{components/head-styles :: core-styles}"></div>
-    <div th:replace="~{components/head-styles :: trophy-styles}"></div>
-  </div>
+  <th:block layout:fragment="styles">
+    <link rel="stylesheet" href="/css/pages.css" th:href="@{/css/pages.css(v=${assetVersion})}">
+  </th:block>
 
 </head>
 

@@ -20,6 +20,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -404,6 +406,24 @@ class ThymeleafTemplateTest {
     assertThat(result).contains("No banned members.");
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"auth/new-session", "auth/trophies", "auth/trophySeason"})
+  void pageStylesLoadInAValidHeadBeforeTheBody(String template) {
+    Map<String, Object> variables = authenticatedShowLayoutVariables();
+    variables.put("seasonCatalogs", List.of());
+    String result = renderWebTemplate(template, variables);
+    String head = result.substring(0, result.indexOf("</head>"));
+    String body = result.substring(result.indexOf("<body"));
+
+    assertThat(head).contains("rel=\"stylesheet\"", "/css/site.css");
+    assertThat(head).doesNotContain("<div", "<section", "<main", "<form");
+    assertThat(body).doesNotContain("rel=\"stylesheet\"");
+    if (template.equals("auth/new-session")) {
+      assertThat(head).contains("/css/session-matchups.css");
+      assertThat(body).contains("session-scoring-option", "Organizer records scores");
+    }
+  }
+
   @Test
   void showPageRendersOnlySessionBodyForSessions() {
     LadderConfig ladder = new LadderConfig();
@@ -442,6 +462,9 @@ class ThymeleafTemplateTest {
 
     String result = renderWebTemplate("auth/show", variables);
 
+    assertThat(result.substring(0, result.indexOf("</head>")))
+        .contains("/css/session-matchups.css");
+    assertThat(result.substring(result.indexOf("<body"))).doesNotContain("rel=\"stylesheet\"");
     assertThat(result).contains("Session Standings");
     assertThat(result).contains("Session is live now.");
     assertThat(result).contains("href=\"/home\"");
