@@ -1281,10 +1281,6 @@ body.app-home-tour-open {
   gap: 0.4rem;
 }
 
-.competition-session-status i {
-  font-size: 1rem;
-}
-
 .competition-session-title {
   width: 100%;
   min-width: 0;

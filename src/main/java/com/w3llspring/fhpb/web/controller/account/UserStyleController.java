@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,14 +58,12 @@ import com.w3llspring.fhpb.web.service.user.UserIdentityService.DisplayNameChang
 import com.w3llspring.fhpb.web.service.user.UserIdentityService.DisplayNameChangeStatus;
 import com.w3llspring.fhpb.web.service.trophy.TrophyBadgeSupport;
 import com.w3llspring.fhpb.web.util.InputValidation;
-import com.w3llspring.fhpb.web.util.PaginationWindowSupport;
 
 
 @Controller
 @Secured("ROLE_USER")
 public class UserStyleController {
 
-	private static final int ACCOUNT_RECENT_MATCHES_PAGE_SIZE = 8;
 	private static final ZoneId DEFAULT_TIME_ZONE = ZoneId.of("America/New_York");
 	private static final DateTimeFormatter AWARD_DISPLAY_DATE = DateTimeFormatter.ofPattern("MMM d, uuuu", Locale.ENGLISH);
 	private static final DateTimeFormatter SEARCH_MONTH_DAY_YEAR = DateTimeFormatter.ofPattern("MMM d uuuu", Locale.ENGLISH);
@@ -83,9 +80,6 @@ public class UserStyleController {
 
 	@Autowired
 	private UserRepository userRepo;
-
-	@Autowired
-	private com.w3llspring.fhpb.web.db.MatchRepository matchRepo;
 
 	@Autowired
 	private UserCourtNameRepository userCourtNameRepo;
@@ -107,9 +101,6 @@ public class UserStyleController {
 
     
 
-	@Autowired
-	private com.w3llspring.fhpb.web.service.MatchRowModelBuilder matchRowModelBuilder;
-
 	@Value("${fhpb.account.display-name-change-cooldown-seconds:86400}")
 	private long displayNameChangeCooldownSeconds;
 
@@ -119,13 +110,8 @@ public class UserStyleController {
 	@Autowired
 	private UserAccountSettingsService userAccountSettingsService;
 
-	public String viewUser(String memberCode, Model model) {
-		return viewUser(memberCode, null, model);
-	}
-
 	@GetMapping("/account")
 	public String viewUser(@RequestParam(value = "member", required = false) String memberCode,
-			@RequestParam(value = "recentMatchesPage", required = false) Integer recentMatchesPage,
 			Model model) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
@@ -159,7 +145,6 @@ public class UserStyleController {
 			model.addAttribute("ladderOptions", Collections.emptyList());
 			populateEmptyBadgeModel(model);
 			model.addAttribute("courtNameMaxLength", UserCourtName.MAX_ALIAS_LENGTH);
-			model.addAttribute("recentMatches", Collections.emptyList());
 			return "auth/userDetails";
 		}
 		requireSharedActiveLadderOrSelf(currentUser, styleOwner);
@@ -168,37 +153,6 @@ public class UserStyleController {
 
 		List<UserStyle> userStyleList = userStyleRepo.findUserStyles(styleOwnerId);
 		model.addAttribute("styleList", userStyleList);
-
-		List<com.w3llspring.fhpb.web.model.Match> recentMatches;
-		if (canEditDisplayName) {
-			RecentMatchesPage recentMatchesPageSlice = loadRecentMatchesPage(
-					styleOwner,
-					recentMatchesPage,
-					ACCOUNT_RECENT_MATCHES_PAGE_SIZE);
-			recentMatches = recentMatchesPageSlice.matches();
-			model.addAttribute("recentMatchesPage", recentMatchesPageSlice.pageNumber());
-			model.addAttribute("recentMatchesPageSize", recentMatchesPageSlice.pageSize());
-			model.addAttribute("recentMatchesTotalPages", recentMatchesPageSlice.totalPages());
-			model.addAttribute("recentMatchesStandalonePage", false);
-			applyRecentMatchesPaginationModel(model, recentMatchesPageSlice.pageNumber(), recentMatchesPageSlice.totalPages());
-		} else {
-			recentMatches = Collections.emptyList();
-		}
-		model.addAttribute("recentMatches", recentMatches);
-
-		if (canEditDisplayName) {
-			// Use MatchRowModelBuilder to compute confirmer/pending/editable attributes for these recent matches.
-			var mrModel = matchRowModelBuilder.buildFor(currentUser, recentMatches);
-			model.addAttribute("confirmerByMatchId", mrModel.getConfirmerByMatchId());
-			model.addAttribute("casualAutoConfirmedByMatchId", mrModel.getCasualAutoConfirmedByMatchId());
-			model.addAttribute("pendingByMatchId", mrModel.getPendingByMatchId());
-			model.addAttribute("confirmableMatchIds", mrModel.getConfirmableMatchIds());
-			model.addAttribute("editableByMatchId", mrModel.getEditableByMatchId());
-			model.addAttribute("deletableByMatchId", mrModel.getDeletableByMatchId());
-			model.addAttribute("nullifyRequestableByMatchId", mrModel.getNullifyRequestableByMatchId());
-			model.addAttribute("nullifyApprovableByMatchId", mrModel.getNullifyApprovableByMatchId());
-			model.addAttribute("nullifyWaitingOnOpponentByMatchId", mrModel.getNullifyWaitingOnOpponentByMatchId());
-		}
 
 		Long styleVoterId = currentUser.getId();
 
@@ -228,39 +182,6 @@ public class UserStyleController {
 			return "Account";
 		}
 		return displayName + "'s Account";
-	}
-
-	private RecentMatchesPage loadRecentMatchesPage(User user, Integer requestedPage, int requestedSize) {
-		int pageSize = Math.max(1, requestedSize);
-		int safeRequestedPage = requestedPage != null ? Math.max(0, requestedPage) : 0;
-		long totalElements = matchRepo.countParticipantMatchesIncludingNullified(user);
-		int totalPages = totalElements == 0 ? 1 : (int) Math.ceil((double) totalElements / pageSize);
-		int pageNumber = Math.max(0, Math.min(safeRequestedPage, totalPages - 1));
-
-		List<com.w3llspring.fhpb.web.model.Match> matches = Collections.emptyList();
-		if (totalElements > 0) {
-			List<Long> recentMatchIds = matchRepo.findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(
-					user,
-					PageRequest.of(pageNumber, pageSize));
-			matches = recentMatchIds.isEmpty()
-					? Collections.emptyList()
-					: matchRepo.findAllByIdInWithUsers(recentMatchIds).stream()
-							.sorted(Comparator.comparing(this::matchTimeline).reversed())
-							.collect(Collectors.toList());
-		}
-
-		return new RecentMatchesPage(matches, pageNumber, pageSize, totalPages, totalElements);
-	}
-
-	private void applyRecentMatchesPaginationModel(Model model, int currentPage, int totalPages) {
-		PaginationWindowSupport.PaginationWindow pagination = PaginationWindowSupport.buildWindow(currentPage, totalPages);
-		model.addAttribute("recentMatchesPageNumbers", pagination.pageNumbers());
-		model.addAttribute("recentMatchesShowFirstPage", pagination.showFirstPage());
-		model.addAttribute("recentMatchesShowLastPage", pagination.showLastPage());
-		model.addAttribute("recentMatchesShowLeadingEllipsis", pagination.showLeadingEllipsis());
-		model.addAttribute("recentMatchesShowTrailingEllipsis", pagination.showTrailingEllipsis());
-		model.addAttribute("recentMatchesJumpBackPage", pagination.jumpBackPage());
-		model.addAttribute("recentMatchesJumpForwardPage", pagination.jumpForwardPage());
 	}
 
 	private String buildAccountPageSubtitle(String displayName, boolean canEditDisplayName) {
@@ -848,27 +769,6 @@ public class UserStyleController {
 
 	private String safeName(User u) {
 		return com.w3llspring.fhpb.web.util.UserPublicName.forUserOrGuest(u);
-	}
-
-	private Instant matchTimeline(com.w3llspring.fhpb.web.model.Match match) {
-		if (match == null) {
-			return Instant.EPOCH;
-		}
-		if (match.getPlayedAt() != null) {
-			return match.getPlayedAt();
-		}
-		if (match.getCreatedAt() != null) {
-			return match.getCreatedAt();
-		}
-		return Instant.EPOCH;
-	}
-
-	private record RecentMatchesPage(
-			List<com.w3llspring.fhpb.web.model.Match> matches,
-			int pageNumber,
-			int pageSize,
-			int totalPages,
-			long totalElements) {
 	}
 
 	private String redirectToUserDetails(User user, RedirectAttributes redirectAttributes) {

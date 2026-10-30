@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/authenticated}">
+<head>
+  <title layout:fragment="title">Recent matches</title>
+</head>
+<body>
+  <main layout:fragment="content" class="app-page">
+    <div class="app-page-header">
+      <div>
+        <h1 class="app-page-title">Recent matches</h1>
+      </div>
+    </div>
+    <div class="app-page-back">
+      <a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/account-menu}">Back</a>
+    </div>
+    <div class="card-stack-col card-stack-col-desktop-fluid pb-5 text-start">
+      <div th:replace="~{fragments/userRecentMatches :: userRecentMatches}"></div>
+    </div>
+  </main>
+</body>
+</html>

@@ -6,8 +6,8 @@
       1254,
       1254
     ],
-    "mainBytes": 412189,
-    "badgeBytes": 32350,
+    "mainBytes": 403952,
+    "badgeBytes": 31361,
     "preserved": false,
     "mainCornerAlpha": [
       0,
@@ -22,6 +22,12 @@
       0
     ],
     "sourceCornerAlpha": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "cornerAlpha": [
       0,
       0,
       0,
@@ -151,8 +157,8 @@
       1254,
       1254
     ],
-    "mainBytes": 441121,
-    "badgeBytes": 34157,
+    "mainBytes": 429921,
+    "badgeBytes": 32668,
     "preserved": false,
     "mainCornerAlpha": [
       0,
@@ -167,6 +173,12 @@
       0
     ],
     "sourceCornerAlpha": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "cornerAlpha": [
       0,
       0,
       0,
@@ -528,8 +540,8 @@
       1254,
       1254
     ],
-    "mainBytes": 437715,
-    "badgeBytes": 33901,
+    "mainBytes": 431630,
+    "badgeBytes": 32719,
     "preserved": false,
     "mainCornerAlpha": [
       0,
@@ -544,6 +556,12 @@
       0
     ],
     "sourceCornerAlpha": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "cornerAlpha": [
       0,
       0,
       0,
@@ -557,8 +575,8 @@
       1254,
       1254
     ],
-    "mainBytes": 423857,
-    "badgeBytes": 32942,
+    "mainBytes": 414207,
+    "badgeBytes": 31722,
     "preserved": false,
     "mainCornerAlpha": [
       0,
@@ -573,6 +591,12 @@
       0
     ],
     "sourceCornerAlpha": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "cornerAlpha": [
       0,
       0,
       0,
@@ -1369,8 +1393,8 @@
       1254,
       1254
     ],
-    "mainBytes": 418671,
-    "badgeBytes": 32186,
+    "mainBytes": 408393,
+    "badgeBytes": 31562,
     "preserved": false,
     "mainCornerAlpha": [
       0,
@@ -1385,6 +1409,12 @@
       0
     ],
     "sourceCornerAlpha": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "cornerAlpha": [
       0,
       0,
       0,

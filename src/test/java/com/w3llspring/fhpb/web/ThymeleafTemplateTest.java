@@ -1299,6 +1299,7 @@ class ThymeleafTemplateTest {
     String result = renderWebTemplate("auth/account-menu", variables);
 
     assertThat(result).contains("Weeknight Rally");
+    assertThat(result).contains("href=\"/recent-matches\"", "Recent matches");
     assertThat(result).contains("Jump back into an active session you joined.");
     assertThat(result.indexOf("Weeknight Rally")).isLessThan(result.indexOf("Account Settings"));
   }

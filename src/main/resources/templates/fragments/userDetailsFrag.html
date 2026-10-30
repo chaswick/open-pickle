@@ -315,9 +315,6 @@
 </div>
 
 
-<div th:if="${canEditDisplayName}" th:replace="~{fragments/userRecentMatches :: userRecentMatches}" th:with="memberCode=${memberCode}, canEditDisplayName=${canEditDisplayName}"></div>
-
-
 <div class="card mb-4">
 	<h1 class="card-header card-header-title text-center"><span th:text="${queryName}"></span>'s Styles</h1>
 	<div class="card-body">

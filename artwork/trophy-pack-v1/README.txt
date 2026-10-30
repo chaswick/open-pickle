@@ -2,6 +2,14 @@ PICKLEBALL TROPHY ART PACK V1
 
 Individual trophy illustrations with consistent rarity frames.
 
+PEOPLE REFRESH
+Five illustrations now include a wider range of adult ages and skin tones:
+Breaking a Sweat, Comeback Kid, Frequent Host, Back-to-Back Buddies, and
+Please, Make Yourselves at Home. See people-refresh-review.html for before
+and after images. The other 61 designs, including Pat's story, are unchanged.
+Reapply this updated pack using the same install command below. Only artwork
+references are updated; your original pre-pack rollback references are retained.
+
 CONTENTS
 - 66 title/rarity mappings: 35 season/special, 14 division, 9 round robin,
   and 8 story trackers.

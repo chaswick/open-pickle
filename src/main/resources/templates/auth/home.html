@@ -51,7 +51,7 @@
                 <a class="competition-session-link" th:href="@{/groups/{id}(id=${sessionConfig.id})}">
                     <div class="competition-session-meta">
                         <span class="competition-session-status">
-                            <i th:class="${sessionConfig.upcomingSession ? 'bi bi-calendar-event' : 'bi bi-play-circle'}" aria-hidden="true"></i>
+                            <span class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></span>
                             <span th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
                         </span>
                     </div>

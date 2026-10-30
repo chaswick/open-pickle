@@ -19,8 +19,9 @@
       "original_file": "originals/breaking-a-sweat.png",
       "width": 512,
       "badge_width": 128,
-      "sha256": "d0757d1bbfd91d0c6f45716ad6bee89b9dac76baa92f09dea4f3889d875604a2",
-      "badge_sha256": "dd1e66732095fbc0e68033f2886a1bad18f888e72563b9ccd4f47a7664a1f979"
+      "sha256": "e655efb219b89c2b75d472dc406e75ecf51c13bcb67ecb26aa49ed8192c150b3",
+      "badge_sha256": "b954dd489464b2f60b065804677e3cdf89e1ab4e1773fa4309277237887f35df",
+      "people_refresh": "Make the central player a Black woman around age 40 with rich deep-brown skin and natural dark curly hair tied back beneath the same orange visor. Give her a recognizably mature adult face, a warm relaxed smile and an everyday athletic build. Keep her orange shirt, green paddle, towel-wiping gesture and the entire composition."
     },
     {
       "title": "Dozen Played",
@@ -114,8 +115,9 @@
       "original_file": "originals/comeback-kid.png",
       "width": 512,
       "badge_width": 128,
-      "sha256": "51969b2bcd73d411497ec905ef466eb727592a60c91df53a4687b80e768b3c0a",
-      "badge_sha256": "1dcea1ffd07b949fe461632f6d873045f8934df73f396ab172d282225a9e764d"
+      "sha256": "eae623095641981ece6ae48d1b55cb028af78d876a161b8df718d7b98d8efe98",
+      "badge_sha256": "81ccb692668842e8fe7324b55fa5d607c8835c1e50928aa8fca8f004d655c68f",
+      "people_refresh": "Make the central player an East Asian man around age 65, with visible short silver-gray hair, natural older-adult facial features and smile lines. Keep the backwards light cap, blue shirt, shorts, paddle, cheerful returning gesture, returning arrow, body position and court-gate composition. He should look like an active recreational senior, with a natural build rather than a youthful bodybuilder."
     },
     {
       "title": "On a Roll",
@@ -361,8 +363,9 @@
       "original_file": "originals/frequent-host.png",
       "width": 512,
       "badge_width": 128,
-      "sha256": "036bb38676e47d9fb6773228e2b349ad36f920dba95d18a126e6b9f08a4e5b1f",
-      "badge_sha256": "1dd38072f3889961604b09f43e9f83b6bbc40106f26327180a6da4e4933985ff"
+      "sha256": "838f338b288d37f66bf981693f0f14fdcf8c62f4a585fa709ea57aaee744660d",
+      "badge_sha256": "c8111480d00e8fca0a344223fb4922ae715a5e7bbbed53b48e014b5c01d100e1",
+      "people_refresh": "Make the foreground host a Latina woman around age 55, with medium warm-brown skin, dark hair with a few natural silver strands tied back, and subtle mature-adult features. Make the arriving smiling guest a Black man around age 35 with deep-brown skin. Keep both people's original clothing, poses, spare-paddle welcome, bag, net, gate and sunlit court composition. Convey a normal friendly local pickleball welcome, with no cultural props or slogans."
     },
     {
       "title": "Back-to-Back Buddies",
@@ -380,8 +383,9 @@
       "original_file": "originals/back-to-back-buddies.png",
       "width": 512,
       "badge_width": 128,
-      "sha256": "ce9b70cc188a445eb8d9a439535a4a2034e0e9eacec40ce6b38d2353d09b2c35",
-      "badge_sha256": "e463660f05b7246c2c0612dcd5ed2e318664f4820d273444ef869acd9d85d1f0"
+      "sha256": "19a1ab24974e4d4f0e7d1487a8218e779dea29fc72737bb23974188409bace7a",
+      "badge_sha256": "7057f184307cdebb0067afb94cc893c08bc242e4373988ae07fd85e3a4cd7194",
+      "people_refresh": "Make the left player a woman around age 60 with light skin, silver-gray curly hair in her ponytail and visible natural smile lines. Make the right player a South Asian man around age 40 with medium-brown skin, dark hair and a short dark beard. Keep their orange and blue shirts, orange visor and backwards cap, poses, paddles, two stars, ball and exact composition. Everyday recreational players, no stereotypes or extra props."
     },
     {
       "title": "Competitive",
@@ -899,8 +903,9 @@
       "original_file": "originals/please-make-yourselves-at-home.png",
       "width": 512,
       "badge_width": 128,
-      "sha256": "2d562cacd0d5faf8ca3eae125f7fae1505ea96309535aef81289ce29fd81d823",
-      "badge_sha256": "e0cb4b0ff79d3adf2d239a7ebd00698689abcfb3053e261824d2cbb6a4f90b41"
+      "sha256": "b282b6f55da6e3d8868e0a52a0da4de5a67d9382ba215cebecc011745e6c68c0",
+      "badge_sha256": "b7226922cc35c05aa84d22667bfedb3d4a3f5ae9751fb1999411395890610aab",
+      "people_refresh": "Keep exactly four players in precisely the same roles and positions. Make the foreground home-team man a Black man around age 50 with deep-brown skin, short dark hair and a little gray in his close beard. Make his foreground partner an East Asian woman around age 40 with medium-light skin and dark hair tied back under the orange visor. Keep the visiting background pair recognizably older adults around 60 with light skin and some gray hair, celebrating across the net. Preserve the front pair's gentle rueful smiles after losing, lowered paddles, blue/orange clothing, visiting pair high-five, net and guest bag. No caricatures or other cultural markers."
     },
     {
       "title": "Lucky Charm",
@@ -1235,5 +1240,6 @@
       "sha256": "cabc35e9ae266da8f3f9da7db4aa59aec600874550eeecbf962b454047d37ff1",
       "badge_sha256": "ce782a9fa555d05301f576357407338d11f6ef6e9cccd801d5be4a8be0a5c12c"
     }
-  ]
+  ],
+  "revision": "people-refresh-1"
 }

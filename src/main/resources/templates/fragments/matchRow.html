@@ -67,13 +67,14 @@
     font-weight: 700;
   }
 </style>
-<div th:fragment="matchRow_context(match, title)" class="match-row-context">
+<div th:fragment="matchRow_context(match, title)" class="match-row-context"
+     th:if="${match.sourceSessionConfig != null or (title != null and !#strings.isEmpty(title))}">
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-    <div class="small text-muted">
-      <span class="fw-semibold">Group:</span>
+    <div class="small text-muted text-break" th:if="${match.sourceSessionConfig != null}">
+      <span class="fw-semibold">Session:</span>
       <span class="match-row-context-value"
-            th:text="${match.season != null and match.season.ladderConfig != null ? match.season.ladderConfig.title : 'Group'}">
-        Group
+            th:text="${match.sourceSessionConfig.title}">
+        Session
       </span>
     </div>
     <div th:if="${title != null and !#strings.isEmpty(title)}"
@@ -367,6 +368,7 @@
 
 <div
   th:fragment="matchRow(match, confirmable, editable, showTime, title, showScore, showState, showAdminControls, a1Name, a2Name, b1Name, b2Name, confirmer, removeOnConfirm)"
+  data-match-row
   th:attr="data-remove-on-confirm=${removeOnConfirm} ? 'true' : null, data-match-id=${match.id}"
   th:with="confirmableSafe=${confirmable != null and confirmable},
       editableSafe=${editable != null and editable},

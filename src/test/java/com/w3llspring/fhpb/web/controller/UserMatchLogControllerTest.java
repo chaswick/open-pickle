@@ -46,6 +46,55 @@ class UserMatchLogControllerTest {
   }
 
   @Test
+  void ownRecentMatchesRendersPageWithNewestHydratedMatchesFirst() {
+    User owner = user(2L, "owner");
+    var auth =
+        new UsernamePasswordAuthenticationToken(new CustomUserDetails(owner), null, List.of());
+    var older = new Match();
+    ReflectionTestUtils.setField(older, "id", 10L);
+    older.setPlayedAt(java.time.Instant.parse("2026-03-01T10:00:00Z"));
+    var newer = new Match();
+    ReflectionTestUtils.setField(newer, "id", 20L);
+    newer.setPlayedAt(java.time.Instant.parse("2026-03-02T10:00:00Z"));
+    when(userRepo.findByPublicCode(owner.getPublicCode())).thenReturn(Optional.of(owner));
+    when(matchRepo.countParticipantMatchesIncludingNullified(owner)).thenReturn(2L);
+    when(matchRepo.findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(any(), any()))
+        .thenReturn(List.of(20L, 10L));
+    when(matchRepo.findAllByIdInWithUsers(List.of(20L, 10L))).thenReturn(List.of(older, newer));
+    var model = new ExtendedModelMap();
+
+    String view = controller().ownRecentMatches(0, 8, model, auth);
+
+    assertThat(view).isEqualTo("auth/recentMatches");
+    assertThat(model.get("recentMatchesPageView")).isEqualTo(true);
+    assertThat(model.get("memberCode")).isEqualTo(owner.getPublicCode());
+    assertThat(model.get("recentMatches")).isEqualTo(List.of(newer, older));
+  }
+
+  @Test
+  void ownRecentMatchesKeepsPaginationOnTheRequestedPage() {
+    User owner = user(2L, "owner");
+    var auth =
+        new UsernamePasswordAuthenticationToken(new CustomUserDetails(owner), null, List.of());
+    when(userRepo.findByPublicCode(owner.getPublicCode())).thenReturn(Optional.of(owner));
+    when(matchRepo.countParticipantMatchesIncludingNullified(owner)).thenReturn(9L);
+    when(matchRepo.findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(any(), any()))
+        .thenReturn(List.of());
+    var model = new ExtendedModelMap();
+
+    String view = controller().ownRecentMatches(1, 8, model, auth);
+
+    assertThat(view).isEqualTo("auth/recentMatches");
+    assertThat(model.get("recentMatchesPage")).isEqualTo(1);
+    assertThat(model.get("recentMatchesTotalPages")).isEqualTo(2);
+    assertThat(model.get("recentMatchesPageNumbers")).isEqualTo(List.of(0, 1));
+    assertThat(model.get("returnToPath")).isEqualTo("/recent-matches?page=1&size=8");
+    verify(matchRepo)
+        .findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(
+            owner, org.springframework.data.domain.PageRequest.of(1, 8));
+  }
+
+  @Test
   void recentMatchesRejectsDifferentAuthenticatedUser() {
     User viewer = user(1L, "viewer");
     User owner = user(2L, "owner");

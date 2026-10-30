@@ -28,3 +28,12 @@ Browser verification:
 - No browser JavaScript errors observed.
 
 The art import has been applied to the local review database only.
+
+PEOPLE REFRESH
+Five illustrations and their profile badges were revised with the built-in
+image_gen tool to include more variety in adult ages and appearances.
+The other 61 designs retain their exact prior image checksums.
+See people-refresh-review.html for before/after views and the separate
+people-refresh validation JSON files for this revision's checks.
+The user's first production art import predates this refresh; the refreshed
+images have only been applied to the local review database by the agent.

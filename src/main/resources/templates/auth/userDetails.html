@@ -33,16 +33,9 @@
     <script>
       document.addEventListener('DOMContentLoaded', function () {
         if (window.location.hash === '#recent-matches') {
-          var recentMatches = document.getElementById('recent-matches');
-          if (recentMatches) {
-            var collapse = recentMatches.querySelector('.collapse');
-            if (collapse) {
-              FHPB.CollapseState.applyExpandedState(collapse, true, document);
-            }
-            window.requestAnimationFrame(function () {
-              recentMatches.scrollIntoView({ block: 'start' });
-            });
-          }
+          var page = new URLSearchParams(window.location.search).get('recentMatchesPage') || '0';
+          window.location.replace('/recent-matches?page=' + encodeURIComponent(page));
+          return;
         }
 
         var picker = document.querySelector('[data-badge-picker]');

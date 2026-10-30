@@ -19,11 +19,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping("/users/{memberCode}/matches")
 public class UserMatchLogController {
 
   private static final ZoneId LADDER_ZONE = ZoneId.of("America/New_York");
@@ -46,7 +44,28 @@ public class UserMatchLogController {
     this.matchEntryContextService = matchEntryContextService;
   }
 
-  @GetMapping
+  @GetMapping("/recent-matches")
+  public String ownRecentMatches(
+      @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+      @RequestParam(value = "size", required = false, defaultValue = "8") int size,
+      Model model,
+      org.springframework.security.core.Authentication auth) {
+    User current = getCurrentUser(auth);
+    if (current == null) {
+      return "redirect:/login";
+    }
+    recentMatches(current.getPublicCode(), page, size, model, auth);
+    model.addAttribute("recentMatchesPageView", true);
+    model.addAttribute(
+        "returnToPath",
+        "/recent-matches?page="
+            + model.asMap().get("recentMatchesPage")
+            + "&size="
+            + model.asMap().get("recentMatchesPageSize"));
+    return "auth/recentMatches";
+  }
+
+  @GetMapping("/users/{memberCode}/matches")
   public String recentMatches(
       @PathVariable String memberCode,
       @RequestParam(value = "page", required = false, defaultValue = "0") int page,
@@ -73,7 +92,6 @@ public class UserMatchLogController {
     model.addAttribute("recentMatchesTotalPages", recentMatchesPage.totalPages());
     model.addAttribute("recentMatchesPageSize", recentMatchesPage.pageSize());
     model.addAttribute("recentMatchesTotalElements", recentMatchesPage.totalElements());
-    model.addAttribute("recentMatchesStandalonePage", true);
     applyRecentMatchesPaginationModel(
         model, recentMatchesPage.pageNumber(), recentMatchesPage.totalPages());
     model.addAttribute("recentMatches", recent);
@@ -151,7 +169,7 @@ public class UserMatchLogController {
     }
   }
 
-  @GetMapping(value = "/export", produces = "text/csv")
+  @GetMapping(value = "/users/{memberCode}/matches/export", produces = "text/csv")
   public ResponseEntity<String> exportCsv(
       @PathVariable String memberCode, org.springframework.security.core.Authentication auth) {
     User user = userRepo.findByPublicCode(memberCode).orElse(null);

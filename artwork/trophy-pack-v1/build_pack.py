@@ -218,9 +218,9 @@ def main():
     (ROOT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     files = ["apply.sql", "rollback.sql", "README.txt", "manifest.json", "prompts.json", "index.html", "build_pack.py", "asset-validation.json"]
     files += [e[key] for e in manifest["entries"] for key in ["file", "badge_file"]]
-    files += [str(path.relative_to(ROOT)) for path in (ROOT / "references").glob("*.png")]
+    files += [str(path.relative_to(ROOT)) for path in (ROOT / "references").rglob("*.png")]
     files += [str(path.relative_to(ROOT)) for path in (ROOT / "prompts").glob("*.json")]
-    files += [name for name in ["contact-sheet.png", "import-validation.json", "browser-validation.json", "validation-summary.txt"] if (ROOT / name).is_file()]
+    files += [name for name in ["contact-sheet.png", "import-validation.json", "browser-validation.json", "validation-summary.txt", "people-refresh-review.html", "people-refresh-validation.json", "people-refresh-import-validation.json", "people-refresh-browser-validation.json"] if (ROOT / name).is_file()]
     with zipfile.ZipFile(ROOT / "trophy-pack-v1.zip", "w", zipfile.ZIP_DEFLATED) as bundle:
         for name in dict.fromkeys(files):
             bundle.write(ROOT / name, name)

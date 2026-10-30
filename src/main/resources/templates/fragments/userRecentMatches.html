@@ -1,7 +1,9 @@
 
 <div th:fragment="userRecentMatches" th:if="${canEditDisplayName}">
-  <div class="card mb-4" id="recent-matches" data-card-collapse-default="closed" style="scroll-margin-top: 5rem;">
-    <div class="card-header card-header-title text-center">Recent matches</div>
+  <div class="card mb-4" id="recent-matches" data-card-collapse-default="closed"
+       th:attr="data-card-collapse-default=${recentMatchesPageView == true ? 'open' : 'closed'},data-card-collapse=${recentMatchesPageView == true ? 'off' : null}"
+       style="scroll-margin-top: 5rem;">
+    <div class="card-header card-header-title text-center" th:if="${recentMatchesPageView != true}">Recent matches</div>
     <div class="card-body">
     <div class="mb-2 text-center">
       <a class="btn btn-sm btn-nav-primary" th:if="${canEditDisplayName}" th:href="@{/users/{memberCode}/matches/export(memberCode=${memberCode})}">Download CSV</a>
@@ -24,34 +26,20 @@
       <div class="small text-muted text-center mb-2">
         Page <span th:text="${recentMatchesPage + 1}">1</span> of <span th:text="${recentMatchesTotalPages}">1</span>
       </div>
-      <ul class="pagination pagination-sm justify-content-center mb-0">
+      <ul class="pagination pagination-sm flex-wrap justify-content-center row-gap-1 mb-0">
         <li class="page-item" th:classappend="${recentMatchesPage == 0} ? 'disabled'">
           <a class="page-link"
-             th:if="${recentMatchesStandalonePage}"
-             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesPage - 1},size=${recentMatchesPageSize})}">
-            Previous
-          </a>
-          <a class="page-link"
-             th:unless="${recentMatchesStandalonePage}"
-             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesPage - 1})} + '#recent-matches'">
+             th:href="@{/recent-matches(page=${recentMatchesPage - 1},size=${recentMatchesPageSize})}">
             Previous
           </a>
         </li>
         <li class="page-item" th:if="${recentMatchesShowFirstPage}" th:classappend="${recentMatchesPage == 0} ? 'active'">
           <a class="page-link"
-             th:if="${recentMatchesStandalonePage}"
-             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=0,size=${recentMatchesPageSize})}">1</a>
-          <a class="page-link"
-             th:unless="${recentMatchesStandalonePage}"
-             th:href="@{/account(member=${memberCode},recentMatchesPage=0)} + '#recent-matches'">1</a>
+             th:href="@{/recent-matches(page=0,size=${recentMatchesPageSize})}">1</a>
         </li>
         <li class="page-item" th:if="${recentMatchesShowLeadingEllipsis and recentMatchesJumpBackPage != null}">
           <a class="page-link"
-             th:if="${recentMatchesStandalonePage}"
-             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesJumpBackPage},size=${recentMatchesPageSize})}">-5</a>
-          <a class="page-link"
-             th:unless="${recentMatchesStandalonePage}"
-             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesJumpBackPage})} + '#recent-matches'">-5</a>
+             th:href="@{/recent-matches(page=${recentMatchesJumpBackPage},size=${recentMatchesPageSize})}">-5</a>
         </li>
         <li class="page-item disabled" th:if="${recentMatchesShowLeadingEllipsis}">
           <span class="page-link">&hellip;</span>
@@ -60,12 +48,7 @@
             th:each="i : ${recentMatchesPageNumbers}"
             th:classappend="${i == recentMatchesPage} ? 'active'">
           <a class="page-link"
-             th:if="${recentMatchesStandalonePage}"
-             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${i},size=${recentMatchesPageSize})}"
-             th:text="${i + 1}">1</a>
-          <a class="page-link"
-             th:unless="${recentMatchesStandalonePage}"
-             th:href="@{/account(member=${memberCode},recentMatchesPage=${i})} + '#recent-matches'"
+             th:href="@{/recent-matches(page=${i},size=${recentMatchesPageSize})}"
              th:text="${i + 1}">1</a>
         </li>
         <li class="page-item disabled" th:if="${recentMatchesShowTrailingEllipsis}">
@@ -73,31 +56,16 @@
         </li>
         <li class="page-item" th:if="${recentMatchesShowTrailingEllipsis and recentMatchesJumpForwardPage != null}">
           <a class="page-link"
-             th:if="${recentMatchesStandalonePage}"
-             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesJumpForwardPage},size=${recentMatchesPageSize})}">+5</a>
-          <a class="page-link"
-             th:unless="${recentMatchesStandalonePage}"
-             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesJumpForwardPage})} + '#recent-matches'">+5</a>
+             th:href="@{/recent-matches(page=${recentMatchesJumpForwardPage},size=${recentMatchesPageSize})}">+5</a>
         </li>
         <li class="page-item" th:if="${recentMatchesShowLastPage}" th:classappend="${recentMatchesPage == recentMatchesTotalPages - 1} ? 'active'">
           <a class="page-link"
-             th:if="${recentMatchesStandalonePage}"
-             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesTotalPages - 1},size=${recentMatchesPageSize})}"
-             th:text="${recentMatchesTotalPages}">1</a>
-          <a class="page-link"
-             th:unless="${recentMatchesStandalonePage}"
-             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesTotalPages - 1})} + '#recent-matches'"
+             th:href="@{/recent-matches(page=${recentMatchesTotalPages - 1},size=${recentMatchesPageSize})}"
              th:text="${recentMatchesTotalPages}">1</a>
         </li>
         <li class="page-item" th:classappend="${recentMatchesPage + 1 >= recentMatchesTotalPages} ? 'disabled'">
           <a class="page-link"
-             th:if="${recentMatchesStandalonePage}"
-             th:href="@{/users/{memberCode}/matches(memberCode=${memberCode},page=${recentMatchesPage + 1},size=${recentMatchesPageSize})}">
-            Next
-          </a>
-          <a class="page-link"
-             th:unless="${recentMatchesStandalonePage}"
-             th:href="@{/account(member=${memberCode},recentMatchesPage=${recentMatchesPage + 1})} + '#recent-matches'">
+             th:href="@{/recent-matches(page=${recentMatchesPage + 1},size=${recentMatchesPageSize})}">
             Next
           </a>
         </li>

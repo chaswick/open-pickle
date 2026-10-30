@@ -987,7 +987,8 @@
 
     findMatchRoot: function(element) {
       if (!element || !element.closest) return null;
-      return element.closest('[data-match-id]');
+      // Match IDs also appear on controls; only the containing row can be replaced.
+      return element.closest('[data-match-row]');
     },
 
     shouldRemoveOnConfirm: function(matchRoot) {
@@ -1085,7 +1086,7 @@
         .then(function(html) {
           var parser = new DOMParser();
           var doc = parser.parseFromString(html, 'text/html');
-          var newNode = doc.querySelector('[data-match-id="' + matchId + '"]') || doc.body.firstElementChild;
+          var newNode = doc.querySelector('[data-match-row][data-match-id="' + matchId + '"]');
           if (!newNode) {
             window.location.reload();
             return;

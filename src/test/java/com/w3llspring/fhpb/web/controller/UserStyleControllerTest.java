@@ -35,8 +35,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import com.w3llspring.fhpb.web.controller.advice.SecurityExceptionHandler;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
-import com.w3llspring.fhpb.web.db.MatchRepository;
-import com.w3llspring.fhpb.web.db.MatchConfirmationRepository;
 import com.w3llspring.fhpb.web.db.UserCourtNameRepository;
 import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.db.UserStyleRepository;
@@ -50,8 +48,6 @@ import com.w3llspring.fhpb.web.model.Trophy;
 import com.w3llspring.fhpb.web.model.TrophyArt;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.model.UserTrophy;
-import com.w3llspring.fhpb.web.service.LadderAccessService;
-import com.w3llspring.fhpb.web.service.MatchConfirmationService;
 import com.w3llspring.fhpb.web.service.user.CourtNameSimilarityService;
 import com.w3llspring.fhpb.web.service.user.DisplayNameModerationService;
 import com.w3llspring.fhpb.web.service.user.UserAccountSettingsService;
@@ -68,9 +64,6 @@ class UserStyleControllerTest {
     private UserRepository userRepo;
 
     @Mock
-    private MatchRepository matchRepo;
-
-    @Mock
     private UserCourtNameRepository userCourtNameRepo;
 
     @Mock
@@ -85,12 +78,6 @@ class UserStyleControllerTest {
     @Mock
     private DisplayNameModerationService displayNameModerationService;
 
-    @Mock
-    private MatchConfirmationRepository matchConfirmationRepository;
-
-    @Mock
-    private MatchConfirmationService matchConfirmationService;
-
     private UserStyleController controller;
     private RecordingUserIdentityService userIdentityService;
     private RecordingUserAccountSettingsService userAccountSettingsService;
@@ -104,24 +91,15 @@ class UserStyleControllerTest {
         userAccountSettingsService = new RecordingUserAccountSettingsService();
         ReflectionTestUtils.setField(controller, "userStyleRepo", userStyleRepo);
         ReflectionTestUtils.setField(controller, "userRepo", userRepo);
-        ReflectionTestUtils.setField(controller, "matchRepo", matchRepo);
         ReflectionTestUtils.setField(controller, "userCourtNameRepo", userCourtNameRepo);
         ReflectionTestUtils.setField(controller, "ladderMembershipRepository", ladderMembershipRepository);
         ReflectionTestUtils.setField(controller, "userTrophyRepository", userTrophyRepository);
         ReflectionTestUtils.setField(controller, "trophyRepository", trophyRepository);
         ReflectionTestUtils.setField(controller, "displayNameModerationService", displayNameModerationService);
         ReflectionTestUtils.setField(controller, "courtNameSimilarityService", new CourtNameSimilarityService());
-        ReflectionTestUtils.setField(controller, "matchRowModelBuilder",
-                new com.w3llspring.fhpb.web.service.MatchRowModelBuilder(
-                        matchConfirmationService,
-                        matchConfirmationRepository,
-                        new LadderAccessService(null, null)));
         ReflectionTestUtils.setField(controller, "userIdentityService", userIdentityService);
         ReflectionTestUtils.setField(controller, "userAccountSettingsService", userAccountSettingsService);
         lenient().when(userRepo.findById(anyLong())).thenReturn(Optional.empty());
-        lenient().when(matchRepo.countParticipantMatchesIncludingNullified(any())).thenReturn(0L);
-        lenient().when(matchConfirmationRepository.findByMatchIdIn(any())).thenReturn(Collections.emptyList());
-        lenient().when(matchConfirmationService.pendingForUser(anyLong())).thenReturn(Collections.emptyList());
         lenient().when(trophyRepository.findByBadgeSelectableByAllTrueOrderByDisplayOrderAscIdAsc())
                 .thenReturn(Collections.emptyList());
         lenient().when(userTrophyRepository.findByUserIdWithTrophyAndSeasonOrderBySeasonStartDateDesc(anyLong()))
@@ -155,7 +133,6 @@ class UserStyleControllerTest {
                 .hasMessage("User details unavailable.");
 
         verify(userStyleRepo, never()).findUserStyles(any());
-        verify(matchRepo, never()).findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(any(), any());
     }
 
     @Test
@@ -186,7 +163,6 @@ class UserStyleControllerTest {
         assertThat(result.getModelAndView().getModel().get("accountPageSubtitle"))
                 .isEqualTo("");
         assertThat(result.getResponse().getContentAsString()).doesNotContain("Recent matches");
-        verify(matchRepo, never()).findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(any(), any());
     }
 
     @Test
@@ -202,7 +178,6 @@ class UserStyleControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(userStyleRepo, never()).findUserStyles(any());
-        verify(matchRepo, never()).findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(any(), any());
     }
 
     @Test
@@ -223,7 +198,6 @@ class UserStyleControllerTest {
                 .hasMessage("User details unavailable.");
 
         verify(userStyleRepo, never()).findUserStyles(any());
-        verify(matchRepo, never()).findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(any(), any());
     }
 
     @Test
@@ -282,76 +256,6 @@ class UserStyleControllerTest {
         assertThat(result.getModelAndView().getModel().get("accountPageSubtitle"))
                 .isEqualTo("Update AdminCharlie's profile, names, and preferences.");
         assertThat(sessionUser.getNickName()).isEqualTo("AdminCharlie");
-    }
-
-    @Test
-    void userDetailsSortsHydratedRecentMatchesNewestFirst() throws Exception {
-        User viewer = user(1L, "viewer");
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(new CustomUserDetails(viewer), null, List.of()));
-
-        var older = new com.w3llspring.fhpb.web.model.Match();
-        older.setPlayedAt(Instant.parse("2026-03-01T10:00:00Z"));
-        setId(older, 10L);
-
-        var newer = new com.w3llspring.fhpb.web.model.Match();
-        newer.setPlayedAt(Instant.parse("2026-03-02T10:00:00Z"));
-        setId(newer, 20L);
-
-        when(userRepo.findById(1L)).thenReturn(Optional.of(viewer));
-        when(userStyleRepo.findUserStyles(1L)).thenReturn(Collections.emptyList());
-        when(matchRepo.countParticipantMatchesIncludingNullified(viewer)).thenReturn(2L);
-        when(matchRepo.findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(any(), any())).thenReturn(List.of(20L, 10L));
-        when(matchRepo.findAllByIdInWithUsers(List.of(20L, 10L))).thenReturn(List.of(older, newer));
-        when(userStyleRepo.findIfVoted(1L, 1L)).thenReturn(0);
-        when(userCourtNameRepo.findByUser_Id(1L)).thenReturn(Collections.emptyList());
-        when(ladderMembershipRepository.findByUserIdAndState(1L, LadderMembership.State.ACTIVE))
-                .thenReturn(Collections.emptyList());
-
-        var result = mockMvc.perform(get("/account"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        @SuppressWarnings("unchecked")
-        var recentMatches = (List<com.w3llspring.fhpb.web.model.Match>) result.getModelAndView()
-                .getModel().get("recentMatches");
-        assertThat(recentMatches).extracting(com.w3llspring.fhpb.web.model.Match::getId)
-                .containsExactly(20L, 10L);
-    }
-
-    @Test
-    void userDetailsPaginatesRecentMatchesOnRequestedAccountPage() throws Exception {
-        User viewer = user(1L, "viewer");
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(new CustomUserDetails(viewer), null, List.of()));
-
-        var pageTwoMatch = new com.w3llspring.fhpb.web.model.Match();
-        pageTwoMatch.setPlayedAt(Instant.parse("2026-03-03T10:00:00Z"));
-        setId(pageTwoMatch, 90L);
-
-        when(userRepo.findById(1L)).thenReturn(Optional.of(viewer));
-        when(userStyleRepo.findUserStyles(1L)).thenReturn(Collections.emptyList());
-        when(matchRepo.countParticipantMatchesIncludingNullified(viewer)).thenReturn(9L);
-        when(matchRepo.findParticipantMatchIdsOrderByPlayedAtDescIncludingNullified(any(), any())).thenReturn(List.of(90L));
-        when(matchRepo.findAllByIdInWithUsers(List.of(90L))).thenReturn(List.of(pageTwoMatch));
-        when(userStyleRepo.findIfVoted(1L, 1L)).thenReturn(0);
-        when(userCourtNameRepo.findByUser_Id(1L)).thenReturn(Collections.emptyList());
-        when(ladderMembershipRepository.findByUserIdAndState(1L, LadderMembership.State.ACTIVE))
-                .thenReturn(Collections.emptyList());
-
-        var result = mockMvc.perform(get("/account").param("recentMatchesPage", "1"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        assertThat(result.getModelAndView()).isNotNull();
-        assertThat(result.getModelAndView().getModel().get("recentMatchesPage")).isEqualTo(1);
-        assertThat(result.getModelAndView().getModel().get("recentMatchesTotalPages")).isEqualTo(2);
-        assertThat(result.getModelAndView().getModel().get("recentMatchesPageNumbers")).isEqualTo(List.of(0, 1));
-        @SuppressWarnings("unchecked")
-        var recentMatches = (List<com.w3llspring.fhpb.web.model.Match>) result.getModelAndView()
-                .getModel().get("recentMatches");
-        assertThat(recentMatches).extracting(com.w3llspring.fhpb.web.model.Match::getId)
-                .containsExactly(90L);
     }
 
     @Test

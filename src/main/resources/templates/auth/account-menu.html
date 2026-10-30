@@ -12,7 +12,7 @@
             <div class="app-hero-card">
                 <h1 class="app-hero-title">User Account</h1>
                 <p class="app-hero-subtitle">
-                    Open active sessions, settings, trophies, stats, or sign out from one place.
+                    Open active sessions, recent matches, settings, trophies, stats, or sign out from one place.
                 </p>
             </div>
         </section>
@@ -27,7 +27,7 @@
                th:each="sessionConfig : ${navigationSessionConfigs}"
                th:with="owned=${currentUserId != null and sessionConfig != null and currentUserId == sessionConfig.ownerUserId}"
                th:href="@{/groups/{id}(id=${sessionConfig.id})}">
-                <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
+                <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
                 <div>
                     <span class="app-action-callout app-action-callout-top"
                           th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
@@ -46,7 +46,15 @@
                 <div class="app-action-icon"><i class="bi bi-gear" aria-hidden="true"></i></div>
                 <div>
                     <div class="app-action-title">Account Settings</div>
-                    <div class="app-action-subtitle">Names, preferences, profile badges, and account history.</div>
+                    <div class="app-action-subtitle">Names, preferences, and profile badges.</div>
+                </div>
+            </a>
+
+            <a class="app-action-tile app-action-log" th:href="@{/recent-matches}">
+                <div class="app-action-icon"><i class="bi bi-clock-history" aria-hidden="true"></i></div>
+                <div>
+                    <div class="app-action-title">Recent matches</div>
+                    <div class="app-action-subtitle">Review your games or download a CSV.</div>
                 </div>
             </a>
 
