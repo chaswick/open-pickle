@@ -165,6 +165,11 @@ public class TrophyCatalogService {
     return ladderIds;
   }
 
+  private TrophyCardModel markRoundRobin(TrophyCardModel card, boolean roundRobin) {
+    card.setRoundRobinTrophy(roundRobin);
+    return card;
+  }
+
   private TrophyCatalog buildCatalog(LadderSeason season, User user, boolean currentSeasonFlag) {
     if (season == null) {
       return new TrophyCatalog(
@@ -179,7 +184,9 @@ public class TrophyCatalogService {
 
     List<Trophy> trophies =
         trophyRepository.findBySeasonOrderByDisplayOrderAscIdAsc(season).stream()
-            .filter(trophy -> !storySeason || trophy.isStoryModeTracker())
+            .filter(
+                trophy ->
+                    !storySeason || trophy.isStoryModeTracker() || trophy.isRoundRobinTrophy())
             .collect(Collectors.toList());
 
     Map<Long, Long> userAwardCounts = resolveUserAwardCounts(user, trophies);
@@ -200,23 +207,25 @@ public class TrophyCatalogService {
           bandFinishSpec != null ? bandFinishSpec.unlockCondition() : trophy.getUnlockCondition();
       TrophyRarity rarity = bandFinishSpec != null ? bandFinishSpec.rarity() : trophy.getRarity();
       cards.add(
-          new TrophyCardModel(
-              trophy.getId(),
-              title,
-              summary,
-              unlockCondition,
-              formatEnum(rarity),
-              trophy.isLimited(),
-              trophy.isRepeatable(),
-              trophy.getMaxClaims(),
-              resolveImageUrl(trophy),
-              season.getName(),
-              formatEnum(trophy.getStatus()),
-              earnedCount > 0,
-              earnedCount,
-              ownerCounts.getOrDefault(trophy.getId(), 0L),
-              hasImage(trophy),
-              cssForRarity(rarity)));
+          markRoundRobin(
+              new TrophyCardModel(
+                  trophy.getId(),
+                  title,
+                  summary,
+                  unlockCondition,
+                  formatEnum(rarity),
+                  trophy.isLimited(),
+                  trophy.isRepeatable(),
+                  trophy.getMaxClaims(),
+                  resolveImageUrl(trophy),
+                  season.getName(),
+                  formatEnum(trophy.getStatus()),
+                  earnedCount > 0,
+                  earnedCount,
+                  ownerCounts.getOrDefault(trophy.getId(), 0L),
+                  hasImage(trophy),
+                  cssForRarity(rarity)),
+              trophy.isRoundRobinTrophy()));
     }
 
     if (!storySeason && (currentSeasonFlag || isFallbackCatalog(trophies))) {
@@ -323,23 +332,25 @@ public class TrophyCatalogService {
           bandFinishSpec != null ? bandFinishSpec.unlockCondition() : template.getUnlockCondition();
       TrophyRarity rarity = bandFinishSpec != null ? bandFinishSpec.rarity() : template.getRarity();
       cards.add(
-          new TrophyCardModel(
-              template.getId(),
-              title,
-              summary,
-              unlockCondition,
-              formatEnum(rarity),
-              template.isLimited(),
-              template.isRepeatable(),
-              template.getMaxClaims(),
-              resolveImageUrl(template),
-              seasonName,
-              "Available",
-              false,
-              0L,
-              0L,
-              hasImage(template),
-              cssForRarity(rarity)));
+          markRoundRobin(
+              new TrophyCardModel(
+                  template.getId(),
+                  title,
+                  summary,
+                  unlockCondition,
+                  formatEnum(rarity),
+                  template.isLimited(),
+                  template.isRepeatable(),
+                  template.getMaxClaims(),
+                  resolveImageUrl(template),
+                  seasonName,
+                  "Available",
+                  false,
+                  0L,
+                  0L,
+                  hasImage(template),
+                  cssForRarity(rarity)),
+              template.isRoundRobinTrophy()));
       if (template.getGenerationSeed() != null) {
         existingSeeds.add(template.getGenerationSeed());
       }

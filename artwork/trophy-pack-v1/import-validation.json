@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "All matching catalog and season trophy rows receive the correct main and badge bytes",
+    "Definitions, rules, IDs and earned awards remain unchanged",
+    "Unrelated artwork references remain unchanged",
+    "Second import adds no artwork rows and changes no content",
+    "Rollback restores the original references",
+    "Reapplication after rollback produces the same result"
+  ],
+  "matched_rows": 217,
+  "unrelated_rows": 100,
+  "artwork_rows_after_import": 234,
+  "mysql_output": "catalog\t56\ntrophy\t161\nLucky Charm\tEPIC\nPat finds the essentials\tUNCOMMON\nPat finds the game\tRARE\nPat gets geared up\tUNCOMMON\nPat gets off the couch\tCOMMON\nPat makes it home\tEPIC\nPat's Keys\tUNCOMMON\nPat's Laundry\tCOMMON\nPat's Snack Bag\tCOMMON\nPlease, Make Yourselves at Home\tCOMMON",
+  "production_export_records_covered": 761,
+  "missing_production_mappings": []
+}

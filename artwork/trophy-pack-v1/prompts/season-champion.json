@@ -1,0 +1,8 @@
+{
+  "slug": "season-champion",
+  "prompt": "Use case: stylized-concept. Asset: ONE production-ready pickleball achievement badge, square PNG with true transparency outside its shield. Input image is the COMMON master from the same new collection: preserve its exact rounded shield outline, border thickness, top corner rivets, inset braided rope, centered bottom pickleball seal, front-on perspective, scale, and painterly enamel illustration style. Create a new trophy in the same family, not a contact sheet. Keep all frame and illustration inside the square with comfortable transparent margins; never crop the rim. Make central subject big and legible at 64px. No title, lettering, watermark, extra emblems, blank banners, or full-bleed backdrop. Rarity: LEGENDARY. Trophy: season-champion. Central illustration: A single gold championship cup and crown above a one-step winners podium, flanked by two elegant laurel sprigs and a pair of pickleball paddles; a perforated gold ball at the center. No numerals or lettering. Legendary frame: rich polished gold outer rim with faceted amber and magenta enamel inset, braided gold rope, jewel-like gold corner studs and bottom pickleball seal. Delicate laurel engraving confined to the rim, a restrained radiant halo behind the cup. Scene colors: molten gold, warm ivory, rich sunset magenta, hints of violet.",
+  "mode": "built-in image_gen",
+  "references": [
+    "assets/breaking-a-sweat.png"
+  ]
+}

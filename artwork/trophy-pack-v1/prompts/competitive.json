@@ -1,0 +1,8 @@
+{
+  "slug": "competitive",
+  "prompt": "Use case: stylized-concept. Create ONE new production pickleball achievement badge, not a sheet. Input image: exact RARITY FRAME and collection style reference, not a subject to repeat. Trophy title for meaning only: Competitive. Achievement meaning: Win by exactly 2 points. Replace ALL central illustration with this unique concept: Two paddle heads almost touching over a taut net, a perforated ball balanced in the narrow gap and a tiny caliper-like two-point gap symbol, visually a close contest; no score digits. Match the input's exact shield outline, border thickness, corner rivets/gems, braided inset rope, centered bottom pickleball seal, straight-on perspective, image scale and polished hand-painted enamel illustration style. Rarity: UNCOMMON; polished teal enamel rim, brass inset, pale aqua and gold braided rope, turquoise corner gems and teal bottom ball seal; turquoise and coral interior. Preserve that frame's geometry and material from the reference. Clear large shapes and only a few main props so it reads at 64 pixels. Friendly casual pickleball spirit; warm coastal light. If people appear, natural anatomy and a welcoming mix of adult ages and appearances. All of the complete shield must remain inside the square, with transparent margins around every outer edge. Fully TRANSPARENT exterior, opaque illustrated shield interior. No written trophy name, no words, no arbitrary letters or numerals, no empty banners, no watermark. If the specific concept requests a single numeral, only that numeral is allowed. Do not repeat the reference's interior image, objects or numbers.",
+  "mode": "built-in image_gen",
+  "references": [
+    "assets/weekend-warrior.png"
+  ]
+}

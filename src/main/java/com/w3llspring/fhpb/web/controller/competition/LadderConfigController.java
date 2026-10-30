@@ -121,6 +121,10 @@ public class LadderConfigController {
   @Autowired
   private com.w3llspring.fhpb.web.service.competition.SessionMatchupService sessionMatchupService;
 
+  @Autowired
+  private com.w3llspring.fhpb.web.service.trophy.RoundRobinTrophyAwardService
+      roundRobinTrophyAwards;
+
   @Autowired private UserOnboardingService userOnboardingService;
   @Autowired private MatchConfirmationRepository matchConfirmationRepository;
 
@@ -645,6 +649,13 @@ public class LadderConfigController {
                       : Set.of(),
                   "true".equals(request.getParameter("prepareMatchups")))
               : null);
+      Object board = model.getAttribute("sessionMatchups");
+      if (roundRobinTrophyAwards != null
+          && board
+              instanceof com.w3llspring.fhpb.web.service.competition.SessionMatchupService.View view
+          && view.id() != null) {
+        model.addAttribute("roundRobinAwards", roundRobinTrophyAwards.awardsForRun(view.id()));
+      }
       applySessionRoundRobinTask(
           model,
           cfg,

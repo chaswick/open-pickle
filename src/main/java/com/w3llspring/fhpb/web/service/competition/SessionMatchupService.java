@@ -202,6 +202,10 @@ public class SessionMatchupService {
             + ":"
             + rr.getEndedAt()
             + ":"
+            + rr.isTrophiesProcessed()
+            + ":"
+            + rr.getTrophiesProcessedAt()
+            + ":"
             + slots
             + ":"
             + available

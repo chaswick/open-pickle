@@ -46,14 +46,9 @@ public class AutoTrophyService {
       return;
     }
 
-    if (season.isStoryModeEnabled()) {
-      if (storyModeService != null) {
-        storyModeService.ensureTrackers(season);
-      }
-      return;
-    }
-
     List<TrophyCatalogEntry> templates = loadApplicableTemplates(season);
+    if (season.isStoryModeEnabled())
+      templates = templates.stream().filter(TrophyCatalogEntry::isRoundRobinTrophy).toList();
     if (templates.isEmpty()) {
       log.warn("No default trophy templates found in DB for season {}.", season.getId());
       if (storyModeService != null) {
@@ -119,6 +114,7 @@ public class AutoTrophyService {
       trophy.setRarity(generatedRarity);
       trophy.setLimited(template.isLimited());
       trophy.setRepeatable(template.isRepeatable());
+      trophy.setRoundRobinTrophy(template.isRoundRobinTrophy());
       trophy.setMaxClaims(template.getMaxClaims());
       trophy.setPrompt(generatedPrompt);
       trophy.setAiProvider(template.getAiProvider());

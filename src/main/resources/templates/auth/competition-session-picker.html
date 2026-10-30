@@ -46,17 +46,16 @@
                 </form>
                 <a class="competition-session-link"
                    th:href="@{/groups/{id}(id=${membership.ladderConfig.id})}">
-                    <div class="app-action-icon"><i class="bi bi-trophy" aria-hidden="true"></i></div>
-                    <div>
-                        <span class="app-action-callout app-action-callout-top" th:if="${suggested}">Suggested</span>
-                        <div class="app-action-title" th:text="${sessionConfig != null ? sessionConfig.title : 'Session'}">Session</div>
-                        <div class="app-action-subtitle" th:if="${sessionConfig != null and sessionConfig.sessionScheduledAt != null}"
-                             th:text="${sessionConfig.sessionDateLabel}">Upcoming · Sat, Nov 7</div>
-                        <div class="app-action-subtitle"
-                             th:text="${owned ? 'You own this session. Open it to invite players, manage the roster, and log matches.' : 'You joined this session. Open it to jump back into that roster and log matches.'}">
-                            Open this match session.
-                        </div>
+                    <div class="competition-session-meta">
+                        <span class="competition-session-status">
+                            <i th:class="${sessionConfig.upcomingSession ? 'bi bi-calendar-event' : 'bi bi-play-circle'}" aria-hidden="true"></i>
+                            <span th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
+                        </span>
+                        <span class="competition-session-suggestion" th:if="${suggested}">Suggested</span>
                     </div>
+                    <div class="app-action-title competition-session-title" th:text="${sessionConfig.title}">Session</div>
+                    <div class="app-action-subtitle fw-semibold" th:if="${sessionConfig.sessionScheduledAt != null}"
+                         th:text="${sessionConfig.sessionDateLabel}">Upcoming · Sat, Nov 7</div>
                 </a>
             </div>
 

@@ -1,6 +1,16 @@
 package com.w3llspring.fhpb.web.service.trophy;
 
 public class TrophyCardModel {
+  private boolean roundRobinTrophy;
+
+  public boolean isRoundRobinTrophy() {
+    return roundRobinTrophy;
+  }
+
+  public void setRoundRobinTrophy(boolean value) {
+    roundRobinTrophy = value;
+  }
+
   private final Long id;
   private final String title;
   private final String summary;

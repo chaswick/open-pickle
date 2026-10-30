@@ -1,0 +1,8 @@
+{
+  "slug": "podium-finish",
+  "prompt": "Use case: stylized-concept. Create ONE new production pickleball achievement badge, not a sheet. Input image: exact RARITY FRAME and collection style reference, not a subject to repeat. Trophy title for meaning only: Podium Finish. Achievement meaning: Finish #2 or #3 among the players you faced this season (min 6-player group). Replace ALL central illustration with this unique concept: A friendly local-court podium showing the silver and bronze steps together, two paddles raised in celebration and a perforated ball; no numeral labels. Match the input's exact shield outline, border thickness, corner rivets/gems, braided inset rope, centered bottom pickleball seal, straight-on perspective, image scale and polished hand-painted enamel illustration style. Rarity: EPIC; dark indigo gunmetal rim, violet enamel inset with fine lightning engraving, gold braided rope, violet corner gems and bottom ball seal; amethyst, plum and warm amber interior. Preserve that frame's geometry and material from the reference. Clear large shapes and only a few main props so it reads at 64 pixels. Friendly casual pickleball spirit; warm coastal light. If people appear, natural anatomy and a welcoming mix of adult ages and appearances. All of the complete shield must remain inside the square, with transparent margins around every outer edge. Fully TRANSPARENT exterior, opaque illustrated shield interior. No written trophy name, no words, no arbitrary letters or numerals, no empty banners, no watermark. If the specific concept requests a single numeral, only that numeral is allowed. Do not repeat the reference's interior image, objects or numbers.",
+  "mode": "built-in image_gen",
+  "references": [
+    "assets/ironman.png"
+  ]
+}

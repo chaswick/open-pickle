@@ -49,14 +49,15 @@
                             th:attr="aria-label=${leaveLabel},title=${leaveLabel}"></button>
                 </form>
                 <a class="competition-session-link" th:href="@{/groups/{id}(id=${sessionConfig.id})}">
-                    <div class="app-action-icon"><i th:class="${sessionConfig.upcomingSession ? 'bi bi-calendar-event' : 'bi bi-play-circle'}" aria-hidden="true"></i></div>
-                    <div>
-                        <span class="app-action-callout app-action-callout-top" th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
-                        <div class="app-action-title" th:text="${sessionConfig.title}">Your session</div>
-                        <div class="app-action-subtitle fw-semibold" th:if="${sessionConfig.sessionScheduledAt != null}"
-                             th:text="${sessionConfig.sessionDateLabel}">Upcoming · Sat, Nov 7</div>
-                        <div class="app-action-subtitle" th:text="${sessionConfig.upcomingSession ? 'Invite friends and see who’s joining.' : 'Jump back in to invite players, log scores, and see your session standings.'}">Jump back in to invite players, log scores, and see your session standings.</div>
+                    <div class="competition-session-meta">
+                        <span class="competition-session-status">
+                            <i th:class="${sessionConfig.upcomingSession ? 'bi bi-calendar-event' : 'bi bi-play-circle'}" aria-hidden="true"></i>
+                            <span th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
+                        </span>
                     </div>
+                    <div class="app-action-title competition-session-title" th:text="${sessionConfig.title}">Your session</div>
+                    <div class="app-action-subtitle fw-semibold" th:if="${sessionConfig.sessionScheduledAt != null}"
+                         th:text="${sessionConfig.sessionDateLabel}">Upcoming · Sat, Nov 7</div>
                 </a>
             </div>
 

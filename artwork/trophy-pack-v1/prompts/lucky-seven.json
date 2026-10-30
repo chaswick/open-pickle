@@ -1,0 +1,8 @@
+{
+  "slug": "lucky-seven",
+  "prompt": "Use case: stylized-concept. Asset: ONE production-ready pickleball achievement badge, square PNG with true transparency outside its shield. Input image is the COMMON master from the same new collection: preserve its exact rounded shield outline, border thickness, top corner rivets, inset braided rope, centered bottom pickleball seal, front-on perspective, scale, and painterly enamel illustration style. Create a new trophy in the same family, not a contact sheet. Keep all frame and illustration inside the square with comfortable transparent margins; never crop the rim. Make central subject big and legible at 64px. No title, lettering, watermark, extra emblems, blank banners, or full-bleed backdrop. Rarity: RARE. Trophy: lucky-seven. Central illustration: One large sculpted numeral 7, a small four-leaf clover tucked against a pickleball paddle, and a perforated ball; a clean triumphant arrangement with a faint seven-point lightburst. The ONLY written mark is the single numeral 7. Rare frame: polished silver with sapphire-blue enamel outer edging, braided silver-blue rope, cool cyan corner gems and bottom pickleball seal. Subtle nautical compass-ray engraving in the rim without changing its geometry. Scene colors: sapphire, luminous aqua, pearl, clear sunrise highlights.",
+  "mode": "built-in image_gen",
+  "references": [
+    "assets/breaking-a-sweat.png"
+  ]
+}

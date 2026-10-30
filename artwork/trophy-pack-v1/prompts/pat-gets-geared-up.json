@@ -1,0 +1,8 @@
+{
+  "slug": "pat-gets-geared-up",
+  "prompt": "Use case: stylized-concept. Create ONE new production pickleball achievement badge, not a sheet. Reference image 1 fixes the exact rarity frame and collection illustration style, not its subject. Trophy meaning: Pat gets geared up; Story mode tracker. Replace the whole central illustration with: A neatly packed pickleball kit: two athletic shoes, a folded towel, water bottle, paddle and one perforated ball arranged in a simple ready-to-go composition. Preserve the reference's exact shield outline, border thickness, corner rivets/gems, braided inset rope, centered bottom pickleball seal, front-on perspective, scale, and polished hand-painted enamel illustration style. Rarity: UNCOMMON; polished teal enamel rim, brass inset, pale aqua and gold braided rope, turquoise corner gems and teal bottom ball seal; turquoise and coral interior. Keep the same frame geometry and material. Large clear subjects, few main props, readable at 64px. Friendly casual pickleball mood and warm coastal light. Natural anatomy if people appear. Fully transparent exterior, opaque illustrated shield interior. Keep the complete rim and seal inside the square canvas with transparent margins at every edge. No trophy title, no words, no arbitrary numerals, no empty banner, no watermark. If the concept specifically requests a numeral, show only that numeral. Do not repeat the reference's central objects or numbers.",
+  "references": [
+    "assets/weekend-warrior.png"
+  ],
+  "mode": "built-in image_gen"
+}

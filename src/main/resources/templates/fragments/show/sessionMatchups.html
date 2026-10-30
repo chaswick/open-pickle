@@ -4,6 +4,26 @@
          class="session-matchups" data-session-matchups-root
          th:attr="data-revision=${sessionMatchups.revision},data-initial-round=${sessionMatchups.initialRound}">
   <th:block th:with="board=${sessionMatchups}">
+    <section class="matchups-panel" th:if="${roundRobinAwards != null and !#lists.isEmpty(roundRobinAwards)}"
+             aria-labelledby="round-robin-trophies-title" data-round-robin-trophies>
+      <h2 id="round-robin-trophies-title">Round robin results</h2>
+      <ul class="matchups-results">
+        <li class="matchups-result" th:each="award : ${roundRobinAwards}" th:attr="data-placement=${award.place}">
+          <img class="matchups-result-art" th:src="${award.imageUrl}" th:alt="${award.title}"
+               width="80" height="80" decoding="async">
+          <div class="matchups-result-copy">
+            <h3 th:text="${award.place == 1 ? 'Winner' : 'Runner-up'}">Winner</h3>
+            <ul class="matchups-result-players">
+              <li th:each="player : ${award.players}">
+                <a th:if="${player.publicCode != null}" class="player-link link-contrast fw-semibold"
+                   th:href="@{/account(member=${player.publicCode})}" th:text="${player.name}">Player</a>
+                <span th:unless="${player.publicCode != null}" class="fw-semibold" th:text="${player.name}">Player</span>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </section>
     <section class="matchups-panel" th:if="${board.id == null}">
       <div class="matchups-eyebrow">Gather your players</div>
       <h2>Your group, ready to play</h2>

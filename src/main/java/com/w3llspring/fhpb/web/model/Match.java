@@ -4,8 +4,46 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
+@EntityListeners(com.w3llspring.fhpb.web.service.trophy.RoundRobinTrophyResultListener.class)
 @Table(name = "matches")
 public class Match {
+  @Transient private java.util.List<Object> trophyResultSnapshot;
+
+  public void rememberTrophyResults() {
+    trophyResultSnapshot = trophyResults();
+  }
+
+  public boolean trophyResultsChanged() {
+    var current = trophyResults();
+    boolean changed = !java.util.Objects.equals(trophyResultSnapshot, current);
+    trophyResultSnapshot = current;
+    return changed;
+  }
+
+  private java.util.List<Object> trophyResults() {
+    return java.util.Arrays.asList(
+        state,
+        scoreA,
+        scoreB,
+        playedAt,
+        a1 == null ? null : a1.getId(),
+        a2 == null ? null : a2.getId(),
+        b1 == null ? null : b1.getId(),
+        b2 == null ? null : b2.getId(),
+        a1Guest,
+        a2Guest,
+        b1Guest,
+        b2Guest,
+        a1GuestName,
+        a2GuestName,
+        b1GuestName,
+        b2GuestName,
+        cosignedBy == null ? null : cosignedBy.getId(),
+        season == null ? null : season.getId(),
+        sourceSessionConfig == null ? null : sourceSessionConfig.getId(),
+        excludeFromStandings,
+        organizerConfirmed);
+  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

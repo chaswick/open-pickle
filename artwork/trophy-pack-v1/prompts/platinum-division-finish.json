@@ -1,0 +1,8 @@
+{
+  "slug": "platinum-division-finish",
+  "prompt": "Use case: stylized-concept. Create ONE new production pickleball achievement badge, not a sheet. Reference image 1 fixes the exact rarity frame and collection illustration style, not its subject. Trophy meaning: Platinum Division Finish; Finish the season in Platinum Division. Replace the whole central illustration with: A broad polished platinum ingot with a sunburst engraving behind a pickleball paddle and perforated ball, cool luminous highlights. Preserve the reference's exact shield outline, border thickness, corner rivets/gems, braided inset rope, centered bottom pickleball seal, front-on perspective, scale, and polished hand-painted enamel illustration style. Rarity: RARE; silver and sapphire-blue rim, silver-blue braided rope, cyan corner gems and silver-blue bottom ball seal; sapphire, luminous aqua and pearl interior. Keep the same frame geometry and material. Large clear subjects, few main props, readable at 64px. Friendly casual pickleball mood and warm coastal light. Natural anatomy if people appear. Fully transparent exterior, opaque illustrated shield interior. Keep the complete rim and seal inside the square canvas with transparent margins at every edge. No trophy title, no words, no arbitrary numerals, no empty banner, no watermark. If the concept specifically requests a numeral, show only that numeral. Do not repeat the reference's central objects or numbers.",
+  "references": [
+    "assets/lucky-seven.png"
+  ],
+  "mode": "built-in image_gen"
+}

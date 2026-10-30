@@ -101,7 +101,7 @@ public class TrophyAwardService {
           season.getId());
       return;
     }
-    List<Trophy> trophies = trophyRepository.findBySeasonOrderByDisplayOrderAscIdAsc(season);
+    List<Trophy> trophies = seasonTrophies(season);
     if (trophies.isEmpty()) {
       return;
     }
@@ -274,7 +274,7 @@ public class TrophyAwardService {
           season.getId());
       return;
     }
-    List<Trophy> trophies = trophyRepository.findBySeasonOrderByDisplayOrderAscIdAsc(season);
+    List<Trophy> trophies = seasonTrophies(season);
     if (trophies.isEmpty()) {
       return;
     }
@@ -379,7 +379,7 @@ public class TrophyAwardService {
           season.getId());
       return 0;
     }
-    List<Trophy> trophies = trophyRepository.findBySeasonOrderByDisplayOrderAscIdAsc(season);
+    List<Trophy> trophies = seasonTrophies(season);
     if (trophies.isEmpty()) {
       return 0;
     }
@@ -503,6 +503,36 @@ public class TrophyAwardService {
           revokedCount);
     }
     return awardedCount;
+  }
+
+  private List<Trophy> seasonTrophies(LadderSeason season) {
+    return trophyRepository.findBySeasonOrderByDisplayOrderAscIdAsc(season).stream()
+        .filter(trophy -> !trophy.isRoundRobinTrophy())
+        .toList();
+  }
+
+  // Shared match statistics, calculated only from the results supplied by the caller.
+  Map<Long, Map<String, Double>> buildMatchMetrics(List<Match> matches) {
+    Map<Long, UserStats> stats = new HashMap<>();
+    matches.stream()
+        .sorted(
+            Comparator.comparing(
+                    Match::getPlayedAt, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(Match::getId))
+        .forEach(match -> processMatch(stats, match));
+    Map<Long, Map<String, Double>> result = new HashMap<>();
+    stats.forEach(
+        (id, value) -> {
+          value.finalizeStats(null, null, 0, null);
+          result.put(id, new HashMap<>(value.metrics));
+        });
+    return result;
+  }
+
+  boolean evaluateMetrics(String expression, Map<String, Double> metrics) {
+    return expression != null
+        && !expression.isBlank()
+        && evaluateExpression(expression, key -> metrics.getOrDefault(key, 0d));
   }
 
   private List<Match> confirmedMatches(LadderSeason season) {

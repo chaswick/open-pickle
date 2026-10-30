@@ -1,0 +1,30 @@
+TROPHY ART PACK V1 - VALIDATION
+
+66 title/rarity mappings and 66 distinct main images.
+65 new illustrations generated with the built-in image_gen tool.
+Lucky Charm main artwork is byte-for-byte identical to its production original.
+66 card PNGs at 512x512; 66 profile badge PNGs at 128x128.
+All 65 new designs have fully transparent exterior corners at both sizes.
+
+Every non-flag production catalog/trophy record in the supplied export maps to
+an included title/rarity definition: 761 records covered, zero missing mappings.
+
+Local MySQL 8 integration:
+- 217 matching catalog/trophy rows updated with verified image checksums.
+- 100 unrelated profile badge rows preserved.
+- Trophy definitions, rules, IDs and earned awards preserved.
+- Repeated import added no duplicate artwork and changed no content.
+- Rollback restored all original references.
+- Reapplication after rollback produced the same result.
+
+Browser verification:
+- All 66 gallery images load at the production size.
+- Search, collection filters and rarity filters work.
+- Card, 64px and 128px previews work on light and dark backgrounds.
+- Gallery fits 320px, 390px and 1366px widths.
+- ZIP download link works.
+- App image endpoints return the exact imported 512px and 128px PNGs.
+- Trophy collection, account and home pages render on phone and desktop.
+- No browser JavaScript errors observed.
+
+The art import has been applied to the local review database only.

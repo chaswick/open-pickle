@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "All 66 gallery images load at their production size",
+    "Search and all collection/rarity filters work",
+    "64px and 128px previews work on light and dark backgrounds",
+    "Gallery fits phone and desktop widths",
+    "Download link serves the complete ZIP",
+    "The app serves the correct imported 512px image and 128px profile badge",
+    "App trophy collection, account and home pages render without errors on phone and desktop"
+  ],
+  "jsErrors": []
+}

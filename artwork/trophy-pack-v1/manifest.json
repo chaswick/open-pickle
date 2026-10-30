@@ -1,0 +1,1239 @@
+{
+  "version": "trophy-pack-v1",
+  "style": "Unique hand-painted pickleball illustrations; consistent shield silhouette and rarity-specific materials; transparent PNG exterior; no embedded titles.",
+  "coverage": "All implemented repository and exported production trophy titles, including nine new round-robin definitions, fourteen division finishes, and eight story trackers. Archived idea spreadsheets and country flags are outside this artwork replacement.",
+  "entries": [
+    {
+      "title": "Breaking a Sweat",
+      "rarity": "COMMON",
+      "condition": "Play 3 matches in a single season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "breaking-a-sweat",
+      "file": "assets/breaking-a-sweat.png",
+      "concept": "One smiling adult player wiping sweat from their forehead with a towel, holding a green paddle against their chest; one perforated pickleball in front and a quiet sunlit court behind.",
+      "badge_file": "badges/breaking-a-sweat.png",
+      "original_file": "originals/breaking-a-sweat.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "d0757d1bbfd91d0c6f45716ad6bee89b9dac76baa92f09dea4f3889d875604a2",
+      "badge_sha256": "dd1e66732095fbc0e68033f2886a1bad18f888e72563b9ccd4f47a7664a1f979"
+    },
+    {
+      "title": "Dozen Played",
+      "rarity": "COMMON",
+      "condition": "Play 12 matches in a single season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "dozen-played",
+      "file": "assets/dozen-played.png",
+      "concept": "A tidy triangular rack of twelve perforated pickleballs arranged four-three-two-two-one, with a small paddle leaning against it and a single simple medal disc bearing the numeral 12. Only text: 12.",
+      "badge_file": "badges/dozen-played.png",
+      "original_file": "originals/dozen-played.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "7737941068a57f787b357b278b4f794bc171874c34cd38dccdfd201cd136c2a7",
+      "badge_sha256": "69d61045135bac2db00435ac228465f3f82b1b655d2cceaff778fac210b3985e"
+    },
+    {
+      "title": "Grinder",
+      "rarity": "RARE",
+      "condition": "Play 25 matches in a single season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "grinder",
+      "file": "assets/grinder.png",
+      "concept": "A worn but cared-for paddle leaning against a stack of practice pickleballs, with a determined hand tightening a wristband beside it; warm sparks of persistence, not a coffee grinder.",
+      "badge_file": "badges/grinder.png",
+      "original_file": "originals/grinder.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "21d82d1b93721481f90dcc30c9cce853c4805414fe47dac9cba7fd1996cae31c",
+      "badge_sha256": "fa171f63fe0b07b343c8aae19981a2ac437c25b6db7441499508081b6017b1ca"
+    },
+    {
+      "title": "Ironman",
+      "rarity": "EPIC",
+      "condition": "Play 40 matches in a single season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "ironman",
+      "file": "assets/ironman.png",
+      "concept": "A forged dark iron pickleball paddle with a glowing warm iron heart inset at its center, a perforated ball in front, two sweeping endurance arcs; no superhero branding.",
+      "badge_file": "badges/ironman.png",
+      "original_file": "originals/ironman.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "321a538d665123780daa293f3d19d76711bf9852afe335ddd8d791fa6c65edd0",
+      "badge_sha256": "d3ae4c032902ce9463f1ee09bea5e940c296e399cdddd7a3bf14e5dd19e81456"
+    },
+    {
+      "title": "Weekend Warrior",
+      "rarity": "UNCOMMON",
+      "condition": "Play 5 matches on Saturday and Sunday of a single weekend",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "weekend-warrior",
+      "file": "assets/weekend-warrior.png",
+      "concept": "A compact calendar with exactly two sunny day tiles, a pair of pickleball paddles leaning against it and one perforated ball; no text or numerals.",
+      "badge_file": "badges/weekend-warrior.png",
+      "original_file": "originals/weekend-warrior.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "db87c4d40235399afbc23a900ebf7d24b29a077ce38c92b15fe9fcc50d546145",
+      "badge_sha256": "aaf925500d1e594e27d3dea190c3740705cdcba7f142621e4c9a69a24de7a8a3"
+    },
+    {
+      "title": "Comeback Kid",
+      "rarity": "RARE",
+      "condition": "After 7+ days without a match, return and play 3+ matches in the same day",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "comeback-kid",
+      "file": "assets/comeback-kid.png",
+      "concept": "A smiling adult player stepping back onto a sunny court through an open gate, paddle in hand, with one curling return-arrow motif and a bright sunrise.",
+      "badge_file": "badges/comeback-kid.png",
+      "original_file": "originals/comeback-kid.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "51969b2bcd73d411497ec905ef466eb727592a60c91df53a4687b80e768b3c0a",
+      "badge_sha256": "1dcea1ffd07b949fe461632f6d873045f8934df73f396ab172d282225a9e764d"
+    },
+    {
+      "title": "On a Roll",
+      "rarity": "UNCOMMON",
+      "condition": "Win 3 matches in a row within a single season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "on-a-roll",
+      "file": "assets/on-a-roll.png",
+      "concept": "Three perforated pickleballs rolling together up a short curving court line with three gentle success sparkles, and a paddle following their motion.",
+      "badge_file": "badges/on-a-roll.png",
+      "original_file": "originals/on-a-roll.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "1e2472f2b3c82c0a1a330fcb7c1d15afb607e2122dd81738c80569dbe190bc04",
+      "badge_sha256": "9265ef2492bf0e9d2e4b765db735795c5f22a825b030fe0c98575a4bf668fbde"
+    },
+    {
+      "title": "Lucky Seven",
+      "rarity": "RARE",
+      "condition": "Win 7 matches in a row within a single season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "lucky-seven",
+      "file": "assets/lucky-seven.png",
+      "concept": "One large sculpted numeral 7, a small four-leaf clover tucked against a blue pickleball paddle, and a perforated ball. Only text: 7.",
+      "badge_file": "badges/lucky-seven.png",
+      "original_file": "originals/lucky-seven.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "422b9306dfa9efa403f68f584e117dc5c616d2e5daed442df16711128739dcd0",
+      "badge_sha256": "13b4b3ba4b7b13db3144612383446f7d88c0c8c6fb9679a15a8edd81c80eca80"
+    },
+    {
+      "title": "Decimator",
+      "rarity": "EPIC",
+      "condition": "Win 10 matches in a row within a single season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "decimator",
+      "file": "assets/decimator.png",
+      "concept": "Ten small bright stars forming a sweeping victory arc over one dramatic paddle smashing a perforated ball across a clean net; use confident sporting energy, no destruction or weapons.",
+      "badge_file": "badges/decimator.png",
+      "original_file": "originals/decimator.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "9b234ed4be120475e4d2d2d4fe412a8a895ae8ea53d94b65a779a3421244453e",
+      "badge_sha256": "dc1973f2218b9f59ffb6a6aeba830c0dc66f0f52d34c3ecbf82145055c5a4f57"
+    },
+    {
+      "title": "Bumpy Road",
+      "rarity": "COMMON",
+      "condition": "Lose 4 matches in a row within a single season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "bumpy-road",
+      "file": "assets/bumpy-road.png",
+      "concept": "A winding court-colored path with four gentle bumps, a determined small pickleball riding along it toward a welcoming paddle and sun; lighthearted perseverance, not a sad injured player.",
+      "badge_file": "badges/bumpy-road.png",
+      "original_file": "originals/bumpy-road.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "172e4bef21435fa3830ce9043358b8dd6b3b2f706e26ba5fd138003ceb459b99",
+      "badge_sha256": "9235a7457612e03aab65d2de710475677b89aa9f242f54bf58f0162a1a3353c7"
+    },
+    {
+      "title": "Bounce Back",
+      "rarity": "RARE",
+      "condition": "After losing 5 in a row, win the next match",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "bounce-back",
+      "file": "assets/bounce-back.png",
+      "concept": "A perforated pickleball springing from a low point on a curved trajectory toward a glowing paddle, with a bright upward rebound arrow behind it.",
+      "badge_file": "badges/bounce-back.png",
+      "original_file": "originals/bounce-back.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "34c385838bbbbff7a55007a0d8ca23f17505868a77b57a9f9be7ada40b9483ec",
+      "badge_sha256": "99484ba84cb122a51ec49b8a06904cea5ab155a29dc92a14fb4898493268e50b"
+    },
+    {
+      "title": "Stop the Bleed",
+      "rarity": "COMMON",
+      "condition": "Break a 3+ match losing streak with a win",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "stop-the-bleed",
+      "file": "assets/stop-the-bleed.png",
+      "concept": "A paddle-shaped wooden bridge mending a cracked court line, with a perforated ball rolling from shadow into sunlight and three faded small loss marks turning into one bright star; no blood or medical imagery.",
+      "badge_file": "badges/stop-the-bleed.png",
+      "original_file": "originals/stop-the-bleed.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "b0e7fe0331d677a491e30e7d2a3e9d233513c729bf66232ddd161ed06b04d6bd",
+      "badge_sha256": "4b5118ab1ce281e42cc638b969e94fdf3e191ef1fc08e04206ae52a7978dbc62"
+    },
+    {
+      "title": "Elite 3",
+      "rarity": "EPIC",
+      "condition": "End the season Top 3 overall",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "elite-3",
+      "file": "assets/elite-3.png",
+      "concept": "Three distinct small podium steps together under a bright laurel arch, each with a perforated pickleball and a paddle silhouette; emphasize the whole top-three podium without numbers.",
+      "badge_file": "badges/elite-3.png",
+      "original_file": "originals/elite-3.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "8769a00513a207b4978ba02e32df570a650f74e8bd03201666ea53ff6505124c",
+      "badge_sha256": "5051ad7c52db8fe4cb7acef9d15c124a350d230dbda9af48a0adf5dc25a4ceca"
+    },
+    {
+      "title": "Familiar Foe",
+      "rarity": "UNCOMMON",
+      "condition": "Play the same opponent 5 times in a season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "familiar-foe",
+      "file": "assets/familiar-foe.png",
+      "concept": "Two friendly opposing pickleball players recognizing one another across a net, exchanging a cheerful paddle tap; a small circular return motif connects them.",
+      "badge_file": "badges/familiar-foe.png",
+      "original_file": "originals/familiar-foe.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "e720d526631a82f1e34d39328f2b282b8f318b18b875cfc74bb0c1c2d84567e0",
+      "badge_sha256": "80d309b1582adf872a7b01be7bcdea9e7c0cc90d75683fe95324cd800a94f79f"
+    },
+    {
+      "title": "Settled the Score",
+      "rarity": "RARE",
+      "condition": "Defeat the same opponent 3 times in a row in a season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "settled-the-score",
+      "file": "assets/settled-the-score.png",
+      "concept": "A neat scorebook beside a winning paddle and ball, with three bright checkmarks in a row and a balanced scale settling level behind them; no lettering or numbers.",
+      "badge_file": "badges/settled-the-score.png",
+      "original_file": "originals/settled-the-score.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "b0e39121946741fc556fefcc86550edaab55c2dd8d37a527d607d4078f598c9d",
+      "badge_sha256": "f9ca6662a9f8491a292bcc628b84534172f3cd08c44b0188235e793f0aaeaaa9"
+    },
+    {
+      "title": "Social Butterfly",
+      "rarity": "RARE",
+      "condition": "Win with 8 different partners in a season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "social-butterfly",
+      "file": "assets/social-butterfly.png",
+      "concept": "A graceful butterfly made from four colorful pickleball paddles, with a perforated ball as its body and a subtle circle of friendly court silhouettes behind.",
+      "badge_file": "badges/social-butterfly.png",
+      "original_file": "originals/social-butterfly.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "c1a3bb0800e8fde5040de25ce585e32c41929fc3e496fdaf8549f7166382bfa5",
+      "badge_sha256": "69dd5b57ec1dd5033abf8625fc1faadb4a827cca4c38513691bfa6607eaa8df3"
+    },
+    {
+      "title": "Backstabber",
+      "rarity": "RARE",
+      "condition": "Beat your last partner in the very next match",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "backstabber",
+      "file": "assets/backstabber.png",
+      "concept": "Two cheerful former partners on opposite sides of a net now facing each other, their paddles crossed playfully above a central ball; a curved swapping arrow behind them, no knives or aggression.",
+      "badge_file": "badges/backstabber.png",
+      "original_file": "originals/backstabber.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "12767a594c3d2c34887df3576327e897eccf653289fafd9477552e80ccbd99ed",
+      "badge_sha256": "f8f464c30bc638da24871028b5606cd6579c4526a641c0eddd03dce4db341250"
+    },
+    {
+      "title": "Ride or Die",
+      "rarity": "EPIC",
+      "condition": "Play 30+ matches with the same partner in a season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "ride-or-die",
+      "file": "assets/ride-or-die.png",
+      "concept": "Two sturdy pickleball paddles clasped together by one strong nautical knot, a glowing perforated ball and a winding trail of tiny paired footprints behind; loyal partnership, no skeletons.",
+      "badge_file": "badges/ride-or-die.png",
+      "original_file": "originals/ride-or-die.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "6e1b91020cf01e12902a1150a21b3fa53aad04205f9df5fc78c9113b32693fce",
+      "badge_sha256": "71cd75bba39d9a01f4bc8a0df243d8198f90291ef1990094ff019068714afe29"
+    },
+    {
+      "title": "Frequent Host",
+      "rarity": "UNCOMMON",
+      "condition": "Play 10+ matches in a season with at least one guest partner",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "frequent-host",
+      "file": "assets/frequent-host.png",
+      "concept": "A welcoming guest arriving through an open pickleball court gate while another player offers a spare paddle; one perforated ball and warm hospitality.",
+      "badge_file": "badges/frequent-host.png",
+      "original_file": "originals/frequent-host.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "036bb38676e47d9fb6773228e2b349ad36f920dba95d18a126e6b9f08a4e5b1f",
+      "badge_sha256": "1dd38072f3889961604b09f43e9f83b6bbc40106f26327180a6da4e4933985ff"
+    },
+    {
+      "title": "Back-to-Back Buddies",
+      "rarity": "COMMON",
+      "condition": "Win two matches in the same day with the same partner",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "back-to-back-buddies",
+      "file": "assets/back-to-back-buddies.png",
+      "concept": "Two players in friendly back-to-back poses holding their paddles outward with two bright victory stars and one perforated ball between them.",
+      "badge_file": "badges/back-to-back-buddies.png",
+      "original_file": "originals/back-to-back-buddies.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "ce9b70cc188a445eb8d9a439535a4a2034e0e9eacec40ce6b38d2353d09b2c35",
+      "badge_sha256": "e463660f05b7246c2c0612dcd5ed2e318664f4820d273444ef869acd9d85d1f0"
+    },
+    {
+      "title": "Competitive",
+      "rarity": "UNCOMMON",
+      "condition": "Win by exactly 2 points",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "competitive",
+      "file": "assets/competitive.png",
+      "concept": "Two paddle heads almost touching over a taut net, a perforated ball balanced in the narrow gap and a tiny caliper-like two-point gap symbol, visually a close contest; no score digits.",
+      "badge_file": "badges/competitive.png",
+      "original_file": "originals/competitive.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "f196304ea974b57b32c68fd63b3c9f2745d609c92c0e3d35653fc55692c9b29e",
+      "badge_sha256": "97a95a03b2f1a55fcbd383e7f7564509b8330703460a3b82d0c47f87568429e0"
+    },
+    {
+      "title": "Thursday Thunder",
+      "rarity": "COMMON",
+      "condition": "Play a match on a Thursday",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "thursday-thunder",
+      "file": "assets/thursday-thunder.png",
+      "concept": "One calendar tile with a bold single lightning bolt above a pickleball paddle and ball, a small warm thundercloud overhead; no day names or letters.",
+      "badge_file": "badges/thursday-thunder.png",
+      "original_file": "originals/thursday-thunder.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "afa446af1091a6f7242d491ee897f1f539dbd79df7337bed3fc2260bb08edd24",
+      "badge_sha256": "149db68f6786c7c69d337aed8b9465c9871e6992e16dbeba1b994f2946437005"
+    },
+    {
+      "title": "Scribe",
+      "rarity": "COMMON",
+      "condition": "Cosign 10 matches in the season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "scribe",
+      "file": "assets/scribe.png",
+      "concept": "A clean open match logbook with a large checkmark, a fountain pen shaped like a paddle handle and a perforated ball resting beside it; no words.",
+      "badge_file": "badges/scribe.png",
+      "original_file": "originals/scribe.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "3ee7ab1dbd098cd551b5b7fa98a2885be363d39ddfc7c93415bb726479b6e27c",
+      "badge_sha256": "70e52ee4c5b6f2956d9206af5aae4f61ec1e163a4bc25e0ce20d4e6ce4ef4100"
+    },
+    {
+      "title": "Season Champion",
+      "rarity": "LEGENDARY",
+      "condition": "Finish #1 overall in the season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "season-champion",
+      "file": "assets/season-champion.png",
+      "concept": "A single gold championship cup with a crown floating directly above it, paired paddles and a gold perforated ball, elegant laurels and one solid winners podium; no numerals.",
+      "badge_file": "badges/season-champion.png",
+      "original_file": "originals/season-champion.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "41b863d107b4589296a59541e21e98ef4bc4bcbe413d8e06607d9855ef01e481",
+      "badge_sha256": "0fa2f7c88615921130cbbb3aea714e3d3667f81074b3e65f67bf735dd34d6eb5"
+    },
+    {
+      "title": "Runner-Up",
+      "rarity": "EPIC",
+      "condition": "Finish #2 overall in the season",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "runner-up",
+      "file": "assets/runner-up.png",
+      "concept": "A distinguished silver medal bearing a single numeral 2, two small laurel sprigs, a paddle and perforated ball on a raised second podium step. Only text: 2.",
+      "badge_file": "badges/runner-up.png",
+      "original_file": "originals/runner-up.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "6df5410e97c3957caf1c9ebfb94338ebed953747a7f03422708721d68a0570c6",
+      "badge_sha256": "34a5c768fbf36b9d1be6fba9372d83ab5fc9ede175bac94a9f453fe97f53fd20"
+    },
+    {
+      "title": "Pickler",
+      "rarity": "RARE",
+      "condition": "Opponents finish with exactly 0 points",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "pickler",
+      "file": "assets/pickler.png",
+      "concept": "A playful large pickle standing proudly beside a pickleball paddle and a clean score tile bearing a single numeral 0, with a perforated ball at its base. Only text: 0.",
+      "badge_file": "badges/pickler.png",
+      "original_file": "originals/pickler.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "fc59b453790b69ee5f79a6269fb13c32b7692c471959bc772d8d8943b2cdf21f",
+      "badge_sha256": "868b54f9c53237801d4ea70172ed30c4c51f5d3491f17cc5fa4449f81aa6f01d"
+    },
+    {
+      "title": "Switch Hitters",
+      "rarity": "RARE",
+      "condition": "Alternate partners in 4 consecutive wins",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "switch-hitters",
+      "file": "assets/switch-hitters.png",
+      "concept": "Four differently colored paddle heads arranged in a clockwise rotation around a perforated ball, with two clear curving swap arrows and four small victory stars.",
+      "badge_file": "badges/switch-hitters.png",
+      "original_file": "originals/switch-hitters.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "a3aa01940a5edb87a4547ffb810be84b86c64357deb914b754902336fd3d0879",
+      "badge_sha256": "794dc64f07b4c3b1dc91f0715a966759505f25ede1134b2173bc6c8560bb3349"
+    },
+    {
+      "title": "Division Dominator",
+      "rarity": "RARE",
+      "condition": "End the season #1 in your division",
+      "group": "season",
+      "origins": [
+        "repository",
+        "production"
+      ],
+      "slug": "division-dominator",
+      "file": "assets/division-dominator.png",
+      "concept": "One crowned pickleball paddle standing on top of a compact tiered division ladder, with a perforated ball, laurel sprig and bright success rays.",
+      "badge_file": "badges/division-dominator.png",
+      "original_file": "originals/division-dominator.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "4f1b0dfe8e134e79a0f1147c1be9b8e62248b43058177aad27f099e566320c83",
+      "badge_sha256": "a2d9a3e3887b3c6ea9f640957f4a92f7b61fe535d3b88e499f28aad0e1e9ad8f"
+    },
+    {
+      "title": "St. Patrick's Day",
+      "rarity": "RARE",
+      "condition": "Play a match on St. Patrick's Day (March 17)",
+      "group": "season",
+      "origins": [
+        "repository"
+      ],
+      "slug": "st-patrick-s-day",
+      "file": "assets/st-patrick-s-day.png",
+      "concept": "A perforated pickleball nestled in a large emerald four-leaf clover, a small gold horseshoe and a festive paddle, friendly coastal Irish celebration; no lettering or numerals.",
+      "badge_file": "badges/st-patrick-s-day.png",
+      "original_file": "originals/st-patrick-s-day.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "9499f266c022e9fab6833ca7ee116f60e40a1d94bbbdbdaa506eff9da87a296b",
+      "badge_sha256": "782c26664a21947808c11a44f9382a76843fcc4fdc0bd567f9958d96d0438b9f"
+    },
+    {
+      "title": "Court Sovereign",
+      "rarity": "LEGENDARY",
+      "condition": "Finish #1 among the players you faced this season (min 6-player group)",
+      "group": "season",
+      "origins": [
+        "repository"
+      ],
+      "slug": "court-sovereign",
+      "file": "assets/court-sovereign.png",
+      "concept": "A majestic gold crown hovering over a complete miniature pickleball court, with a royal paddle and perforated ball at the center and two graceful palm-like laurels.",
+      "badge_file": "badges/court-sovereign.png",
+      "original_file": "originals/court-sovereign.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "8f9d57cba1e0d3a16ed63748bcb36679997aa73079fb15cc88640a75e7f8e6ed",
+      "badge_sha256": "48bc871de988663269cc04699114341959975a9043d2fee003e60e35a967c986"
+    },
+    {
+      "title": "Podium Finish",
+      "rarity": "EPIC",
+      "condition": "Finish #2 or #3 among the players you faced this season (min 6-player group)",
+      "group": "season",
+      "origins": [
+        "repository"
+      ],
+      "slug": "podium-finish",
+      "file": "assets/podium-finish.png",
+      "concept": "A friendly local-court podium showing the silver and bronze steps together, two paddles raised in celebration and a perforated ball; no numeral labels.",
+      "badge_file": "badges/podium-finish.png",
+      "original_file": "originals/podium-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "7bc0652f77528e9491c92325122ec2e6a6acc034374ceb99806c17146be84830",
+      "badge_sha256": "ea45ca0f1eb2f7cb1acc186271ee8d8ed37f7b24edbb243c2fc3502393444028"
+    },
+    {
+      "title": "Last but not Least",
+      "rarity": "LEGENDARY",
+      "condition": "Finish last overall in the season",
+      "group": "season",
+      "origins": [
+        "repository"
+      ],
+      "slug": "last-but-not-least",
+      "file": "assets/last-but-not-least.png",
+      "concept": "A beautifully polished wooden spoon held proudly beside a perforated pickleball and a small festive rosette; an affectionate consolatory award, with triumphant warm lighting and no mockery.",
+      "badge_file": "badges/last-but-not-least.png",
+      "original_file": "originals/last-but-not-least.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "4f37d34e1220594b75eff802db6fe8c359eb060a47c5f38ed39ba7d65cdce2a7",
+      "badge_sha256": "83d97dc381fb8801d5bf6e2e20fcaa0b3b5ceda184b38dfdff4f54f49974a689"
+    },
+    {
+      "title": "You got Pickled",
+      "rarity": "RARE",
+      "condition": "Finish last among the players you faced this season (min 6-player group)",
+      "group": "season",
+      "origins": [
+        "repository"
+      ],
+      "slug": "you-got-pickled",
+      "file": "assets/you-got-pickled.png",
+      "concept": "A cheerful pickleball peeking out of a pickle jar, a paddle resting against the jar and a small playful consolation rosette; friendly humor and resilience.",
+      "badge_file": "badges/you-got-pickled.png",
+      "original_file": "originals/you-got-pickled.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "f66f167809fdb7612e57ceecac0c2e29947850f910775f10f612fff6623779c5",
+      "badge_sha256": "cdeb520cc75a09f29d2899a173f99f3ad318a7691f81cff461e84ceb11c56225"
+    },
+    {
+      "title": "Upper Division Finish",
+      "rarity": "UNCOMMON",
+      "condition": "Finish the season in Upper Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "upper-division-finish",
+      "file": "assets/upper-division-finish.png",
+      "concept": "A pair of stepped platforms ascending toward a sunrise, an upright paddle on the higher step and a perforated ball, optimistic upward-flight motif.",
+      "badge_file": "badges/upper-division-finish.png",
+      "original_file": "originals/upper-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "d64ea1f79a7688d36add42c760d6e70bf39aeb1261221d41ccafd3a34ba14dcb",
+      "badge_sha256": "d8b03cd96ddccf54f29a2ff2970e2598e797fef178c19a945540ef1e42b90095"
+    },
+    {
+      "title": "Lower Division Finish",
+      "rarity": "COMMON",
+      "condition": "Finish the season in Lower Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "lower-division-finish",
+      "file": "assets/lower-division-finish.png",
+      "concept": "A sturdy welcoming basecamp court platform with two paddles, a perforated ball and grounded bronze support blocks, proud reliable foundation.",
+      "badge_file": "badges/lower-division-finish.png",
+      "original_file": "originals/lower-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "8adba89671ef243d5ca53d1374ab1b0940d9cf814d9ffd7ddb4da361e5bd76c7",
+      "badge_sha256": "7862c619a185d60596fe4925f663492e3e8f2aaa2e3119efb254c0797624e7ab"
+    },
+    {
+      "title": "Premier Division Finish",
+      "rarity": "RARE",
+      "condition": "Finish the season in Premier Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "premier-division-finish",
+      "file": "assets/premier-division-finish.png",
+      "concept": "A polished star-shaped silver court crest with a single upright paddle and a perforated ball, refined premier-tier spotlight.",
+      "badge_file": "badges/premier-division-finish.png",
+      "original_file": "originals/premier-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "2a16004fc0f756f0a51cc0d82928f8c508d5796ccbf710966cb2cd9d949d5a2b",
+      "badge_sha256": "5993ca212a5c5759e5d9da66f282efc3cfc570955dc236b42abf921af6641a65"
+    },
+    {
+      "title": "Select Division Finish",
+      "rarity": "UNCOMMON",
+      "condition": "Finish the season in Select Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "select-division-finish",
+      "file": "assets/select-division-finish.png",
+      "concept": "A precise faceted selection diamond cradling a pickleball paddle, a perforated ball and a small checkmark, elegant geometric symmetry.",
+      "badge_file": "badges/select-division-finish.png",
+      "original_file": "originals/select-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "7ae986c21c29f0dbbcedb4eaf6c11c0a20d1f7f591054c68357748d8a2db1c42",
+      "badge_sha256": "5d9ab294190710e514f383bd5cffd6ab5a8414792b21da09c50a4c4c6901f83d"
+    },
+    {
+      "title": "Club Division Finish",
+      "rarity": "COMMON",
+      "condition": "Finish the season in Club Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "club-division-finish",
+      "file": "assets/club-division-finish.png",
+      "concept": "Two friendly crossed pickleball paddles beneath a welcoming small clubhouse roof, one perforated ball and simple club pennant without lettering.",
+      "badge_file": "badges/club-division-finish.png",
+      "original_file": "originals/club-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "b28a421c8b3c07c0ef628f86738e53e599681d7ff7d8a608b001a32330acaf17",
+      "badge_sha256": "f4709d97adb2c7ff80ebda5bebb178a9af7712931846821921c996cee13be592"
+    },
+    {
+      "title": "Champion Division Finish",
+      "rarity": "EPIC",
+      "condition": "Finish the season in Champion Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "champion-division-finish",
+      "file": "assets/champion-division-finish.png",
+      "concept": "A distinguished trophy cup on a four-step miniature platform with a broad bright crown above and a paddle-and-ball pair at its base.",
+      "badge_file": "badges/champion-division-finish.png",
+      "original_file": "originals/champion-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "4b39cd89c2b0490280c3f1e00937a0fa763300b82960dab2a9cc3563fbe6ef0b",
+      "badge_sha256": "0414e68d9557c5b88eb3d87ea43e998ca1110f39d81f60fa8a4d903197b0128e"
+    },
+    {
+      "title": "Master Division Finish",
+      "rarity": "RARE",
+      "condition": "Finish the season in Master Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "master-division-finish",
+      "file": "assets/master-division-finish.png",
+      "concept": "A carefully balanced ornate paddle and ball above a polished medallion with a small compass-star motif, skilled and composed.",
+      "badge_file": "badges/master-division-finish.png",
+      "original_file": "originals/master-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "7a76895eda431e0c0f03957c92ae4248ced1bccf547899fd56d48099687f982b",
+      "badge_sha256": "e24dafb230b1e9d3d1dd117016d6f8046e44ee9659f6eb8fe4a28f0e932f6519"
+    },
+    {
+      "title": "Contender Division Finish",
+      "rarity": "UNCOMMON",
+      "condition": "Finish the season in Contender Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "contender-division-finish",
+      "file": "assets/contender-division-finish.png",
+      "concept": "An upright pickleball paddle rising through a gentle swooping upward path, a perforated ball and three small rising stars.",
+      "badge_file": "badges/contender-division-finish.png",
+      "original_file": "originals/contender-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "a5e3a845369e24e8b3d7a6fb6454a7ff1db6160c38648c5ae067a2e7f7f967f0",
+      "badge_sha256": "bd5fc95e00bde3966f96d829243fe5d6dc1fa37fe709a018b3d7abffdd1f232c"
+    },
+    {
+      "title": "Challenger Division Finish",
+      "rarity": "COMMON",
+      "condition": "Finish the season in Challenger Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "challenger-division-finish",
+      "file": "assets/challenger-division-finish.png",
+      "concept": "A determined paddle at the beginning of a clear ascending stepped court path, a perforated ball leading the way and a small sunrise.",
+      "badge_file": "badges/challenger-division-finish.png",
+      "original_file": "originals/challenger-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "67f431893eb4cdfa17de7e818e6100acfd1cf65a56037e58a88b473bcb0e5b1f",
+      "badge_sha256": "b599a1fe8e62063919e8b03634b9778a7fc434968a27de658ba86a5413f0cade"
+    },
+    {
+      "title": "Diamond Division Finish",
+      "rarity": "EPIC",
+      "condition": "Finish the season in Diamond Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "diamond-division-finish",
+      "file": "assets/diamond-division-finish.png",
+      "concept": "One large precision-cut violet diamond above a small pickleball court grid, a paddle and perforated ball below, restrained prismatic light.",
+      "badge_file": "badges/diamond-division-finish.png",
+      "original_file": "originals/diamond-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "bc8326686d929c3f17259b0118f770c163143ddf519311368caf21a2059f8de5",
+      "badge_sha256": "d8080aca0140514e07a0497aa727d2e28e2c33f54365db652b6bf2fbcefdd76b"
+    },
+    {
+      "title": "Platinum Division Finish",
+      "rarity": "RARE",
+      "condition": "Finish the season in Platinum Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "platinum-division-finish",
+      "file": "assets/platinum-division-finish.png",
+      "concept": "A broad polished platinum ingot with a sunburst engraving behind a pickleball paddle and perforated ball, cool luminous highlights.",
+      "badge_file": "badges/platinum-division-finish.png",
+      "original_file": "originals/platinum-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "307677de68bdf0cffe83b52c0df6e27c759641e6df80df0ddcc6377ee41ac5ca",
+      "badge_sha256": "8a91a3491bd0c9318129ee5ca74a348be4f06b1145494127065a1b6f06e0d16f"
+    },
+    {
+      "title": "Gold Division Finish",
+      "rarity": "UNCOMMON",
+      "condition": "Finish the season in Gold Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "gold-division-finish",
+      "file": "assets/gold-division-finish.png",
+      "concept": "A warm gold medal suspended by a simple ribbon above a paddle and perforated ball, soft sunburst engraving on the medal with no text.",
+      "badge_file": "badges/gold-division-finish.png",
+      "original_file": "originals/gold-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "b58dbb5f2e0559fac3fbb6fa7fdf769feee64df1ee505a89e30c9ef64687f4c3",
+      "badge_sha256": "bd6cf3ac4c5255e5331f50231e28e96d8a720395e0d23879da67fc9cfd3e8b67"
+    },
+    {
+      "title": "Silver Division Finish",
+      "rarity": "UNCOMMON",
+      "condition": "Finish the season in Silver Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "silver-division-finish",
+      "file": "assets/silver-division-finish.png",
+      "concept": "A bright silver medal with a simple wave engraving beside a paddle and perforated ball, balanced cool highlights and welcoming light.",
+      "badge_file": "badges/silver-division-finish.png",
+      "original_file": "originals/silver-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "3b9d2b6382529fdc5f6d03ff7223af883323be3d2a633b8bce8967912f2b5294",
+      "badge_sha256": "50153d70fed24a67c786ea2dd76ede911dcd55cb5580348cd1993a8d42095a73"
+    },
+    {
+      "title": "Bronze Division Finish",
+      "rarity": "COMMON",
+      "condition": "Finish the season in Bronze Division",
+      "group": "division",
+      "origins": [
+        "repository"
+      ],
+      "slug": "bronze-division-finish",
+      "file": "assets/bronze-division-finish.png",
+      "concept": "A durable bronze medal with a small palm-leaf engraving beside a paddle and perforated ball, earthy warm reliable finish.",
+      "badge_file": "badges/bronze-division-finish.png",
+      "original_file": "originals/bronze-division-finish.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "ad0503d06a3c7f254a4f2f24a9f014f18d18da26c54f6c6a536580a4a6ade8ee",
+      "badge_sha256": "351bce7a48d8dd4830231bd60bcf4e29139c5de1745292157a4e16aef1f18392"
+    },
+    {
+      "title": "Please, Make Yourselves at Home",
+      "rarity": "COMMON",
+      "condition": "Lose with a partner against two guest opponents.",
+      "group": "season",
+      "origins": [
+        "production",
+        "production",
+        "production",
+        "production",
+        "production",
+        "production",
+        "production",
+        "production"
+      ],
+      "slug": "please-make-yourselves-at-home",
+      "file": "assets/please-make-yourselves-at-home.png",
+      "concept": "Two home pickleball partners in the foreground with paddles lowered, sharing a rueful but friendly smile after a loss. Across the net two visiting opponents celebrate a friendly paddle high-five, with their guest sports bag beside the court gate. Exactly four adults, sunny court, warm good-natured hospitality, no shame or mockery; central home pair large and readable.",
+      "badge_file": "badges/please-make-yourselves-at-home.png",
+      "original_file": "originals/please-make-yourselves-at-home.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "2d562cacd0d5faf8ca3eae125f7fae1505ea96309535aef81289ce29fd81d823",
+      "badge_sha256": "e0cb4b0ff79d3adf2d239a7ebd00698689abcfb3053e261824d2cbb6a4f90b41"
+    },
+    {
+      "title": "Lucky Charm",
+      "rarity": "EPIC",
+      "condition": "",
+      "group": "season",
+      "origins": [
+        "production"
+      ],
+      "slug": "lucky-charm",
+      "file": "assets/lucky-charm.png",
+      "concept": "Preserve the existing distinctive Lucky Charm holiday artwork, used for both main art and profile badge.",
+      "preserve_existing": true,
+      "badge_file": "badges/lucky-charm.png",
+      "original_file": "originals/lucky-charm.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "ff4377c2eaa9041b6112835442bf353252356af3c0046249de0afed23715b679",
+      "badge_sha256": "df27d3b7b7e2e8f8716444808ba3a4ff5363126b7fcf8d575a1b51eecadce5bc"
+    },
+    {
+      "title": "Round Robin Champion",
+      "rarity": "RARE",
+      "condition": "Finish first by wins, then points for, with at least 4 players.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "round-robin-champion",
+      "file": "assets/round-robin-champion.png",
+      "concept": "A bright individual gold victory rosette with a tiny crown, a paddle and perforated ball, encircled by one smooth rotation arrow; smaller casual-session celebration, no text.",
+      "badge_file": "badges/round-robin-champion.png",
+      "original_file": "originals/round-robin-champion.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "a98d647f0ebe1e9d7b94a4e54b60465fc988ee10d9451cea06ca0220a00e178f",
+      "badge_sha256": "971da55fdc0006653737657b6bb97de76f768cab08a3ad2dad9cb8b30c1f931c"
+    },
+    {
+      "title": "Round Robin Runner-Up",
+      "rarity": "UNCOMMON",
+      "condition": "Finish second by wins, then points for, with at least 4 players.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "round-robin-runner-up",
+      "file": "assets/round-robin-runner-up.png",
+      "concept": "A silver second-place rosette with one numeral 2, a paddle and perforated ball, encircled by a gentle rotation arrow. Only text: 2.",
+      "badge_file": "badges/round-robin-runner-up.png",
+      "original_file": "originals/round-robin-runner-up.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "d0065e93ac985b876b51e266e25bc297b8a8393af1636e6d04306160392d7618",
+      "badge_sha256": "4577a2435aefbb7a5f59ef08c9eae1c4aa58d20e14463433bccc3fb3f31f678a"
+    },
+    {
+      "title": "Wooden Spoon",
+      "rarity": "COMMON",
+      "condition": "Finish last in a round robin with at least 3 competing players or teams.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "wooden-spoon",
+      "file": "assets/wooden-spoon.png",
+      "concept": "One cheerful polished wooden spoon cradling a perforated pickleball, with a small playful ribbon bow and two tiny confetti stars; warmhearted, no lettering.",
+      "badge_file": "badges/wooden-spoon.png",
+      "original_file": "originals/wooden-spoon.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "e138faddf8364b7f22d9f38dddbf88694221011d51c579a0e021daddea2093ce",
+      "badge_sha256": "bab05ffa84e6740737b7162cf34548ac54605286fc829a5c7b94530afa61dca4"
+    },
+    {
+      "title": "Mix Master",
+      "rarity": "RARE",
+      "condition": "Win with 4 different partners in one rotating-partner round robin.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "mix-master",
+      "file": "assets/mix-master.png",
+      "concept": "Four distinct colorful pickleball paddles fanning outward like a hand of cards around one central perforated ball, with friendly sweeping arrows showing varied partners.",
+      "badge_file": "badges/mix-master.png",
+      "original_file": "originals/mix-master.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "100fd5bf76bb4187d62d9e7e465ec6c869ec9ec67071810dda55a8736eab14cc",
+      "badge_sha256": "7462155bfc22f2511a3e008613524226cb5eb42e581c130f7303a7acce4429f3"
+    },
+    {
+      "title": "Court Captain",
+      "rarity": "UNCOMMON",
+      "condition": "Organize a round robin with at least 4 confirmed games and 4 players.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "court-captain",
+      "file": "assets/court-captain.png",
+      "concept": "A large organizer clipboard with a simple four-court matchup diagram, a small captain star on its clip, one paddle and a perforated ball; no lettering or numbers.",
+      "badge_file": "badges/court-captain.png",
+      "original_file": "originals/court-captain.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "b0c39dd1e2017e8cecc8cb012e2564085c2c52eba6648f8596036bb061c38340",
+      "badge_sha256": "0a8b487be487e1e542d3c1f94aeb153869dca7150626edf3ec7ecd438b9a5660"
+    },
+    {
+      "title": "Court Time",
+      "rarity": "COMMON",
+      "condition": "Play 3 confirmed games in one round robin.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "court-time",
+      "file": "assets/court-time.png",
+      "concept": "A friendly analog clock with paddle-shaped hands beside a pair of well-used pickleball shoes and a perforated ball on court; clear time spent playing, no written numbers.",
+      "badge_file": "badges/court-time.png",
+      "original_file": "originals/court-time.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "d78b013ba6eacbd16bb2a656122dc03fc1445a00b914c1c88bc1ebc5eb159e8c",
+      "badge_sha256": "9726be0bdaf24e6a93f8aed77bd5c3ec9a34e09c307b3e97b32713eb3e962188"
+    },
+    {
+      "title": "Close Call",
+      "rarity": "COMMON",
+      "condition": "Win a game by exactly 2 points in a round robin.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "close-call",
+      "file": "assets/close-call.png",
+      "concept": "A perforated pickleball just clearing the top tape of a net by a tiny gap, flanked by two opposing paddle tips and two bright sparks; a close, fair point.",
+      "badge_file": "badges/close-call.png",
+      "original_file": "originals/close-call.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "9aa9329fc4cdbdb4b3a671b50d28f7674de162dad58bf2058de32b8e743bb6e5",
+      "badge_sha256": "f353e830c077bd01966ee1eed8710f4764b316739337ff2d8b7cd44049f30852"
+    },
+    {
+      "title": "Winning Pair",
+      "rarity": "COMMON",
+      "condition": "Win twice with the same partner in one round robin.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "winning-pair",
+      "file": "assets/winning-pair.png",
+      "concept": "Two complementary pickleball paddles leaning together like a high five over two bright victory stars, one perforated ball at their base.",
+      "badge_file": "badges/winning-pair.png",
+      "original_file": "originals/winning-pair.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "aef91b1a707f5a2bc5a57f47591d230b4fa28085a55277aab19518d8dbf0b3e0",
+      "badge_sha256": "9cf943dcb02b51a7f0ca7d9aab198d4dfa61d0c6d264605f433a84d5606ad720"
+    },
+    {
+      "title": "Back in It",
+      "rarity": "UNCOMMON",
+      "condition": "Win after 2 consecutive losses in a round robin.",
+      "group": "round-robin",
+      "origins": [
+        "round-robin draft"
+      ],
+      "slug": "back-in-it",
+      "file": "assets/back-in-it.png",
+      "concept": "A perforated pickleball bouncing up a clear curved comeback path past two subdued small cloud marks into one bright winning star, with an uplifted paddle alongside.",
+      "badge_file": "badges/back-in-it.png",
+      "original_file": "originals/back-in-it.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "53a0d199da3c43a214c16c0293dae9fddde95defba38c8847abcfcdda9cd496a",
+      "badge_sha256": "d97cba7e643cc8485e5e30683e273d50827f07dcccae290c14758b12a3ba86f9"
+    },
+    {
+      "title": "Pat gets off the couch",
+      "rarity": "COMMON",
+      "condition": "Story mode tracker",
+      "group": "story",
+      "origins": [
+        "story mode"
+      ],
+      "story_key": "main_off_couch",
+      "slug": "pat-gets-off-the-couch",
+      "file": "assets/pat-gets-off-the-couch.png",
+      "concept": "One friendly gender-neutral adult with short brown hair getting up from a small cozy couch and reaching eagerly for a pickleball paddle; a perforated ball waiting by the shoes.",
+      "badge_file": "badges/pat-gets-off-the-couch.png",
+      "original_file": "originals/pat-gets-off-the-couch.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "bc4e71f9815f4bfd47a566e14d93107e605c216b74c2cf914fbf8dd0723d59d5",
+      "badge_sha256": "84fb1395b8a108e178821a5b664a6460ccafa811e7a8718e2b8e7b2aa235b8c2"
+    },
+    {
+      "title": "Pat gets geared up",
+      "rarity": "UNCOMMON",
+      "condition": "Story mode tracker",
+      "group": "story",
+      "origins": [
+        "story mode"
+      ],
+      "story_key": "main_gear_up",
+      "slug": "pat-gets-geared-up",
+      "file": "assets/pat-gets-geared-up.png",
+      "concept": "A neatly packed pickleball kit: two athletic shoes, a folded towel, water bottle, paddle and one perforated ball arranged in a simple ready-to-go composition.",
+      "badge_file": "badges/pat-gets-geared-up.png",
+      "original_file": "originals/pat-gets-geared-up.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "e22d41287ca2ec5ff89fb7f60bfd96a5d41150db0af4714be6cc027f83e03354",
+      "badge_sha256": "0a38700b57fdde8e141a26dadff8a10889fabef0d61e1364afb1021a36a202fa"
+    },
+    {
+      "title": "Pat finds the essentials",
+      "rarity": "UNCOMMON",
+      "condition": "Story mode tracker",
+      "group": "story",
+      "origins": [
+        "story mode"
+      ],
+      "story_key": "main_find_essentials",
+      "slug": "pat-finds-the-essentials",
+      "file": "assets/pat-finds-the-essentials.png",
+      "concept": "A friendly adult with short brown hair checking a court bag containing keys, a water bottle and a pickleball paddle, with a small perforated ball perched at the opening.",
+      "badge_file": "badges/pat-finds-the-essentials.png",
+      "original_file": "originals/pat-finds-the-essentials.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "e12112c061f89c5e7b53d5aae620030068347bcc5b294266bc4b5c420871845a",
+      "badge_sha256": "07f05b3d0c294d9379408ac381f5e2a92fc43d8613c34f8e54629024b98bb18c"
+    },
+    {
+      "title": "Pat finds the game",
+      "rarity": "RARE",
+      "condition": "Story mode tracker",
+      "group": "story",
+      "origins": [
+        "story mode"
+      ],
+      "story_key": "main_find_game",
+      "slug": "pat-finds-the-game",
+      "file": "assets/pat-finds-the-game.png",
+      "concept": "A friendly adult with short brown hair entering an open pickleball gate toward two welcoming players on a sunny court, paddle raised in greeting.",
+      "badge_file": "badges/pat-finds-the-game.png",
+      "original_file": "originals/pat-finds-the-game.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "a6d9e2ab6bc81f1d5e9b4e538d051610ab3fa03c8a37c35b074f2c446d83dbce",
+      "badge_sha256": "da8046268d4609634cfa5d65b86c3def3537823cd74d70ca80184b9f81b2ab02"
+    },
+    {
+      "title": "Pat makes it home",
+      "rarity": "EPIC",
+      "condition": "Story mode tracker",
+      "group": "story",
+      "origins": [
+        "story mode"
+      ],
+      "story_key": "main_home_again",
+      "slug": "pat-makes-it-home",
+      "file": "assets/pat-makes-it-home.png",
+      "concept": "A friendly tired-but-happy adult with short brown hair arriving at a cozy front door at sunset, pickleball paddle in hand and a warm glowing porch light above.",
+      "badge_file": "badges/pat-makes-it-home.png",
+      "original_file": "originals/pat-makes-it-home.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "99e790582407f72ed4bea5446d5771715634c9d4747d400e852fcad6387a8456",
+      "badge_sha256": "a5c06b81f2e034ea953862e092a88c1c89308b50bd2b519338df23594f08823b"
+    },
+    {
+      "title": "Pat's Laundry",
+      "rarity": "COMMON",
+      "condition": "Story mode tracker",
+      "group": "story",
+      "origins": [
+        "story mode"
+      ],
+      "story_key": "side_laundry",
+      "slug": "pat-s-laundry",
+      "file": "assets/pat-s-laundry.png",
+      "concept": "A laundry basket filled with colorful court shirts, a clean towel draped over the edge and a small pickleball paddle leaning beside it, with one cheerful soap bubble.",
+      "badge_file": "badges/pat-s-laundry.png",
+      "original_file": "originals/pat-s-laundry.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "b955045b1304397fff08f99029b44c07535f8c29620aa70357b9d33b15b01342",
+      "badge_sha256": "d4cfef1e169dfd0bbec56a9407bd4fbde0f76561bed65149585ac89597f625b2"
+    },
+    {
+      "title": "Pat's Keys",
+      "rarity": "UNCOMMON",
+      "condition": "Story mode tracker",
+      "group": "story",
+      "origins": [
+        "story mode"
+      ],
+      "story_key": "side_keys",
+      "slug": "pat-s-keys",
+      "file": "assets/pat-s-keys.png",
+      "concept": "A shiny ring of house keys with a tiny paddle-shaped keychain and a perforated pickleball charm, sparkling clearly against a simple court-colored interior.",
+      "badge_file": "badges/pat-s-keys.png",
+      "original_file": "originals/pat-s-keys.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "c57d3c0c1159f4966023cad0a29021da4bb5efd04478bbeb75b9a3bb17266c42",
+      "badge_sha256": "671dfb583278fafad439e1cda9c2f3d98d2170fd8cc6d673ab8ea3e5847cd08b"
+    },
+    {
+      "title": "Pat's Snack Bag",
+      "rarity": "COMMON",
+      "condition": "Story mode tracker",
+      "group": "story",
+      "origins": [
+        "story mode"
+      ],
+      "story_key": "side_snacks",
+      "slug": "pat-s-snack-bag",
+      "file": "assets/pat-s-snack-bag.png",
+      "concept": "An open friendly sports snack bag with a banana, orange slices, a granola bar and water bottle, with a tiny pickleball and paddle charm attached.",
+      "badge_file": "badges/pat-s-snack-bag.png",
+      "original_file": "originals/pat-s-snack-bag.png",
+      "width": 512,
+      "badge_width": 128,
+      "sha256": "cabc35e9ae266da8f3f9da7db4aa59aec600874550eeecbf962b454047d37ff1",
+      "badge_sha256": "ce782a9fa555d05301f576357407338d11f6ef6e9cccd801d5be4a8be0a5c12c"
+    }
+  ]
+}

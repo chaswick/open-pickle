@@ -11,6 +11,10 @@ import org.springframework.data.repository.query.Param;
 
 public interface TrophyRepository extends JpaRepository<Trophy, Long> {
 
+  @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+  @Query("select t from Trophy t where t.id = :id")
+  Optional<Trophy> lockById(@Param("id") Long id);
+
   boolean existsBySeason(LadderSeason season);
 
   long countBySeason(LadderSeason season);

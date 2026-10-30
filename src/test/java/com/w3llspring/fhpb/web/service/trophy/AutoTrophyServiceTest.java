@@ -149,15 +149,24 @@ class AutoTrophyServiceTest {
   }
 
   @Test
-  void generateSeasonTrophies_storySeasonSkipsDefaultTemplateGeneration() {
+  void generateSeasonTrophies_storySeasonGeneratesOnlyOptedInRoundRobinTemplates() {
     LadderSeason season = seasonWithId(31L, LocalDate.of(2026, 3, 1));
     season.setStoryModeEnabled(true);
+    TrophyCatalogEntry regular = defaultTemplate("Regular", "matches_played >= 1", "regular", 0);
+    TrophyCatalogEntry roundRobin =
+        defaultTemplate("Round robin", "matches_played >= 1", "round-robin", 1);
+    roundRobin.setRoundRobinTrophy(true);
+    when(trophyCatalogEntryRepository
+            .findByDefaultTemplateTrueAndSeasonIsNullOrderByDisplayOrderAscIdAsc())
+        .thenReturn(List.of(regular, roundRobin));
 
     service.generateSeasonTrophies(season);
 
-    verify(trophyCatalogEntryRepository, never())
-        .findByDefaultTemplateTrueAndSeasonIsNullOrderByDisplayOrderAscIdAsc();
-    verify(trophyRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
+    ArgumentCaptor<List<Trophy>> captured = ArgumentCaptor.forClass(List.class);
+    verify(trophyRepository).saveAll(captured.capture());
+    assertThat(captured.getValue()).hasSize(1);
+    assertThat(captured.getValue().getFirst().getTitle()).isEqualTo("Round robin");
+    assertThat(captured.getValue().getFirst().isRoundRobinTrophy()).isTrue();
     assertThat(storyModeService.ensured).containsExactly(season);
   }
 

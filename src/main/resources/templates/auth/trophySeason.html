@@ -81,6 +81,7 @@
 
                               <div class="mt-auto trophy-meta-badges text-center">
                                   <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center text-center">
+                                      <span class="badge bg-primary text-white" th:if="${trophy.roundRobinTrophy}">Round robin</span>
                                       <span class="badge badge-limited" th:if="${trophy.limited}"
                                           th:text="${seasonCatalog.currentSeason ? (trophy.maxClaims != null ? 'Limited: ' + trophy.maxClaims + ' minted' : 'Limited edition') : 'Limited'}"></span>
                                       <span class="badge bg-secondary text-white" th:if="${trophy.repeatable}">Repeatable</span>

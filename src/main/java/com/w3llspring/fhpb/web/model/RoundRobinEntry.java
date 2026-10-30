@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "round_robin_entry")
+@EntityListeners(com.w3llspring.fhpb.web.service.trophy.RoundRobinTrophyResultListener.class)
 public class RoundRobinEntry {
 
   @Id

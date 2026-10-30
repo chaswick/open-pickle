@@ -76,6 +76,18 @@ public class Trophy {
   @Column(name = "is_repeatable")
   private boolean repeatable;
 
+  @Column(name = "is_round_robin_trophy", nullable = false)
+  @org.hibernate.annotations.ColumnDefault("false")
+  private boolean roundRobinTrophy;
+
+  public boolean isRoundRobinTrophy() {
+    return roundRobinTrophy;
+  }
+
+  public void setRoundRobinTrophy(boolean value) {
+    roundRobinTrophy = value;
+  }
+
   @Enumerated(EnumType.STRING)
   @Column(name = "evaluation_scope", nullable = false, length = 24)
   private TrophyEvaluationScope evaluationScope;

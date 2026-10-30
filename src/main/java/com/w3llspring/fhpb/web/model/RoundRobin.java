@@ -5,7 +5,31 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "round_robin")
+@EntityListeners(com.w3llspring.fhpb.web.service.trophy.RoundRobinTrophyResultListener.class)
 public class RoundRobin {
+
+  @Column(name = "trophies_processed", nullable = false)
+  @org.hibernate.annotations.ColumnDefault("false")
+  private boolean trophiesProcessed;
+
+  @Column(name = "trophies_processed_at")
+  private Instant trophiesProcessedAt;
+
+  public boolean isTrophiesProcessed() {
+    return trophiesProcessed;
+  }
+
+  public void setTrophiesProcessed(boolean value) {
+    trophiesProcessed = value;
+  }
+
+  public Instant getTrophiesProcessedAt() {
+    return trophiesProcessedAt;
+  }
+
+  public void setTrophiesProcessedAt(Instant value) {
+    trophiesProcessedAt = value;
+  }
 
   public enum Format {
     ROTATING_PARTNERS,

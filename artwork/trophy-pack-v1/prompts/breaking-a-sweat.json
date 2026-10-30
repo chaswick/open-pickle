@@ -1,0 +1,9 @@
+{
+  "slug": "breaking-a-sweat",
+  "prompt": "Use case: stylized-concept. Asset type: one production-ready pickleball achievement badge PNG for a friendly casual score-tracking app. This is the COMMON rarity master artwork for a complete coordinated trophy collection. Input image 1 is a reference for the existing warm coastal illustrated style; input image 2 references the substantial shield construction. Create a NEW individual trophy illustration, not a sheet or mockup. Trophy: Breaking a Sweat, earned for playing three games. Subject: one friendly adult pickleball player with a paddle tucked under an arm, wiping their forehead with a small towel; one clearly perforated pickleball and a minimal sunny outdoor court behind the player. Style: polished hand-painted collectible sports emblem, expressive clear shapes, restrained detail, clean silhouette, welcoming and playful rather than aggressive. Frame: symmetrical rounded shield with gently curved top corners and a centered bottom point; warm matte bronze edging and a thin braided sand-gold rope inset; small fixed round bronze pickleball seal centered on the bottom rim. Frame stays entirely within the image, occupying about 88 percent of a square canvas, consistent 6 percent transparent margin on every side. Interior: warm cream, lime and sunrise orange, soft coastal daylight, painted enamel texture. The central illustration must remain readable at 64-pixel badge size. True transparent background OUTSIDE the complete shield; opaque illustrated interior. No written title, no letters, no numbers, no ribbon with lettering, no watermark, no extra badges, no full-bleed scenery.",
+  "mode": "built-in image_gen",
+  "references": [
+    "references/common-original.png",
+    "references/uncommon-original.png"
+  ]
+}
