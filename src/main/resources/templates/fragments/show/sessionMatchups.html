@@ -25,12 +25,9 @@
       </ul>
     </section>
     <section class="matchups-panel" th:if="${board.id == null}">
-      <div class="matchups-eyebrow">Gather your players</div>
-      <h2>Your group, ready to play</h2>
-      <p>Everyone who joins before you start is included in the matchups.</p>
-      <p th:if="${board.organizerScored}" class="matchups-note" data-organizer-scoring-notice><strong>Organizer records scores.</strong> Results are confirmed automatically. You can review your games here without confirming each score.</p>
+      <p th:if="${board.organizerScored}" class="matchups-note" data-organizer-scoring-notice><strong>Organizer records scores.</strong> Results are confirmed automatically.</p>
       <a th:if="${param.prepareMatchups != null}" th:href="@{/groups/{id}(id=${ladder.id})} + '#matchups'" class="small">Back to saved matchups</a>
-      <div class="matchups-roster-heading"><h3>Players <span class="matchups-count" th:text="${#lists.size(board.members)}">4</span></h3>
+      <div class="matchups-roster-heading"><h2>Players <span class="matchups-count" th:text="${#lists.size(board.members)}">4</span></h2>
         <a th:if="${board.host}" href="#session-invite-panel" class="btn btn-outline-primary btn-sm" data-open-session-invite>Invite friends</a></div>
       <ul class="matchups-player-chips" aria-label="Players included in matchups">
         <li th:each="player : ${board.members}" th:text="${player.name}">Player</li>

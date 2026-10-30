@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 public class LadderConfigService {
 
   public static final int MAX_SESSION_ADVANCE_DAYS = 90;
+  private static final int MIN_SCHEDULED_SESSION_HOURS = 48;
 
   public static ZoneId sessionZone(User owner) {
     try {
@@ -336,7 +337,10 @@ public class LadderConfigService {
         scheduledDate == null ? now : scheduledDate.atStartOfDay(zone).toInstant();
     cfg.setSessionScheduledAt(scheduledDate == null ? null : windowStart);
     cfg.setSessionTimeZone(scheduledDate == null ? null : zone.getId());
-    cfg.setExpiresAt(windowStart.plusSeconds(Math.max(1, defaultSessionLifetimeHours) * 3600L));
+    int lifetimeHours =
+        Math.max(
+            scheduledDate == null ? 1 : MIN_SCHEDULED_SESSION_HOURS, defaultSessionLifetimeHours);
+    cfg.setExpiresAt(windowStart.plusSeconds(lifetimeHours * 3600L));
     LadderConfig savedCfg = configs.save(cfg);
 
     LadderMembership ownerMembership = new LadderMembership();

@@ -699,13 +699,12 @@
         <p class="app-page-subtitle mb-0" th:if="${isSessionLadder}">
           <span class="d-block" th:if="${ladder.sessionScheduledAt != null}">
             <span th:text="${ladder.sessionDateLabel}">Upcoming · Sat, Nov 7</span>
-            <small th:text="${' · ' + ladder.sessionTimeZone}"></small>
           </span>
-          <span th:if="${ladder.expiresAt != null}">
+          <span class="d-block" th:if="${!ladder.upcomingSession and ladder.expiresAt != null}">
             Expires
             <span th:text="${@fhpbTime.pattern(ladder.expiresAt, authPrincipal, sessionDateTimePattern)}">Saturday, Mar 15, 2:00 PM</span>.
           </span>
-          <span th:unless="${ladder.expiresAt != null}">Session is live now.</span>
+          <span th:if="${!ladder.upcomingSession and ladder.expiresAt == null}">Session is live now.</span>
         </p>
         <p class="app-page-subtitle" th:unless="${isSessionLadder}">
           Invite players, manage members, and adjust league settings.

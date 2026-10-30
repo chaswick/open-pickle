@@ -54,7 +54,7 @@ Home shows a visible note inside the “Let’s Pickle!” card only for a playe
 Session creation offers **Now** or **Later**. Later requires a date within the next 90 days.
 The organizer's account timezone (Eastern when unset) is saved with the session. Its planned
 boundary is the start of that date in that timezone, including daylight-saving transitions.
-Changing account timezones does not move a planned session. Existing sessions keep their current expiry.
+Changing account timezones does not move a planned session.
 
 Friends can join upcoming sessions immediately. Matchup and scheduled open-play invitations stay
 available until the session expires.
@@ -68,8 +68,12 @@ separately to current and upcoming sessions; the existing daily creation cap als
 
 At the planned local midnight the card changes from Upcoming to Today. This does not generate
 matchups or freeze the roster. Starting matchups explicitly records the actual start, including
-an early start, and gives the session its normal 48-hour playing window. An unstarted planned
-session expires 48 hours after its planned boundary; Now sessions expire 48 hours after creation.
+an early start, and gives the session its configured playing window (48 hours by default).
+An unstarted planned session gets at least 48 hours after its planned boundary, even if the
+configured playing window is shorter. Now sessions use the configured window from creation.
+Migration V60 extends shorter active, unstarted planned sessions and their pending join requests;
+it leaves started, archived, undated, and longer-lived sessions alone. Upcoming pages show the
+planned date; the expiry appears once the session is current.
 The existing cleanup job archives expired sessions and preserves recorded matches.
 
 `SessionSchedulingIntegrationTest` checks real persistence, independent current/upcoming caps,

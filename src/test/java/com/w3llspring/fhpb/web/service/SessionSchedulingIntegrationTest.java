@@ -219,6 +219,38 @@ class SessionSchedulingIntegrationTest {
   }
 
   @Test
+  void aShortLiveWindowStillLeavesTheWholePlannedDayAvailable() {
+    int originalHours =
+        (Integer)
+            org.springframework.test.util.ReflectionTestUtils.getField(
+                service, "defaultSessionLifetimeHours");
+    org.springframework.test.util.ReflectionTestUtils.setField(
+        service, "defaultSessionLifetimeHours", 8);
+    try {
+      owner.setTimeZone("America/New_York");
+      users.saveAndFlush(owner);
+      ZoneId zone = ZoneId.of(owner.getTimeZone());
+      LocalDate date =
+          LocalDate.now(zone)
+              .with(java.time.temporal.TemporalAdjusters.next(DayOfWeek.SUNDAY))
+              .plusWeeks(1);
+      LadderConfig planned = service.createSessionConfig(owner.getId(), null, season, date);
+      Instant midnight = date.atStartOfDay(zone).toInstant();
+      assertThat(planned.getSessionScheduledDate()).isEqualTo(date);
+      assertThat(planned.getExpiresAt()).isEqualTo(midnight.plus(Duration.ofHours(48)));
+      assertThat(planned.getExpiresAt()).isAfter(date.plusDays(1).atStartOfDay(zone).toInstant());
+
+      Instant before = Instant.now();
+      LadderConfig now = service.createSessionConfig(owner.getId(), null, season);
+      assertThat(now.getExpiresAt())
+          .isBetween(before.plus(Duration.ofHours(8)), Instant.now().plus(Duration.ofHours(8)));
+    } finally {
+      org.springframework.test.util.ReflectionTestUtils.setField(
+          service, "defaultSessionLifetimeHours", originalHours);
+    }
+  }
+
+  @Test
   void scheduleKeepsItsOrganizerTimezoneAndArchivesAnUnstartedExpiredSession() {
     LocalDate date = LocalDate.now(ZoneId.of(owner.getTimeZone())).plusWeeks(1);
     LadderConfig planned = service.createSessionConfig(owner.getId(), null, season, date);

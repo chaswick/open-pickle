@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -129,8 +130,11 @@ class SessionMatchupServiceTest {
     assertThat(rr.isSessionFlow()).isTrue();
   }
 
-  @Test
-  void manuallyStartingAnUpcomingSessionBeginsItsPlayingWindowWithoutChangingThePlannedDate() {
+  @ParameterizedTest
+  @ValueSource(ints = {8, 48})
+  void manuallyStartingAnUpcomingSessionBeginsItsPlayingWindowWithoutChangingThePlannedDate(
+      int liveHours) {
+    ReflectionTestUtils.setField(service, "liveSessionHours", liveHours);
     when(schedules.findBySessionConfig(session)).thenReturn(List.of());
     when(seasons.resolveActiveCompetitionSeason()).thenReturn(rr.getSeason());
     when(roundRobins.createAndStart(
@@ -145,7 +149,7 @@ class SessionMatchupServiceTest {
     service.start(7L, host, RoundRobin.Format.ROTATING_PARTNERS, 6, List.of());
     assertThat(session.getSessionStartedAt()).isBetween(before, Instant.now());
     assertThat(session.getExpiresAt())
-        .isEqualTo(session.getSessionStartedAt().plusSeconds(48 * 3600L));
+        .isEqualTo(session.getSessionStartedAt().plusSeconds(liveHours * 3600L));
     assertThat(session.getSessionScheduledAt()).isEqualTo(planned);
     assertThat(session.isUpcomingSession()).isFalse();
   }
