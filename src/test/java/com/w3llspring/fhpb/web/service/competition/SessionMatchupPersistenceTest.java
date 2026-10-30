@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.w3llspring.fhpb.web.db.*;
 import com.w3llspring.fhpb.web.model.*;
+import com.w3llspring.fhpb.web.service.SeasonStandingsRecalcQueue;
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinModificationException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -18,10 +19,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 class SessionMatchupPersistenceTest {
+  // Rating updates change match versions independently of the score-persistence checks below.
+  @MockitoBean private SeasonStandingsRecalcQueue standingsRecalcQueue;
+
   @Autowired private SessionMatchupService service;
   @Autowired private UserRepository users;
   @Autowired private LadderConfigRepository configs;
