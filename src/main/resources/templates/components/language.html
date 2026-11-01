@@ -1,0 +1,17 @@
+<section th:fragment="selector" th:if="${translationEnabled == true}"
+         class="container app-language notranslate my-3" translate="no" aria-label="Language">
+  <div class="card">
+    <div class="card-body d-flex flex-wrap align-items-center justify-content-center gap-2">
+      <label for="app-language-select" class="mb-0">
+        <i class="bi bi-translate me-1" aria-hidden="true"></i>Language
+      </label>
+      <div data-translation-widget title="Automatic translation by GTranslate">
+        <select disabled aria-label="Language" data-translation-placeholder>
+          <option>English</option>
+        </select>
+      </div>
+      <small data-translation-status class="text-muted" role="status" hidden></small>
+    </div>
+  </div>
+  <script defer th:src="@{/js/translation.js(v=${assetVersion})}"></script>
+</section>

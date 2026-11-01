@@ -88,6 +88,21 @@ and `FHPB_BOOTSTRAP_GLOBAL_LADDER_AUTO_ENROLL_NEW`, and configure
 `FHPB_BOOTSTRAP_ADMIN_EMAIL` and a strong `FHPB_BOOTSTRAP_ADMIN_PASSWORD`.
 This initializes the shared season used by sessions and enrolls new players.
 
+### Optional display translation
+
+Set `FHPB_TRANSLATION_ENABLED=true` to show a language selector on public and signed-in
+pages. It uses GTranslate's automatic page translation for Spanish, Simplified and
+Traditional Chinese, Japanese, German, Vietnamese, and French, with English as the original
+language. No translation files or voice-recording changes are required. Player names
+are excluded from translation, including names in refreshed match rows and score dialogs.
+
+This feature is off by default. Translation requires external scripts and sends page
+text to the translation provider. English remains usable if the provider is unavailable;
+English can also appear briefly before a saved language is applied. Check
+[GTranslate's current terms](https://gtranslate.io/terms) before enabling it on a hosted
+site; the free widget has use restrictions. Private branding overlays should retain the
+shared layout's `components/language` include, which is separate from the footer override.
+
 ## Running Tests
 
 Use the same command CI runs so local results match GitHub as closely as possible:

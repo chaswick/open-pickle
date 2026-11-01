@@ -40,6 +40,23 @@ class ThymeleafTemplateTest {
   @Autowired private TemplateEngine templateEngine;
   @Autowired private org.springframework.context.ApplicationContext applicationContext;
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void automaticTranslationIsOptionalOnPublicAndAuthenticatedPages(boolean enabled) {
+    var variables = authenticatedShowLayoutVariables();
+    variables.put("translationEnabled", enabled);
+    for (String template : List.of("public/login", "auth/account-menu")) {
+      String rendered = renderWebTemplate(template, variables);
+      if (enabled) {
+        assertThat(rendered)
+            .contains("data-translation-widget", "/js/translation.js?v=test-build")
+            .contains("data-translation-placeholder", "translate=\"no\"");
+      } else {
+        assertThat(rendered).doesNotContain("data-translation-widget", "/js/translation.js");
+      }
+    }
+  }
+
   @Test
   void organizerConfirmationDoesNotAttributeAnAutomaticApprovalToAPlayer() {
     var variables = authenticatedShowLayoutVariables();

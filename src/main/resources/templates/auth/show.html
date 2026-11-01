@@ -936,6 +936,7 @@
           nameRow.className = 'd-flex flex-wrap align-items-center gap-2';
 
           const name = document.createElement('strong');
+          name.setAttribute('data-translation-name', '');
           name.textContent = member.displayName || 'missing name';
           nameRow.appendChild(name);
 

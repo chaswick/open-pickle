@@ -1467,6 +1467,32 @@ body.app-home-tour-open {
   justify-content: center;
 }
 
+/* The automatic translator is optional; its placeholder and loaded select share styling. */
+.app-language {
+  max-width: 32rem;
+}
+
+.app-language [data-translation-widget] {
+  min-width: 11rem;
+  max-width: 100%;
+}
+
+.app-language select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius);
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  font: inherit;
+}
+
+.app-language select:focus-visible {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+}
+
 .site-footer {
   background: linear-gradient(180deg, #f8fafc 0%, #eef4f8 100%);
   border-top-color: rgba(13, 59, 102, 0.12) !important;

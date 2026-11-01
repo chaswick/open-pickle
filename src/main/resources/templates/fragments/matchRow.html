@@ -159,23 +159,23 @@
     th:with="playedTime=${match.playedAt != null ? match.playedAt : match.createdAt},
         casualAutoConfirmed=${casualAutoConfirmedByMatchId != null and casualAutoConfirmedByMatchId[match.id] != null ? casualAutoConfirmedByMatchId[match.id] : false}">
     <span class="text-muted">#<span th:text="${match.id}">0</span></span>
-    Logged by <span th:text="${match.loggedBy != null ? match.loggedBy.nickName : 'Unknown'}">user</span>
+    Logged by <span data-translation-name th:text="${match.loggedBy != null ? match.loggedBy.nickName : 'Unknown'}">user</span>
     <span>&bull;</span>
     Played at <span
       th:attr="data-utc-time=${playedTime}"
       th:text="${@fhpbTime.display(playedTime, (#authentication != null ? #authentication.principal : null))}">time</span>
     <span th:if="${match.organizerConfirmed and match.state.name() == 'CONFIRMED'}"> &middot; Organizer confirmed</span>
     <span th:if="${match.state.name() == 'CONFIRMED' and casualAutoConfirmed}"> &middot; Casual mode auto-confirmed</span>
-    <span th:if="${match.state.name() == 'CONFIRMED' and !match.organizerConfirmed and !casualAutoConfirmed and confirmer != null}"> &middot; Confirmed by <span
+    <span th:if="${match.state.name() == 'CONFIRMED' and !match.organizerConfirmed and !casualAutoConfirmed and confirmer != null}"> &middot; Confirmed by <span data-translation-name
         th:text="${confirmer}">-</span></span>
     <span th:if="${match.state.name() == 'FLAGGED' and match.disputedBy != null}">
-      &middot; Disputed by <span th:text="${match.disputedBy.nickName ?: 'Unknown'}">user</span>
+      &middot; Disputed by <span data-translation-name th:text="${match.disputedBy.nickName ?: 'Unknown'}">user</span>
       <span th:if="${match.disputedAt != null}"> at <span th:attr="data-utc-time=${match.disputedAt}"
           th:text="${@fhpbTime.display(match.disputedAt, (#authentication != null ? #authentication.principal : null))}">time</span></span>
     </span>
     <span th:if="${match.editedBy != null or match.editedAt != null}">
       &middot; Edited
-      <span th:if="${match.editedBy != null}"> by <span th:text="${match.editedBy.nickName ?: 'Unknown'}">user</span></span>
+      <span th:if="${match.editedBy != null}"> by <span data-translation-name th:text="${match.editedBy.nickName ?: 'Unknown'}">user</span></span>
       <span th:if="${match.editedAt != null}"> at <span th:attr="data-utc-time=${match.editedAt}"
           th:text="${@fhpbTime.display(match.editedAt, (#authentication != null ? #authentication.principal : null))}">time</span></span>
     </span>

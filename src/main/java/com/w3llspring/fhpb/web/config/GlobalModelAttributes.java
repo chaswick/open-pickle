@@ -35,6 +35,10 @@ public class GlobalModelAttributes {
   private final BrandingProperties brandingProperties;
   private final OperatorProperties operatorProperties;
   private final boolean checkInEnabled;
+
+  @Value("${fhpb.translation.enabled:false}")
+  private boolean translationEnabled;
+
   private final long pwaInstallMinAccountAgeDays;
   private final boolean googleAnalyticsEnabled;
   private final String googleAnalyticsMeasurementId;
@@ -155,6 +159,7 @@ public class GlobalModelAttributes {
     model.addAttribute("operator", operatorProperties);
     model.addAttribute("publicMetadataBaseUrl", resolvePublicMetadataBaseUrl(request));
     model.addAttribute("checkInEnabled", checkInEnabled);
+    model.addAttribute("translationEnabled", translationEnabled);
     model.addAttribute("googleAnalyticsEnabled", googleAnalyticsEnabled);
     model.addAttribute("googleAnalyticsMeasurementId", googleAnalyticsMeasurementId);
     model.addAttribute("googleAdsId", googleAdsId);
