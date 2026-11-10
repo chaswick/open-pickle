@@ -839,46 +839,6 @@ html.js .card[data-card-collapse-default="closed"]:not([data-card-collapse-upgra
   min-height: 32px;
 }
 
-/* ===== Standardized Back Button System ===== */
-.back-button-container {
-  position: sticky;
-  top: calc(var(--navbar-height, 3.5rem) + 0.75rem);
-  z-index: var(--z-navigation);
-  background: rgba(248, 249, 250, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-light);
-  padding: 0.75rem 0;
-  margin-bottom: 1rem;
-  width: 100%;
-}
-
-.back-button-standard {
-  display: inline-flex;
-  align-items: center;
-  font-weight: 500;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: var(--border-radius);
-  transition: all 0.15s ease-in-out;
-}
-
-.back-button-standard i {
-  font-size: 0.875rem;
-}
-
-.back-button-breadcrumb {
-  font-size: 0.875rem;
-  color: var(--btn-secondary);
-  font-weight: 500;
-}
-
-/* Hide back button container on small screens if needed */
-@media (max-width: 576px) {
-  .back-button-breadcrumb {
-    display: none;
-  }
-}
-
 /* ===== Responsive Layout System ===== */
 .navbar {
   margin-bottom: 20px;

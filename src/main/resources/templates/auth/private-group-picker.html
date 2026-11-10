@@ -15,9 +15,7 @@
             </div>
         </section>
 
-        <div class="app-page-back">
-            <a class="btn btn-nav-secondary btn-lg w-100" href="/home">Back</a>
-        </div>
+        <div th:replace="~{components/back-button :: back-button(@{/home}, 'Back')}"></div>
 
         <section class="app-action-grid" th:if="${privateGroupMemberships != null and !#lists.isEmpty(privateGroupMemberships)}">
             <a class="app-action-tile app-action-groups"

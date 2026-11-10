@@ -4,10 +4,6 @@
  */
 
 /* ===== Trophy Components ===== */
-.trophy-page-offset {
-  margin-top: -2rem;
-}
-
 .card-spotlight.trophy {
   border: 2px solid var(--trophy-gold);
   box-shadow: 0 4px 20px var(--trophy-shadow);
@@ -27,10 +23,6 @@
 }
 
 /* ===== Navigation & Buttons ===== */
-.back-button {
-  margin-bottom: 1rem;
-}
-
 .ladder-nav-arrows {
   display: grid;
   grid-template-columns: 3rem 1fr 3rem;

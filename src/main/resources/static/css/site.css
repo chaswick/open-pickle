@@ -1536,8 +1536,7 @@ body.app-home-tour-open {
 }
 
 .app-page-back {
-  flex: 1 0 100%;
-  order: 2;
+  width: 100%;
 }
 
 .app-page-back .btn-nav-secondary {

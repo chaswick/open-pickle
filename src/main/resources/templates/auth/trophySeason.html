@@ -15,11 +15,14 @@
 </head>
 
 <body>
-  <div layout:fragment="content">
+  <div layout:fragment="content" class="app-page">
     
-    <div th:replace="~{components/back-button :: back-button-auto(@{/trophies}, 'Back to Trophy Room', ${seasonCatalog?.seasonName})}"></div>
+    <div class="app-page-header"><div>
+      <h1 class="app-page-title" th:text="${seasonCatalog?.seasonName ?: 'Trophies'}">Trophies</h1>
+    </div></div>
+    <div th:replace="~{components/back-button :: back-button(@{/trophies}, 'Back')}"></div>
     
-    <div class="container py-4 trophy-page-offset">
+    <div>
       
       <div th:if="${seasonCatalog != null}" class="card mb-4 shadow card-spotlight"
           th:with="cardsToDisplay=${seasonCatalog.currentSeason ? seasonCatalog.cards : seasonCatalog.cards.?[ownedByUser]}, cardCount=${cardsToDisplay != null ? cardsToDisplay.size() : 0}">
@@ -70,6 +73,12 @@
 
                               <div class="text-center mb-2">
                                   <h3 class="h6 mb-1" th:text="${trophy.title}"></h3>
+                                  <div class="trophy-meta-badges mb-1" th:if="${trophy.repeatable and trophy.ownedByUser}">
+                                      <span class="badge bg-success text-white"
+                                            th:text="${trophy.earnedCount == 1 ? 'Earned 1 time' : 'Earned ' + trophy.earnedCount + ' times'}"></span>
+                                  </div>
+                                  <p class="small text-muted text-break mb-1" th:each="sessionName : ${trophy.roundRobinSessionNames}"
+                                     th:text="${sessionName}"></p>
                                   <span class="badge trophy-rarity-badge text-uppercase small"
                                       th:classappend=" ' ' + trophy.rarityCssClass"
                                       th:text="${trophy.rarity}"></span>
@@ -87,10 +96,6 @@
                                       <span class="badge bg-secondary text-white" th:if="${trophy.repeatable}">Repeatable</span>
                                       <span class="badge bg-success text-white" th:if="${trophy.ownedByUser}">You unlocked this</span>
                                   </div>
-                                  <p class="small text-muted mb-0 mt-2 text-center"
-                                      th:if="${trophy.repeatable and trophy.ownedByUser}"
-                                      th:text="${trophy.earnedCount == 1 ? 'You earned this 1 time.' : 'You earned this ' + trophy.earnedCount + ' times.'}">
-                                  </p>
                                   <p class="small text-muted mb-0 mt-2 text-center"
                                       th:text="${trophy.ownerCount == 1 ? '1 player has earned this.' : trophy.ownerCount + ' players have earned this.'}">
                                   </p>

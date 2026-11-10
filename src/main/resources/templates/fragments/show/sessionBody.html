@@ -307,8 +307,15 @@
                   th:text="${iter.index + 1}">1</span>
             <div class="player-cell session-roster-player-cell">
               <div class="player-name-with-badges">
-                <div class="player-name-line">
+                <div class="player-name-line"
+                     th:with="player=${userById != null and s.userId != null ? userById[s.userId] : null}">
+                  <a class="player-link link-contrast fw-semibold player-name-label"
+                     th:if="${player != null and !#strings.isEmpty(player.publicCode)}"
+                     th:href="@{/account(member=${player.publicCode})}"
+                     th:title="${s.nickName}"
+                     th:text="${s.nickName}">Player Name</a>
                   <span class="fw-semibold player-name-label"
+                        th:unless="${player != null and !#strings.isEmpty(player.publicCode)}"
                         th:title="${s.nickName}"
                         th:text="${s.nickName}">Player Name</span>
                 </div>

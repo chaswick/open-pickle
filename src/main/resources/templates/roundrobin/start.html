@@ -24,12 +24,7 @@
             <p class="app-page-subtitle">Choose the players in this group and spin up a round-robin quickly.</p>
         </div>
     </div>
-    <div class="app-page-back">
-        <a class="btn btn-nav-secondary btn-lg w-100"
-           th:href="${roundRobinListPath != null ? roundRobinListPath : '/home'}">
-            Back
-        </a>
-    </div>
+    <div th:replace="~{components/back-button :: back-button(${roundRobinListPath != null ? roundRobinListPath : '/home'}, 'Back')}"></div>
     <div class="container">
         <div class="card mb-4 shadow card-spotlight">
             <div class="card-header card-header-title text-center">Start Round-Robin</div>

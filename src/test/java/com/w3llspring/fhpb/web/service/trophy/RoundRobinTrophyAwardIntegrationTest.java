@@ -217,6 +217,20 @@ class RoundRobinTrophyAwardIntegrationTest {
   }
 
   @Test
+  void earnedSessionQueryIncludesOnlyTheRequestedPlayersAwards() {
+    RoundRobin rr = run(RoundRobin.Format.ROTATING_PARTNERS);
+    standardGames(rr);
+    service.process(rr.getId());
+    Trophy trophy = definitions.get("rr-court-time");
+    var sessions = awards.findAwardSessions(people.get(0), List.of(trophy));
+    assertThat(sessions).hasSize(1);
+    assertThat(sessions.getFirst().getTrophyId()).isEqualTo(trophy.getId());
+    assertThat(sessions.getFirst().getRoundRobinId()).isEqualTo(rr.getId());
+    assertThat(sessions.getFirst().getSessionTitle()).isEqualTo(session.getTitle());
+    assertThat(awards.findAwardSessions(people.get(9), List.of(trophy))).isEmpty();
+  }
+
+  @Test
   void twoRunsInOneSessionHaveIndependentCountsAndInvalidation() {
     RoundRobin first = run(RoundRobin.Format.ROTATING_PARTNERS),
         second = run(RoundRobin.Format.ROTATING_PARTNERS);

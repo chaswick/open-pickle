@@ -24,9 +24,7 @@
             </div>
         </section>
 
-        <div class="app-page-back">
-            <a class="btn btn-nav-secondary btn-lg w-100" href="/competition/sessions">Back</a>
-        </div>
+        <div th:replace="~{components/back-button :: back-button(@{/competition/sessions}, 'Back')}"></div>
 
         <div class="card mb-4 shadow card-spotlight">
             <div class="card-header card-header-title text-center">Use Current Location</div>

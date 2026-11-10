@@ -27,9 +27,7 @@
       </div>
     </div>
 
-    <div class="app-page-back">
-      <a class="btn btn-nav-secondary btn-lg w-100" href="/account-menu">Back</a>
-    </div>
+    <div th:replace="~{components/back-button :: back-button(@{/account-menu}, 'Back')}"></div>
 
     <div th:if="${seasonCatalogs != null}">
       <div class="card mb-4 shadow card-spotlight"
@@ -113,8 +111,12 @@
                     </div>
                   </button>
                   <p class="trophy-room-name small mb-0" th:text="${trophy.title}"></p>
-                  <p class="small text-muted mb-0" th:if="${trophy.repeatable}"
-                     th:text="${trophy.earnedCount == 1 ? 'Earned 1 time' : 'Earned ' + trophy.earnedCount + ' times'}"></p>
+                  <div class="trophy-meta-badges mb-1" th:if="${trophy.repeatable}">
+                    <span class="badge bg-success text-white"
+                          th:text="${trophy.earnedCount == 1 ? 'Earned 1 time' : 'Earned ' + trophy.earnedCount + ' times'}"></span>
+                  </div>
+                  <p class="small text-muted text-break text-center w-100 mb-0" th:each="sessionName : ${trophy.roundRobinSessionNames}"
+                     th:text="${sessionName}"></p>
                 </div>
               </div>
               <div class="text-center py-4" th:if="${owned == null or #lists.isEmpty(owned)}">

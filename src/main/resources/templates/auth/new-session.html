@@ -12,6 +12,7 @@
     <h1 class="app-page-title">Host a session</h1>
     <p class="app-page-subtitle">Start your group here. Friends join with your invite.</p>
   </div></div>
+  <div th:replace="~{components/back-button :: back-button(@{/home}, 'Back')}"></div>
   <form method="post" th:action="@{/groups/create-session}" class="session-intent-form">
     <section class="session-when-card" aria-labelledby="session-when-title">
       <h2 id="session-when-title" class="session-create-step-title"><span class="session-step-number" aria-hidden="true">1</span> When are you playing?</h2>
@@ -73,7 +74,6 @@
              th:value="${sessionName}" th:maxlength="${sessionNameMaxLength}" placeholder="e.g. Amateur Bracket">
     </section>
     <button type="submit" class="btn btn-action-primary w-100">Create session</button>
-    <a th:href="@{/home}" class="btn btn-link w-100">Back</a>
   </form>
 </div>
 <th:block layout:fragment="scripts"><script th:src="@{/js/session-matchups.js(v=${assetVersion})}"></script></th:block>

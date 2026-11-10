@@ -51,7 +51,7 @@
     }
     .log-match-large .form-select,
     .log-match-large .form-control,
-    .log-match-large .btn {
+    .log-match-large .btn:not(.app-page-back > a) {
       font-size: 1.15rem;
       padding: 0.5rem 0.75rem;
     }
@@ -90,7 +90,7 @@
     }
     .log-match-very-large .form-select,
     .log-match-very-large .form-control,
-    .log-match-very-large .btn {
+    .log-match-very-large .btn:not(.app-page-back > a) {
       font-size: 1.6rem;
       padding: 0.85rem 1.1rem;
     }
@@ -142,7 +142,7 @@
       }
       .log-match-large .form-select,
       .log-match-large .form-control,
-      .log-match-large .btn {
+      .log-match-large .btn:not(.app-page-back > a) {
         font-size: 1rem;
         padding: 0.45rem 0.65rem;
       }
@@ -203,7 +203,7 @@
       }
       .log-match-very-large .form-select,
       .log-match-very-large .form-control,
-      .log-match-very-large .btn,
+      .log-match-very-large .btn:not(.app-page-back > a),
       .log-match-very-large .player-picker-option {
         font-size: 1.15rem;
         padding: 0.6rem 0.8rem;
@@ -281,9 +281,14 @@
 
 <body>
   <div layout:fragment="content"
-       class="log-match-page log-match-large"
+       class="app-page log-match-page log-match-large"
        th:attr="data-player-picker-mode=${useSearchablePlayerPicker == true ? 'search' : 'native'}">
     
+    <div class="app-page-header"><div>
+      <h1 class="app-page-title" th:text="${editMode == true ? 'Edit match' : (voiceReviewMode == true ? 'Review match' : 'Log Match')}">Log Match</h1>
+    </div></div>
+    <div th:replace="~{components/back-button :: back-button(${returnToRoundRobinId != null} ? @{/round-robin/view/{id}(id=${returnToRoundRobinId},round=${returnToRoundRobinRound})} : (${returnToPath != null} ? @{${returnToPath}} : (${competitionLogMode} ? @{/competition/log-match(ladderId=${ladderId})} : @{/private-groups/{ladderId}(ladderId=${ladderId},seasonId=${seasonId})})), 'Back')}"></div>
+
     <div th:if="${editMode}" class="alert alert-info mb-3" role="alert">
       <i class="bi bi-pencil-square me-2"></i>
       <strong>Editing Match</strong>

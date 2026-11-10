@@ -11,12 +11,7 @@
             <p class="app-page-subtitle">Start a new round-robin or review previous ones for this group.</p>
         </div>
     </div>
-    <div class="app-page-back">
-        <a class="btn btn-nav-secondary btn-lg w-100"
-           th:href="${roundRobinBackPath != null ? roundRobinBackPath : '/private-groups'}">
-            Back
-        </a>
-    </div>
+    <div th:replace="~{components/back-button :: back-button(${roundRobinBackPath != null ? roundRobinBackPath : '/private-groups'}, 'Back')}"></div>
     <div class="container">
         <div class="card mb-4 shadow card-spotlight">
             <div class="card-header card-header-title text-center">Round-Robins</div>

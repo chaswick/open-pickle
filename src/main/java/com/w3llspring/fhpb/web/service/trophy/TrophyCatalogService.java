@@ -3,6 +3,7 @@ package com.w3llspring.fhpb.web.service.trophy;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
 import com.w3llspring.fhpb.web.db.LadderStandingRepository;
+import com.w3llspring.fhpb.web.db.RoundRobinTrophyAwardRepository;
 import com.w3llspring.fhpb.web.db.TrophyCatalogEntryRepository;
 import com.w3llspring.fhpb.web.db.TrophyRepository;
 import com.w3llspring.fhpb.web.db.UserTrophyRepository;
@@ -31,6 +32,7 @@ public class TrophyCatalogService {
   private final LadderMembershipRepository membershipRepository;
   private final LadderStandingRepository ladderStandingRepository;
   private final LadderV2Service ladderV2Service;
+  private final RoundRobinTrophyAwardRepository roundRobinTrophyAwardRepository;
 
   public TrophyCatalogService(
       LadderSeasonRepository seasonRepository,
@@ -39,7 +41,8 @@ public class TrophyCatalogService {
       UserTrophyRepository userTrophyRepository,
       LadderMembershipRepository membershipRepository,
       LadderStandingRepository ladderStandingRepository,
-      LadderV2Service ladderV2Service) {
+      LadderV2Service ladderV2Service,
+      RoundRobinTrophyAwardRepository roundRobinTrophyAwardRepository) {
     this.seasonRepository = seasonRepository;
     this.trophyCatalogEntryRepository = trophyCatalogEntryRepository;
     this.trophyRepository = trophyRepository;
@@ -47,6 +50,7 @@ public class TrophyCatalogService {
     this.membershipRepository = membershipRepository;
     this.ladderStandingRepository = ladderStandingRepository;
     this.ladderV2Service = ladderV2Service;
+    this.roundRobinTrophyAwardRepository = roundRobinTrophyAwardRepository;
   }
 
   @Transactional(readOnly = true)
@@ -165,8 +169,10 @@ public class TrophyCatalogService {
     return ladderIds;
   }
 
-  private TrophyCardModel markRoundRobin(TrophyCardModel card, boolean roundRobin) {
+  private TrophyCardModel markRoundRobin(
+      TrophyCardModel card, boolean roundRobin, List<String> sessionNames) {
     card.setRoundRobinTrophy(roundRobin);
+    card.setRoundRobinSessionNames(sessionNames);
     return card;
   }
 
@@ -190,6 +196,8 @@ public class TrophyCatalogService {
             .collect(Collectors.toList());
 
     Map<Long, Long> userAwardCounts = resolveUserAwardCounts(user, trophies);
+    Map<Long, List<String>> sessionNames =
+        resolveRoundRobinSessionNames(user, trophies, userAwardCounts);
     Map<Long, Long> ownerCounts = resolveOwnerCounts(trophies);
 
     List<TrophyCardModel> cards = new ArrayList<>();
@@ -225,7 +233,8 @@ public class TrophyCatalogService {
                   ownerCounts.getOrDefault(trophy.getId(), 0L),
                   hasImage(trophy),
                   cssForRarity(rarity)),
-              trophy.isRoundRobinTrophy()));
+              trophy.isRoundRobinTrophy(),
+              sessionNames.getOrDefault(trophy.getId(), List.of())));
     }
 
     if (!storySeason && (currentSeasonFlag || isFallbackCatalog(trophies))) {
@@ -350,7 +359,8 @@ public class TrophyCatalogService {
                   0L,
                   hasImage(template),
                   cssForRarity(rarity)),
-              template.isRoundRobinTrophy()));
+              template.isRoundRobinTrophy(),
+              List.of()));
       if (template.getGenerationSeed() != null) {
         existingSeeds.add(template.getGenerationSeed());
       }
@@ -391,6 +401,34 @@ public class TrophyCatalogService {
       counts.merge(userTrophy.getTrophy().getId(), (long) userTrophy.getAwardCount(), Long::sum);
     }
     return counts;
+  }
+
+  private Map<Long, List<String>> resolveRoundRobinSessionNames(
+      User user, List<Trophy> trophies, Map<Long, Long> userAwardCounts) {
+    if (user == null || user.getId() == null) return Map.of();
+    List<Trophy> owned =
+        trophies.stream()
+            .filter(Trophy::isRoundRobinTrophy)
+            .filter(t -> userAwardCounts.getOrDefault(t.getId(), 0L) > 0)
+            .toList();
+    if (owned.isEmpty()) return Map.of();
+    Map<Long, LinkedHashMap<String, Integer>> names = new LinkedHashMap<>();
+    for (var award : roundRobinTrophyAwardRepository.findAwardSessions(user, owned)) {
+      String title = award.getSessionTitle();
+      if (title == null || title.isBlank()) title = "Round robin #" + award.getRoundRobinId();
+      names
+          .computeIfAbsent(award.getTrophyId(), k -> new LinkedHashMap<>())
+          .merge(title, 1, Integer::sum);
+    }
+    Map<Long, List<String>> result = new HashMap<>();
+    names.forEach(
+        (id, titles) ->
+            result.put(
+                id,
+                titles.entrySet().stream()
+                    .map(e -> e.getValue() > 1 ? e.getKey() + " ×" + e.getValue() : e.getKey())
+                    .toList()));
+    return result;
   }
 
   private Map<Long, Long> resolveOwnerCounts(List<Trophy> trophies) {

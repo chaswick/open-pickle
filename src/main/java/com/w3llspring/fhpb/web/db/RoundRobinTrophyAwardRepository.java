@@ -13,6 +13,19 @@ public interface RoundRobinTrophyAwardRepository
   List<RoundRobinTrophyAward> findForRun(@Param("id") Long id);
 
   @Query(
+      "select a.trophy.id as trophyId, a.roundRobin.id as roundRobinId, s.title as sessionTitle from RoundRobinTrophyAward a left join a.roundRobin.sessionConfig s where a.user = :user and a.trophy in :trophies order by a.awardedAt desc, a.id desc")
+  List<AwardSession> findAwardSessions(
+      @Param("user") User user, @Param("trophies") List<Trophy> trophies);
+
+  interface AwardSession {
+    Long getTrophyId();
+
+    Long getRoundRobinId();
+
+    String getSessionTitle();
+  }
+
+  @Query(
       "select a.user.id as userId, count(a.id) as total, min(a.awardedAt) as firstAwardedAt, max(a.awardedAt) as lastAwardedAt from RoundRobinTrophyAward a where a.trophy = :trophy group by a.user.id")
   List<OwnerSummary> summarizeOwners(@Param("trophy") Trophy trophy);
 

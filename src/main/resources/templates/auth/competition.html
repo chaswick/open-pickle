@@ -18,11 +18,7 @@
             </div>
         </section>
 
-        <div class="app-page-back">
-            <a class="btn btn-nav-secondary btn-lg w-100" href="/competition/sessions">
-                Back
-            </a>
-        </div>
+        <div th:replace="~{components/back-button :: back-button(@{/competition/sessions}, 'Back')}"></div>
 
         <div class="alert alert-info" th:if="${competitionUnavailable}">
             Season standings are unavailable right now.

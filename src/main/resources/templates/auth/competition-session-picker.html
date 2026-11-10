@@ -17,9 +17,7 @@
             </div>
         </section>
 
-        <div class="app-page-back">
-            <a class="btn btn-nav-secondary btn-lg w-100" href="/home">Back</a>
-        </div>
+        <div th:replace="~{components/back-button :: back-button(@{/home}, 'Back')}"></div>
 
         <div class="alert alert-info" th:if="${competitionUnavailable}">
             Sessions are unavailable right now. Please try again later.

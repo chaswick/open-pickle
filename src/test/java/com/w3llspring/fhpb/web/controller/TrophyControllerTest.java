@@ -32,7 +32,7 @@ class TrophyControllerTest {
   @BeforeEach
   void setUp() {
     catalogService =
-        new TrophyCatalogService(null, null, null, null, null, null, null) {
+        new TrophyCatalogService(null, null, null, null, null, null, null, null) {
           @Override
           public List<TrophyCatalog> fetchSeasonCatalogs(User user) {
             return seasonCatalogs;

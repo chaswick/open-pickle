@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
 import com.w3llspring.fhpb.web.db.LadderStandingRepository;
+import com.w3llspring.fhpb.web.db.RoundRobinTrophyAwardRepository;
 import com.w3llspring.fhpb.web.db.TrophyCatalogEntryRepository;
 import com.w3llspring.fhpb.web.db.TrophyRepository;
 import com.w3llspring.fhpb.web.db.UserTrophyRepository;
@@ -22,6 +23,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -41,6 +44,8 @@ class TrophyCatalogServiceTest {
 
   @Mock private LadderStandingRepository ladderStandingRepository;
 
+  @Mock private RoundRobinTrophyAwardRepository roundRobinTrophyAwardRepository;
+
   private TrophyCatalogService service;
 
   @BeforeEach
@@ -53,11 +58,14 @@ class TrophyCatalogServiceTest {
             userTrophyRepository,
             membershipRepository,
             ladderStandingRepository,
-            null);
+            null,
+            roundRobinTrophyAwardRepository);
   }
 
-  @Test
-  void fetchSeasonCatalog_showsEarnedCountForRepeatableTrophyWithoutInflatingOwnerCount() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void fetchSeasonCatalog_showsEarnedCountAndSessionNamesWithoutInflatingOwnerCount(
+      boolean roundRobin) {
     LadderConfig ladder = new LadderConfig();
     ladder.setId(8L);
     ladder.setTitle("Story Ladder");
@@ -77,6 +85,7 @@ class TrophyCatalogServiceTest {
     trophy.setSummary("Key helper");
     trophy.setUnlockCondition("Help Pat find the keys.");
     trophy.setRepeatable(true);
+    trophy.setRoundRobinTrophy(roundRobin);
 
     User viewer = new User();
     ReflectionTestUtils.setField(viewer, "id", 77L);
@@ -103,16 +112,30 @@ class TrophyCatalogServiceTest {
             season))
         .thenReturn(List.of());
     when(userTrophyRepository.findByUserAndTrophyIn(viewer, List.of(trophy)))
-        .thenReturn(List.of(grant(viewer, trophy, 3)));
+        .thenReturn(List.of(grant(viewer, trophy, roundRobin ? 4 : 3)));
     when(userTrophyRepository.countOwnersByTrophyIn(List.of(trophy)))
         .thenReturn(List.of(ownerCount(21L, 2L)));
 
+    if (roundRobin) {
+      when(roundRobinTrophyAwardRepository.findAwardSessions(viewer, List.of(trophy)))
+          .thenReturn(
+              List.of(
+                  awardSession(21L, 41L, "Dave's Amateur Bracket session"),
+                  awardSession(21L, 42L, "Dave's Session"),
+                  awardSession(21L, 43L, "Dave's Amateur Bracket session"),
+                  awardSession(21L, 44L, null)));
+    }
     TrophyCatalog catalog = service.fetchSeasonCatalog(viewer, 55L).orElseThrow();
     TrophyCardModel card = catalog.getCards().get(0);
 
     assertThat(card.isOwnedByUser()).isTrue();
     assertThat(card.isRepeatable()).isTrue();
-    assertThat(card.getEarnedCount()).isEqualTo(3);
+    assertThat(card.getEarnedCount()).isEqualTo(roundRobin ? 4 : 3);
+    assertThat(card.getRoundRobinSessionNames())
+        .isEqualTo(
+            roundRobin
+                ? List.of("Dave's Amateur Bracket session ×2", "Dave's Session", "Round robin #44")
+                : List.of());
     assertThat(card.getOwnerCount()).isEqualTo(2);
   }
 
@@ -260,6 +283,23 @@ class TrophyCatalogServiceTest {
         .containsExactly(
             org.assertj.core.groups.Tuple.tuple(
                 "Diamond Division Finish", "Finish the season in Diamond Division"));
+  }
+
+  private RoundRobinTrophyAwardRepository.AwardSession awardSession(
+      Long trophyId, Long runId, String title) {
+    return new RoundRobinTrophyAwardRepository.AwardSession() {
+      public Long getTrophyId() {
+        return trophyId;
+      }
+
+      public Long getRoundRobinId() {
+        return runId;
+      }
+
+      public String getSessionTitle() {
+        return title;
+      }
+    };
   }
 
   private UserTrophy grant(User user, Trophy trophy, int awardCount) {

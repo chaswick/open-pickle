@@ -1,7 +1,18 @@
 package com.w3llspring.fhpb.web.service.trophy;
 
+import java.util.List;
+
 public class TrophyCardModel {
   private boolean roundRobinTrophy;
+  private List<String> roundRobinSessionNames = List.of();
+
+  public List<String> getRoundRobinSessionNames() {
+    return roundRobinSessionNames;
+  }
+
+  public void setRoundRobinSessionNames(List<String> names) {
+    roundRobinSessionNames = List.copyOf(names);
+  }
 
   public boolean isRoundRobinTrophy() {
     return roundRobinTrophy;

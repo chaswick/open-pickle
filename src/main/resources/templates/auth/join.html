@@ -8,14 +8,16 @@
 </head>
 
 <body>
-  <main layout:fragment="content" class="container pt-4 pb-5 mt-4 text-center">
-    <h4 class="mb-3" th:unless="${sessionApprovalMode == true or sessionJoinContext == true}">Join Group</h4>
+  <main layout:fragment="content" class="app-page">
+    <div class="app-page-header"><div>
+      <h1 class="app-page-title" th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join a session' : 'Join Group'">Join Group</h1>
+    </div></div>
+    <div th:replace="~{components/back-button :: back-button(${returnToPath != null} ? @{${returnToPath}} : @{/home}, 'Back')}"></div>
 
     <div class="row justify-content-center">
       <div class="col-12 col-lg-6 mx-auto card-stack-col">
         <section class="card mb-3 text-start" th:if="${sessionApprovalMode == true or sessionJoinContext == true}" data-session-join-intro>
           <div class="card-body">
-            <h1 class="h3 mb-3">Join a session</h1>
             <p class="text-muted mb-3">Choose the method that works for you.</p>
             <div class="session-invite-grid" aria-label="Ways to join">
               <section class="session-share-panel d-flex align-items-start gap-2" aria-labelledby="join-method-link">
@@ -134,8 +136,6 @@
               <div class="d-grid gap-2">
                 <button class="btn btn-action-primary btn-lg" type="submit"
                         th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Ask to join' : 'Join'">Join</button>
-                <a class="btn btn-nav-secondary" href="/"
-                   th:href="${returnToPath != null} ? @{${returnToPath}} : @{/home}">Cancel</a>
               </div>
             </div>
           </div>

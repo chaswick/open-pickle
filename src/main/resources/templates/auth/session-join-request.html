@@ -7,10 +7,13 @@
 </head>
 
 <body>
-  <main layout:fragment="content" class="container pt-4 pb-5 mt-4 text-center">
-    <h4 class="mb-3" th:text="${joinRequestStatus.pending} ? 'Waiting for Approval' : 'Session Join Request'">
+  <main layout:fragment="content" class="app-page">
+    <div class="app-page-header"><div>
+    <h1 class="app-page-title" th:text="${joinRequestStatus.pending} ? 'Waiting for Approval' : 'Session Join Request'">
       Session Join Request
-    </h4>
+    </h1>
+    </div></div>
+    <div th:replace="~{components/back-button :: back-button(@{/competition/sessions}, 'Back')}"></div>
 
     <div class="row justify-content-center">
       <div class="col-12 col-lg-6 mx-auto card-stack-col">
@@ -54,9 +57,6 @@
                  th:if="${joinRequestStatus.redirectUrl != null}"
                  th:href="@{${joinRequestStatus.redirectUrl}}">
                 Open Session
-              </a>
-              <a class="btn btn-nav-secondary" th:href="@{/competition/sessions}">
-                Back to Sessions
               </a>
             </div>
           </div>

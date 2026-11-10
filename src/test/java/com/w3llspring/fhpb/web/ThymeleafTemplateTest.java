@@ -605,6 +605,7 @@ class ThymeleafTemplateTest {
     User currentUser = new User();
     currentUser.setId(7L);
     currentUser.setNickName("Tester");
+    currentUser.setPublicCode("PB-sage-ace-247");
 
     User otherUser = new User();
     otherUser.setId(8L);
@@ -658,6 +659,7 @@ class ThymeleafTemplateTest {
     String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
     assertThat(result).contains("Session Standings");
+    assertThat(result).contains("href=\"/account?member=PB-sage-ace-247\"");
     assertThat(result).contains("Manage Invited Buddies");
     assertThat(result).contains("Partner");
     assertThat(result).contains("Center Court");
@@ -1065,15 +1067,11 @@ class ThymeleafTemplateTest {
         Files.readString(Path.of("src/main/resources/templates/public/terms.html"));
     String privacyTemplate =
         Files.readString(Path.of("src/main/resources/templates/public/privacy.html"));
-    String backButtonTemplate =
-        Files.readString(Path.of("src/main/resources/templates/components/back-button.html"));
 
     assertThat(termsTemplate).contains("bi bi-arrow-left me-2");
     assertThat(privacyTemplate).contains("bi bi-arrow-left me-2");
-    assertThat(backButtonTemplate).contains("bi bi-arrow-left me-2");
     assertThat(termsTemplate).doesNotContain("fas fa-arrow-left");
     assertThat(privacyTemplate).doesNotContain("fas fa-arrow-left");
-    assertThat(backButtonTemplate).doesNotContain("fas fa-arrow-left");
   }
 
   @Test
@@ -1229,14 +1227,16 @@ class ThymeleafTemplateTest {
     assertThat(sessionPickerTemplate).contains("Leave Session");
     assertThat(sessionPickerTemplate).contains("End Session");
     assertThat(sessionPickerTemplate).contains("'/leave/' + ${membership.id}");
-    assertThat(sessionPickerTemplate).contains("href=\"/home\"");
+    assertThat(sessionPickerTemplate)
+        .contains("components/back-button :: back-button(@{/home}, 'Back')");
     assertThat(
             sessionPickerTemplate.indexOf(
                 "<div class=\"competition-session-card app-action-tile app-action-standings\""))
         .isLessThan(sessionPickerTemplate.indexOf("<a th:href=\"@{/groups/new-session}\""));
 
     assertThat(accountMenuTemplate).contains("User Account");
-    assertThat(accountMenuTemplate).contains("href=\"/home\"");
+    assertThat(accountMenuTemplate)
+        .contains("components/back-button :: back-button(@{/home}, 'Back')");
     assertThat(accountMenuTemplate).doesNotContain("navigationSessionConfigs");
     assertThat(accountMenuTemplate).contains("Account Settings");
     assertThat(accountMenuTemplate).contains("Trophies");
@@ -1540,8 +1540,7 @@ class ThymeleafTemplateTest {
         .contains("Review the voice result, fix anything off, then log the match.");
     assertThat(logMatchTemplate).contains("class=\"btn btn-nav-secondary btn-lg\">Cancel</a>");
     assertThat(logMatchTemplate).doesNotContain("components/ladderSelector :: ladderSelector");
-    assertThat(logMatchTemplate).doesNotContain("app-page-back");
-    assertThat(logMatchTemplate).doesNotContain(">Back<");
+    assertThat(logMatchTemplate).contains("components/back-button :: back-button");
     assertThat(competitionLogTemplate).doesNotContain("/voice-match-log");
     assertThat(competitionLogTemplate).contains("Open Voice Logger");
     assertThat(competitionLogTemplate)

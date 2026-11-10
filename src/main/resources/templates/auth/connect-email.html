@@ -3,11 +3,11 @@
       layout:decorate="~{layouts/authenticated}">
 <head><title layout:fragment="title">Connect email</title></head>
 <body>
-<main layout:fragment="content" class="app-home">
-  <div class="app-page-back"><a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/account}">Back</a></div>
+<main layout:fragment="content" class="app-page">
+  <div class="app-page-header"><div><h1 class="app-page-title">Connect email</h1></div></div>
+  <div th:replace="~{components/back-button :: back-button(@{/account}, 'Back')}"></div>
   <section class="card shadow-sm">
     <div class="card-body p-4">
-      <h1 class="h3">Connect email</h1>
       <p>Keep your player ID, scores, and trophies. Use your email to sign in or recover access later.</p>
       <p class="alert alert-danger" role="alert" th:if="${connectError}" th:text="${connectError}"></p>
       <div th:if="${emailSent == true}">
