@@ -21,7 +21,7 @@
                 <h1 class="app-hero-title">Let's Pickle!</h1>
                 <p class="app-hero-subtitle"
                    th:if="${competitionUnavailable or canCreateCompetitionSession}">
-                    Playing with friends? Start a session, invite your players, and keep score together.
+                    Host a session, invite your players, and keep score together.
                 </p>
                 <p class="app-hero-subtitle mb-0" data-session-hosting-note
                    th:if="${!competitionUnavailable and canCreateCompetitionSession == false}">
