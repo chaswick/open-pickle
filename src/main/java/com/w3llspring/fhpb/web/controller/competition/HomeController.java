@@ -10,6 +10,7 @@ import com.w3llspring.fhpb.web.model.LadderMatchLink;
 import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.LadderSeason;
 import com.w3llspring.fhpb.web.model.Match;
+import com.w3llspring.fhpb.web.model.MatchState;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.CompetitionDisplayNameModerationService;
 import com.w3llspring.fhpb.web.service.CompetitionSeasonService;
@@ -41,16 +42,16 @@ import java.util.Objects;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
-import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -252,7 +253,8 @@ public class HomeController {
     Long selectedPrivateGroupId = UserSessionState.resolveSelectedGroupId(request, null);
     boolean showHomeIntro =
         currentUser.getId() != null
-            && userOnboardingService.shouldShow(currentUser.getId(), UserOnboardingService.HOME_TOUR_V1);
+            && userOnboardingService.shouldShow(
+                currentUser.getId(), UserOnboardingService.HOME_TOUR_V1);
 
     model.addAttribute("myMemberships", myMemberships);
     model.addAttribute("competitionSessionMemberships", competitionSessions.sessionMemberships());
@@ -1237,7 +1239,8 @@ public class HomeController {
     }
     Set<Long> opponentIds = new LinkedHashSet<>();
     for (Match match : matches) {
-      if (match == null) {
+      // Legacy null states count as confirmed, matching the season rating replay.
+      if (match == null || (match.getState() != null && match.getState() != MatchState.CONFIRMED)) {
         continue;
       }
       boolean onTeamA =

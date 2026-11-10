@@ -40,6 +40,7 @@
 
         <div class="container py-4" th:classappend="${extraContainerClasses}">
             
+            <div th:replace="~{components/mailbox :: bar}"></div>
             <div th:replace="~{components/alerts :: global-alerts}"></div>
             
             
@@ -58,9 +59,11 @@
     <div th:replace="~{components/head-scripts :: pwa-scripts}"></div>
     
     
+    <div th:replace="~{components/mailbox :: modals}"></div>
     <div th:replace="~{components/confirm-modal :: confirmModal}"></div>
     
     <div th:replace="~{components/head-scripts :: component-scripts}"></div>
+    <script th:src="@{/js/mailbox.js(v=${assetVersion})}" src="/js/mailbox.js"></script>
     
     <script src="/js/toasts.js" th:src="@{/js/toasts.js(v=${assetVersion})}"></script>
     

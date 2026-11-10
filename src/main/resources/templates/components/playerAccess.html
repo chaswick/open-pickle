@@ -1,0 +1,26 @@
+<section th:fragment="recovery" th:if="${canEditDisplayName == true and loggedInUser != null and loggedInUser.nameOnlyAccount}"
+         class="card mb-4 shadow card-spotlight">
+  <div class="card-header card-header-title text-center">Keep access to your account</div>
+  <div class="card-body">
+    <p>Connect an email to sign in on another device or after clearing browser data. Your scores and trophies stay with you.</p>
+    <a class="btn btn-nav-primary mb-3" th:if="${playerAccessEnabled}" th:href="@{/account/connect-email}">Connect email</a>
+    <p class="small">You can also save a private recovery code.</p>
+    <form method="post" th:action="@{/account/recovery-code}">
+      <button type="submit" class="btn btn-nav-primary">Save recovery code</button>
+    </form>
+    <p class="small text-muted mt-3 mb-0">Keep the downloaded file private. Saving a new code replaces the previous one.</p>
+  </div>
+</section>
+
+<aside th:fragment="email-reminder" th:if="${showConnectEmailReminder == true}" class="card shadow-sm mb-4" data-connect-email-reminder>
+  <div class="card-body text-start">
+    <h2 class="h5">Keep access to your scores</h2>
+    <p>Connect an email so you can sign back in if you change phones or clear your browser.</p>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-nav-primary" th:href="@{/account/connect-email}">Connect email</a>
+      <form method="post" th:action="@{/account/connect-email/dismiss}" class="m-0">
+        <button class="btn btn-nav-secondary" type="submit">Not now</button>
+      </form>
+    </div>
+  </div>
+</aside>

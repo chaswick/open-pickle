@@ -24,8 +24,8 @@ import com.w3llspring.fhpb.web.service.scoring.LadderScoringAlgorithms;
 import com.w3llspring.fhpb.web.service.scoring.MarginCurveV1LadderScoringAlgorithm;
 import com.w3llspring.fhpb.web.service.standings.SeasonStandingsViewService;
 import com.w3llspring.fhpb.web.service.standings.StandingsPageService;
-import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.service.user.CourtNameService;
+import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.session.LadderPageState;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.time.Instant;
@@ -412,9 +412,8 @@ class HomeControllerTest {
         .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.LIST)
         .hasSize(2);
     assertThat(
-            ((List<LadderMembership>) model.get("sessionMemberships")).stream()
-                .map(membership -> membership.getLadderConfig().getId())
-                .toList())
+            ((List<LadderMembership>) model.get("sessionMemberships"))
+                .stream().map(membership -> membership.getLadderConfig().getId()).toList())
         .containsExactly(9L, 8L);
     assertThat(model.get("showCompetitionSessionChooser")).isEqualTo(true);
     assertThat(model.get("activeCompetitionSessionCount")).isEqualTo(2);
@@ -1000,8 +999,10 @@ class HomeControllerTest {
     assertThat(competitionDisplayNameModerationService.lastTarget).isSameAs(target);
   }
 
-  @Test
-  void competitionPageExposesPlayedAgainstOpponentsForFilters() {
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.EnumSource(MatchState.class)
+  @org.junit.jupiter.params.provider.NullSource
+  void competitionPageExposesOnlyConfirmedOpponents(MatchState state) {
     User viewer = new User();
     viewer.setId(123L);
     viewer.setNickName("Tester");
@@ -1027,6 +1028,7 @@ class HomeControllerTest {
 
     Match match = new Match();
     match.setSeason(season);
+    match.setState(state);
     match.setA1(viewer);
     match.setB1(opponent);
 
@@ -1040,10 +1042,13 @@ class HomeControllerTest {
     String view = controller.competition(null, null, null, null, null, "all", false, model);
 
     assertThat(view).isEqualTo("auth/competition");
-    assertThat(model.get("hasPlayedAgainstOpponents")).isEqualTo(Boolean.TRUE);
-    assertThat(model.get("playedAgainstUserIds"))
-        .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.collection(Long.class))
-        .contains(456L);
+    boolean confirmed = state == null || state == MatchState.CONFIRMED;
+    assertThat(model.get("hasPlayedAgainstOpponents")).isEqualTo(confirmed);
+    var opponents =
+        assertThat(model.get("playedAgainstUserIds"))
+            .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.collection(Long.class));
+    if (confirmed) opponents.containsExactly(456L);
+    else opponents.isEmpty();
   }
 
   @Test
@@ -1118,8 +1123,9 @@ class HomeControllerTest {
     when(standingRepo.findBySeasonOrderByRankNoAscWithUser(season))
         .thenReturn(List.of(new LadderStanding()));
     when(matchRepo.findBySeasonOrderByPlayedAtDescWithUsers(season))
-        .thenReturn(matchesAgainst(viewer, season,
-            java.util.stream.LongStream.range(1000, 1030).boxed().toList()));
+        .thenReturn(
+            matchesAgainst(
+                viewer, season, java.util.stream.LongStream.range(1000, 1030).boxed().toList()));
 
     ExtendedModelMap model = new ExtendedModelMap();
 
@@ -1218,8 +1224,9 @@ class HomeControllerTest {
     when(standingRepo.findBySeasonOrderByRankNoAscWithUser(season))
         .thenReturn(List.of(new LadderStanding()));
     when(matchRepo.findBySeasonOrderByPlayedAtDescWithUsers(season))
-        .thenReturn(matchesAgainst(viewer, season,
-            java.util.stream.LongStream.range(1000, 1030).boxed().toList()));
+        .thenReturn(
+            matchesAgainst(
+                viewer, season, java.util.stream.LongStream.range(1000, 1030).boxed().toList()));
 
     ExtendedModelMap model = new ExtendedModelMap();
 
@@ -1268,6 +1275,7 @@ class HomeControllerTest {
 
     Match match = new Match();
     match.setSeason(season);
+    match.setState(MatchState.CONFIRMED);
     match.setA1(viewer);
     match.setB1(opponent);
 
@@ -1375,11 +1383,13 @@ class HomeControllerTest {
 
     Match firstMatch = new Match();
     firstMatch.setSeason(season);
+    firstMatch.setState(MatchState.CONFIRMED);
     firstMatch.setA1(viewer);
     firstMatch.setB1(goldOpponent);
 
     Match secondMatch = new Match();
     secondMatch.setSeason(season);
+    secondMatch.setState(MatchState.CONFIRMED);
     secondMatch.setA1(viewer);
     secondMatch.setB1(silverOpponent);
 
@@ -1451,10 +1461,12 @@ class HomeControllerTest {
             model.get("ladderDisplay");
     assertThat(rows).extracting(row -> row.userId).containsExactly(123L, 456L, 789L);
     assertThat(rows).extracting(row -> row.rank).containsExactly(1, 2, 3);
-    assertThat(rows).allSatisfy(row -> {
-      assertThat(row.showBandHeader).isFalse();
-      assertThat(row.bandName).isNull();
-    });
+    assertThat(rows)
+        .allSatisfy(
+            row -> {
+              assertThat(row.showBandHeader).isFalse();
+              assertThat(row.bandName).isNull();
+            });
     assertThat(model.get("competitionStandingsView")).isEqualTo("played");
     assertThat(sourceRows.get(3).rank).isEqualTo(21);
     assertThat(sourceRows.get(3).bandName).isEqualTo("Silver Division");
@@ -1465,8 +1477,9 @@ class HomeControllerTest {
     ExtendedModelMap emptyCircleModel = new ExtendedModelMap();
     controller.competition(null, null, null, 0, 25, requestedView, false, emptyCircleModel);
     @SuppressWarnings("unchecked")
-    var ownRows = (List<com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow>)
-        emptyCircleModel.get("ladderDisplay");
+    var ownRows =
+        (List<com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow>)
+            emptyCircleModel.get("ladderDisplay");
     assertThat(ownRows).extracting(row -> row.userId).containsExactly(123L);
     assertThat(ownRows.get(0).rank).isEqualTo(1);
   }
@@ -1714,6 +1727,7 @@ class HomeControllerTest {
       return reportOutcome;
     }
   }
+
   private com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow buildCompetitionRow(
       int rank, long userId, String displayName, String bandName, String bandCssClass) {
     com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow row =
@@ -1729,15 +1743,18 @@ class HomeControllerTest {
   }
 
   private List<Match> matchesAgainst(User viewer, LadderSeason season, List<Long> opponentIds) {
-    return opponentIds.stream().map(id -> {
-      User opponent = new User();
-      opponent.setId(id);
-      Match match = new Match();
-      match.setSeason(season);
-      match.setA1(viewer);
-      match.setB1(opponent);
-      return match;
-    }).toList();
+    return opponentIds.stream()
+        .map(
+            id -> {
+              User opponent = new User();
+              opponent.setId(id);
+              Match match = new Match();
+              match.setSeason(season);
+              match.setState(MatchState.CONFIRMED);
+              match.setA1(viewer);
+              match.setB1(opponent);
+              return match;
+            })
+        .toList();
   }
-
 }

@@ -10,9 +10,11 @@ import com.w3llspring.fhpb.web.model.LadderSeason;
 import com.w3llspring.fhpb.web.model.LadderSecurity;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.util.InputValidation;
+import com.w3llspring.fhpb.web.util.SessionScheduleSupport;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -294,6 +296,16 @@ public class LadderConfigService {
   @Transactional(dontRollbackOn = {IllegalStateException.class, IllegalArgumentException.class})
   public LadderConfig createSessionConfig(
       Long ownerUserId, String title, LadderSeason targetSeason, LocalDate scheduledDate) {
+    return createSessionConfig(ownerUserId, title, targetSeason, scheduledDate, null);
+  }
+
+  @Transactional(dontRollbackOn = {IllegalStateException.class, IllegalArgumentException.class})
+  public LadderConfig createSessionConfig(
+      Long ownerUserId,
+      String title,
+      LadderSeason targetSeason,
+      LocalDate scheduledDate,
+      LocalTime scheduledTime) {
     if (ownerUserId == null) {
       throw new IllegalArgumentException("Owner is required");
     }
@@ -302,12 +314,11 @@ public class LadderConfigService {
     }
     Instant now = Instant.now();
     ZoneId zone = sessionZone(userRepo.findById(ownerUserId).orElse(null));
-    if (scheduledDate != null
-        && (!scheduledDate.isAfter(now.atZone(zone).toLocalDate())
-            || scheduledDate.isAfter(
-                now.atZone(zone).toLocalDate().plusDays(MAX_SESSION_ADVANCE_DAYS)))) {
-      throw new IllegalArgumentException("Choose a date within the next 90 days.");
-    }
+    Instant windowStart =
+        scheduledDate == null
+            ? now
+            : SessionScheduleSupport.resolveStart(
+                scheduledDate, scheduledTime, zone, now, MAX_SESSION_ADVANCE_DAYS);
     boolean limitReached =
         scheduledDate == null
             ? hasReachedSessionLimit(ownerUserId)
@@ -333,8 +344,6 @@ public class LadderConfigService {
     cfg.setAllowGuestOnlyPersonalMatches(false);
     cfg.setStoryModeDefaultEnabled(false);
     cfg.setTargetSeasonId(targetSeason.getId());
-    Instant windowStart =
-        scheduledDate == null ? now : scheduledDate.atStartOfDay(zone).toInstant();
     cfg.setSessionScheduledAt(scheduledDate == null ? null : windowStart);
     cfg.setSessionTimeZone(scheduledDate == null ? null : zone.getId());
     int lifetimeHours =

@@ -1004,7 +1004,6 @@
 
       parent.removeChild(removable);
       FHPB.Confirmations.updateDashboardEmptyState();
-      FHPB.Confirmations.updateSessionConfirmationState(parent);
       return true;
     },
 
@@ -1015,61 +1014,6 @@
 
       if (dashboardList.querySelector('.match-dashboard-card')) return;
       emptyMessage.classList.remove('d-none');
-    },
-
-    updateSessionConfirmationState: function(contextRoot) {
-      if (!contextRoot || !contextRoot.closest) return;
-
-      var modal = contextRoot.closest('[data-session-confirmation-modal]');
-      if (!modal) return;
-
-      var modalType = modal.getAttribute('data-session-confirmation-modal');
-      if (!modalType) return;
-
-      var remainingCards = modal.querySelectorAll('.match-dashboard-card').length;
-      var actionRow = document.querySelector('.session-hero-confirmation-actions');
-      var button = document.querySelector('[data-session-confirmation-button="' + modalType + '"]');
-      var badge = button ? button.querySelector('[data-session-confirmation-count]') : null;
-      var label = button ? button.querySelector('[data-session-confirmation-label]') : null;
-
-      if (button) {
-        if (remainingCards > 0) {
-          button.classList.remove('d-none');
-          if (badge) {
-            badge.textContent = String(remainingCards);
-          }
-          if (label) {
-            var lowerLabel = (label.textContent || modalType).trim().toLowerCase();
-            if (lowerLabel === 'inbox') {
-              button.setAttribute(
-                'aria-label',
-                remainingCards === 1
-                  ? 'Inbox, 1 match needs your confirmation'
-                  : 'Inbox, ' + remainingCards + ' matches need your confirmation');
-            } else {
-              button.setAttribute(
-                'aria-label',
-                remainingCards === 1
-                  ? 'Outbox, 1 match is waiting on the other team'
-                  : 'Outbox, ' + remainingCards + ' matches are waiting on the other team');
-            }
-          }
-        } else {
-          button.classList.add('d-none');
-        }
-      }
-
-      if (actionRow) {
-        var visibleButtons = actionRow.querySelectorAll('[data-session-confirmation-button]:not(.d-none)');
-        actionRow.classList.toggle('d-none', visibleButtons.length === 0);
-      }
-
-      if (remainingCards > 0 || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
-        return;
-      }
-
-      var modalInstance = bootstrap.Modal.getInstance(modal) || bootstrap.Modal.getOrCreateInstance(modal);
-      modalInstance.hide();
     },
 
     refreshMatchRowFragment: function(matchId, currentRoot) {
@@ -1101,6 +1045,9 @@
     },
 
     syncAfterConfirmationStateChange: function(matchId, button, skipFragmentRefresh) {
+      if (FHPB.Mailbox && typeof FHPB.Mailbox.refresh === 'function') {
+        FHPB.Mailbox.refresh();
+      }
       if (skipFragmentRefresh) {
         window.setTimeout(function() {
           window.location.reload();
@@ -1325,14 +1272,7 @@
       if (!button) return;
       var form = button.closest && button.closest('form');
       if (!form) return;
-      var useModal = false;
-      try { useModal = window.matchMedia && window.matchMedia('(max-width:767px)').matches; } catch (e) { useModal = false; }
-
       var perform = function() { FHPB.Confirmations.performNullify(form, button); };
-      if (!useModal) {
-        if (window.confirm(message)) perform();
-        return;
-      }
       window.fhpbConfirm(message, perform, { confirmText: 'Delete' });
     },
 
@@ -1408,14 +1348,7 @@
       if (!button) return;
       var form = button.closest && button.closest('form');
       if (!form) return;
-      var useModal = false;
-      try { useModal = window.matchMedia && window.matchMedia('(max-width:767px)').matches; } catch (e) { useModal = false; }
-
       var perform = function() { FHPB.Confirmations.performConfirmedNullify(form, button); };
-      if (!useModal) {
-        if (window.confirm(message)) perform();
-        return;
-      }
       window.fhpbConfirm(message, perform, { confirmText: 'Continue' });
     },
 
@@ -1509,14 +1442,7 @@
       if (!button) return;
       var form = button.closest && button.closest('form');
       if (!form) return;
-      var useModal = false;
-      try { useModal = window.matchMedia && window.matchMedia('(max-width:767px)').matches; } catch (e) { useModal = false; }
-
       var perform = function() { FHPB.Confirmations.performDispute(form, button); };
-      if (!useModal) {
-        if (window.confirm(message)) perform();
-        return;
-      }
       window.fhpbConfirm(message, perform, { confirmText: 'Dispute' });
     },
 
@@ -1611,20 +1537,23 @@ window.refreshMatchDashboard = function() {
 };
 
 
-// Small cross-page confirm helper that uses native confirm on larger screens
-// and a Bootstrap modal on small/mobile screens so text is reliably visible.
+// Keep translated confirmations in the page: browser-native dialogs cannot be translated.
+window.fhpbUseConfirmModal = function() {
+  if (!window.bootstrap || typeof window.bootstrap.Modal !== 'function') return false;
+  if (document.querySelector('[data-translation-widget]')) return true;
+  try {
+    return !!(window.matchMedia && window.matchMedia('(max-width:767px)').matches);
+  } catch (e) { return false; }
+};
+
+// Use the shared modal on mobile and on pages with optional display translation.
 window.fhpbConfirm = function(message, onConfirm, options) {
   // If no callback provided, fall back to simple synchronous confirm
   if (typeof onConfirm !== 'function') {
     try { return window.confirm(message); } catch (e) { return false; }
   }
 
-  var useModal = false;
-  try {
-    useModal = window.matchMedia && window.matchMedia('(max-width:767px)').matches;
-  } catch (e) { useModal = false; }
-
-  if (!useModal) {
+  if (!window.fhpbUseConfirmModal()) {
     // Synchronous path: native confirm
     if (window.confirm(message)) onConfirm();
     return;
@@ -1649,31 +1578,24 @@ window.fhpbConfirm = function(message, onConfirm, options) {
 
   // Safe guard: remove any previous handlers
   var newYes = yesBtn.cloneNode(true);
-  // If caller provided a custom confirm button label, set it here
-  try {
-    if (options && options.confirmText) {
-      // replace text content while preserving possible inner HTML structure
-      newYes.textContent = options.confirmText;
-    }
-  } catch (e) {
-    // ignore
-  }
+  // Always start with the caller's label, rather than a previous dialog's translated text.
+  newYes.textContent = options && options.confirmText ? options.confirmText : 'Confirm';
+  newYes.disabled = false;
   yesBtn.parentNode.replaceChild(newYes, yesBtn);
 
-  var bsModal = new bootstrap.Modal(modalEl);
+  var bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
   newYes.addEventListener('click', function () {
-    try { onConfirm(); } catch (e) { console.error('fhpbConfirm callback error', e); }
+    newYes.disabled = true;
     bsModal.hide();
-  });
+    try { onConfirm(); } catch (e) { console.error('fhpbConfirm callback error', e); }
+  }, { once: true });
   bsModal.show();
 };
 
 // Helper to attach to form onsubmit handlers: returns boolean (true to allow submit)
 window.handleConfirmForm = function(form, message) {
   if (!form) return false;
-  var useModal = false;
-  try { useModal = window.matchMedia && window.matchMedia('(max-width:767px)').matches; } catch (e) { useModal = false; }
-  if (!useModal) {
+  if (!window.fhpbUseConfirmModal()) {
     return window.confirm(message);
   }
   // Use modal: prevent default submit and show modal; submit when confirmed

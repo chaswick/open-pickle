@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -90,8 +90,13 @@ class LadderConfigControllerJoinTest {
   @Test
   void joinFormSessionContextSetsSafeDefaultsBeforeInviteLookup() {
     ExtendedModelMap model = new ExtendedModelMap();
+    User viewer = new User();
+    viewer.setId(7L);
+    viewer.setNickName("Tester");
+    var auth =
+        new UsernamePasswordAuthenticationToken(new CustomUserDetails(viewer), null, List.of());
 
-    String view = controller.joinForm(null, "/competition/sessions", false, null, model);
+    String view = controller.joinForm(null, "/competition/sessions", false, auth, model);
 
     assertThat(view).isEqualTo("auth/join");
     assertThat(model.get("returnToPath")).isEqualTo("/competition/sessions");
@@ -116,7 +121,12 @@ class LadderConfigControllerJoinTest {
 
     ExtendedModelMap model = new ExtendedModelMap();
 
-    String view = controller.joinForm("mint court 42", "/competition/sessions", false, null, model);
+    User viewer = new User();
+    viewer.setId(7L);
+    viewer.setNickName("Tester");
+    var auth =
+        new UsernamePasswordAuthenticationToken(new CustomUserDetails(viewer), null, List.of());
+    String view = controller.joinForm("mint court 42", "/competition/sessions", false, auth, model);
 
     assertThat(view).isEqualTo("auth/join");
     assertThat(model.get("prefillInviteCodeWordOne")).isEqualTo("MINT");
@@ -213,7 +223,8 @@ class LadderConfigControllerJoinTest {
     UsernamePasswordAuthenticationToken auth =
         new UsernamePasswordAuthenticationToken(new CustomUserDetails(user), null, List.of());
 
-    String view = controller.join("dink-7", "/competition/sessions", auth, new RedirectAttributesModelMap());
+    String view =
+        controller.join("dink-7", "/competition/sessions", auth, new RedirectAttributesModelMap());
 
     assertThat(view).isEqualTo("redirect:/groups/join-requests/99");
     verify(sessionJoinRequests).submitByInvite("DINK-7", 7L);

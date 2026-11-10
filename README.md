@@ -2,7 +2,9 @@
 
 Open-Pickle is a Spring Boot web application for playing pickleball with friends and clubs: invite players to a session, log results, and track standings together. It also supports seasonal standings, round robins, trophies, and voice-assisted match logging.
 
-The home page offers session creation, code-based joining, and links back to active sessions. First-use guidance stays inline, session codes and QR invites are visible immediately, and season standings focus on the opponents you have played. Community totals and private-league entry points are hidden from the main experience; existing league data and routes are retained for compatibility.
+The home page offers **Host a session**, **Join a session**, and links back to active sessions. First-use guidance stays inline, session codes and invite options are available immediately, and season standings focus on opponents from confirmed matches. Community totals and private-league entry points are hidden from the main experience; existing league data and routes are retained for compatibility.
+
+Signed-in pages share a slim Inbox/Outbox card inline at the top. It includes pending score confirmations and match removal requests across sessions, including sessions that have ended. Counts and lists refresh after actions and periodically; both controls remain available when empty.
 
 Current product surface:
 
@@ -102,6 +104,46 @@ English can also appear briefly before a saved language is applied. Check
 [GTranslate's current terms](https://gtranslate.io/terms) before enabling it on a hosted
 site; the free widget has use restrictions. Private branding overlays should retain the
 shared layout's `components/language` include, which is separate from the footer override.
+
+## Name-only session joining
+
+Session invitation links let a new player enter a name and join without supplying an
+email or password. They get a normal player record, membership, scores, standings,
+and trophies. Existing players can choose Sign in instead; joining with the same
+name never claims an existing account. The current session capacity, invite expiry,
+organizer approval for code requests, and membership permissions still apply.
+
+This requires the existing stable `REMEMBER_ME_KEY` (or
+`FHPB_SECURITY_REMEMBER_ME_KEY`). Without it, invites fall back to ordinary sign-in.
+`FHPB_GUEST_ACCESS_ENABLED=false` disables new name-only signups.
+`FHPB_GUEST_REMEMBER_DAYS` defaults to 365 and is capped at 365. This is a remembered
+device credential; the normal HTTP session timeout stays separate. Spring Security
+checks the signed cookie and renews it when a returning player resumes their account.
+App restarts and the end of a playing session/season do not erase that account.
+Logging out clears the cookie and revokes previous name-only cookies for that account.
+
+Account Settings offers an optional recovery-code download. Only the hash is stored;
+the secret is delivered as a private, uncached text attachment. It can be entered at
+`/recover-player` to resume the same account on another browser. Generating a new code
+replaces the previous one. Public member IDs, names, and shared session invites cannot
+recover an account. If both the device credential and private recovery code are lost,
+the player must join with a new account.
+
+Players can also connect an email from Account Settings. A small reminder appears on
+User Account once a name-only account is seven days old; **Not now** hides it
+for another seven days. A confirmation email contains a single-use, 30-minute link;
+the recipient chooses a password before the email is attached. This upgrades the same
+player record, preserving their public ID, matches, memberships, and trophies. Existing
+email accounts are never merged. The old device cookies and recovery code stop working;
+the completing browser is signed in with the normal remembered email-account lifetime.
+Email links use `FHPB_PUBLIC_BASE_URL` (or localhost for local development).
+Home always offers name-only players a **Finish setting up your account** button.
+
+Name-only accounts use internal non-deliverable addresses solely for compatibility
+with the existing user schema. Email resets and meetup email delivery are disabled for
+them. Rate limits allow 64 join attempts per IP per hour by default, so a group on shared
+Wi-Fi can join; adjust with `FHPB_GUEST_JOINS_PER_IP_PER_HOUR`. Name-only forms retain
+CSRF checks, signed form tokens, name validation, and the existing terms acknowledgement.
 
 ## Running Tests
 

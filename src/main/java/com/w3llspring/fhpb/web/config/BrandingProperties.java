@@ -76,7 +76,7 @@ public class BrandingProperties {
   }
 
   public String getLandingCopy() {
-    return "Playing with friends? Start a session, share the code, and track your scores and standings together. "
+    return "Start a session, share the invite, and track your results. Your rating will reset each season. "
         + getAppName()
         + " is free to use, whether you play with the same four people or a whole club.";
   }

@@ -12,7 +12,7 @@
             <div class="app-hero-card">
                 <h1 class="app-hero-title">User Account</h1>
                 <p class="app-hero-subtitle">
-                    Open active sessions, recent matches, settings, trophies, stats, or sign out from one place.
+                    Review recent matches, manage settings, browse trophies and stats, or sign out.
                 </p>
             </div>
         </section>
@@ -21,27 +21,9 @@
             <a class="btn btn-nav-secondary btn-lg w-100" href="/home">Back</a>
         </div>
 
-        <section class="app-action-grid">
-            <a class="app-action-tile app-action-groups"
-               th:if="${navigationSessionConfigs != null and !#lists.isEmpty(navigationSessionConfigs)}"
-               th:each="sessionConfig : ${navigationSessionConfigs}"
-               th:with="owned=${currentUserId != null and sessionConfig != null and currentUserId == sessionConfig.ownerUserId}"
-               th:href="@{/groups/{id}(id=${sessionConfig.id})}">
-                <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
-                <div>
-                    <span class="app-action-callout app-action-callout-top"
-                          th:text="${owned ? 'Hosting' : 'Joined'}">Hosting</span>
-                    <div class="app-action-title"
-                         th:text="${sessionConfig != null ? sessionConfig.title : 'Open Session'}">Open Session</div>
-                    <div class="app-action-subtitle" th:if="${sessionConfig != null and sessionConfig.sessionScheduledAt != null}"
-                         th:text="${sessionConfig.sessionDateLabel}">Upcoming · Sat, Nov 7</div>
-                    <div class="app-action-subtitle"
-                         th:text="${owned ? 'Open your active session to manage players, invites, and match logging.' : 'Jump back into an active session you joined.'}">
-                        Open your active session.
-                    </div>
-                </div>
-            </a>
+        <div th:replace="~{components/playerAccess :: email-reminder}"></div>
 
+        <section class="app-action-grid">
             <a class="app-action-tile app-action-account" th:href="@{/account}">
                 <div class="app-action-icon"><i class="bi bi-gear" aria-hidden="true"></i></div>
                 <div>
@@ -74,7 +56,8 @@
                 </div>
             </a>
 
-            <form method="post" th:action="@{/logout}" class="m-0">
+            <form method="post" th:action="@{/logout}" class="m-0"
+                  th:attr="onsubmit=${loggedInUser != null and loggedInUser.nameOnlyAccount} ? 'return handleConfirmForm(this, &quot;Log out of this device? You will need your saved recovery code to sign back in to this account.&quot;);' : null">
                 <button type="submit" class="app-action-tile app-action-logout w-100 text-start border-0">
                     <div class="app-action-icon"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></div>
                     <div>

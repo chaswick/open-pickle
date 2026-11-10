@@ -1,5 +1,6 @@
 package com.w3llspring.fhpb.web.controller.competition;
 
+import com.w3llspring.fhpb.web.config.BrandingProperties;
 import com.w3llspring.fhpb.web.db.LadderConfigRepository;
 import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.db.LadderSeasonRepository;
@@ -38,6 +39,7 @@ import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
+import com.w3llspring.fhpb.web.util.SessionInviteText;
 import com.w3llspring.fhpb.web.util.UserPublicName;
 import java.net.URI;
 import java.time.Duration;
@@ -719,6 +721,7 @@ public class LadderConfigController {
         Stream.concat(members.stream(), bannedMembers.stream())
             .map(LadderMembership::getUserId)
             .collect(Collectors.toCollection(LinkedHashSet::new));
+    if (cfg.getOwnerUserId() != null) userIds.add(cfg.getOwnerUserId());
     recentDisplayNameChanges.stream()
         .map(UserDisplayNameAudit::getUserId)
         .filter(id -> id != null)
@@ -836,6 +839,19 @@ public class LadderConfigController {
       inviteShareLink = inviteBuilder.build().toUriString();
     }
     model.addAttribute("ladderInviteLink", inviteShareLink);
+    var branding =
+        model.getAttribute("branding") instanceof BrandingProperties configured
+            ? configured
+            : new BrandingProperties();
+    User inviteOwner = userById.get(cfg.getOwnerUserId());
+    if (inviteOwner == null && Objects.equals(cfg.getOwnerUserId(), currentUser.getId()))
+      inviteOwner = currentUser;
+    model.addAttribute(
+        "ladderInviteMessage",
+        cfg.isSessionType()
+            ? SessionInviteText.build(
+                cfg, UserPublicName.forUser(inviteOwner), branding.getAppName(), inviteShareLink)
+            : inviteShareLink);
 
     return "auth/show";
   }
@@ -1775,7 +1791,37 @@ public class LadderConfigController {
       @RequestParam(name = "returnTo", required = false) String returnTo,
       @RequestParam(name = "autoJoin", required = false, defaultValue = "false") boolean autoJoin,
       Authentication auth,
-      Model model) {
+      Model model,
+      jakarta.servlet.http.HttpServletRequest request,
+      jakarta.servlet.http.HttpServletResponse response) {
+    if (getCurrentUser(auth) == null) {
+      if (inviteCode == null || inviteCode.isBlank()) return "redirect:/login";
+      var target = configs.findByInviteCode(normalizeInviteCodeForLookup(inviteCode));
+      if (target.isPresent() && !target.get().isSessionType()) {
+        if (request != null && response != null)
+          new org.springframework.security.web.savedrequest.HttpSessionRequestCache()
+              .saveRequest(request, response);
+        String destination =
+            org.springframework.web.util.UriComponentsBuilder.fromPath("/groups/join")
+                .queryParam("inviteCode", inviteCode)
+                .build()
+                .encode()
+                .toUriString();
+        return "redirect:"
+            + org.springframework.web.util.UriComponentsBuilder.fromPath("/login")
+                .queryParam("returnTo", destination)
+                .build()
+                .encode()
+                .toUriString();
+      }
+      return "redirect:"
+          + org.springframework.web.util.UriComponentsBuilder.fromPath("/join/session")
+              .queryParam("inviteCode", inviteCode)
+              .queryParam("direct", autoJoin)
+              .build()
+              .encode()
+              .toUriString();
+    }
     String normalizedReturnTo = normalizeGroupReturnTo(returnTo);
     model.addAttribute("returnToPath", normalizedReturnTo);
     model.addAttribute("sessionJoinContext", "/competition/sessions".equals(normalizedReturnTo));
@@ -1843,6 +1889,11 @@ public class LadderConfigController {
       return "auth/join";
     }
     return "auth/join";
+  }
+
+  public String joinForm(
+      String inviteCode, String returnTo, boolean autoJoin, Authentication auth, Model model) {
+    return joinForm(inviteCode, returnTo, autoJoin, auth, model, null, null);
   }
 
   @PostMapping("/join")

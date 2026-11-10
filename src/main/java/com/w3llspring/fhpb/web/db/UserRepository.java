@@ -40,6 +40,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findByPublicCode(String publicCode);
 
+  Optional<User> findByRecoveryCodeHash(String recoveryCodeHash);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select u from User u where u.connectEmailTokenHash = :hash")
+  Optional<User> findByConnectEmailTokenHashForUpdate(@Param("hash") String hash);
+
+  Optional<User> findByConnectEmailTokenHash(String hash);
+
   boolean existsByPublicCode(String publicCode);
 
   List<User> findByPublicCodeIsNull(Pageable pageable);

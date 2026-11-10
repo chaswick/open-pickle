@@ -25,8 +25,14 @@
                 </p>
                 <p class="app-hero-subtitle mb-0" data-session-hosting-note
                    th:if="${!competitionUnavailable and canCreateCompetitionSession == false}">
-                    To start another session now, end the one you’re hosting with its <strong>×</strong> below. You can still plan one for later.
+                    To start another session now, end the session you’re hosting by clicking its “X”.
+                    <span th:if="${scheduledSessionLimit != null and scheduledSessionLimit > 0}"
+                          th:text="|You can schedule up to ${scheduledSessionLimit} ${scheduledSessionLimit == 1 ? 'session' : 'sessions'} for later.|"></span>
                 </p>
+                <a class="btn btn-action-primary btn-lg mt-3" th:href="@{/account/connect-email}"
+                   th:if="${playerAccessEnabled == true and loggedInUser != null and loggedInUser.nameOnlyAccount}">
+                    Finish setting up your account
+                </a>
             </div>
         </section>
 
@@ -65,7 +71,7 @@
                   th:if="${!competitionUnavailable}">
                     <div class="app-action-icon"><i class="bi bi-plus-circle" aria-hidden="true"></i></div>
                     <div>
-                        <div class="app-action-title">Start a session with friends</div>
+                        <div class="app-action-title">Host a session</div>
                         <div class="app-action-subtitle">Make matchups for your group, or log games as you go. Only one person needs to start.</div>
                     </div>
             </a>
@@ -74,8 +80,8 @@
                th:href="@{/groups/join(returnTo='/competition/sessions')}">
                 <div class="app-action-icon"><i class="bi bi-phone" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Join with a code</div>
-                    <div class="app-action-subtitle">Someone already started? Enter their shared code, or open their invite link.</div>
+                    <div class="app-action-title">Join a session</div>
+                    <div class="app-action-subtitle">Someone already started? Choose how to join their session.</div>
                 </div>
             </a>
 
@@ -86,7 +92,7 @@
             <div class="card-body text-start">
                 <h2 class="h5">Your first session</h2>
                 <ol class="mb-3 ps-3">
-                    <li><strong>Start or join.</strong> One person starts a session; friends join with its code, QR, or link.</li>
+                    <li><strong>Host or join.</strong> One person hosts; friends join with an invite link, QR code, or session code.</li>
                     <li><strong>Play your way.</strong> Follow your session's matchups, or choose your own games.</li>
                     <li><strong>Follow your results.</strong> See recorded games and standings in your session.</li>
                 </ol>

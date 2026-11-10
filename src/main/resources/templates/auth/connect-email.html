@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/authenticated}">
+<head><title layout:fragment="title">Connect email</title></head>
+<body>
+<main layout:fragment="content" class="app-home">
+  <div class="app-page-back"><a class="btn btn-nav-secondary btn-lg w-100" th:href="@{/account}">Back</a></div>
+  <section class="card shadow-sm">
+    <div class="card-body p-4">
+      <h1 class="h3">Connect email</h1>
+      <p>Keep your player ID, scores, and trophies. Use your email to sign in or recover access later.</p>
+      <p class="alert alert-danger" role="alert" th:if="${connectError}" th:text="${connectError}"></p>
+      <div th:if="${emailSent == true}">
+        <p class="alert alert-success" role="status">Check your email. Follow the link to choose a password and finish connecting your account.</p>
+        <p class="small text-muted mb-0">The link expires in 30 minutes. You can keep playing while you wait.</p>
+      </div>
+      <form th:unless="${emailSent == true}" method="post" th:action="@{/account/connect-email}">
+        <label for="connect-email" class="form-label">Email</label>
+        <input class="form-control mb-3 notranslate" translate="no" id="connect-email" name="email" type="email"
+               maxlength="45" autocomplete="email" required th:value="${enteredEmail}">
+        <button class="btn btn-nav-primary" type="submit">Send confirmation email</button>
+      </form>
+    </div>
+  </section>
+</main>
+</body>
+</html>

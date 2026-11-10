@@ -94,8 +94,8 @@ public class MeetupsEmailDigestUserProcessor {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void recordOptIn(Long userId, boolean optIn) {
     User user = userRepo.findByIdForUpdate(userId).orElseThrow();
-    user.setMeetupsEmailOptIn(optIn);
-    if (!optIn) {
+    user.setMeetupsEmailOptIn(optIn && !user.isNameOnlyAccount());
+    if (user.isNameOnlyAccount() || !user.isMeetupsEmailOptIn()) {
       user.setMeetupsEmailPending(false);
     }
     userRepo.save(user);
@@ -104,7 +104,7 @@ public class MeetupsEmailDigestUserProcessor {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public MarkPendingResult markPendingIfOptedIn(Long userId) {
     User user = userRepo.findByIdForUpdate(userId).orElse(null);
-    if (user == null || !user.isMeetupsEmailOptIn()) {
+    if (user == null || user.isNameOnlyAccount() || !user.isMeetupsEmailOptIn()) {
       return MarkPendingResult.skipped();
     }
     user.setMeetupsEmailPending(true);
@@ -128,7 +128,7 @@ public class MeetupsEmailDigestUserProcessor {
     if (user == null || !user.isMeetupsEmailPending()) {
       return;
     }
-    if (!user.isMeetupsEmailOptIn()) {
+    if (user.isNameOnlyAccount() || !user.isMeetupsEmailOptIn()) {
       user.setMeetupsEmailPending(false);
       userRepo.save(user);
       return;

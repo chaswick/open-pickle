@@ -85,6 +85,7 @@ public class AuthenticatedUserService {
     }
 
     sessionUser.setEmail(persistedUser.getEmail());
+    sessionUser.setNameOnlyAccount(persistedUser.isNameOnlyAccount());
     sessionUser.setNickName(persistedUser.getNickName());
     sessionUser.setAdmin(persistedUser.isAdmin());
     sessionUser.setPublicCode(persistedUser.getPublicCode());

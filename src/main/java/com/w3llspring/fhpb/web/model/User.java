@@ -45,6 +45,64 @@ public class User {
   @Column(nullable = false, length = 64)
   private String password;
 
+  @Column(name = "name_only_account", nullable = false)
+  @org.hibernate.annotations.ColumnDefault("false")
+  private boolean nameOnlyAccount;
+
+  @JsonIgnore
+  @Column(name = "recovery_code_hash", unique = true, length = 64)
+  private String recoveryCodeHash;
+
+  @JsonIgnore
+  @Column(name = "connect_email_pending", length = 45)
+  private String connectEmailPending;
+
+  @JsonIgnore
+  @Column(name = "connect_email_token_hash", unique = true, length = 64)
+  private String connectEmailTokenHash;
+
+  @JsonIgnore private Instant connectEmailExpiresAt;
+
+  public String getConnectEmailPending() {
+    return connectEmailPending;
+  }
+
+  public void setConnectEmailPending(String value) {
+    connectEmailPending = value;
+  }
+
+  public String getConnectEmailTokenHash() {
+    return connectEmailTokenHash;
+  }
+
+  public void setConnectEmailTokenHash(String value) {
+    connectEmailTokenHash = value;
+  }
+
+  public Instant getConnectEmailExpiresAt() {
+    return connectEmailExpiresAt;
+  }
+
+  public void setConnectEmailExpiresAt(Instant value) {
+    connectEmailExpiresAt = value;
+  }
+
+  public boolean isNameOnlyAccount() {
+    return nameOnlyAccount;
+  }
+
+  public void setNameOnlyAccount(boolean nameOnlyAccount) {
+    this.nameOnlyAccount = nameOnlyAccount;
+  }
+
+  public String getRecoveryCodeHash() {
+    return recoveryCodeHash;
+  }
+
+  public void setRecoveryCodeHash(String recoveryCodeHash) {
+    this.recoveryCodeHash = recoveryCodeHash;
+  }
+
   @JsonIgnore // SECURITY: Never expose password reset tokens
   @Column(name = "reset_password_token", length = 30)
   private String resetPasswordToken;

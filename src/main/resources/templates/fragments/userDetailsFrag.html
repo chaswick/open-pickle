@@ -1,5 +1,6 @@
 
 <div th:if="${canEditDisplayName}">
+	<div th:replace="~{components/playerAccess :: recovery}"></div>
 	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
 	<div class="card-header card-header-title text-center">Update Display Name</div>
 	<div class="card-body text-center">

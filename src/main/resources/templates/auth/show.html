@@ -66,17 +66,6 @@
       text-transform: uppercase;
     }
 
-    .session-share-panel {
-      border: 1px solid rgba(18, 68, 122, 0.12);
-      border-radius: 1rem;
-      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-      padding: 1rem;
-    }
-
-    .session-share-panel[hidden] {
-      display: none !important;
-    }
-
     .session-share-panel-intro {
       font-size: 1rem;
       font-weight: 700;
@@ -232,33 +221,6 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-top: 0.85rem;
-    }
-
-    .session-hero-confirmation-actions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-      width: 100%;
-    }
-
-    .session-hero-confirmation-slot {
-      min-width: 0;
-      display: flex;
-    }
-
-    .session-hero-confirmation-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      width: 100%;
-      justify-content: center;
-      white-space: nowrap;
-    }
-
-    .session-hero-confirmation-count {
-      min-width: 1.6rem;
-      padding-inline: 0.45rem;
     }
 
     .session-hero-action-voice {
@@ -643,10 +605,6 @@
         min-width: 0;
       }
 
-      .session-hero-confirmation-btn {
-        width: 100%;
-        justify-content: center;
-      }
 
       .session-toolbar {
         align-items: stretch;
@@ -710,7 +668,7 @@
           Invite players, manage members, and adjust league settings.
         </p>
         <div class="session-hero-actions"
-             th:if="${isSessionLadder and !ladder.matchupSession and !ladder.upcomingSession and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}">
+             th:if="${isSessionLadder and !ladder.matchupSession and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}">
           <button th:if="${targetSeason != null}"
                   id="logMatchVoiceBtn"
                   type="button"
@@ -744,41 +702,7 @@
             Log Match
           </a>
         </div>
-        <div class="session-hero-confirmation-actions"
-             th:if="${isSessionLadder and sessionRoundRobinTask == null and ((sessionConfirmationInboxCount != null and sessionConfirmationInboxCount > 0) or (sessionConfirmationOutboxCount != null and sessionConfirmationOutboxCount > 0))}">
-          <div class="session-hero-confirmation-slot">
-            <button type="button"
-                    class="btn btn-nav-secondary session-hero-confirmation-btn"
-                    th:if="${sessionConfirmationInboxCount != null and sessionConfirmationInboxCount > 0}"
-                    data-session-confirmation-button="inbox"
-                    data-bs-toggle="modal"
-                    data-bs-target="#sessionConfirmationsInboxModal"
-                    title="Matches that need your confirmation"
-                    th:attr="aria-label=${sessionConfirmationInboxCount == 1 ? 'Inbox, 1 match needs your confirmation' : 'Inbox, ' + sessionConfirmationInboxCount + ' matches need your confirmation'}">
-              <i class="bi bi-inbox" aria-hidden="true"></i>
-              <span data-session-confirmation-label>Inbox</span>
-              <span class="badge rounded-pill bg-primary text-white session-hero-confirmation-count"
-                    data-session-confirmation-count
-                    th:text="${sessionConfirmationInboxCount}">1</span>
-            </button>
-          </div>
-          <div class="session-hero-confirmation-slot">
-            <button type="button"
-                    class="btn btn-nav-secondary session-hero-confirmation-btn"
-                    th:if="${sessionConfirmationOutboxCount != null and sessionConfirmationOutboxCount > 0}"
-                    data-session-confirmation-button="outbox"
-                    data-bs-toggle="modal"
-                    data-bs-target="#sessionConfirmationsOutboxModal"
-                    title="Matches waiting on the other team"
-                    th:attr="aria-label=${sessionConfirmationOutboxCount == 1 ? 'Outbox, 1 match is waiting on the other team' : 'Outbox, ' + sessionConfirmationOutboxCount + ' matches are waiting on the other team'}">
-              <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-              <span data-session-confirmation-label>Outbox</span>
-              <span class="badge rounded-pill bg-primary text-white session-hero-confirmation-count"
-                    data-session-confirmation-count
-                    th:text="${sessionConfirmationOutboxCount}">1</span>
-            </button>
-          </div>
-        </div>
+
       </div>
     </div>
     <aside class="card quick-start-guide mb-3"
@@ -1163,8 +1087,8 @@
           try {
             new window.QRCode(qrWrapper, {
               text: value,
-              width: 176,
-              height: 176,
+              width: Number(qrWrapper.dataset.qrSize) || 176,
+              height: Number(qrWrapper.dataset.qrSize) || 176,
               correctLevel: window.QRCode.CorrectLevel.M,
               colorDark: '#000000',
               colorLight: '#ffffff'

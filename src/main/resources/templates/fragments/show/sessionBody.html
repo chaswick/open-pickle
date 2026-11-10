@@ -12,67 +12,50 @@
         <div class="invite-share d-flex flex-column gap-3 align-items-center text-center">
           <input type="hidden" id="inviteCodeInput" th:value="${ladder.inviteCode}" />
           <input type="hidden" id="inviteLinkInput" th:value="${inviteLink}" />
-          <p class="text-muted mb-0">Invite the people you play with. They can join this session with the code, QR, or link.</p>
+          <input type="hidden" id="inviteMessageInput" th:value="${ladderInviteMessage != null ? ladderInviteMessage : inviteLink}" />
+          <p class="text-muted mb-0">Choose the method that works for you.</p>
           <div class="session-invite-grid w-100">
-            <section class="session-share-panel d-flex flex-column gap-3 text-center" aria-label="Shared code">
-              <h2 class="h6 mb-0">Share this code</h2>
-              <div class="session-code-chip font-monospace" th:text="${ladder.inviteCode}">DINK-7</div>
-              <p class="text-muted small mb-0">Friends enter it under Join with a code. You'll approve their requests here.</p>
-              <button class="btn btn-nav-secondary" type="button" data-copy-target="inviteCodeInput">Copy code</button>
-            </section>
-            <section class="session-share-panel d-flex flex-column gap-3 text-center" aria-label="QR and invite link">
-              <h2 class="h6 mb-0">Scan or send an invite</h2>
-              <div class="invite-share-qr d-flex flex-column gap-2 align-items-center">
-                <div class="invite-qr-wrapper border rounded bg-white p-2 shadow-sm" id="inviteQrCode"
-                     role="img" aria-label="QR code for session invite link">
-                  <div class="text-muted small">Loading...</div>
-                </div>
-                <p class="text-muted small mb-0">Scan with a phone camera, or send the link to your friends.</p>
+            <section class="session-share-panel session-invite-option" aria-labelledby="session-invite-link-title">
+              <div class="session-invite-option-heading">
+                <span class="session-invite-icon"><i class="bi bi-link-45deg" aria-hidden="true"></i></span>
+                <h2 class="h6 mb-0" id="session-invite-link-title">Invite link</h2>
               </div>
-              <button class="btn btn-action-primary" type="button" data-copy-target="inviteLinkInput">Copy invite link</button>
+              <p class="text-muted small mb-0">Share the invite link by text or email.</p>
+              <button class="btn btn-nav-primary w-100 mt-auto" type="button" data-copy-target="inviteMessageInput">Copy invite</button>
+            </section>
+            <section class="session-share-panel session-invite-option" aria-labelledby="session-invite-qr-title">
+              <div class="session-invite-option-heading">
+                <span class="session-invite-icon"><i class="bi bi-qr-code" aria-hidden="true"></i></span>
+                <h2 class="h6 mb-0" id="session-invite-qr-title">QR code</h2>
+              </div>
+              <p class="text-muted small mb-0">Show the QR code for someone to scan with their phone camera.</p>
+              <button class="btn btn-nav-primary w-100 mt-auto" type="button" data-bs-toggle="modal" data-bs-target="#sessionInviteQrModal">Show QR code</button>
+            </section>
+            <section class="session-share-panel session-invite-option" aria-labelledby="session-invite-code-title">
+              <div class="session-invite-option-heading">
+                <span class="session-invite-icon"><i class="bi bi-keyboard" aria-hidden="true"></i></span>
+                <h2 class="h6 mb-0" id="session-invite-code-title">Session code</h2>
+              </div>
+              <p class="text-muted small mb-0">Share the code aloud with several players at once. They must be logged in to <span th:text="${branding != null ? branding.appName : 'Open-Pickle'}">Open-Pickle</span> and select “Join a session” to enter it.</p>
+              <div class="session-code-chip session-invite-code font-monospace notranslate" translate="no" th:text="${ladder.inviteCode}">DINK-7</div>
+              <button class="btn btn-nav-primary w-100 mt-auto" type="button" data-copy-target="inviteCodeInput">Copy code</button>
+            </section>
+            <section class="session-share-panel session-invite-option" aria-labelledby="session-invite-nearby-title" th:if="${checkInEnabled}">
+              <div class="session-invite-option-heading">
+                <span class="session-invite-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></span>
+                <h2 class="h6 mb-0" id="session-invite-nearby-title">Find players</h2>
+              </div>
+              <p class="text-muted small mb-0">Players with an account can find your session if they choose to share their location.</p>
+              <p class="small mb-0" th:if="${ladder.nearbyShareLocationId != null}">
+                Sharing at <span th:text="${ladder.nearbyShareLocationName ?: 'your current court'}">your current court</span>.
+              </p>
+              <div class="mt-auto" th:attr="data-session-nearby-host=${true}, data-session-id=${ladder.id}">
+                <button class="btn btn-nav-primary w-100" type="button" data-nearby-start
+                        th:text="${ladder.nearbyShareLocationId != null} ? 'Refresh location' : 'Find players'">Find players</button>
+                <div class="alert d-none mt-3 mb-0 text-start" data-nearby-status role="status" aria-live="polite"></div>
+              </div>
             </section>
           </div>
-          <details class="session-nearby-options w-100 text-start" th:if="${checkInEnabled}">
-            <summary class="fw-semibold">Find players at your courts with nearby sharing</summary>
-            <section class="session-share-panel d-flex flex-column gap-3 text-center"
-                     aria-label="Nearby sharing">
-              <div class="session-share-panel-intro"
-                   th:if="${ladder.nearbyShareLocationName != null and !#strings.isEmpty(ladder.nearbyShareLocationName)}">
-                Nearby sharing is on for <span th:text="${ladder.nearbyShareLocationName}">Lakeside Courts</span>.
-              </div>
-              <div class="session-share-panel-intro"
-                   th:if="${(ladder.nearbyShareLocationName == null or #strings.isEmpty(ladder.nearbyShareLocationName)) and ladder.nearbyShareLocationId != null}">
-                Nearby sharing is on for your current court.
-              </div>
-              <div class="session-share-panel-intro"
-                   th:unless="${ladder.nearbyShareLocationId != null}">
-                Let other players at your courts find this session.
-              </div>
-              <p class="text-muted small mb-0"
-                 th:if="${ladder.nearbyShareLocationId != null}">
-                Player can find nearby sessions and request to join.
-              </p>
-              <p class="text-muted small mb-0"
-                 th:unless="${ladder.nearbyShareLocationId != null}">
-                Access your phone's location to let nearby checked-in players discover this session and request to join.
-              </p>
-              <div class="d-flex flex-column gap-3 align-items-center"
-                   th:attr="data-session-nearby-host=${true}, data-session-id=${ladder.id}">
-                <div class="session-share-panel-actions d-grid gap-2">
-                  <button class="btn btn-action-primary w-100"
-                          type="button"
-                          data-nearby-start
-                          th:text="${ladder.nearbyShareLocationId != null} ? 'Refresh Nearby Court' : 'Use My Current Location'">
-                    Use My Current Location
-                  </button>
-                </div>
-                <div class="alert d-none mt-0 mb-0 w-100 text-start"
-                     data-nearby-status
-                     role="status"
-                     aria-live="polite"></div>
-              </div>
-            </section>
-          </details>
         </div>
       </div>
       <div class="d-grid gap-3"
@@ -83,7 +66,7 @@
           <div class="text-muted"
                data-empty-state
                th:classappend="${#lists.isEmpty(pendingSessionJoinRequests)} ? '' : ' d-none'">
-            Requests to join with your code will appear here.
+            No pending join requests.
           </div>
           <ul class="list-group"
               data-request-list
@@ -115,6 +98,24 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="modal fade" id="sessionInviteQrModal" tabindex="-1" aria-labelledby="sessionInviteQrModalTitle"
+       aria-hidden="true" th:if="${currentUserIsAdmin and inviteActive}">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="sessionInviteQrModalTitle">Scan to join</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div class="invite-share-qr d-flex justify-content-center">
+          <div class="invite-qr-wrapper border rounded bg-white p-2" id="inviteQrCode" data-qr-size="224"
+               role="img" aria-label="QR code for session invite link">
+            <div class="text-muted small">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div></div>
   </div>
 
   <div class="card mb-3"
@@ -437,68 +438,6 @@
   </div>
 
   <div class="modal fade"
-       id="sessionConfirmationsInboxModal"
-       data-session-confirmation-modal="inbox"
-       tabindex="-1"
-       aria-labelledby="sessionConfirmationsInboxModalLabel"
-       aria-hidden="true"
-       th:if="${sessionConfirmationInboxLinks != null and !#lists.isEmpty(sessionConfirmationInboxLinks)}">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title fs-5"
-              id="sessionConfirmationsInboxModalLabel">Inbox</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body d-grid gap-3">
-          <div class="small text-muted">Your confirmation is needed on these matches.</div>
-          <div th:replace="~{fragments/show/sessionBody :: sessionConfirmationList(
-                 confirmationLinks=${sessionConfirmationInboxLinks},
-                 confirmableMatchIds=${sessionConfirmationInboxConfirmableMatchIds})}"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade"
-       id="sessionConfirmationsOutboxModal"
-       data-session-confirmation-modal="outbox"
-       tabindex="-1"
-       aria-labelledby="sessionConfirmationsOutboxModalLabel"
-       aria-hidden="true"
-       th:if="${sessionConfirmationOutboxLinks != null and !#lists.isEmpty(sessionConfirmationOutboxLinks)}">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title fs-5"
-              id="sessionConfirmationsOutboxModalLabel">Outbox</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body d-grid gap-3">
-          <div class="small text-muted">These matches are waiting on the other team.</div>
-          <div th:replace="~{fragments/show/sessionBody :: sessionConfirmationList(
-                 confirmationLinks=${sessionConfirmationOutboxLinks},
-                 confirmableMatchIds=${null})}"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <th:block th:fragment="sessionConfirmationList(confirmationLinks, confirmableMatchIds)">
-    <div class="d-flex flex-column">
-      <div th:each="lnk : ${confirmationLinks}"
-           th:data-match-id="${lnk.match.id}"
-           class="match-dashboard-card card mb-1 position-relative"
-           th:with="isParticipant=${loggedInUser != null and (loggedInUser.id == lnk.match.a1?.id or loggedInUser.id == lnk.match.a2?.id or loggedInUser.id == lnk.match.b1?.id or loggedInUser.id == lnk.match.b2?.id)}"
-           th:classappend="${isParticipant and ((loggedInUser.id == lnk.match.a1?.id or loggedInUser.id == lnk.match.a2?.id) and lnk.match.scoreA > lnk.match.scoreB or (loggedInUser.id == lnk.match.b1?.id or loggedInUser.id == lnk.match.b2?.id) and lnk.match.scoreB > lnk.match.scoreA) ? 'bg-success bg-opacity-10' : (isParticipant ? 'bg-danger bg-opacity-10' : '')}">
-        <div class="card-body p-2">
-          <div th:insert="~{fragments/matchRow :: matchRow(match=${lnk.match}, confirmable=${confirmableMatchIds != null and confirmableMatchIds.contains(lnk.match.id)}, editable=${editableByMatchId != null and editableByMatchId[lnk.match.id] != null ? editableByMatchId[lnk.match.id] : lnk.match.isEditableBy(loggedInUser)}, showTime=true, title=${null}, showScore=true, showState=true, showAdminControls=false, a1Name=null, a2Name=null, b1Name=null, b2Name=null, confirmer=${confirmerByMatchId != null ? confirmerByMatchId[lnk.match.id] : null}, removeOnConfirm=${true})}"></div>
-        </div>
-      </div>
-    </div>
-  </th:block>
-
-  <div class="modal fade"
        id="sessionRatingDetailsModal"
        tabindex="-1"
        aria-labelledby="sessionRatingDetailsModalLabel"
@@ -533,16 +472,4 @@
   <script th:if="${targetSeason != null}"
           src="/js/match-log-voice.js"
           th:src="@{/js/match-log-voice.js(v=${assetVersion})}"></script>
-  <script th:if="${sessionConfirmationsAutoOpen}">
-    (function () {
-      const modalEl = document.getElementById('sessionConfirmationsInboxModal')
-        || document.getElementById('sessionConfirmationsOutboxModal');
-      if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
-        return;
-      }
-      window.setTimeout(function () {
-        bootstrap.Modal.getOrCreateInstance(modalEl).show();
-      }, 120);
-    })();
-  </script>
 </th:block>

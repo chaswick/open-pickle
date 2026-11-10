@@ -8,6 +8,7 @@ import com.w3llspring.fhpb.web.model.LadderSecurity;
 import com.w3llspring.fhpb.web.service.LadderConfigService;
 import com.w3llspring.fhpb.web.service.StoryModeService;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -151,6 +152,15 @@ public class GroupCreationService {
 
   public GroupCreationOutcome createOrReuseSession(
       Long currentUserId, String title, LadderSeason competitionSeason, LocalDate scheduledDate) {
+    return createOrReuseSession(currentUserId, title, competitionSeason, scheduledDate, null);
+  }
+
+  public GroupCreationOutcome createOrReuseSession(
+      Long currentUserId,
+      String title,
+      LadderSeason competitionSeason,
+      LocalDate scheduledDate,
+      LocalTime scheduledTime) {
     if (scheduledDate == null) return createOrReuseSession(currentUserId, title, competitionSeason);
     if (competitionSeason == null) {
       return GroupCreationOutcome.failure(
@@ -159,7 +169,7 @@ public class GroupCreationService {
     try {
       LadderConfig session =
           ladderConfigService.createSessionConfig(
-              currentUserId, title, competitionSeason, scheduledDate);
+              currentUserId, title, competitionSeason, scheduledDate, scheduledTime);
       return GroupCreationOutcome.success(session.getId(), "Session created.", "light", false);
     } catch (IllegalStateException | IllegalArgumentException ex) {
       return GroupCreationOutcome.failure(ex.getMessage(), "danger");

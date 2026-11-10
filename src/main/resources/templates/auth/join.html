@@ -3,24 +3,59 @@
 
 <head>
   <title layout:fragment="title"
-         th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join with a code' : 'Join Group'">Join Group</title>
+         th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join a session' : 'Join Group'">Join Group</title>
   <meta layout:fragment="meta-tags">
 </head>
 
 <body>
   <main layout:fragment="content" class="container pt-4 pb-5 mt-4 text-center">
-    <h4 class="mb-3"
-        th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join with a code' : 'Join Group'">Join Group</h4>
+    <h4 class="mb-3" th:unless="${sessionApprovalMode == true or sessionJoinContext == true}">Join Group</h4>
 
     <div class="row justify-content-center">
       <div class="col-12 col-lg-6 mx-auto card-stack-col">
+        <section class="card mb-3 text-start" th:if="${sessionApprovalMode == true or sessionJoinContext == true}" data-session-join-intro>
+          <div class="card-body">
+            <h1 class="h3 mb-3">Join a session</h1>
+            <p class="text-muted mb-3">Choose the method that works for you.</p>
+            <div class="session-invite-grid" aria-label="Ways to join">
+              <section class="session-share-panel d-flex align-items-start gap-2" aria-labelledby="join-method-link">
+                <span class="session-invite-icon"><i class="bi bi-link-45deg" aria-hidden="true"></i></span>
+                <div>
+                  <h2 class="h6 mb-1" id="join-method-link">Invite link</h2>
+                  <p class="small text-muted mb-0">Open the link someone texted or emailed you.</p>
+                </div>
+              </section>
+              <section class="session-share-panel d-flex align-items-start gap-2" aria-labelledby="join-method-qr">
+                <span class="session-invite-icon"><i class="bi bi-qr-code" aria-hidden="true"></i></span>
+                <div>
+                  <h2 class="h6 mb-1" id="join-method-qr">QR code</h2>
+                  <p class="small text-muted mb-0">Scan the code the host shows you with your phone camera.</p>
+                </div>
+              </section>
+              <section class="session-share-panel d-flex align-items-start gap-2" aria-labelledby="join-method-code">
+                <span class="session-invite-icon"><i class="bi bi-keyboard" aria-hidden="true"></i></span>
+                <div>
+                  <h2 class="h6 mb-1" id="join-method-code">Session code</h2>
+                  <p class="small text-muted mb-0">Enter the code below to ask to join.</p>
+                </div>
+              </section>
+              <section class="session-share-panel d-flex align-items-start gap-2" aria-labelledby="join-method-nearby" th:if="${checkInEnabled}">
+                <span class="session-invite-icon"><i class="bi bi-geo-alt" aria-hidden="true"></i></span>
+                <div>
+                  <h2 class="h6 mb-1" id="join-method-nearby">Nearby sessions</h2>
+                  <p class="small text-muted mb-0">At the courts? Find a session nearby below.</p>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
         <p th:if="${organizerScoredInvite == true}" class="alert alert-info" data-organizer-scoring-notice>The organizer records and automatically confirms scores in this session. You can review your results without confirming each game.</p>
         <form method="post" action="/groups/join" th:action="@{/groups/join}" id="joinLadderForm" class="text-start">
           <input type="hidden" name="returnTo" th:if="${returnToPath != null}" th:value="${returnToPath}">
 
           <div class="card mb-3 text-center">
             <div class="card-header card-header-title" th:if="${sessionApprovalMode == true or sessionJoinContext == true}">
-              <span th:text="${sessionJoinContext == true and sessionApprovalMode != true and checkInEnabled} ? 'Shared Code' : 'Session Code'">Session Code</span>
+              Join with a code
             </div>
             <div class="card-header card-header-title" th:unless="${sessionApprovalMode == true or sessionJoinContext == true}">Invite Code</div>
             <div class="card-body">
@@ -30,16 +65,8 @@
                      th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Pick the two words and number' : 'Enter the invite code (words-digits)'">
                 Enter the invite code (words-digits)
               </label>
-              <p class="text-muted small mb-3" th:if="${sessionApprovalMode == true}">
-                The session owner will see your request inside Open-Pickle and choose whether to let you in.
-              </p>
-              <p class="text-muted small mb-3"
-                 th:if="${sessionApprovalMode != true and sessionJoinContext == true and checkInEnabled}">
-                Ask your friend for the shared code. You can also scan their QR or open their invite link.
-              </p>
-              <p class="text-muted small mb-3"
-                 th:if="${sessionApprovalMode != true and sessionJoinContext == true and !checkInEnabled}">
-                Ask your friend for the shared code, or open their invite link.
+              <p class="text-muted small mb-3" th:if="${sessionApprovalMode == true or sessionJoinContext == true}">
+                The host approves requests made with a code.
               </p>
 
               <div th:if="${sessionApprovalMode == true or sessionJoinContext == true}" class="d-grid gap-2 mb-3">
@@ -100,32 +127,31 @@
                      minlength="3"
                      required
                      th:value="${prefillInviteCode}">
-              <div class="form-text"
-                   th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Ask the session owner for the shared code.' : 'Ask the league admin for the invite code.'">
+              <div class="form-text" th:unless="${sessionApprovalMode == true or sessionJoinContext == true}">
                 Ask the league admin for the invite code.
               </div>
 
               <div class="d-grid gap-2">
                 <button class="btn btn-action-primary btn-lg" type="submit"
-                        th:text="${sessionApprovalMode == true} ? 'Ask to Join' : 'Join'">Join</button>
+                        th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Ask to join' : 'Join'">Join</button>
                 <a class="btn btn-nav-secondary" href="/"
                    th:href="${returnToPath != null} ? @{${returnToPath}} : @{/home}">Cancel</a>
               </div>
             </div>
           </div>
         </form>
-        <details class="card mb-3 text-start"
-             th:if="${sessionJoinContext == true and sessionApprovalMode != true and checkInEnabled}">
-          <summary class="p-3 fw-semibold">Find Nearby Sessions</summary>
+        <details class="card mb-3 text-start" data-nearby-discovery
+             th:if="${(sessionJoinContext == true or sessionApprovalMode == true) and checkInEnabled}">
+          <summary class="p-3 fw-semibold">Nearby sessions</summary>
           <div class="card-body">
             <p class="text-muted small mb-3">
-              Recommended when you are already at the courts. Use your current location to see nearby sessions, then the host can approve you in-app.
+              Use your location to find sessions at your courts. The host approves requests to join.
             </p>
             <div class="d-grid gap-3" data-session-nearby-join="true">
               <button class="btn btn-action-primary btn-lg"
                       type="button"
                       data-nearby-start>
-                Use My Current Location
+                Find nearby sessions
               </button>
               <div class="alert d-none mt-0 mb-0 text-start" data-nearby-status role="status" aria-live="polite"></div>
               <p class="text-muted small mb-0 text-start">

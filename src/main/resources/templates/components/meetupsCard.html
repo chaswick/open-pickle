@@ -1,7 +1,7 @@
 <div th:fragment="meetupsCard" class="card mb-4 shadow card-spotlight">
   <div class="card-header card-header-title text-center">Play Plans</div>
   <div class="card-body">
-    <div class="form-check mb-2">
+    <div class="form-check mb-2" th:if="${loggedInUser == null or !loggedInUser.nameOnlyAccount}">
       <input class="form-check-input" type="checkbox" id="meetupsEmailOptIn" th:checked="${loggedInUser != null and loggedInUser.meetupsEmailOptIn}" />
       <label class="form-check-label" for="meetupsEmailOptIn">
         Notify me by E-mail (no more than once every 8 hours, only if a new meetup is added)
@@ -337,19 +337,20 @@
           }
         }
 
-        async function deleteSlot(slotId) {
-          if (!confirm('Remove this plan?')) return;
-          const res = await fetch(`/api/meetups/${slotId}/delete`, {
-            method: 'POST',
-            headers: csrfHeaders()
-          });
-          if (res.ok) {
-            await refresh();
-          } else {
-            const body = await safeJson(res);
-            const msg = body && (body.message || body.error) ? (body.message || body.error) : '';
-            setStatus(`Unable to delete plan (HTTP ${res.status})${msg ? ': ' + msg : ''}.`);
-          }
+        function deleteSlot(slotId) {
+          window.fhpbConfirm('Remove this plan?', async function () {
+            const res = await fetch(`/api/meetups/${slotId}/delete`, {
+              method: 'POST',
+              headers: csrfHeaders()
+            });
+            if (res.ok) {
+              await refresh();
+            } else {
+              const body = await safeJson(res);
+              const msg = body && (body.message || body.error) ? (body.message || body.error) : '';
+              setStatus(`Unable to delete plan (HTTP ${res.status})${msg ? ': ' + msg : ''}.`);
+            }
+          }, { confirmText: 'Remove' });
         }
 
         async function updateLocation(slotId) {

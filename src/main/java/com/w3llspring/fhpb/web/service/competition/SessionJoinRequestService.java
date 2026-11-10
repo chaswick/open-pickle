@@ -398,7 +398,9 @@ public class SessionJoinRequestService {
   }
 
   private SessionJoinRequest expireIfNeeded(SessionJoinRequest request, Instant now) {
-    if (request == null || request.getStatus() != SessionJoinRequest.Status.PENDING) {
+    if (request == null
+        || request.getId() == null
+        || request.getStatus() != SessionJoinRequest.Status.PENDING) {
       return request;
     }
     LadderConfig session = request.getLadderConfig();

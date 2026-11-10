@@ -9,15 +9,16 @@
 <body>
 <div layout:fragment="content" class="app-page session-create-page">
   <div class="app-page-header"><div>
-    <h1 class="app-page-title">How are you playing?</h1>
+    <h1 class="app-page-title">Host a session</h1>
     <p class="app-page-subtitle">Start your group here. Friends join with your invite.</p>
   </div></div>
   <form method="post" th:action="@{/groups/create-session}" class="session-intent-form">
     <section class="session-when-card" aria-labelledby="session-when-title">
-      <h2 id="session-when-title">When are you playing?</h2>
+      <h2 id="session-when-title" class="session-create-step-title"><span class="session-step-number" aria-hidden="true">1</span> When are you playing?</h2>
       <div class="session-when-options" role="radiogroup" aria-labelledby="session-when-title">
         <label><input type="radio" name="sessionWhen" value="NOW"
                       th:checked="${sessionWhen != 'LATER'}" th:disabled="${sessionNowAvailable == false}"><span>Now</span></label>
+        <span class="session-choice-or" aria-hidden="true">or</span>
         <label><input type="radio" name="sessionWhen" value="LATER"
                       th:checked="${sessionWhen == 'LATER'}"><span>Later</span></label>
       </div>
@@ -28,28 +29,49 @@
                th:value="${sessionDate}" th:min="${sessionMinDate}" th:max="${sessionMaxDate}"
                th:required="${sessionWhen == 'LATER'}" th:disabled="${sessionWhen != 'LATER'}"
                aria-describedby="session-date-note">
-        <p id="session-date-note" class="small text-muted mt-2 mb-0">Friends can join ahead of time. Dates use <span th:text="${sessionTimeZone}">your timezone</span>.</p>
+        <label for="session-time" class="form-label mt-3">Start time</label>
+        <select id="session-time" name="sessionTime" class="form-select"
+                th:required="${sessionWhen == 'LATER'}" th:disabled="${sessionWhen != 'LATER'}"
+                aria-describedby="session-date-note">
+          <option value="">Choose a time</option>
+          <option th:each="slot : ${sessionStartTimes}" th:value="${slot.key}" th:text="${slot.value}"
+                  th:selected="${slot.key == sessionTime}">6:30 PM</option>
+        </select>
+        <p id="session-date-note" class="small text-muted mt-2 mb-0">Friends can join ahead of time. Date and time use <span th:text="${sessionTimeZone}">your timezone</span>.</p>
       </div>
     </section>
-    <div class="session-intent-card">
-      <label class="session-intent-option">
-        <input type="radio" name="playMode" value="MATCHUPS" th:checked="${sessionPlayMode == null or sessionPlayMode.name() == 'MATCHUPS'}">
-        <span><strong>Make matchups</strong><span>Invite your players, mix partners or keep teams together, and follow a schedule.</span>
-          <small>Great for a group playing together</small></span>
-        <i class="bi bi-grid" aria-hidden="true"></i>
-      </label>
-      <label class="session-scoring-option" data-organizer-scoring-choice
-             th:hidden="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
-        <input type="checkbox" name="organizerScored" value="true" class="form-check-input mt-1" th:checked="${sessionOrganizerScored == true}"
-               th:disabled="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
-        <span><strong>Organizer records scores</strong><span>Scores are confirmed automatically. Players only need to join and review their results.</span></span>
-      </label>
-    </div>
-    <label class="session-intent-option">
-      <input type="radio" name="playMode" value="OPEN_PLAY" th:checked="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
-      <span><strong>Log games as we go</strong><span>Choose your own pairings and keep track of scores together.</span></span>
-      <i class="bi bi-pencil-square" aria-hidden="true"></i>
-    </label>
+    <section class="session-when-card" aria-labelledby="session-play-title">
+      <h2 id="session-play-title" class="session-create-step-title"><span class="session-step-number" aria-hidden="true">2</span> How are you playing?</h2>
+      <p class="small text-muted mb-0">Choose one.</p>
+      <div class="session-play-options" role="radiogroup" aria-labelledby="session-play-title">
+        <div class="session-intent-card">
+          <label class="session-intent-option">
+            <input type="radio" name="playMode" value="MATCHUPS" th:checked="${sessionPlayMode == null or sessionPlayMode.name() == 'MATCHUPS'}">
+            <span><strong>Round Robin</strong><span>Invite your players, mix partners or keep teams together, and follow a schedule.</span></span>
+            <i class="bi bi-grid" aria-hidden="true"></i>
+          </label>
+          <label class="session-scoring-option" data-organizer-scoring-choice
+                 th:hidden="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
+            <input type="checkbox" name="organizerScored" value="true" class="form-check-input mt-1" th:checked="${sessionOrganizerScored == true}"
+                   th:disabled="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
+            <span><strong>Organizer records scores</strong><span>Scores are confirmed automatically.</span></span>
+          </label>
+        </div>
+        <span class="session-choice-or" aria-hidden="true">or</span>
+        <div class="session-intent-card">
+          <label class="session-intent-option">
+            <input type="radio" name="playMode" value="OPEN_PLAY" th:checked="${sessionPlayMode != null and sessionPlayMode.name() == 'OPEN_PLAY'}">
+            <span><strong>Log games as we go</strong><span>Choose your own pairings. Someone on the opposing team needs to confirm the match results.</span></span>
+            <i class="bi bi-pencil-square" aria-hidden="true"></i>
+          </label>
+        </div>
+      </div>
+    </section>
+    <section class="session-when-card" aria-labelledby="session-name-title">
+      <h2 id="session-name-title" class="session-create-step-title"><span class="session-step-number" aria-hidden="true">3</span><label for="session-name" class="mb-0">Session name <span class="text-muted fw-normal">(optional)</span></label></h2>
+      <input id="session-name" name="sessionName" type="text" class="form-control"
+             th:value="${sessionName}" th:maxlength="${sessionNameMaxLength}" placeholder="e.g. Amateur Bracket">
+    </section>
     <button type="submit" class="btn btn-action-primary w-100">Create session</button>
     <a th:href="@{/home}" class="btn btn-link w-100">Back</a>
   </form>

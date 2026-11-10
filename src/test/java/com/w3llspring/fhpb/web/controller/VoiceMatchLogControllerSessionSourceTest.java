@@ -27,9 +27,11 @@ import com.w3llspring.fhpb.web.service.scoring.BalancedV1LadderScoringAlgorithm;
 import com.w3llspring.fhpb.web.service.scoring.LadderScoringAlgorithms;
 import com.w3llspring.fhpb.web.service.scoring.MarginCurveV1LadderScoringAlgorithm;
 import com.w3llspring.fhpb.web.service.trophy.TrophyAwardService;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,9 +55,21 @@ class VoiceMatchLogControllerSessionSourceTest {
   private Match capturedMatch;
   private User currentUser;
   private LadderSeason competitionSeason;
+  private Object previousAuthenticatedUserService;
+
+  @AfterEach
+  void restoreAuthenticationSupport() {
+    ReflectionTestUtils.setField(
+        AuthenticatedUserSupport.class,
+        "authenticatedUserService",
+        previousAuthenticatedUserService);
+  }
 
   @BeforeEach
   void setUp() {
+    previousAuthenticatedUserService =
+        ReflectionTestUtils.getField(AuthenticatedUserSupport.class, "authenticatedUserService");
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
     capturedMatch = null;
 
     MatchConfirmationService confirmationService =

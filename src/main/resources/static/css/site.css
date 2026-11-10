@@ -1783,6 +1783,21 @@ body.app-home-tour-open {
   margin-top: 0.4rem;
 }
 
+#session-invite-panel {
+  scroll-margin-top: 85px;
+}
+
+.session-share-panel {
+  border: 1px solid rgba(18, 68, 122, 0.12);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+  padding: 1rem;
+}
+
+.session-share-panel[hidden] {
+  display: none !important;
+}
+
 .session-invite-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1793,16 +1808,57 @@ body.app-home-tour-open {
   min-width: 0;
 }
 
-.session-nearby-options summary {
-  cursor: pointer;
+.session-invite-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-align: left;
 }
 
-.session-nearby-options[open] summary {
-  margin-bottom: 1rem;
+.session-invite-option-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.session-invite-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+  font-size: 1.2rem;
+}
+
+.session-invite-code {
+  min-width: 0;
+  width: 100%;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+#sessionInviteQrModal .invite-qr-wrapper {
+  width: 256px;
+  height: 256px;
+  max-width: 100%;
 }
 
 @media (max-width: 575.98px) {
   .session-invite-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+.player-mailbox {
+  background: #fff;
+}
+.player-mailbox .btn {
+  min-height: 40px;
+  white-space: nowrap;
+}
+.player-mailbox .badge {
+  min-width: 1.5rem;
 }

@@ -1,0 +1,67 @@
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="content">
+  <section th:fragment="bar" th:if="${loggedInUser != null}" id="playerMailbox"
+           class="card player-mailbox mb-3" aria-label="Your match confirmations" th:attr="data-mailbox-url=@{/mailbox}">
+    <div class="card-body p-2 d-flex gap-2">
+      <button type="button" class="btn btn-nav-secondary flex-fill" data-mailbox-button="inbox"
+              data-bs-toggle="modal" data-bs-target="#playerInboxModal"
+              th:attr="aria-label=|Inbox: ${navigationInboxCount ?: 0} matches need your confirmation|">
+        <i class="bi bi-inbox" aria-hidden="true"></i> Inbox
+        <span class="badge rounded-pill" data-mailbox-count
+              th:classappend="${navigationInboxCount != null and navigationInboxCount > 0} ? 'bg-primary' : 'bg-secondary'"
+              th:text="${navigationInboxCount ?: 0}">0</span>
+      </button>
+      <button type="button" class="btn btn-nav-secondary flex-fill" data-mailbox-button="outbox"
+              data-bs-toggle="modal" data-bs-target="#playerOutboxModal"
+              th:attr="aria-label=|Outbox: ${navigationOutboxCount ?: 0} matches waiting on the other team|">
+        <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> Outbox
+        <span class="badge rounded-pill" data-mailbox-count
+              th:classappend="${navigationOutboxCount != null and navigationOutboxCount > 0} ? 'bg-primary' : 'bg-secondary'"
+              th:text="${navigationOutboxCount ?: 0}">0</span>
+      </button>
+    </div>
+  </section>
+
+  <th:block th:fragment="modals" th:if="${loggedInUser != null}">
+    <div class="modal fade" id="playerInboxModal" data-mailbox-modal="inbox" tabindex="-1"
+         aria-labelledby="playerInboxTitle" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title fs-5" id="playerInboxTitle">Inbox</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body d-grid gap-3" id="playerInboxBody">
+          <p class="small text-muted mb-0" th:text="${navigationInboxLinks == null or #lists.isEmpty(navigationInboxLinks)} ? 'No matches need your confirmation.' : 'Your confirmation is needed on these matches.'"></p>
+          <div th:replace="~{components/mailbox :: matchList(confirmationLinks=${navigationInboxLinks})}"></div>
+        </div>
+      </div></div>
+    </div>
+    <div class="modal fade" id="playerOutboxModal" data-mailbox-modal="outbox" tabindex="-1"
+         aria-labelledby="playerOutboxTitle" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title fs-5" id="playerOutboxTitle">Outbox</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body d-grid gap-3" id="playerOutboxBody">
+          <p class="small text-muted mb-0" th:text="${navigationOutboxLinks == null or #lists.isEmpty(navigationOutboxLinks)} ? 'No matches are waiting on the other team.' : 'These matches are waiting on the other team.'"></p>
+          <div th:replace="~{components/mailbox :: matchList(confirmationLinks=${navigationOutboxLinks})}"></div>
+        </div>
+      </div></div>
+    </div>
+  </th:block>
+
+  <th:block th:fragment="matchList(confirmationLinks)"
+            th:with="mailboxRowModel=${navigationMailbox != null ? navigationMailbox.matchRowModel : null},
+                     confirmableMatchIds=${mailboxRowModel != null ? mailboxRowModel.confirmableMatchIds : null},
+                     confirmerByMatchId=${mailboxRowModel != null ? mailboxRowModel.confirmerByMatchId : null},
+                     casualAutoConfirmedByMatchId=${mailboxRowModel != null ? mailboxRowModel.casualAutoConfirmedByMatchId : null},
+                     pendingByMatchId=${mailboxRowModel != null ? mailboxRowModel.pendingByMatchId : null},
+                     waitingOnOpponentByMatchId=${mailboxRowModel != null ? mailboxRowModel.waitingOnOpponentByMatchId : null},
+                     editableByMatchId=${mailboxRowModel != null ? mailboxRowModel.editableByMatchId : null},
+                     deletableByMatchId=${mailboxRowModel != null ? mailboxRowModel.deletableByMatchId : null},
+                     nullifyRequestableByMatchId=${mailboxRowModel != null ? mailboxRowModel.nullifyRequestableByMatchId : null},
+                     nullifyApprovableByMatchId=${mailboxRowModel != null ? mailboxRowModel.nullifyApprovableByMatchId : null},
+                     nullifyWaitingOnOpponentByMatchId=${mailboxRowModel != null ? mailboxRowModel.nullifyWaitingOnOpponentByMatchId : null}">
+    <div th:each="lnk : ${confirmationLinks}" th:data-match-id="${lnk.match.id}" class="match-dashboard-card card mb-1">
+      <div class="card-body p-2">
+        <div th:insert="~{fragments/matchRow :: matchRow(match=${lnk.match}, confirmable=${confirmableMatchIds != null and confirmableMatchIds.contains(lnk.match.id)}, editable=${editableByMatchId != null and editableByMatchId[lnk.match.id] == true}, showTime=true, title=${null}, showScore=true, showState=true, showAdminControls=false, a1Name=null, a2Name=null, b1Name=null, b2Name=null, confirmer=${confirmerByMatchId != null ? confirmerByMatchId[lnk.match.id] : null}, removeOnConfirm=${true})}"></div>
+      </div>
+    </div>
+  </th:block>
+</th:block>

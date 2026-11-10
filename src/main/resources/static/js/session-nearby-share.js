@@ -323,6 +323,10 @@
     });
 
     container.classList.remove('d-none');
+    if (sessions.length) {
+      const disclosure = root.closest('[data-nearby-discovery]');
+      if (disclosure) disclosure.open = true;
+    }
   }
 
   function initHostNearby(root) {
@@ -366,6 +370,13 @@
         resolveUrl: '/api/check-in/session-nearby-join'
       }
     );
+
+    // Reuse an existing court check-in without asking for device location on page load.
+    getJson('/api/sessions/nearby-sharing/candidates').then(function (payload) {
+      if (payload.sessions && payload.sessions.length) renderNearbySessions(root, payload);
+    }).catch(function () {
+      // No active check-in (or a failed lookup): leave manual search available.
+    });
 
     const startButton = root.querySelector('[data-nearby-start]');
     if (startButton) {

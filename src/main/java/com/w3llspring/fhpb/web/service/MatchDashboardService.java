@@ -376,5 +376,30 @@ public class MatchDashboardService {
     }
 
     public record DashboardModel(List<LadderMatchLink> links, MatchRowModel matchRowModel) {
+        public List<LadderMatchLink> inboxLinks() {
+            return filterMailbox(true);
+        }
+
+        public List<LadderMatchLink> outboxLinks() {
+            return filterMailbox(false);
+        }
+
+        private List<LadderMatchLink> filterMailbox(boolean inbox) {
+            if (links == null || matchRowModel == null) return List.of();
+            return links.stream().filter(Objects::nonNull)
+                    .filter(link -> link.getMatch() != null && link.getMatch().getId() != null)
+                    .filter(link -> {
+                        Long id = link.getMatch().getId();
+                        return inbox
+                                ? (matchRowModel.getConfirmableMatchIds() != null && matchRowModel.getConfirmableMatchIds().contains(id))
+                                  || isTrue(matchRowModel.getNullifyApprovableByMatchId(), id)
+                                : isTrue(matchRowModel.getWaitingOnOpponentByMatchId(), id)
+                                  || isTrue(matchRowModel.getNullifyWaitingOnOpponentByMatchId(), id);
+                    }).toList();
+        }
+
+        private boolean isTrue(Map<Long, Boolean> flags, Long id) {
+            return flags != null && Boolean.TRUE.equals(flags.get(id));
+        }
     }
 }

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/public}">
+<head><title layout:fragment="title">Connect email</title><meta name="robots" content="noindex,nofollow"></head>
+<body>
+<main layout:fragment="content" class="container py-5">
+  <div class="row justify-content-center"><div class="col-12 col-md-8 col-lg-6">
+    <section class="card shadow-sm"><div class="card-body p-4">
+      <h1 class="h3">Connect email</h1>
+      <p class="alert alert-danger" role="alert" th:if="${connectError}" th:text="${connectError}"></p>
+      <form th:if="${connectionAvailable == true}" method="post" th:action="@{/connect-email}">
+        <p>Choose a password to sign in with <span class="notranslate" translate="no" th:text="${connectingEmail}"></span>.</p>
+        <label for="password" class="form-label">Password</label>
+        <input class="form-control" id="password" name="password" type="password" required autocomplete="new-password"
+               minlength="8" maxlength="64" th:pattern="${passwordPattern}">
+        <p class="form-text mb-3" th:text="${passwordRequirements}"></p>
+        <label for="confirm-password" class="form-label">Confirm password</label>
+        <input class="form-control mb-3" id="confirm-password" name="confirm_password" type="password" required autocomplete="new-password" maxlength="64">
+        <button class="btn btn-nav-primary w-100" type="submit">Connect email</button>
+      </form>
+      <a class="btn btn-nav-secondary mt-3" th:href="@{/home}">Back</a>
+    </div></section>
+  </div></div>
+</main>
+</body>
+</html>

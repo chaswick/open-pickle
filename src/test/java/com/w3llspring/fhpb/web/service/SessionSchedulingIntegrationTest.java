@@ -31,6 +31,8 @@ class SessionSchedulingIntegrationTest {
   @Autowired CompetitionSeasonService competitionSeasons;
   @Autowired SessionJoinRequestService joinRequests;
   @Autowired SessionJoinRequestRepository requestRows;
+  @Autowired MatchRepository matches;
+  @Autowired com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService roundRobins;
   private User owner;
   private LadderSeason season;
 
@@ -95,7 +97,14 @@ class SessionSchedulingIntegrationTest {
     var flash = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
     String result =
         controller.create(
-            auth, LadderConfig.SessionPlayMode.MATCHUPS, true, "LATER", date.toString(), flash);
+            auth,
+            LadderConfig.SessionPlayMode.MATCHUPS,
+            true,
+            "LATER",
+            date.toString(),
+            "18:30",
+            "  Amateur Bracket  ",
+            flash);
     assertThat(result).startsWith("redirect:/groups/").endsWith("#matchups");
     LadderConfig planned =
         configs.findByOwnerUserId(owner.getId()).stream()
@@ -103,13 +112,21 @@ class SessionSchedulingIntegrationTest {
             .findFirst()
             .orElseThrow();
     assertThat(planned.getSessionScheduledDate()).isEqualTo(date);
+    assertThat(planned.getTitle()).isEqualTo("Organizer's \"Amateur Bracket\" session");
     assertThat(planned.isOrganizerScored()).isTrue();
     assertThat(planned.getSessionStartedAt()).isNull();
 
     var missing = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
     assertThat(
             controller.create(
-                auth, LadderConfig.SessionPlayMode.OPEN_PLAY, false, "LATER", "", missing))
+                auth,
+                LadderConfig.SessionPlayMode.OPEN_PLAY,
+                false,
+                "LATER",
+                "",
+                "18:30",
+                "Amateur Bracket",
+                missing))
         .isEqualTo("redirect:/groups/new-session");
     assertThat(missing.getFlashAttributes().get("sessionWhen")).isEqualTo("LATER");
     assertThat(missing.getFlashAttributes().get("sessionPlayMode"))
@@ -141,9 +158,96 @@ class SessionSchedulingIntegrationTest {
   }
 
   @Test
-  void plannedOpenPlayCannotLogEarlyAndFindsTheNewSeasonAfterARollover() {
+  void timedSessionsPersistTheSelectedTimeAndExpireFromThatInstant() {
+    ZoneId zone = ZoneId.of(owner.getTimeZone());
+    LocalDate date = LocalDate.now(zone).plusDays(1);
+    LadderConfig planned =
+        service.createSessionConfig(owner.getId(), null, season, date, LocalTime.of(18, 30));
+    assertThat(planned.getSessionScheduledAt())
+        .isEqualTo(date.atTime(18, 30).atZone(zone).toInstant());
+    assertThat(planned.getExpiresAt())
+        .isEqualTo(planned.getSessionScheduledAt().plus(Duration.ofHours(48)));
+    assertThat(planned.getSessionDateLabel()).contains("6:30 PM");
+    assertThat(planned.isUpcomingSession(planned.getSessionScheduledAt().minusSeconds(1))).isTrue();
+    assertThat(planned.isUpcomingSession(planned.getSessionScheduledAt())).isFalse();
+  }
+
+  @Test
+  void laterRequiresATimeAndPreservesInputsOnValidationFailure() {
+    var auth =
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(owner), null, java.util.List.of());
+    var flash = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+    String date = LocalDate.now(ZoneId.of(owner.getTimeZone())).plusDays(1).toString();
+    assertThat(
+            controller.create(
+                auth,
+                LadderConfig.SessionPlayMode.MATCHUPS,
+                true,
+                "LATER",
+                date,
+                "",
+                "Amateur Bracket",
+                flash))
+        .isEqualTo("redirect:/groups/new-session");
+    assertThat(flash.getFlashAttributes().get("sessionDate")).isEqualTo(date);
+    assertThat(flash.getFlashAttributes().get("sessionTime")).isEqualTo("");
+    assertThat(flash.getFlashAttributes().get("sessionName")).isEqualTo("Amateur Bracket");
+    assertThat(configs.findByOwnerUserId(owner.getId())).noneMatch(LadderConfig::isSessionType);
+  }
+
+  @Test
+  void blankNameKeepsTheDefaultAndReopeningDoesNotRenameTheCurrentSession() {
+    var auth =
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(owner), null, java.util.List.of());
+    var flash = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+    String destination =
+        controller.create(
+            auth, LadderConfig.SessionPlayMode.OPEN_PLAY, false, "NOW", null, null, "   ", flash);
+    LadderConfig current =
+        configs.findByOwnerUserId(owner.getId()).stream()
+            .filter(LadderConfig::isSessionType)
+            .findFirst()
+            .orElseThrow();
+    assertThat(current.getTitle()).isEqualTo("Organizer's Session");
+    assertThat(
+            controller.create(
+                auth,
+                LadderConfig.SessionPlayMode.MATCHUPS,
+                true,
+                "NOW",
+                null,
+                null,
+                "Different event",
+                flash))
+        .isEqualTo(destination);
+    assertThat(current.getTitle()).isEqualTo("Organizer's Session");
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(
+      strings = {"<b>Event</b>", "12345678901234567890123456789012345678901"})
+  void invalidSessionNamesAreRejectedBeforeCreation(String name) {
+    var auth =
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(owner), null, java.util.List.of());
+    var flash = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+    assertThat(
+            controller.create(
+                auth, LadderConfig.SessionPlayMode.MATCHUPS, true, "NOW", null, null, name, flash))
+        .isEqualTo("redirect:/groups/new-session");
+    assertThat(flash.getFlashAttributes().get("sessionName")).isEqualTo(name);
+    assertThat(flash.getFlashAttributes().get("toastMessage").toString()).contains("Session name");
+    assertThat(configs.findByOwnerUserId(owner.getId())).noneMatch(LadderConfig::isSessionType);
+  }
+
+  @Test
+  void plannedOpenPlayCanLogEarlyAndFindsTheNewSeasonWithoutChangingItsSchedule() {
     LocalDate date = LocalDate.now(ZoneId.of(owner.getTimeZone())).plusWeeks(1);
     LadderConfig planned = service.createSessionConfig(owner.getId(), null, season, date);
+    Instant scheduledAt = planned.getSessionScheduledAt();
+    Instant expiresAt = planned.getExpiresAt();
     var context =
         new com.w3llspring.fhpb.web.service.matchlog.MatchLogContextService(
             seasons, configs, memberships, null, null, null, ZoneId.of("America/New_York"));
@@ -151,7 +255,7 @@ class SessionSchedulingIntegrationTest {
             context
                 .resolveMatchLogContext(season.getId(), planned.getId(), Instant.now(), false)
                 .getSeason())
-        .isNull();
+        .isEqualTo(season);
     season.setState(LadderSeason.State.ENDED);
     seasons.saveAndFlush(season);
     LadderSeason next = new LadderSeason();
@@ -161,8 +265,6 @@ class SessionSchedulingIntegrationTest {
     next.setStartDate(LocalDate.now().minusDays(1));
     next.setEndDate(LocalDate.now().plusDays(100));
     next = seasons.saveAndFlush(next);
-    planned.setSessionScheduledAt(Instant.now().minusSeconds(86400));
-    planned = configs.saveAndFlush(planned);
     assertThat(competitionSeasons.resolveTargetSeason(planned).getId()).isEqualTo(next.getId());
     assertThat(
             context
@@ -170,6 +272,81 @@ class SessionSchedulingIntegrationTest {
                 .getSeason()
                 .getId())
         .isEqualTo(next.getId());
+    assertThat(planned.isUpcomingSession()).isTrue();
+    assertThat(planned.getSessionStartedAt()).isNull();
+    assertThat(planned.getSessionScheduledAt()).isEqualTo(scheduledAt);
+    assertThat(planned.getExpiresAt()).isEqualTo(expiresAt);
+  }
+
+  @Test
+  void earlyLoggingStillRejectsUnstartedMatchupsAndEndedSessions() {
+    LocalDate date = LocalDate.now(ZoneId.of(owner.getTimeZone())).plusWeeks(1);
+    LadderConfig planned = service.createSessionConfig(owner.getId(), null, season, date);
+    var context =
+        new com.w3llspring.fhpb.web.service.matchlog.MatchLogContextService(
+            seasons, configs, memberships, null, null, null, ZoneId.of("America/New_York"));
+    planned.setSessionPlayMode(LadderConfig.SessionPlayMode.MATCHUPS);
+    configs.saveAndFlush(planned);
+    assertThat(
+            context
+                .resolveMatchLogContext(season.getId(), planned.getId(), Instant.now(), false)
+                .getSeason())
+        .isNull();
+    planned.setSessionPlayMode(LadderConfig.SessionPlayMode.OPEN_PLAY);
+    planned.setExpiresAt(Instant.now().minusSeconds(1));
+    configs.saveAndFlush(planned);
+    assertThat(
+            context
+                .resolveMatchLogContext(season.getId(), planned.getId(), Instant.now(), false)
+                .getSeason())
+        .isNull();
+    planned.setExpiresAt(Instant.now().plusSeconds(3600));
+    planned.setStatus(LadderConfig.Status.ARCHIVED);
+    configs.saveAndFlush(planned);
+    assertThat(
+            context
+                .resolveMatchLogContext(season.getId(), planned.getId(), Instant.now(), false)
+                .getSeason())
+        .isNull();
+  }
+
+  @Test
+  void sessionTotalsIncludeConfirmedGamesFromBothSidesOfASeasonBoundary() {
+    LadderConfig planned =
+        service.createSessionConfig(
+            owner.getId(),
+            null,
+            season,
+            LocalDate.now(ZoneId.of(owner.getTimeZone())).plusWeeks(1));
+    User opponent = new User();
+    opponent.setEmail("opponent-" + UUID.randomUUID().toString().substring(0, 8) + "@test.local");
+    opponent.setNickName("Opponent");
+    opponent.setPassword("unused");
+    opponent = users.saveAndFlush(opponent);
+    LadderSeason old = new LadderSeason();
+    old.setLadderConfig(season.getLadderConfig());
+    old.setName("Previous season");
+    old.setState(LadderSeason.State.ENDED);
+    old.setStartDate(LocalDate.now().minusWeeks(6));
+    old.setEndDate(LocalDate.now().minusDays(2));
+    old = seasons.saveAndFlush(old);
+    for (int i = 0; i < 3; i++) {
+      Match match = new Match();
+      match.setSeason(i == 0 ? old : season);
+      match.setPlayedAt(i == 0 ? Instant.now().minus(Duration.ofDays(3)) : Instant.now());
+      match.setSourceSessionConfig(planned);
+      match.setA1(owner);
+      match.setB1(opponent);
+      match.setScoreA(11);
+      match.setScoreB(7);
+      match.setState(i == 2 ? MatchState.PROVISIONAL : MatchState.CONFIRMED);
+      matches.saveAndFlush(match);
+    }
+    var standings = roundRobins.computeStandingsForSession(planned);
+    assertThat(standings).hasSize(2);
+    assertThat(standings.getFirst().getUserId()).isEqualTo(owner.getId());
+    assertThat(standings.getFirst().getWins()).isEqualTo(2);
+    assertThat(standings.getFirst().getPointsFor()).isEqualTo(22);
   }
 
   @Test
@@ -294,11 +471,16 @@ class SessionSchedulingIntegrationTest {
   @Test
   void invalidDatesCannotCreateUnboundedOrPastSessions() {
     LocalDate today = LocalDate.now(ZoneId.of(owner.getTimeZone()));
-    for (LocalDate invalid : new LocalDate[] {today.minusDays(1), today, today.plusDays(91)}) {
+    for (LocalDate invalid : new LocalDate[] {today.minusDays(1), today.plusDays(91)}) {
       assertThatThrownBy(() -> service.createSessionConfig(owner.getId(), null, season, invalid))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("next 90 days");
     }
+    assertThatThrownBy(
+            () ->
+                service.createSessionConfig(owner.getId(), null, season, today, LocalTime.MIDNIGHT))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("future date and time");
     assertThat(
             configs.countSessionsByTiming(
                 owner.getId(),

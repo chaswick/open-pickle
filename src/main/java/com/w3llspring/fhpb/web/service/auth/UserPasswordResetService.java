@@ -51,7 +51,7 @@ public class UserPasswordResetService {
       return null;
     }
     User user = userRepository.findByEmailForUpdate(normalizedEmail).orElse(null);
-    if (user == null) {
+    if (user == null || user.isNameOnlyAccount()) {
       return null;
     }
     if (hasActiveResetPasswordToken(user)) {

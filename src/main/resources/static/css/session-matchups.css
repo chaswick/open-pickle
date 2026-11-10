@@ -6,7 +6,7 @@
 }
 .session-create-page {
   width:100%;
-  max-width:620px;
+  max-width:760px;
   margin:0 auto;
 }
 .app-page-header .app-page-title {
@@ -14,7 +14,7 @@
 }
 .session-intent-form {
   width:100%;
-  max-width:620px;
+  max-width:760px;
   margin:0 auto;
   display:grid;
   gap:16px;
@@ -33,6 +33,58 @@
   margin:0;
   font-size:1rem;
   font-weight:700;
+}
+.session-create-step-title {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.session-step-number {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#e8f2f5;
+  color:#173c50;
+  font-size:.85rem;
+}
+.session-choice-or {
+  align-self:center;
+  justify-self:center;
+  color:#516874;
+  font-size:.85rem;
+  font-weight:600;
+}
+.session-play-options {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  gap:12px;
+}
+.session-play-options .session-intent-card {
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  cursor:default;
+}
+.session-play-options .session-intent-option {
+  flex:1;
+  padding:16px;
+  gap:10px;
+}
+.session-play-options .session-intent-option strong {
+  font-size:1.05rem;
+}
+.session-play-options .session-scoring-option {
+  margin:0 16px 16px;
+  gap:10px;
+}
+@media (max-width:767px) {
+  .session-play-options {
+    grid-template-columns:minmax(0,1fr);
+  }
 }
 .session-when-options {
   display:flex;
@@ -67,7 +119,6 @@
   text-align:left;
   cursor:pointer;
 }
-.session-intent-form>.session-intent-option:has(input:checked),
 .session-intent-card:has(> .session-intent-option > input:checked) {
   border-color:#087f64;
   background:#f0faf6;

@@ -694,15 +694,17 @@
                 fixedTeamsRandomize.addEventListener('click', function () {
                     const selected = selectedParticipants();
                     const currentAssignments = readAssignmentsFromInputs();
+                    const randomize = function () {
+                        const shuffled = shuffle(selected);
+                        renderFixedTeamsBuilder(sequentialAssignments(shuffled));
+                        updateStartButtonState();
+                    };
                     if (shouldConfirmRandomize(selected, currentAssignments)) {
-                        const proceed = window.confirm('Randomize teams and replace your current pairings?');
-                        if (!proceed) {
-                            return;
-                        }
+                        window.fhpbConfirm('Randomize teams and replace your current pairings?', randomize,
+                            { confirmText: 'Randomize' });
+                        return;
                     }
-                    const shuffled = shuffle(selected);
-                    renderFixedTeamsBuilder(sequentialAssignments(shuffled));
-                    updateStartButtonState();
+                    randomize();
                 });
             }
 

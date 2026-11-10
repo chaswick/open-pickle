@@ -150,9 +150,10 @@
     var later = document.querySelector('[name=sessionWhen]:checked');
     later = later && later.value === 'LATER';
     choice.hidden = !later;
-    var input = choice.querySelector('input');
-    input.disabled = !later;
-    input.required = !!later;
+    choice.querySelectorAll('input, select').forEach(function (input) {
+      input.disabled = !later;
+      input.required = !!later;
+    });
   }
   document.addEventListener('DOMContentLoaded', function () {
     updateIntentScoring();

@@ -14,8 +14,15 @@ import com.w3llspring.fhpb.web.service.competition.GroupCreationService;
 import com.w3llspring.fhpb.web.service.competition.SessionMatchupService;
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinModificationException;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
+import com.w3llspring.fhpb.web.util.InputValidation;
+import com.w3llspring.fhpb.web.util.SessionScheduleSupport;
+import com.w3llspring.fhpb.web.util.UserPublicName;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -59,7 +66,16 @@ public class SessionMatchupController {
       model.addAttribute("sessionWhen", nowAvailable ? "NOW" : "LATER");
     model.addAttribute("sessionNowAvailable", nowAvailable);
     model.addAttribute("sessionTimeZone", zone.getId());
-    model.addAttribute("sessionMinDate", LocalDate.now(zone).plusDays(1));
+    model.addAttribute("sessionMinDate", LocalDate.now(zone));
+    var times = new LinkedHashMap<String, String>();
+    for (int minute = 0;
+        minute < 24 * 60;
+        minute += SessionScheduleSupport.START_INTERVAL_MINUTES) {
+      LocalTime time = LocalTime.of(minute / 60, minute % 60);
+      times.put(time.toString(), time.format(DateTimeFormatter.ofPattern("h:mm a", Locale.US)));
+    }
+    model.addAttribute("sessionStartTimes", times);
+    model.addAttribute("sessionNameMaxLength", LadderConfig.MAX_SESSION_NAME_LENGTH);
     model.addAttribute(
         "sessionMaxDate",
         LocalDate.now(zone).plusDays(LadderConfigService.MAX_SESSION_ADVANCE_DAYS));
@@ -74,26 +90,45 @@ public class SessionMatchupController {
       @RequestParam(defaultValue = "false") boolean organizerScored,
       @RequestParam(defaultValue = "NOW") String sessionWhen,
       @RequestParam(required = false) String sessionDate,
+      @RequestParam(required = false) String sessionTime,
+      @RequestParam(required = false) String sessionName,
       RedirectAttributes flash) {
     User actor = actor(auth);
     LocalDate plannedDate = null;
+    LocalTime plannedTime = null;
+    String title = null;
+    String problem = null;
     try {
       if ("LATER".equals(sessionWhen)) {
         plannedDate = LocalDate.parse(sessionDate == null ? "" : sessionDate);
+        plannedTime = LocalTime.parse(sessionTime == null ? "" : sessionTime);
       } else if (!"NOW".equals(sessionWhen)) {
         throw new IllegalArgumentException("Choose Now or Later.");
       }
-    } catch (java.time.DateTimeException | IllegalArgumentException ex) {
-      message(flash, "Choose a date for your session.", "warning");
-      rememberCreation(flash, playMode, organizerScored, sessionWhen, sessionDate);
+      String name = InputValidation.normalizeOptionalSessionName(sessionName);
+      if (name != null) title = UserPublicName.forUser(actor) + "'s \"" + name + "\" session";
+    } catch (java.time.DateTimeException ex) {
+      problem = "Choose a date and time for your session.";
+    } catch (IllegalArgumentException ex) {
+      problem = ex.getMessage();
+    }
+    if (problem != null) {
+      message(flash, problem, "warning");
+      rememberCreation(
+          flash, playMode, organizerScored, sessionWhen, sessionDate, sessionTime, sessionName);
       return "redirect:/groups/new-session";
     }
     var outcome =
         creation.createOrReuseSession(
-            actor.getId(), null, seasons.resolveActiveCompetitionSeason(), plannedDate);
+            actor.getId(),
+            title,
+            seasons.resolveActiveCompetitionSeason(),
+            plannedDate,
+            plannedTime);
     if (!outcome.success()) {
       message(flash, outcome.toastMessage(), "warning");
-      rememberCreation(flash, playMode, organizerScored, sessionWhen, sessionDate);
+      rememberCreation(
+          flash, playMode, organizerScored, sessionWhen, sessionDate, sessionTime, sessionName);
       return "redirect:/groups/new-session";
     }
     if (!outcome.reusedExistingSession()) {
@@ -241,11 +276,15 @@ public class SessionMatchupController {
       LadderConfig.SessionPlayMode playMode,
       boolean organizerScored,
       String when,
-      String date) {
+      String date,
+      String time,
+      String name) {
     flash.addFlashAttribute("sessionPlayMode", playMode);
     flash.addFlashAttribute("sessionOrganizerScored", organizerScored);
     flash.addFlashAttribute("sessionWhen", "NOW".equals(when) ? "NOW" : "LATER");
     flash.addFlashAttribute("sessionDate", date);
+    flash.addFlashAttribute("sessionTime", time);
+    flash.addFlashAttribute("sessionName", name);
   }
 
   private String back(Long id) {

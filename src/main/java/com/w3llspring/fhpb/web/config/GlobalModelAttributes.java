@@ -154,6 +154,9 @@ public class GlobalModelAttributes {
     model.addAttribute("ladderMaxMembers", ladderMaxMembers);
     model.addAttribute("sessionMaxMembers", LadderConfig.MAX_SESSION_MEMBERS);
     model.addAttribute("defaultMaxOwnedLadders", defaultMaxOwnedLadders);
+    model.addAttribute(
+        "scheduledSessionLimit",
+        ladderConfigService != null ? ladderConfigService.allowedSessionsPerUser() : null);
     model.addAttribute("assetVersion", assetVersion);
     model.addAttribute("branding", brandingProperties);
     model.addAttribute("operator", operatorProperties);
@@ -167,6 +170,9 @@ public class GlobalModelAttributes {
     model.addAttribute("showCompetitionSessionChooser", false);
     model.addAttribute("navigationSessionConfigs", List.of());
     model.addAttribute("navigationInboxCount", 0);
+    model.addAttribute("navigationOutboxCount", 0);
+    model.addAttribute("navigationInboxLinks", List.of());
+    model.addAttribute("navigationOutboxLinks", List.of());
     model.addAttribute(
         "competitionAutoModWarningOneThreshold", resolveCompetitionAutoModWarningOneThreshold());
     model.addAttribute(
@@ -222,7 +228,16 @@ public class GlobalModelAttributes {
     if (matchDashboardService == null || user == null || user.getId() == null) {
       return;
     }
-    model.addAttribute("navigationInboxCount", matchDashboardService.countInboxForUser(user));
+    MatchDashboardService.DashboardModel dashboard =
+        matchDashboardService.buildPendingForUser(user);
+    if (dashboard == null) return;
+    var inbox = dashboard.inboxLinks();
+    var outbox = dashboard.outboxLinks();
+    model.addAttribute("navigationMailbox", dashboard);
+    model.addAttribute("navigationInboxLinks", inbox);
+    model.addAttribute("navigationOutboxLinks", outbox);
+    model.addAttribute("navigationInboxCount", inbox.size());
+    model.addAttribute("navigationOutboxCount", outbox.size());
   }
 
   private void populateCompetitionAutoModerationAttributes(Model model, User user) {
@@ -263,6 +278,7 @@ public class GlobalModelAttributes {
     User sanitized = new User();
     sanitized.setId(user.getId());
     sanitized.setNickName(user.getNickName());
+    sanitized.setNameOnlyAccount(user.isNameOnlyAccount());
     sanitized.setAdmin(user.isAdmin());
     sanitized.setMeetupsEmailOptIn(user.isMeetupsEmailOptIn());
     sanitized.setAppUiEnabled(true);

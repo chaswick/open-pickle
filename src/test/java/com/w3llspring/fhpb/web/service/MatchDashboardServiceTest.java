@@ -238,6 +238,23 @@ class MatchDashboardServiceTest {
         assertThat(service.countInboxForUser(viewer)).isEqualTo(2);
     }
 
+    @Test
+    void mailboxSeparatesConfirmationAndRemovalRequestsWithoutDoubleCounting() {
+        User viewer = user(123L, "Viewer");
+        User opponent = user(456L, "Opponent");
+        var a = link(match(1L, viewer, opponent, Instant.now()));
+        var b = link(match(2L, viewer, opponent, Instant.now()));
+        var c = link(match(3L, viewer, opponent, Instant.now()));
+        var d = link(match(4L, viewer, opponent, Instant.now()));
+        var e = link(match(5L, viewer, opponent, Instant.now()));
+        var rows = new MatchRowModel(Set.of(1L), Map.of(), Map.of(), Map.of(),
+                Map.of(2L, true, 5L, false), Map.of(), Map.of(), Map.of(),
+                Map.of(1L, true, 3L, true), Map.of(4L, true));
+        var dashboard = new MatchDashboardService.DashboardModel(List.of(a, b, c, d, e), rows);
+        assertThat(dashboard.inboxLinks()).containsExactly(a, c);
+        assertThat(dashboard.outboxLinks()).containsExactly(b, d);
+    }
+
     private MatchDashboardService service(MatchRowModel baseModel) {
         MatchRowModelBuilder builder = new MatchRowModelBuilder(null, null, null) {
             @Override

@@ -69,6 +69,7 @@ class GlobalModelAttributesTest {
             mock(UserRepository.class), 20, 3, "test-version", "", true, 7, false, "", "", 3, 5, 7);
     LadderConfigService ladderConfigService = mock(LadderConfigService.class);
     ReflectionTestUtils.setField(attributes, "ladderConfigService", ladderConfigService);
+    when(ladderConfigService.allowedSessionsPerUser()).thenReturn(4);
 
     User user = new User();
     user.setId(42L);
@@ -89,6 +90,7 @@ class GlobalModelAttributesTest {
 
     assertThat(model.get("navigationSessionConfigs")).isEqualTo(List.of(session));
     assertThat(model.get("activeCompetitionSessionId")).isEqualTo(99L);
+    assertThat(model.get("scheduledSessionLimit")).isEqualTo(4);
   }
 
   @Test
@@ -103,7 +105,25 @@ class GlobalModelAttributesTest {
     User user = new User();
     user.setId(42L);
     user.setNickName("Tester");
-    when(matchDashboardService.countInboxForUser(any(User.class))).thenReturn(3);
+    var inboxMatch = new com.w3llspring.fhpb.web.model.Match();
+    ReflectionTestUtils.setField(inboxMatch, "id", 100L);
+    var outboxMatch = new com.w3llspring.fhpb.web.model.Match();
+    ReflectionTestUtils.setField(outboxMatch, "id", 101L);
+    var inboxLink = new com.w3llspring.fhpb.web.model.LadderMatchLink();
+    inboxLink.setMatch(inboxMatch);
+    var outboxLink = new com.w3llspring.fhpb.web.model.LadderMatchLink();
+    outboxLink.setMatch(outboxMatch);
+    var rows =
+        new com.w3llspring.fhpb.web.service.MatchRowModel(
+            java.util.Set.of(100L),
+            java.util.Map.of(),
+            java.util.Map.of(),
+            java.util.Map.of(),
+            java.util.Map.of(101L, true),
+            java.util.Map.of(),
+            java.util.Map.of());
+    when(matchDashboardService.buildPendingForUser(any(User.class)))
+        .thenReturn(new MatchDashboardService.DashboardModel(List.of(inboxLink, outboxLink), rows));
 
     ExtendedModelMap model = new ExtendedModelMap();
     var authentication =
@@ -111,6 +131,9 @@ class GlobalModelAttributesTest {
 
     attributes.populateCommonAttributes(model, authentication, null);
 
-    assertThat(model.get("navigationInboxCount")).isEqualTo(3);
+    assertThat(model.get("navigationInboxCount")).isEqualTo(1);
+    assertThat(model.get("navigationOutboxCount")).isEqualTo(1);
+    assertThat(model.get("navigationInboxLinks")).isEqualTo(List.of(inboxLink));
+    assertThat(model.get("navigationOutboxLinks")).isEqualTo(List.of(outboxLink));
   }
 }

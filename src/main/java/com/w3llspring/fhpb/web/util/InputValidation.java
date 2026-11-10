@@ -88,6 +88,10 @@ public final class InputValidation {
     return normalizeOptionalPlainText(value, "Group name", LadderConfig.MAX_TITLE_LENGTH);
   }
 
+  public static String normalizeOptionalSessionName(String value) {
+    return normalizeOptionalPlainText(value, "Session name", LadderConfig.MAX_SESSION_NAME_LENGTH);
+  }
+
   public static String normalizeOptionalSeasonName(String value) {
     return normalizeOptionalPlainText(value, "Season name", LadderSeason.MAX_NAME_LENGTH);
   }

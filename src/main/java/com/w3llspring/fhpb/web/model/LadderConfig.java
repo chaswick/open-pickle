@@ -13,6 +13,7 @@ public class LadderConfig {
 
   public static final int MAX_ROLLING_EVERY_COUNT = 12;
   public static final int MAX_TITLE_LENGTH = 80;
+  public static final int MAX_SESSION_NAME_LENGTH = 40;
   public static final int MAX_SESSION_MEMBERS = 32;
 
   public enum Status {
@@ -180,7 +181,13 @@ public class LadderConfig {
         isUpcomingSession()
             ? "Upcoming · "
             : date.equals(LocalDate.now(ZoneId.of(sessionTimeZone))) ? "Today · " : "";
-    return prefix + date.format(DateTimeFormatter.ofPattern("EEE, MMM d, yyyy", Locale.US));
+    String label = prefix + date.format(DateTimeFormatter.ofPattern("EEE, MMM d, yyyy", Locale.US));
+    label +=
+        " · "
+            + sessionScheduledAt
+                .atZone(ZoneId.of(sessionTimeZone))
+                .format(DateTimeFormatter.ofPattern("h:mm a z", Locale.US));
+    return label;
   }
 
   /** === New: Season mode + rolling cadence and anti-spam knob === */

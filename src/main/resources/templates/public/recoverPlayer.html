@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/public}">
+<head><title layout:fragment="title">Use a recovery code</title><meta name="robots" content="noindex,nofollow"></head>
+<body>
+<main layout:fragment="content" class="container py-5">
+  <div class="row justify-content-center"><div class="col-12 col-md-8 col-lg-6">
+    <section class="card shadow-sm"><div class="card-body p-4">
+      <h1 class="h3">Use a recovery code</h1>
+      <p>Enter the private code you saved from Account Settings. Your public member ID cannot sign you in.</p>
+      <p th:if="${recoveryError}" th:text="${recoveryError}" class="alert alert-danger" role="alert"></p>
+      <form th:if="${playerAccessEnabled == true}" method="post" th:action="@{/recover-player}">
+        <label class="form-label" for="recovery-code">Recovery code</label>
+        <input id="recovery-code" name="recoveryCode" type="password" class="form-control mb-3 notranslate"
+               translate="no" autocomplete="off" spellcheck="false" maxlength="128" required>
+        <button type="submit" class="btn btn-action-primary w-100">Sign in</button>
+      </form>
+      <a th:href="@{/login}" class="btn btn-nav-secondary mt-3">Back to login</a>
+    </div></section>
+  </div></div>
+</main>
+</body>
+</html>

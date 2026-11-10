@@ -271,7 +271,7 @@ public class MatchLogContextService {
     if (sessionConfig == null || !sessionConfig.isSessionType()) {
       return null;
     }
-    if (sessionConfig.isUpcomingSession()
+    if ((sessionConfig.isUpcomingSession() && sessionConfig.isMatchupSession())
         || sessionConfig.getStatus() != LadderConfig.Status.ACTIVE) return null;
     if (sessionConfig.getExpiresAt() != null
         && !sessionConfig.getExpiresAt().isAfter(Instant.now())) {

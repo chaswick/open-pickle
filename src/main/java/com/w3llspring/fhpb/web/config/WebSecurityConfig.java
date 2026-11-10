@@ -5,6 +5,7 @@ import com.w3llspring.fhpb.web.filter.TermsAcceptanceEnforcementFilter;
 import com.w3llspring.fhpb.web.service.auth.AuthenticatedUserService;
 import com.w3llspring.fhpb.web.service.auth.ClientIpResolver;
 import com.w3llspring.fhpb.web.service.auth.CustomUserDetailsService;
+import com.w3llspring.fhpb.web.service.auth.PlayerRememberMeServices;
 import com.w3llspring.fhpb.web.service.user.UserAccountSettingsService;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import com.w3llspring.fhpb.web.util.SecurityRequestMatchers;
@@ -29,9 +30,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.AccessDeniedHandlerImpl;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -74,6 +75,23 @@ public class WebSecurityConfig {
   @Bean
   public BCryptPasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public PlayerRememberMeServices playerRememberMeServices(
+      UserDetailsService details,
+      @Value("${fhpb.security.guest-access.enabled:true}") boolean guestEnabled,
+      @Value("${fhpb.security.guest-access.remember-days:365}") int rememberDays,
+      @Value("${server.servlet.session.cookie.secure:true}") boolean secureCookie) {
+    boolean configured = StringUtils.hasText(rememberMeKey);
+    return new PlayerRememberMeServices(
+        configured ? rememberMeKey.trim() : java.util.UUID.randomUUID().toString(),
+        details,
+        userRepository,
+        configured && guestEnabled,
+        rememberMeTokenValiditySeconds,
+        rememberDays,
+        secureCookie);
   }
 
   @Bean
@@ -140,7 +158,8 @@ public class WebSecurityConfig {
       AuthenticationSuccessHandler termsAcknowledgementAuthenticationSuccessHandler,
       TermsAwareAuthenticationFailureHandler termsAwareAuthenticationFailureHandler,
       AccessDeniedHandler loggingAccessDeniedHandler,
-      TermsAcceptanceEnforcementFilter termsAcceptanceEnforcementFilter)
+      TermsAcceptanceEnforcementFilter termsAcceptanceEnforcementFilter,
+      PlayerRememberMeServices playerRememberMeServices)
       throws Exception {
     http.headers(
             headers -> {
@@ -162,12 +181,12 @@ public class WebSecurityConfig {
               auth.requestMatchers(
                       SecurityRequestMatchers.path("/css/**"),
                       SecurityRequestMatchers.path("/js/**"),
-                  SecurityRequestMatchers.path("/images/**"),
-                  SecurityRequestMatchers.path("/webjars/**"),
-                  SecurityRequestMatchers.path("/error"),
-                  SecurityRequestMatchers.path("/sw.js"),
-                  SecurityRequestMatchers.path("/favicon.ico"),
-                  SecurityRequestMatchers.path("/favicon*.png"),
+                      SecurityRequestMatchers.path("/images/**"),
+                      SecurityRequestMatchers.path("/webjars/**"),
+                      SecurityRequestMatchers.path("/error"),
+                      SecurityRequestMatchers.path("/sw.js"),
+                      SecurityRequestMatchers.path("/favicon.ico"),
+                      SecurityRequestMatchers.path("/favicon*.png"),
                       SecurityRequestMatchers.path("/android-chrome-*.png"),
                       SecurityRequestMatchers.path("/apple-touch-icon.png"),
                       SecurityRequestMatchers.path("/apple-touch-icon-precomposed.png"),
@@ -183,11 +202,17 @@ public class WebSecurityConfig {
                       SecurityRequestMatchers.path("/login"),
                       SecurityRequestMatchers.path("/register"),
                       SecurityRequestMatchers.path("/registration-success"),
+                      SecurityRequestMatchers.path("/join/session"),
+                      SecurityRequestMatchers.path("/recover-player"),
+                      SecurityRequestMatchers.path("/connect-email"),
                       SecurityRequestMatchers.path("/forgot-password"),
                       SecurityRequestMatchers.path("/reset-password"),
                       SecurityRequestMatchers.path("/meetups/unsubscribe"),
                       SecurityRequestMatchers.path("/terms"),
                       SecurityRequestMatchers.path("/privacy"))
+                  .permitAll();
+
+              auth.requestMatchers(SecurityRequestMatchers.path(HttpMethod.GET, "/groups/join"))
                   .permitAll();
 
               if (h2ConsoleAccessEnabled) {
@@ -214,10 +239,7 @@ public class WebSecurityConfig {
 
     if (StringUtils.hasText(rememberMeKey)) {
       http.rememberMe(
-          r ->
-              r.key(rememberMeKey.trim())
-                  .userDetailsService(userDetailsService())
-                  .tokenValiditySeconds(rememberMeTokenValiditySeconds));
+          r -> r.key(rememberMeKey.trim()).rememberMeServices(playerRememberMeServices));
     } else {
       log.warn("Remember-me is disabled because fhpb.security.remember-me.key is not configured");
     }

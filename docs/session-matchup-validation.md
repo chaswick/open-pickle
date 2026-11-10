@@ -51,12 +51,22 @@ Home shows a visible note inside the “Let’s Pickle!” card only for a playe
 
 ## Planning a session
 
-Session creation offers **Now** or **Later**. Later requires a date within the next 90 days.
-The organizer's account timezone (Eastern when unset) is saved with the session. Its planned
-boundary is the start of that date in that timezone, including daylight-saving transitions.
+Session creation offers **Now** or **Later**. Later requires a future date and time, including
+later today, within the next 90 days. Start times use a quarter-hour dropdown; the server
+also rejects times between those intervals. The organizer's account timezone (Eastern when unset)
+is saved with the session. Nonexistent times during daylight-saving changes are rejected.
 Changing account timezones does not move a planned session.
 
-Friends can join upcoming sessions immediately. Matchup and scheduled open-play invitations stay
+An optional session name (up to 40 characters) appears in the existing session title, for example
+`Dave's "Amateur Bracket" session`, on Home, session pages, and invitations. Blank names keep
+the default host title. Names and chosen date/time are retained after validation errors.
+Reopening an existing current session does not rename it.
+
+Friends can join upcoming sessions immediately. Scheduled open-play sessions also allow logging
+before the planned time once another player joins. Recording an early game leaves the planned
+date, upcoming classification, and expiry unchanged. Games use the season covering their played
+date; session wins and points include confirmed games across seasons. Round Robin sessions
+still require the organizer to start matchups. Matchup and scheduled open-play invitations stay
 available until the session expires.
 Join requests for dated sessions remain pending until that expiry, allowing organizers to approve
 advance signups later; undated live sessions retain their existing short request window.
@@ -66,21 +76,32 @@ hosting a current session so the organizer can choose Later. Choosing Now reopen
 current hosted session, and never reuses an upcoming one. The configured session cap applies
 separately to current and upcoming sessions; the existing daily creation cap also remains.
 
-At the planned local midnight the card changes from Upcoming to Today. This does not generate
+At the chosen start time the card changes from Upcoming to Today. This does not generate
 matchups or freeze the roster. Starting matchups explicitly records the actual start, including
 an early start, and gives the session its configured playing window (48 hours by default).
 An unstarted planned session gets at least 48 hours after its planned boundary, even if the
 configured playing window is shorter. Now sessions use the configured window from creation.
 Migration V60 extends shorter active, unstarted planned sessions and their pending join requests;
 it leaves started, archived, undated, and longer-lived sessions alone. Upcoming pages show the
-planned date; the expiry appears once the session is current.
+planned date, time, and timezone; the expiry appears once the session is current.
+Copied invitations include the host, application name, and planned date/time or “now,” followed
+by the join link. QR codes continue to encode only the direct join link.
 The existing cleanup job archives expired sessions and preserves recorded matches.
 
 `SessionSchedulingIntegrationTest` checks real persistence, independent current/upcoming caps,
-creation while hosting, local-midnight classification, timezone persistence, daylight-saving dates,
-invalid dates, cleanup, and season rollover for scheduled open play. `SessionMatchupServiceTest`
+creation while hosting, chosen-time classification, timezone persistence, invalid or missing
+dates/times, cleanup, and season rollover for scheduled open play. `SessionScheduleSupportTest`
+checks later-today scheduling and daylight-saving boundaries. `SessionInviteTextTest` checks
+copied invitation details. `SessionMatchupServiceTest`
 checks the explicit start and playing window. Browser checks cover signup and organizer approval
 before the playing date, the Now/Later controls, dated Home cards, and existing-session reuse.
+
+## Session creation layout
+
+The form uses numbered sections for When, How, and the optional session name. Now/Later and
+Round Robin/open play are separate either-or choices. Play modes share one group, displayed
+side by side on wider screens and stacked with an “or” on phones. Organizer scoring stays
+inside the selected Round Robin option; switching to open play disables that checkbox.
 
 ## Initial rendering
 
