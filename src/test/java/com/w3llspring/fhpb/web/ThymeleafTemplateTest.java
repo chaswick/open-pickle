@@ -270,6 +270,10 @@ class ThymeleafTemplateTest {
     ladder.setCreatedAt(null);
 
     Map<String, Object> variables = new HashMap<>();
+    com.w3llspring.fhpb.web.model.LadderSeason targetSeason =
+        new com.w3llspring.fhpb.web.model.LadderSeason();
+    org.springframework.test.util.ReflectionTestUtils.setField(targetSeason, "id", 77L);
+    variables.put("targetSeason", targetSeason);
     variables.put("ladder", ladder);
     variables.put("currentUserIsAdmin", true);
     variables.put("inviteActive", true);
@@ -295,6 +299,7 @@ class ThymeleafTemplateTest {
     String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
     assertThat(result).contains("Invite friends");
+    assertThat(result).contains("id=\"ladderId\" value=\"42\"", "id=\"seasonId\" value=\"77\"");
     assertThat(result).contains("Session Standings");
     assertThat(result).contains("Manage Invited Buddies");
     assertThat(result).contains("Pending Join Requests");

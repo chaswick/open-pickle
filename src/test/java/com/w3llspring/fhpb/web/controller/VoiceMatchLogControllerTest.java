@@ -22,10 +22,12 @@ import com.w3llspring.fhpb.web.service.matchlog.MatchValidationService;
 import com.w3llspring.fhpb.web.service.matchlog.SpokenMatchInterpretation;
 import com.w3llspring.fhpb.web.service.matchlog.SpokenMatchInterpreter;
 import com.w3llspring.fhpb.web.service.trophy.TrophyAwardService;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -65,9 +67,19 @@ class VoiceMatchLogControllerTest {
   private User user4;
   private LadderSeason season;
   private LadderConfig ladderConfig;
+  private Object previousAuthenticatedUserService;
+
+  @AfterEach
+  void restoreAuthenticationSupport() {
+    ReflectionTestUtils.setField(
+        AuthenticatedUserSupport.class, "authenticatedUserService", previousAuthenticatedUserService);
+  }
 
   @BeforeEach
   void setUp() {
+    previousAuthenticatedUserService =
+        ReflectionTestUtils.getField(AuthenticatedUserSupport.class, "authenticatedUserService");
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
     controller =
         new VoiceMatchLogController(
             defaultInterpreter,
@@ -224,6 +236,28 @@ class VoiceMatchLogControllerTest {
       assertFalse(response.isAutoSubmitted(), "Should NOT auto-submit with low confidence");
       assertNotNull(response.getInterpretation());
       verify(matchFactory, never()).createMatch(any(Match.class));
+    }
+
+    @Test
+    @DisplayName("Should review an ambiguous player even when every name has high confidence")
+    void shouldReviewAmbiguousHighConfidenceNames() {
+      SpokenMatchInterpretation interpretation =
+          createHighConfidenceInterpretation(List.of(1L, 2L), List.of(3L, 4L), 11, 9);
+      var ambiguous = interpretation.getTeams().get(0).getPlayers().get(1);
+      ambiguous.setNeedsReview(true);
+      ambiguous.addAlternative(5L, "User2", "Another User2", 1.0);
+      var request = new VoiceMatchLogController.InterpretRequest();
+      request.setSeasonId(1L);
+      request.setTranscript("User1 and User2 beat User3 and User4 11 to 9");
+      when(defaultInterpreter.interpret(any())).thenReturn(interpretation);
+
+      var response = controller.interpret(request, authentication);
+
+      assertFalse(response.isAutoSubmitted());
+      assertNull(response.getMatchId());
+      assertSame(interpretation, response.getInterpretation());
+      assertTrue(response.getInterpretation().getTeams().get(0).getPlayers().get(1).isNeedsReview());
+      verifyNoInteractions(matchFactory, ladderV2Service, trophyAwardService);
     }
 
     @Test

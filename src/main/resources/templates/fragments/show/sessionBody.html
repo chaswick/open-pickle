@@ -1,4 +1,8 @@
 <th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sessionBody">
+  <th:block th:if="${targetSeason != null and !ladder.matchupSession}">
+    <input type="hidden" id="ladderId" th:value="${ladder.id}">
+    <input type="hidden" id="seasonId" th:value="${targetSeason.id}">
+  </th:block>
   <div th:replace="~{fragments/show/sessionMatchups :: matchups}"></div>
   <div class="card mb-3" id="session-invite-panel"
        th:data-card-collapse-default="${sessionMatchups != null and sessionMatchups.id != null ? 'closed' : 'open'}"

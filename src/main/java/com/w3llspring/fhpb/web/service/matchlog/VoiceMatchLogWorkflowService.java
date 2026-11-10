@@ -154,6 +154,13 @@ public class VoiceMatchLogWorkflowService {
       }
     }
 
+    if (interpretation != null
+        && interpretation.getTeams().stream()
+            .flatMap(team -> team.getPlayers().stream())
+            .anyMatch(SpokenMatchInterpretation.PlayerResolution::isNeedsReview)) {
+      return new VoiceInterpretResult(interpretation, false, null);
+    }
+
     try {
       Long matchId = autoSubmitMatch(interpretation, normalizedCommand, auth);
       return new VoiceInterpretResult(interpretation, true, matchId);

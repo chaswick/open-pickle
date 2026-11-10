@@ -96,6 +96,15 @@ copied invitation details. `SessionMatchupServiceTest`
 checks the explicit start and playing window. Browser checks cover signup and organizer approval
 before the playing date, the Now/Later controls, dated Home cards, and existing-session reuse.
 
+## Session voice logging
+
+Casual session pages provide the session and target-season IDs to the shared voice logger,
+so name matching is limited to that session and results retain their source session. Quick
+joining automatically creates a court name from the name entered; no separate setup is needed.
+Ambiguous or uncertain player matches open the existing review form. Its player choices use
+the same assigned member IDs as the manual form to distinguish shared names. Round Robin
+scores continue to use Enter score beside the scheduled game.
+
 ## Session creation layout
 
 The form uses numbered sections for When, How, and the optional session name. Now/Later and
