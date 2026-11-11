@@ -32,10 +32,9 @@
       <div class="card-body">
       <p th:if="${board.organizerScored}" class="matchups-note" data-organizer-scoring-notice><strong>Organizer records scores.</strong> Results are confirmed automatically.</p>
       <a th:if="${param.prepareMatchups != null}" th:href="@{/groups/{id}(id=${ladder.id})} + '#matchups'" class="small">Back to saved matchups</a>
-      <div th:if="${board.host}" class="matchups-roster-heading justify-content-end">
-        <a th:if="${board.host}" href="#session-invite-panel" class="btn btn-outline-primary btn-sm" data-open-session-invite>Invite friends</a></div>
-      <ul class="matchups-player-chips" aria-label="Players included in matchups">
-        <li th:each="player : ${board.members}"><span th:replace="~{components/player-name :: player-name(${player.name}, ${player.publicCode})}"></span></li>
+      <a th:if="${board.host and inviteActive}" href="#session-invite-panel" class="btn btn-nav-primary w-100 mb-3" data-open-session-invite>Invite friends</a>
+      <ul class="list-group list-group-flush matchups-roster mb-3" aria-label="Players included in matchups">
+        <li class="list-group-item" th:each="player : ${board.members}"><div th:replace="~{fragments/show/sessionMatchups :: roster-player(${player.name}, ${player.publicCode}, ${userById != null ? userById[player.id] : null})}"></div></li>
       </ul>
       <p th:if="${board.host and #lists.size(board.members) < 4}" class="matchups-note">Invite at least four players. Your matchup settings will appear here when the group is ready.</p>
       <form th:if="${board.host and #lists.size(board.members) >= 4}" method="post" th:action="@{/groups/{id}/matchups/start(id=${ladder.id})}"
@@ -167,6 +166,13 @@
   <div class="matchups-team" data-team-b><span th:replace="~{components/player-name :: player-name(${game.b1.name}, ${game.b1.publicCode})}"></span><span th:replace="~{components/player-name :: player-name(${game.b2.name}, ${game.b2.publicCode})}"></span></div>
 </div>
 
+<div th:fragment="roster-player(name, publicCode, playerAccount)" class="session-player-name notranslate" translate="no">
+  <a th:if="${playerAccount != null and !#strings.isEmpty(playerAccount.publicCode)}" class="player-link link-contrast fw-semibold"
+     th:href="@{/account(member=${playerAccount.publicCode},returnTo=${profileReturnTo})}" data-player-name th:text="${name}">Player</a>
+  <span th:unless="${playerAccount != null and !#strings.isEmpty(playerAccount.publicCode)}" class="fw-semibold" data-player-name th:text="${name}">Player</span>
+  <small class="session-player-id text-muted fw-normal notranslate" translate="no" th:if="${publicCode != null}" th:text="${publicCode}">calm-ruby-paddle</small>
+</div>
+
 <details th:fragment="players" th:if="${sessionMatchups != null and sessionMatchups.id != null}"
          th:with="board=${sessionMatchups}" class="card matchups-player-list mb-3" id="matchup-players" data-card-collapse="off" data-matchup-roster>
   <summary class="card-header card-header-title card-collapse-toggle">
@@ -177,19 +183,21 @@
     <i class="bi bi-chevron-down card-collapse-icon" aria-hidden="true"></i>
   </summary>
   <div class="card-body">
-  <div th:if="${board.host}" class="matchups-roster-heading justify-content-end">
-    <a th:if="${board.host}" href="#session-invite-panel" class="btn btn-outline-primary btn-sm" data-open-session-invite>Invite friends</a></div>
+  <a th:if="${board.host and inviteActive}" href="#session-invite-panel" class="btn btn-nav-primary w-100 mb-3" data-open-session-invite>Invite friends</a>
   <p class="small" th:if="${board.host and !board.ended}">Someone stepping out? Replace their remaining games with a late joiner or a guest.</p>
-  <ul class="matchups-roster">
-    <li th:each="player : ${board.roster}">
-      <div><strong><span th:replace="~{components/player-name :: player-name(${player.name}, ${player.publicCode})}"></span></strong><span th:if="${player.guest}" class="matchups-player-label">Guest</span>
+  <ul class="list-group list-group-flush matchups-roster" aria-label="Players included in matchups">
+    <li class="list-group-item" th:each="player : ${board.roster}">
+      <div><div th:replace="~{fragments/show/sessionMatchups :: roster-player(${player.name}, ${player.publicCode}, ${userById != null and player.userId != null ? userById[player.userId] : null})}"></div><span th:if="${player.guest}" class="matchups-player-label">Guest</span>
         <span th:if="${player.left}" class="matchups-player-label text-danger">Left · needs replacement</span></div>
       <button th:if="${board.host and !board.ended and player.replaceable}" type="button" class="btn btn-outline-secondary btn-sm"
               data-replace-player th:attr="data-slot-id=${player.id},data-player-name=${player.name + (player.publicCode != null ? ' (' + player.publicCode + ')' : '')}">Replace</button>
     </li>
   </ul>
   <div th:if="${!#lists.isEmpty(board.available)}" class="matchups-available">
-    <h3>Available replacements</h3><ul class="matchups-player-chips"><li th:each="player : ${board.available}"><span th:replace="~{components/player-name :: player-name(${player.name}, ${player.publicCode})}"></span></li></ul>
+    <h3>Available replacements</h3>
+    <ul class="list-group list-group-flush matchups-roster mb-2" aria-label="Available replacements">
+      <li class="list-group-item" th:each="player : ${board.available}"><div th:replace="~{fragments/show/sessionMatchups :: roster-player(${player.name}, ${player.publicCode}, ${userById != null ? userById[player.id] : null})}"></div></li>
+    </ul>
     <p class="small mb-0">Joining after the start keeps the current matchups in place.</p>
   </div>
   </div>

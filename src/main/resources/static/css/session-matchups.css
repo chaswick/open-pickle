@@ -239,14 +239,14 @@
   color:#506775;
   line-height:1.5;
 }
-.matchups-roster-heading,.matchups-schedule-heading {
+.matchups-schedule-heading {
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
   margin:0 0 12px;
 }
-.matchups-roster-heading h2,.matchups-schedule-heading h2 {
+.matchups-schedule-heading h2 {
   margin:0;
 }
 .matchups-count {
@@ -257,21 +257,6 @@
   padding:3px 9px;
   margin-left:5px;
   font-size:.85rem;
-}
-.matchups-player-chips {
-  padding:0;
-  margin:0 0 20px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  list-style:none;
-}
-.matchups-player-chips li {
-  background:#f0f5f7;
-  border-radius:24px;
-  padding:7px 13px;
-  font-size:.9rem;
-  overflow-wrap:anywhere;
 }
 .matchups-format {
   border:0;
@@ -540,9 +525,6 @@
 }
 .matchups-available h3 {
   margin-bottom:12px;
-}
-.matchups-available .matchups-player-chips {
-  margin-bottom:10px;
 }
 .matchups-score-inputs {
   display:grid;
