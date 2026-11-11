@@ -17,6 +17,7 @@
     <div class="row justify-content-center">
       <div class="col-12 col-lg-6 mx-auto card-stack-col">
         <section class="card mb-3 text-start" th:if="${sessionApprovalMode == true or sessionJoinContext == true}" data-session-join-intro>
+          <div class="card-header card-header-title text-center"><h2 class="card-section-title">Ways to join</h2></div>
           <div class="card-body">
             <p class="text-muted mb-3">Choose the method that works for you.</p>
             <div class="session-invite-grid" aria-label="Ways to join">
@@ -52,7 +53,7 @@
           </div>
         </section>
         <p th:if="${organizerScoredInvite == true}" class="alert alert-info" data-organizer-scoring-notice>The organizer records and automatically confirms scores in this session. You can review your results without confirming each game.</p>
-        <form method="post" action="/groups/join" th:action="@{/groups/join}" id="joinLadderForm" class="text-start">
+        <form method="post" action="/groups/join" th:action="@{/groups/join}" id="joinLadderForm" class="text-start" data-submit-label="Joining…">
           <input type="hidden" name="returnTo" th:if="${returnToPath != null}" th:value="${returnToPath}">
 
           <div class="card mb-3 text-center">
@@ -140,9 +141,9 @@
             </div>
           </div>
         </form>
-        <details class="card mb-3 text-start" data-nearby-discovery
+        <details class="card mb-3 text-start" data-nearby-discovery data-card-collapse="off"
              th:if="${(sessionJoinContext == true or sessionApprovalMode == true) and checkInEnabled}">
-          <summary class="p-3 fw-semibold">Nearby sessions</summary>
+          <summary class="card-header card-header-title card-collapse-toggle"><span class="card-collapse-spacer" aria-hidden="true"></span><span class="card-collapse-title">Nearby sessions</span><i class="bi bi-chevron-down card-collapse-icon" aria-hidden="true"></i></summary>
           <div class="card-body">
             <p class="text-muted small mb-3">
               Use your location to find sessions at your courts. The host approves requests to join.

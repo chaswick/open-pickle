@@ -1595,11 +1595,15 @@ window.fhpbConfirm = function(message, onConfirm, options) {
 // Helper to attach to form onsubmit handlers: returns boolean (true to allow submit)
 window.handleConfirmForm = function(form, message) {
   if (!form) return false;
+  if (form.dataset.submitPending === 'true') return false;
   if (!window.fhpbUseConfirmModal()) {
     return window.confirm(message);
   }
   // Use modal: prevent default submit and show modal; submit when confirmed
-  window.fhpbConfirm(message, function() { form.submit(); });
+  window.fhpbConfirm(message, function() {
+    if (window.FHPB && FHPB.SubmitFeedback) FHPB.SubmitFeedback.submit(form);
+    else form.submit();
+  });
   return false;
 };
 

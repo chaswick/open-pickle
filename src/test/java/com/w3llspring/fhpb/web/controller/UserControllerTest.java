@@ -95,7 +95,8 @@ class UserControllerTest {
   void processRegisterRedirectsHomeAfterSuccessfulSignup() {
     UserRepository userRepository = mock(UserRepository.class);
     RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
-    GlobalLadderBootstrapService globalLadderBootstrapService = mock(GlobalLadderBootstrapService.class);
+    GlobalLadderBootstrapService globalLadderBootstrapService =
+        mock(GlobalLadderBootstrapService.class);
     AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
 
     RegistrationFormTokenService registrationFormTokenService =
@@ -119,7 +120,6 @@ class UserControllerTest {
     when(registrationAbuseGuard.evaluate(eq("127.0.0.1"), isNull(), anyLong()))
         .thenReturn(RegistrationAbuseGuard.Decision.allow());
     when(userRepository.findByEmail("new@example.com")).thenReturn(null);
-    when(userRepository.findByNickName(any())).thenReturn(null);
     when(userRepository.saveAndFlush(any(User.class)))
         .thenAnswer(
             invocation -> {
@@ -129,8 +129,7 @@ class UserControllerTest {
             });
     when(authenticationManager.authenticate(any()))
         .thenReturn(
-            new UsernamePasswordAuthenticationToken(
-                "new@example.com", "ValidPass1", List.of()));
+            new UsernamePasswordAuthenticationToken("new@example.com", "ValidPass1", List.of()));
 
     User user = new User();
     user.setEmail("new@example.com");
@@ -165,7 +164,8 @@ class UserControllerTest {
   void processRegisterLogsRejectedValidationReasons(CapturedOutput output) {
     UserRepository userRepository = mock(UserRepository.class);
     RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
-    GlobalLadderBootstrapService globalLadderBootstrapService = mock(GlobalLadderBootstrapService.class);
+    GlobalLadderBootstrapService globalLadderBootstrapService =
+        mock(GlobalLadderBootstrapService.class);
     AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
 
     RegistrationFormTokenService registrationFormTokenService =
@@ -226,7 +226,8 @@ class UserControllerTest {
   void processRegisterAllowsLegacyCompanyHoneypotSignalDuringRollout(CapturedOutput output) {
     UserRepository userRepository = mock(UserRepository.class);
     RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
-    GlobalLadderBootstrapService globalLadderBootstrapService = mock(GlobalLadderBootstrapService.class);
+    GlobalLadderBootstrapService globalLadderBootstrapService =
+        mock(GlobalLadderBootstrapService.class);
     AuthenticationManager authenticationManager = mock(AuthenticationManager.class);
 
     RegistrationFormTokenService registrationFormTokenService =
@@ -250,7 +251,6 @@ class UserControllerTest {
     when(registrationAbuseGuard.evaluate(eq("127.0.0.1"), eq("filled"), anyLong()))
         .thenReturn(RegistrationAbuseGuard.Decision.allow("honeypot"));
     when(userRepository.findByEmail("new@example.com")).thenReturn(null);
-    when(userRepository.findByNickName(any())).thenReturn(null);
     when(userRepository.saveAndFlush(any(User.class)))
         .thenAnswer(
             invocation -> {
@@ -260,8 +260,7 @@ class UserControllerTest {
             });
     when(authenticationManager.authenticate(any()))
         .thenReturn(
-            new UsernamePasswordAuthenticationToken(
-                "new@example.com", "ValidPass1", List.of()));
+            new UsernamePasswordAuthenticationToken("new@example.com", "ValidPass1", List.of()));
 
     User user = new User();
     user.setEmail("new@example.com");
@@ -294,8 +293,7 @@ class UserControllerTest {
   }
 
   @Test
-  void processRegisterBlocksHoneypotWhenVisibleProfileLooksMachineGenerated(
-      CapturedOutput output) {
+  void processRegisterBlocksHoneypotWhenVisibleProfileLooksMachineGenerated(CapturedOutput output) {
     UserRepository userRepository = mock(UserRepository.class);
     RegistrationAbuseGuard registrationAbuseGuard = mock(RegistrationAbuseGuard.class);
     GlobalLadderBootstrapService globalLadderBootstrapService =
@@ -384,7 +382,6 @@ class UserControllerTest {
     when(registrationAbuseGuard.evaluate(eq("127.0.0.1"), isNull(), anyLong()))
         .thenReturn(RegistrationAbuseGuard.Decision.allow());
     when(userRepository.findByEmail("new@example.com")).thenReturn(null);
-    when(userRepository.findByNickName(any())).thenReturn(null);
     when(userRepository.saveAndFlush(any(User.class)))
         .thenAnswer(
             invocation -> {

@@ -54,7 +54,7 @@
             </div>
           </div>
 
-          <div th:each="group : ${groups}" class="card mb-3 shadow card-spotlight">
+          <div th:each="group : ${groups}" th:with="matchPlayerNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).inMatches(group.rows?.![match])}" class="card mb-3 shadow card-spotlight">
             <div class="card-header card-header-title text-center">
               <span th:text="${#temporals.format(group.day, 'EEE, MMM d, yyyy')}">Mon, Sep 29, 2025</span>
             </div>

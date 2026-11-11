@@ -13,9 +13,10 @@
     <p class="app-page-subtitle">Start your group here. Friends join with your invite.</p>
   </div></div>
   <div th:replace="~{components/back-button :: back-button(@{/home}, 'Back')}"></div>
-  <form method="post" th:action="@{/groups/create-session}" class="session-intent-form">
-    <section class="session-when-card" aria-labelledby="session-when-title">
-      <h2 id="session-when-title" class="session-create-step-title"><span class="session-step-number" aria-hidden="true">1</span> When are you playing?</h2>
+  <form method="post" th:action="@{/groups/create-session}" class="session-intent-form" data-submit-label="Creating session…">
+    <section class="card session-when-card" data-card-collapse="off" aria-labelledby="session-when-title">
+      <div class="card-header card-header-title"><h2 id="session-when-title" class="card-section-title session-create-step-title"><span class="session-step-number" aria-hidden="true">1</span> When are you playing?</h2></div>
+      <div class="card-body">
       <div class="session-when-options" role="radiogroup" aria-labelledby="session-when-title">
         <label><input type="radio" name="sessionWhen" value="NOW"
                       th:checked="${sessionWhen != 'LATER'}" th:disabled="${sessionNowAvailable == false}"><span>Now</span></label>
@@ -40,9 +41,11 @@
         </select>
         <p id="session-date-note" class="small text-muted mt-2 mb-0">Friends can join ahead of time. Date and time use <span th:text="${sessionTimeZone}">your timezone</span>.</p>
       </div>
+      </div>
     </section>
-    <section class="session-when-card" aria-labelledby="session-play-title">
-      <h2 id="session-play-title" class="session-create-step-title"><span class="session-step-number" aria-hidden="true">2</span> How are you playing?</h2>
+    <section class="card session-when-card" data-card-collapse="off" aria-labelledby="session-play-title">
+      <div class="card-header card-header-title"><h2 id="session-play-title" class="card-section-title session-create-step-title"><span class="session-step-number" aria-hidden="true">2</span> How are you playing?</h2></div>
+      <div class="card-body">
       <p class="small text-muted mb-0">Choose one.</p>
       <div class="session-play-options" role="radiogroup" aria-labelledby="session-play-title">
         <div class="session-intent-card">
@@ -67,11 +70,14 @@
           </label>
         </div>
       </div>
+      </div>
     </section>
-    <section class="session-when-card" aria-labelledby="session-name-title">
-      <h2 id="session-name-title" class="session-create-step-title"><span class="session-step-number" aria-hidden="true">3</span><label for="session-name" class="mb-0">Session name <span class="text-muted fw-normal">(optional)</span></label></h2>
+    <section class="card session-when-card" data-card-collapse="off" aria-labelledby="session-name-title">
+      <div class="card-header card-header-title"><h2 id="session-name-title" class="card-section-title session-create-step-title"><span class="session-step-number" aria-hidden="true">3</span><label for="session-name" class="mb-0">Session name <span class="text-muted fw-normal">(optional)</span></label></h2></div>
+      <div class="card-body">
       <input id="session-name" name="sessionName" type="text" class="form-control"
              th:value="${sessionName}" th:maxlength="${sessionNameMaxLength}" placeholder="e.g. Amateur Bracket">
+      </div>
     </section>
     <button type="submit" class="btn btn-action-primary w-100">Create session</button>
   </form>

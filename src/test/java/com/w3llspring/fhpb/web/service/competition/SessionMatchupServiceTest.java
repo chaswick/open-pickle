@@ -180,6 +180,23 @@ class SessionMatchupServiceTest {
   }
 
   @Test
+  void matchupNamesUseCourtNamesAndClarifyOnlyDuplicates() {
+    people.get(1L).setPublicCode("PB-sage-ace-247");
+    people.get(2L).setPublicCode("PB-reef-jump-430");
+    when(roundRobins.buildCourtNameMap(anyCollection(), eq(7L)))
+        .thenReturn(Map.of(1L, "Alex", 2L, "Alex", 3L, "Sam", 4L, "Nina", 5L, "Jordan"));
+    when(entries.findByRoundRobinOrderByRoundNumberAscWithUsers(rr))
+        .thenReturn(List.of(game(20, 1)));
+    var view = service.view(session, host, Set.of());
+    assertThat(view.next().a1().name()).isEqualTo("Alex");
+    assertThat(view.next().a1().publicCode()).isEqualTo("PB-sage-ace-247");
+    assertThat(view.next().a2().publicCode()).isEqualTo("PB-reef-jump-430");
+    assertThat(view.next().b1().name()).isEqualTo("Sam");
+    assertThat(view.next().b1().publicCode()).isNull();
+    assertThat(view.available().getFirst().name()).isEqualTo("Jordan");
+  }
+
+  @Test
   void lateJoinerIsAvailableWithoutChangingTheStartedRoster() {
     RoundRobinEntry entry = game(20, 1);
     when(entries.findByRoundRobinOrderByRoundNumberAscWithUsers(rr)).thenReturn(List.of(entry));

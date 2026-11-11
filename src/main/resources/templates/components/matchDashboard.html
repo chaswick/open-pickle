@@ -7,7 +7,7 @@
 <div th:fragment="matchDashboard"
      id="matchDashboardContainer"
      data-match-dashboard-auto-refresh="true"
-     data-refresh-interval-ms="60000">
+     data-refresh-interval-ms="60000" th:with="matchPlayerNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).inMatches(links?.![match])}">
   
   <div class="">
     

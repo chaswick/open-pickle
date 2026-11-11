@@ -17,7 +17,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -118,20 +117,11 @@ public class UserIdentityService {
       }
     }
 
-    User conflictingUser = userRepository.findByNickName(newDisplayName);
-    if (conflictingUser != null && !Objects.equals(conflictingUser.getId(), user.getId())) {
-      return DisplayNameChangeResult.taken(user);
-    }
-
     String oldDisplayName = user.getNickName();
     user.setNickName(newDisplayName);
     user.setLastDisplayNameChangeAt(effectiveChangedAt);
 
-    try {
-      userRepository.saveAndFlush(user);
-    } catch (DataIntegrityViolationException ex) {
-      return DisplayNameChangeResult.taken(user);
-    }
+    userRepository.saveAndFlush(user);
 
     recordDisplayNameChange(
         user.getId(), changedByUserId, oldDisplayName, newDisplayName, effectiveChangedAt);
@@ -226,16 +216,11 @@ public class UserIdentityService {
     public static DisplayNameChangeResult cooldown(User user, Instant allowedAt) {
       return new DisplayNameChangeResult(DisplayNameChangeStatus.COOLDOWN, user, null, allowedAt);
     }
-
-    public static DisplayNameChangeResult taken(User user) {
-      return new DisplayNameChangeResult(DisplayNameChangeStatus.TAKEN, user, null, null);
-    }
   }
 
   public enum DisplayNameChangeStatus {
     CHANGED,
     UNCHANGED,
-    COOLDOWN,
-    TAKEN
+    COOLDOWN
   }
 }

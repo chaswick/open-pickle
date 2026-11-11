@@ -710,8 +710,9 @@
            th:if="${isSessionLadder and sessionTourVariant != null}"
            data-onboarding-guide
            th:attr="data-onboarding-url=@{/groups/session-tour-complete}, data-onboarding-tour=${sessionTourVariant}">
-      <div class="card-body text-start">
-        <h2 class="h5" th:text="${sessionTourVariant == 'owner' ? 'Your Session Is Ready' : 'You Are In The Session'}">Your Session Is Ready</h2>
+      <div class="card-header card-header-title text-center"><h2 class="card-section-title" th:text="${sessionTourVariant == 'owner' ? 'Your Session Is Ready' : 'You Are In The Session'}">Your Session Is Ready</h2></div>
+    <div class="card-body text-start">
+
         <p th:if="${sessionTourVariant == 'owner'}">Share the code, QR, or link below so your friends can join this session.</p>
         <p th:if="${sessionTourVariant == 'joiner' and ladder.matchupSession}">Your matchups and results are below.</p>
         <p th:if="${sessionTourVariant == 'joiner' and !ladder.matchupSession}">Use <strong>Log Match</strong> to record a game with the people in this session.</p>
@@ -861,7 +862,14 @@
           name.textContent = member.displayName || 'missing name';
           nameRow.appendChild(name);
 
-          if (member.courtName) {
+          if (member.publicCode) {
+            const code = document.createElement('small');
+            code.className = 'session-player-id text-muted fw-normal w-100 notranslate';
+            code.setAttribute('translate', 'no');
+            code.textContent = member.publicCode;
+            nameRow.appendChild(code);
+          }
+          if (member.courtName && member.courtName !== member.displayName) {
             const court = document.createElement('span');
             court.className = 'text-muted';
             court.textContent = ' - ' + member.courtName;

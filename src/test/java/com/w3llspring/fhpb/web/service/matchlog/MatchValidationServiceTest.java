@@ -223,11 +223,11 @@ class MatchValidationServiceTest {
   }
 
   @Test
-  void scoreValidationRespectsConfiguredMinimumMargin() {
-    MatchValidationService strictMarginService =
-        new MatchValidationService(seasonRepository, membershipRepository, 11, 35, 2);
+  void scoreValidationAcceptsOnePointWinsInShortGames() {
+    MatchValidationService scoreService =
+        new MatchValidationService(seasonRepository, membershipRepository, 35);
 
-    assertThat(strictMarginService.validateScore(11, 10).isValid()).isFalse();
-    assertThat(strictMarginService.validateScore(11, 9).isValid()).isTrue();
+    assertThat(scoreService.validateScore(7, 6).isValid()).isTrue();
+    assertThat(scoreService.validateScore(6, 7).isValid()).isTrue();
   }
 }

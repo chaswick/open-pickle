@@ -47,7 +47,8 @@
   </th:block>
 
   <th:block th:fragment="matchList(confirmationLinks)"
-            th:with="mailboxRowModel=${navigationMailbox != null ? navigationMailbox.matchRowModel : null},
+            th:with="matchPlayerNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).inMatches(confirmationLinks?.![match])},
+                     mailboxRowModel=${navigationMailbox != null ? navigationMailbox.matchRowModel : null},
                      confirmableMatchIds=${mailboxRowModel != null ? mailboxRowModel.confirmableMatchIds : null},
                      confirmerByMatchId=${mailboxRowModel != null ? mailboxRowModel.confirmerByMatchId : null},
                      casualAutoConfirmedByMatchId=${mailboxRowModel != null ? mailboxRowModel.casualAutoConfirmedByMatchId : null},

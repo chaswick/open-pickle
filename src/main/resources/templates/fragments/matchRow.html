@@ -98,6 +98,11 @@
           aDisplay2=${match.isA2Guest() and match.a2GuestName != null ? match.a2GuestName : (a2Name != null ? a2Name : (match.isA2Guest() ? 'Guest' : (match.a2 != null ? match.a2.nickName : null)))},
           bDisplay=${match.isB1Guest() and match.b1GuestName != null ? match.b1GuestName : (b1Name != null ? b1Name : (match.isB1Guest() ? 'Guest' : (match.b1 != null ? match.b1.nickName : '-')))},
           bDisplay2=${match.isB2Guest() and match.b2GuestName != null ? match.b2GuestName : (b2Name != null ? b2Name : (match.isB2Guest() ? 'Guest' : (match.b2 != null ? match.b2.nickName : null)))},
+          duplicateNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).duplicatesInMatch(aDisplay, aDisplay2, bDisplay, bDisplay2)},
+          aMemberCode=${!match.isA1Guest() ? T(com.w3llspring.fhpb.web.util.PlayerNames).memberCode(match.a1, aDisplay, duplicateNames, matchPlayerNames) : null},
+          aMemberCode2=${!match.isA2Guest() ? T(com.w3llspring.fhpb.web.util.PlayerNames).memberCode(match.a2, aDisplay2, duplicateNames, matchPlayerNames) : null},
+          bMemberCode=${!match.isB1Guest() ? T(com.w3llspring.fhpb.web.util.PlayerNames).memberCode(match.b1, bDisplay, duplicateNames, matchPlayerNames) : null},
+          bMemberCode2=${!match.isB2Guest() ? T(com.w3llspring.fhpb.web.util.PlayerNames).memberCode(match.b2, bDisplay2, duplicateNames, matchPlayerNames) : null},
           waitingOnOpponent=${waitingOnOpponentByMatchId != null and waitingOnOpponentByMatchId[match.id] != null and waitingOnOpponentByMatchId[match.id]},
           disputed=${match.state.name() == 'FLAGGED'},
           nullified=${match.state.name() == 'NULLIFIED'},
@@ -106,8 +111,8 @@
           nullifyWaiting=${nullifyWaitingOnOpponentByMatchId != null and nullifyWaitingOnOpponentByMatchId[match.id] != null and nullifyWaitingOnOpponentByMatchId[match.id]}">
       <tr th:classappend="${teamAWinner} ? 'fw-bold bg-success bg-opacity-10 rounded' : ''">
         <td>
-          <div th:text="${aDisplay}">Team A Player 1</div>
-          <div th:if="${aDisplay2 != null}" th:text="${aDisplay2}">Team A Player 2</div>
+          <div><span th:replace="~{components/player-name :: player-name(${aDisplay}, ${aMemberCode})}"></span></div>
+          <div th:if="${aDisplay2 != null}"><span th:replace="~{components/player-name :: player-name(${aDisplay2}, ${aMemberCode2})}"></span></div>
         </td>
         <td class="text-end align-middle"><span class="fs-2" th:text="${match.scoreA}">11</span></td>
       </tr>
@@ -128,8 +133,8 @@
       </tr>
       <tr th:classappend="${!teamAWinner} ? 'fw-bold bg-success bg-opacity-10 rounded' : ''">
         <td>
-          <div th:text="${bDisplay}">Team B Player 1</div>
-          <div th:if="${bDisplay2 != null}" th:text="${bDisplay2}">Team B Player 2</div>
+          <div><span th:replace="~{components/player-name :: player-name(${bDisplay}, ${bMemberCode})}"></span></div>
+          <div th:if="${bDisplay2 != null}"><span th:replace="~{components/player-name :: player-name(${bDisplay2}, ${bMemberCode2})}"></span></div>
         </td>
         <td class="text-end align-middle"><span class="fs-2" th:text="${match.scoreB}">9</span></td>
       </tr>

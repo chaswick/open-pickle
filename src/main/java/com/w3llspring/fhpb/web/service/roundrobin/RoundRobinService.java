@@ -1439,6 +1439,7 @@ public class RoundRobinService {
 
   private RoundRobinStanding createStanding(Long userId, String displayName, User user) {
     RoundRobinStanding standing = new RoundRobinStanding(userId, displayName);
+    standing.setPublicCode(user != null ? user.getPublicCode() : null);
     standing.setBadgeViews(
         trophyBadgeViewService != null
             ? trophyBadgeViewService.badgeViews(user)

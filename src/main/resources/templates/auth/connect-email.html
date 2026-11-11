@@ -6,7 +6,8 @@
 <main layout:fragment="content" class="app-page">
   <div class="app-page-header"><div><h1 class="app-page-title">Connect email</h1></div></div>
   <div th:replace="~{components/back-button :: back-button(@{/account}, 'Back')}"></div>
-  <section class="card shadow-sm">
+  <section class="card shadow-sm" data-card-collapse="off">
+    <div class="card-header card-header-title text-center"><h2 class="card-section-title">Connect email</h2></div>
     <div class="card-body p-4">
       <p>Keep your player ID, scores, and trophies. Use your email to sign in or recover access later.</p>
       <p class="alert alert-danger" role="alert" th:if="${connectError}" th:text="${connectError}"></p>
@@ -14,7 +15,7 @@
         <p class="alert alert-success" role="status">Check your email. Follow the link to choose a password and finish connecting your account.</p>
         <p class="small text-muted mb-0">The link expires in 30 minutes. You can keep playing while you wait.</p>
       </div>
-      <form th:unless="${emailSent == true}" method="post" th:action="@{/account/connect-email}">
+      <form th:unless="${emailSent == true}" method="post" data-submit-label="Saving…" th:action="@{/account/connect-email}">
         <label for="connect-email" class="form-label">Email</label>
         <input class="form-control mb-3 notranslate" translate="no" id="connect-email" name="email" type="email"
                maxlength="45" autocomplete="email" required th:value="${enteredEmail}">

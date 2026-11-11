@@ -1,6 +1,6 @@
 <!doctype html>
 
-<div xmlns:th="http://www.thymeleaf.org" th:fragment="standingsTable(standings, title)" class="ms-2">
+<div xmlns:th="http://www.thymeleaf.org" th:fragment="standingsTable(standings, title)" class="ms-2" th:with="duplicateNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).duplicates(standings?.![nickName])}">
     <h5 th:text="${title}">Standings</h5>
     <div class="table-responsive">
         <table class="table table-sm roundrobin-standings-table">
@@ -18,7 +18,7 @@
                 <td class="text-end" th:text="${iter.index + 1}"></td>
                 <td>
                     <div class="player-name-with-badges">
-                        <span class="player-name-label" th:text="${s.nickName}">Player</span>
+                        <span class="player-name-label" th:text="${s.nickName}">Player</span><small class="session-player-id text-muted fw-normal notranslate" translate="no" th:if="${s.publicCode != null and T(com.w3llspring.fhpb.web.util.PlayerNames).requiresId(duplicateNames, s.nickName)}" th:text="${s.publicCode}"></small>
                         <span class="name-badge-strip" th:if="${s.badgeViews != null and !#lists.isEmpty(s.badgeViews)}">
                             <span th:each="badge : ${s.badgeViews}"
                                   class="name-badge-pill badge-detail-trigger"

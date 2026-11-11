@@ -7,28 +7,32 @@ import com.w3llspring.fhpb.web.controller.match.VoiceMatchLogController;
 import com.w3llspring.fhpb.web.model.CustomUserDetails;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.matchlog.MatchValidationService;
+import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 class VoiceMatchLogScoreValidationTest {
+  private Object previousAuthenticatedUserService;
 
-  @Test
-  void confirmRejectsWinnerBelowConfiguredMinimum() {
-    VoiceMatchLogController controller = makeController();
-    Authentication authentication = makeAuthentication(1L);
+  @BeforeEach
+  void isolateAuthenticationSupport() {
+    previousAuthenticatedUserService =
+        ReflectionTestUtils.getField(AuthenticatedUserSupport.class, "authenticatedUserService");
+    ReflectionTestUtils.setField(AuthenticatedUserSupport.class, "authenticatedUserService", null);
+  }
 
-    VoiceMatchLogController.ConfirmRequest request = baseRequest();
-    request.setScoreTeamA(10);
-    request.setScoreTeamB(8);
-
-    ResponseStatusException exception =
-        assertThrows(
-            ResponseStatusException.class, () -> controller.confirm(request, authentication));
-
-    assertThat(exception.getReason()).contains("at least 11 points");
+  @AfterEach
+  void restoreAuthenticationSupport() {
+    ReflectionTestUtils.setField(
+        AuthenticatedUserSupport.class,
+        "authenticatedUserService",
+        previousAuthenticatedUserService);
   }
 
   @Test

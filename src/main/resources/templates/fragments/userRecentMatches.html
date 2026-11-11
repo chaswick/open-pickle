@@ -1,9 +1,9 @@
 
-<div th:fragment="userRecentMatches" th:if="${canEditDisplayName}">
+<div th:fragment="userRecentMatches" th:if="${canEditDisplayName}" th:with="matchPlayerNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).inMatches(recentMatches)}">
   <div class="card mb-4" id="recent-matches" data-card-collapse-default="closed"
        th:attr="data-card-collapse-default=${recentMatchesPageView == true ? 'open' : 'closed'},data-card-collapse=${recentMatchesPageView == true ? 'off' : null}"
        style="scroll-margin-top: 5rem;">
-    <div class="card-header card-header-title text-center" th:if="${recentMatchesPageView != true}">Recent matches</div>
+    <div class="card-header card-header-title text-center">Recent matches</div>
     <div class="card-body">
     <div class="mb-2 text-center">
       <a class="btn btn-sm btn-nav-primary" th:if="${canEditDisplayName}" th:href="@{/users/{memberCode}/matches/export(memberCode=${memberCode})}">Download CSV</a>

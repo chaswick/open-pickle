@@ -9,6 +9,7 @@ import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.SessionJoinRequest;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.service.matchentry.MatchEntryContextService;
+import com.w3llspring.fhpb.web.util.PlayerNames;
 import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
 import com.w3llspring.fhpb.web.util.UserPublicName;
 import java.time.Duration;
@@ -43,7 +44,12 @@ public class SessionJoinRequestService {
       Instant expiresAt) {}
 
   public record ActiveSessionMemberView(
-      Long membershipId, Long userId, String displayName, String courtName) {}
+      Long membershipId, Long userId, String displayName, String courtName, String publicCode) {
+    public ActiveSessionMemberView(
+        Long membershipId, Long userId, String displayName, String courtName) {
+      this(membershipId, userId, displayName, courtName, null);
+    }
+  }
 
   public record RequestStatusView(
       Long id,
@@ -235,6 +241,7 @@ public class SessionJoinRequestService {
             ? matchEntryContextService.buildCourtNameByUserIds(userIds, sessionId)
             : Map.of();
     Map<Long, String> safeCourtNameByUser = courtNameByUser != null ? courtNameByUser : Map.of();
+    Map<Long, PlayerNames.Name> labels = PlayerNames.resolve(users, Map.of());
     return activeMembers.stream()
         .map(
             member ->
@@ -242,7 +249,10 @@ public class SessionJoinRequestService {
                     member.getId(),
                     member.getUserId(),
                     displayNameFor(usersById.get(member.getUserId())),
-                    safeCourtNameByUser.get(member.getUserId())))
+                    safeCourtNameByUser.get(member.getUserId()),
+                    labels.containsKey(member.getUserId())
+                        ? labels.get(member.getUserId()).publicCode()
+                        : null))
         .toList();
   }
 

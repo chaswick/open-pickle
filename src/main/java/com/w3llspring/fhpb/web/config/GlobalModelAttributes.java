@@ -8,6 +8,7 @@ import com.w3llspring.fhpb.web.service.LadderConfigService;
 import com.w3llspring.fhpb.web.service.MatchDashboardService;
 import com.w3llspring.fhpb.web.service.user.UserAccountSettingsService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
+import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import com.w3llspring.fhpb.web.util.UserPublicName;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -161,6 +162,9 @@ public class GlobalModelAttributes {
     model.addAttribute("branding", brandingProperties);
     model.addAttribute("operator", operatorProperties);
     model.addAttribute("publicMetadataBaseUrl", resolvePublicMetadataBaseUrl(request));
+    model.addAttribute(
+        "profileReturnTo",
+        ReturnToSanitizer.sanitize(ReturnToSanitizer.toAppRelativePath(request)));
     model.addAttribute("checkInEnabled", checkInEnabled);
     model.addAttribute("translationEnabled", translationEnabled);
     model.addAttribute("googleAnalyticsEnabled", googleAnalyticsEnabled);

@@ -35,9 +35,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
   @Query("select u from User u where u.resetPasswordToken = :token")
   Optional<User> findByResetPasswordTokenForUpdate(@Param("token") String token);
 
-  @Query(value = "SELECT * FROM users WHERE nick_name = ?1", nativeQuery = true)
-  public User findByNickName(String nickName);
-
   Optional<User> findByPublicCode(String publicCode);
 
   Optional<User> findByRecoveryCodeHash(String recoveryCodeHash);

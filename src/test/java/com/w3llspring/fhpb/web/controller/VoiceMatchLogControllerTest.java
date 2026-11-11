@@ -26,8 +26,8 @@ import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -72,7 +72,9 @@ class VoiceMatchLogControllerTest {
   @AfterEach
   void restoreAuthenticationSupport() {
     ReflectionTestUtils.setField(
-        AuthenticatedUserSupport.class, "authenticatedUserService", previousAuthenticatedUserService);
+        AuthenticatedUserSupport.class,
+        "authenticatedUserService",
+        previousAuthenticatedUserService);
   }
 
   @BeforeEach
@@ -256,7 +258,8 @@ class VoiceMatchLogControllerTest {
       assertFalse(response.isAutoSubmitted());
       assertNull(response.getMatchId());
       assertSame(interpretation, response.getInterpretation());
-      assertTrue(response.getInterpretation().getTeams().get(0).getPlayers().get(1).isNeedsReview());
+      assertTrue(
+          response.getInterpretation().getTeams().get(0).getPlayers().get(1).isNeedsReview());
       verifyNoInteractions(matchFactory, ladderV2Service, trophyAwardService);
     }
 
@@ -858,26 +861,12 @@ class VoiceMatchLogControllerTest {
     }
 
     @Test
-    @DisplayName("Should reject: Winner score < 11")
-    void shouldRejectScoreLessThan11() {
-      // Given
+    @DisplayName("Should accept: Short games with a one-point margin")
+    void shouldAcceptShortGameScore() {
       VoiceMatchLogController.ConfirmRequest request =
-          createConfirmRequest(
-              Arrays.asList(1L, 2L), Arrays.asList(3L, 4L), 10, 8 // Invalid: winner has < 11
-              );
-
+          createConfirmRequest(Arrays.asList(1L, 2L), Arrays.asList(3L, 4L), 7, 6);
       setupSuccessfulConfirmMocks();
-      when(seasonRepository.findById(1L)).thenReturn(Optional.of(season));
-      when(matchValidationService.validateScore(Integer.valueOf(10), Integer.valueOf(8)))
-          .thenReturn(
-              MatchValidationService.ScoreValidationResult.invalid(
-                  "Winning team must score at least 11 points."));
-
-      // When/Then
-      ResponseStatusException exception =
-          assertThrows(
-              ResponseStatusException.class, () -> controller.confirm(request, authentication));
-      assertTrue(exception.getReason().contains("at least 11 points"));
+      assertNotNull(controller.confirm(request, authentication).getMatchId());
     }
 
     @Test

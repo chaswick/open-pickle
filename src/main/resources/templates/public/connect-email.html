@@ -5,10 +5,9 @@
 <body>
 <main layout:fragment="content" class="container py-5">
   <div class="row justify-content-center"><div class="col-12 col-md-8 col-lg-6">
-    <section class="card shadow-sm"><div class="card-body p-4">
-      <h1 class="h3">Connect email</h1>
+    <section class="card shadow-sm"><div class="card-header card-header-title text-center"><h1 class="card-section-title">Connect email</h1></div><div class="card-body p-4">
       <p class="alert alert-danger" role="alert" th:if="${connectError}" th:text="${connectError}"></p>
-      <form th:if="${connectionAvailable == true}" method="post" th:action="@{/connect-email}">
+      <form th:if="${connectionAvailable == true}" method="post" data-submit-label="Saving…" th:action="@{/connect-email}">
         <p>Choose a password to sign in with <span class="notranslate" translate="no" th:text="${connectingEmail}"></span>.</p>
         <label for="password" class="form-label">Password</label>
         <input class="form-control" id="password" name="password" type="password" required autocomplete="new-password"

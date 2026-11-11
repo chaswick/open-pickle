@@ -22,6 +22,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -128,15 +130,23 @@ class UserStyleControllerTest {
         when(ladderMembershipRepository.findByUserIdAndState(2L, LadderMembership.State.ACTIVE))
                 .thenReturn(List.of(membership(22L, 2L)));
 
-        assertThatThrownBy(() -> controller.viewUser(owner.getPublicCode(), new ExtendedModelMap()))
+        assertThatThrownBy(() -> controller.viewUser(owner.getPublicCode(), null, new ExtendedModelMap()))
                 .isInstanceOf(SecurityException.class)
                 .hasMessage("User details unavailable.");
 
         verify(userStyleRepo, never()).findUserStyles(any());
     }
 
-    @Test
-    void userDetailsAllowsUsersWhoShareActiveLadder() throws Exception {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/groups/42|/groups/42",
+            "/competition?standingsPage=2&standingsSize=10|/competition?standingsPage=2&standingsSize=10",
+            "https://example.com/|/account-menu",
+            "//example.com/|/account-menu",
+            "javascript:alert(1)|/account-menu",
+            "/css/site.css|/account-menu"
+    }, delimiter = '|')
+    void userDetailsAllowsUsersWhoShareActiveLadder(String returnTo, String expectedBackHref) throws Exception {
         User viewer = user(1L, "viewer");
         User owner = user(2L, "owner");
         SecurityContextHolder.getContext().setAuthentication(
@@ -150,11 +160,12 @@ class UserStyleControllerTest {
         when(userStyleRepo.findUserStyles(2L)).thenReturn(Collections.emptyList());
         when(userStyleRepo.findIfVoted(2L, 1L)).thenReturn(0);
 
-        var result = mockMvc.perform(get("/account").param("member", owner.getPublicCode()))
+        var result = mockMvc.perform(get("/account").param("member", owner.getPublicCode()).param("returnTo", returnTo))
                 .andExpect(status().isOk())
                 .andReturn();
 
         assertThat(result.getModelAndView()).isNotNull();
+        assertThat(result.getModelAndView().getModel().get("accountBackHref")).isEqualTo(expectedBackHref);
         assertThat(result.getModelAndView().getViewName()).isEqualTo("auth/userDetails");
         assertThat(result.getModelAndView().getModel().get("queryName")).isEqualTo("owner");
         assertThat(result.getModelAndView().getModel().get("memberCode")).isEqualTo(owner.getPublicCode());
@@ -193,7 +204,7 @@ class UserStyleControllerTest {
         when(ladderMembershipRepository.findByUserIdAndState(2L, LadderMembership.State.ACTIVE))
                 .thenReturn(Collections.emptyList());
 
-        assertThatThrownBy(() -> controller.viewUser(owner.getPublicCode(), new ExtendedModelMap()))
+        assertThatThrownBy(() -> controller.viewUser(owner.getPublicCode(), null, new ExtendedModelMap()))
                 .isInstanceOf(SecurityException.class)
                 .hasMessage("User details unavailable.");
 
@@ -219,6 +230,7 @@ class UserStyleControllerTest {
                 .andReturn();
 
         assertThat(result.getModelAndView()).isNotNull();
+        assertThat(result.getModelAndView().getModel().get("accountBackHref")).isEqualTo("/account-menu");
         assertThat(result.getModelAndView().getViewName()).isEqualTo("auth/userDetails");
         assertThat(result.getModelAndView().getModel().get("canEditDisplayName")).isEqualTo(true);
         assertThat(result.getModelAndView().getModel().get("profilePublicCode")).isEqualTo("PB-sage-ace-247");
@@ -473,7 +485,7 @@ class UserStyleControllerTest {
                 .thenReturn(List.of(profileBadge));
 
         ExtendedModelMap model = new ExtendedModelMap();
-        String view = controller.viewUser(null, model);
+        String view = controller.viewUser(null, null, model);
 
         assertThat(view).isEqualTo("auth/userDetails");
         List<?> badgeOptions = (List<?>) model.get("badgeOptions");

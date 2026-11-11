@@ -644,9 +644,14 @@ class ThymeleafTemplateTest {
     variables.put("members", List.of(currentMembership, otherMembership));
     variables.put("sort", "joined");
     variables.put("currentUserId", 7L);
+    variables.put("profileReturnTo", "/groups/42");
     variables.put("ownerUserId", 7L);
     variables.put("userById", Map.of(7L, currentUser, 8L, otherUser));
-    variables.put("courtNameByUser", Map.of(7L, "North Courts", 8L, "Center Court"));
+    variables.put("courtNameByUser", Map.of(7L, "Tester", 8L, "Partner"));
+    variables.put(
+        "sessionPlayerNames",
+        com.w3llspring.fhpb.web.util.PlayerNames.resolve(
+            List.of(currentUser, otherUser), Map.of(7L, "Tester", 8L, "Partner"), List.of()));
     variables.put("sessionStandings", List.of(standing));
     variables.put("sessionGlobalRankByUserId", Map.of(7L, 4));
     variables.put("sessionMomentumByUserId", Map.of(7L, 3));
@@ -659,10 +664,10 @@ class ThymeleafTemplateTest {
     String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
     assertThat(result).contains("Session Standings");
-    assertThat(result).contains("href=\"/account?member=PB-sage-ace-247\"");
+    assertThat(result).contains("href=\"/account?member=PB-sage-ace-247&amp;returnTo=/groups/42\"");
     assertThat(result).contains("Manage Invited Buddies");
     assertThat(result).contains("Partner");
-    assertThat(result).contains("Center Court");
+    assertThat(result).contains("session-player-name");
     assertThat(result).contains("data-session-stat-toggle=\"rating\"");
     assertThat(result.indexOf("data-session-stat-toggle=\"wins\""))
         .isLessThan(result.indexOf("data-session-stat-toggle=\"points-for\""));
@@ -726,7 +731,7 @@ class ThymeleafTemplateTest {
     assertThat(sessionTemplate)
         .doesNotContain("Confirm the location name below or enter your own.");
     assertThat(sessionTemplate).contains("Invite friends");
-    assertThat(sessionTemplate).contains("courtNameByUser");
+    assertThat(sessionTemplate).contains("sessionPlayerNames");
     assertThat(sessionTemplate).contains("Manage Invited Buddies");
     assertThat(sessionTemplate).contains("Pending Join Requests");
     assertThat(sessionTemplate).contains("Session Standings");
@@ -1006,7 +1011,7 @@ class ThymeleafTemplateTest {
         .contains(
             "data-court-name=${courtNames != null and courtNames.containsKey(u.id) ? courtNames[u.id] : ''}");
     assertThat(template).contains("data-app-name=${u.nickName != null ? u.nickName : ''}");
-    assertThat(template).contains("fragments/memberIdentity :: memberIdentity(${u.publicCode})");
+    assertThat(template).contains("participantNames[u.id].publicCode");
     assertThat(template).doesNotContain("id=\"fixedTeamsReset\"");
     assertThat(template).contains("Randomize teams and replace your current pairings?");
   }
@@ -1674,6 +1679,78 @@ class ThymeleafTemplateTest {
         new WebContext(
             application.buildExchange(request, response), Locale.getDefault(), variables);
     return templateEngine.process(templateName, context);
+  }
+
+  @Test
+  void standingsUseSecondaryMemberIdsOnlyForRepeatedNames() {
+    var first = new com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow();
+    first.userId = 1L;
+    first.displayName = "Alex";
+    first.userPublicCode = "PB-sage-ace-247";
+    var second = new com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow();
+    second.userId = 2L;
+    second.displayName = "alex";
+    second.userPublicCode = "PB-reef-jump-430";
+    var third = new com.w3llspring.fhpb.web.service.LadderV2Service.LadderRow();
+    third.userId = 3L;
+    third.displayName = "Sam";
+    third.userPublicCode = "PB-cove-ace-123";
+    Map<String, Object> variables = new HashMap<>();
+    variables.put("ladderDisplay", List.of(first, second, third));
+    variables.put("showCompetitionFeatures", false);
+    variables.put("currentUserId", 1L);
+    variables.put("showFilteredEmptyState", false);
+    String result = renderPlayerFragment("fragments/standingsList", "standingsList", variables);
+    assertThat(StringUtils.countOccurrencesOf(result, "session-player-id")).isEqualTo(2);
+    assertThat(result).contains(">PB-sage-ace-247</small>", ">PB-reef-jump-430</small>");
+    assertThat(result).doesNotContain(">PB-cove-ace-123</small>");
+  }
+
+  @Test
+  void matchResultsDisambiguatePlayersAcrossBothTeams() {
+    var first = new User();
+    first.setId(1L);
+    first.setNickName("Alex");
+    first.setPublicCode("PB-sage-ace-247");
+    var second = new User();
+    second.setId(2L);
+    second.setNickName("alex");
+    second.setPublicCode("PB-reef-jump-430");
+    var sam = new User();
+    sam.setId(3L);
+    sam.setNickName("Sam");
+    sam.setPublicCode("PB-cove-ace-123");
+    var quinn = new User();
+    quinn.setId(4L);
+    quinn.setNickName("Quinn");
+    quinn.setPublicCode("PB-slate-dink-105");
+    var match = new com.w3llspring.fhpb.web.model.Match();
+    match.setA1(first);
+    match.setA2(sam);
+    match.setB1(second);
+    match.setB2(quinn);
+    match.setScoreA(7);
+    match.setScoreB(6);
+    String result =
+        renderPlayerFragment(
+            "fragments/matchRow",
+            "matchRow_result",
+            Map.of("match", match, "confirmable", false, "editable", false, "deletable", false));
+    assertThat(StringUtils.countOccurrencesOf(result, "session-player-id")).isEqualTo(2);
+    assertThat(result).contains(">PB-sage-ace-247</small>", ">PB-reef-jump-430</small>");
+    assertThat(result).doesNotContain(">PB-cove-ace-123</small>");
+  }
+
+  private String renderPlayerFragment(
+      String template, String fragment, Map<String, Object> variables) {
+    MockServletContext servletContext = new MockServletContext();
+    MockHttpServletRequest request = new MockHttpServletRequest(servletContext);
+    MockHttpServletResponse response = new MockHttpServletResponse();
+    JakartaServletWebApplication application =
+        JakartaServletWebApplication.buildApplication(servletContext);
+    WebContext context =
+        new WebContext(application.buildExchange(request, response), Locale.US, variables);
+    return templateEngine.process(template, java.util.Set.of(fragment), context);
   }
 
   private String extractTemplateSection(String template, String startMarker, String endMarker) {

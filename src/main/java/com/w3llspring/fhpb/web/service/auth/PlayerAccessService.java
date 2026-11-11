@@ -80,7 +80,7 @@ public class PlayerAccessService {
     user.setEmail(UUID.randomUUID().toString().replace("-", "") + "@g.invalid");
     user.setPassword(newInternalCredential());
     user.setAdmin(false);
-    user.setNickName(uniqueName(cleanName));
+    user.setNickName(cleanName);
     user.setAcknowledgedTermsAt(Instant.now());
     user.setRegisteredAt(Instant.now());
     user.setMaxOwnedLadders(maxOwned);
@@ -135,18 +135,6 @@ public class PlayerAccessService {
           "This invite is no longer available. Ask the organizer for a new link.");
     }
     return session;
-  }
-
-  private String uniqueName(String name) {
-    String candidate = name;
-    for (int attempt = 0; attempt < 32; attempt++) {
-      if (users.findByNickName(candidate) == null) return candidate;
-      candidate =
-          name.substring(0, Math.min(name.length(), User.MAX_NICKNAME_LENGTH - 7))
-              + "-"
-              + UUID.randomUUID().toString().substring(0, 6);
-    }
-    throw new IllegalStateException("Could not create your player. Please try again.");
   }
 
   private static String normalize(String code) {

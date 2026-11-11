@@ -46,7 +46,7 @@ public class SessionJoinRequestController {
   public record JoinRequestReviewResponse(String status, String message) {}
 
   public record SessionMemberResponse(
-      Long membershipId, Long userId, String displayName, String courtName) {}
+      Long membershipId, Long userId, String displayName, String courtName, String publicCode) {}
 
   public record SessionMembersResponse(
       String memberSectionTitle, int memberCount, java.util.List<SessionMemberResponse> members) {}
@@ -93,7 +93,8 @@ public class SessionJoinRequestController {
                           member.membershipId(),
                           member.userId(),
                           member.displayName(),
-                          member.courtName()))
+                          member.courtName(),
+                          member.publicCode()))
               .toList());
     } catch (IllegalArgumentException ex) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());

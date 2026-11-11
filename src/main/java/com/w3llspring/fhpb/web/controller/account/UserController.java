@@ -45,35 +45,12 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Controller
 public class UserController {
   private static final Logger log = LoggerFactory.getLogger(UserController.class);
-  private static final String[] FUN_SUFFIXES = {
-    "Dinker",
-    "Drop",
-    "Spinner",
-    "Smash",
-    "Ace",
-    "Rally",
-    "Lob",
-    "Volley",
-    "Paddle",
-    "Kitchen",
-    "Coach",
-    "Pro",
-    "Champ",
-    "Star",
-    "Driver",
-    "Backhand",
-    "Stacker",
-    "Lefty",
-    "Paddle",
-    "Out"
-  };
-
   @Autowired private UserRepository userRepo;
 
   @Autowired private UserAccountSettingsService userAccountSettingsService;
@@ -246,13 +223,15 @@ public class UserController {
       return "redirect:/registration-success";
     }
     if (StringUtils.hasText(guardDecision.reason())) {
-      log.info("Registration suspicious but allowed ip={} reason={}", clientIp, guardDecision.reason());
+      log.info(
+          "Registration suspicious but allowed ip={} reason={}", clientIp, guardDecision.reason());
     }
 
     String rawPassword = user != null ? user.getPassword() : null;
 
     if (user == null) {
-      log.info("Registration rejected: ip={} emailDomain={} reasons={}", clientIp, "-", "invalidUser");
+      log.info(
+          "Registration rejected: ip={} emailDomain={} reasons={}", clientIp, "-", "invalidUser");
       bindingResult.addError(new FieldError("User", "", "Invalid user submission."));
       prepareRegistrationForm(model);
       return "public/registrationForm";
@@ -299,11 +278,9 @@ public class UserController {
     }
 
     if (shouldBlockSuspiciousHoneypotRegistration(
-        guardDecision,
-        user.getEmail(),
-        parsedCourtNames,
-        user.getCourtNamesInput())) {
-      log.warn("Blocked registration attempt ip={} reason={}", clientIp, "honeypot_suspicious_profile");
+        guardDecision, user.getEmail(), parsedCourtNames, user.getCourtNamesInput())) {
+      log.warn(
+          "Blocked registration attempt ip={} reason={}", clientIp, "honeypot_suspicious_profile");
       return "redirect:/registration-success";
     }
 
@@ -347,10 +324,7 @@ public class UserController {
      * if (userRepo.findByEmail(user.getEmail()) != null) { throw new
      * DuplicateUserException("User already exists!"); }
      */
-    String nickSeed = assignNickName(user, parsedCourtNames);
-    if (nickSeed == null || nickSeed.isBlank()) {
-      nickSeed = "Player";
-    }
+    assignNickName(user, parsedCourtNames);
     if (user.getMaxOwnedLadders() == null) {
       user.setMaxOwnedLadders(defaultMaxOwnedLadders);
     }
@@ -363,46 +337,23 @@ public class UserController {
       user.getCourtNames().add(courtName);
     }
 
-    int nicknameRetries = 0;
-    boolean saved = false;
-    while (!saved) {
-      try {
-        userRepo.saveAndFlush(user);
-        saved = true;
-      } catch (DataIntegrityViolationException e) {
-        String message =
-            Optional.ofNullable(e.getMostSpecificCause()).map(Throwable::getMessage).orElse("");
-        log.warn("Registration failed due to data integrity violation: {}", message);
-        String lower = message.toLowerCase(Locale.US);
-        if (lower.contains("nick")) {
-          nicknameRetries++;
-          if (nicknameRetries > 25) {
-            bindingResult.addError(
-                new FieldError(
-                    "User",
-                    "courtNamesInput",
-                    "We couldn't generate a unique nickname. Please try different names."));
-            break;
-          }
-          String newNick = ensureUniqueNick(nickSeed, nicknameRetries);
-          log.debug("Retrying nickname generation with attempt {} -> {}", nicknameRetries, newNick);
-          user.setNickName(newNick);
-          continue;
-        }
-        if (lower.contains("email")) {
-          bindingResult.addError(
-              new FieldError("User", "email", "E-mail address is already registered."));
-        } else {
-          bindingResult.reject(
-              "registration.failed", "Sorry, something went wrong while creating your account.");
-        }
-        break;
-      } catch (Exception e) {
-        log.error("Unexpected error while registering user.", e);
+    try {
+      userRepo.saveAndFlush(user);
+    } catch (DataIntegrityViolationException e) {
+      String message =
+          Optional.ofNullable(e.getMostSpecificCause()).map(Throwable::getMessage).orElse("");
+      log.warn("Registration failed due to data integrity violation: {}", message);
+      if (message.toLowerCase(Locale.US).contains("email")) {
+        bindingResult.addError(
+            new FieldError("User", "email", "E-mail address is already registered."));
+      } else {
         bindingResult.reject(
             "registration.failed", "Sorry, something went wrong while creating your account.");
-        break;
       }
+    } catch (Exception e) {
+      log.error("Unexpected error while registering user.", e);
+      bindingResult.reject(
+          "registration.failed", "Sorry, something went wrong while creating your account.");
     }
     if (bindingResult.hasErrors()) {
       log.info(
@@ -494,7 +445,7 @@ public class UserController {
     return email.substring(at + 1).trim().toLowerCase(Locale.US);
   }
 
-  private String assignNickName(User user, List<String> parsedCourtNames) {
+  private void assignNickName(User user, List<String> parsedCourtNames) {
     String base = parsedCourtNames.isEmpty() ? "Player" : parsedCourtNames.get(0);
     String candidate = generateCandidateNick(base);
     if (candidate == null || candidate.isBlank()) {
@@ -506,9 +457,7 @@ public class UserController {
       candidate = "Player";
     }
 
-    String uniqueNick = ensureUniqueNick(candidate);
-    user.setNickName(uniqueNick);
-    return candidate;
+    user.setNickName(candidate);
   }
 
   private String generateCandidateNick(String base) {
@@ -554,79 +503,6 @@ public class UserController {
       result = result.substring(0, User.MAX_NICKNAME_LENGTH);
     }
     return result;
-  }
-
-  private String ensureUniqueNick(String base) {
-    return ensureUniqueNick(base, 0);
-  }
-
-  private String ensureUniqueNick(String base, int attemptOffset) {
-    String sanitizedBase = base != null && !base.isBlank() ? base : "Player";
-    if (sanitizedBase.length() > User.MAX_NICKNAME_LENGTH) {
-      sanitizedBase = sanitizedBase.substring(0, User.MAX_NICKNAME_LENGTH);
-    }
-    int attempt = attemptOffset;
-    if (attemptOffset == 0) {
-      String upperBase = sanitizedBase.toUpperCase(Locale.US);
-      if (!upperBase.contains("GUEST")
-          && !displayNameModerationService.explainViolation(sanitizedBase).isPresent()
-          && !isNickTaken(sanitizedBase)) {
-        return sanitizedBase;
-      }
-      attempt++;
-    }
-    int limit = attemptOffset + 1_000;
-    while (attempt < limit) {
-      String suffixWord = FUN_SUFFIXES[attempt % FUN_SUFFIXES.length];
-      int number = (attempt / FUN_SUFFIXES.length) + 1;
-      String candidate = composeCandidate(sanitizedBase, suffixWord, number);
-      String upper = candidate.toUpperCase(Locale.US);
-      if (upper.contains("GUEST")) {
-        attempt++;
-        continue;
-      }
-      if (displayNameModerationService.explainViolation(candidate).isPresent()) {
-        attempt++;
-        continue;
-      }
-      if (!isNickTaken(candidate)) {
-        return candidate;
-      }
-      attempt++;
-    }
-    // Fallback: append numeric suffix only
-    int counter = Math.max(1, attemptOffset + 1);
-    while (true) {
-      String suffix = String.valueOf(counter++);
-      int maxBaseLength = User.MAX_NICKNAME_LENGTH - suffix.length();
-      String candidate = sanitizedBase;
-      if (candidate.length() > maxBaseLength) {
-        candidate = candidate.substring(0, maxBaseLength);
-      }
-      candidate = candidate + suffix;
-      if (!isNickTaken(candidate)) {
-        return candidate;
-      }
-    }
-  }
-
-  private String composeCandidate(String base, String suffixWord, int number) {
-    String numberPart = String.valueOf(number);
-    int totalSuffixLength = suffixWord.length() + numberPart.length();
-    int maxBaseLength = User.MAX_NICKNAME_LENGTH - totalSuffixLength;
-    String workingBase = base;
-    if (maxBaseLength < 1) {
-      maxBaseLength = 1;
-    }
-    if (workingBase.length() > maxBaseLength) {
-      workingBase = workingBase.substring(0, maxBaseLength);
-    }
-    return workingBase + suffixWord + numberPart;
-  }
-
-  private boolean isNickTaken(String nick) {
-    User existing = userRepo.findByNickName(nick);
-    return existing != null;
   }
 
   private boolean shouldBlockSuspiciousHoneypotRegistration(

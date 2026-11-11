@@ -37,6 +37,7 @@ import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import com.w3llspring.fhpb.web.service.standings.SeasonStandingsViewService;
 import com.w3llspring.fhpb.web.service.user.UserOnboardingService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
+import com.w3llspring.fhpb.web.util.PlayerNames;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
 import com.w3llspring.fhpb.web.util.SessionInviteText;
@@ -748,21 +749,24 @@ public class LadderConfigController {
     model.addAttribute("bannedMembers", bannedMembers);
     model.addAttribute("userById", userById);
     model.addAttribute("sort", sort);
-    model.addAttribute(
-        "courtNameByUser",
+    Map<Long, String> courtNameByUser =
         cfg.isSessionType() && matchEntryContextService != null
             ? matchEntryContextService.buildCourtNameByUserIds(
                 members.stream().map(LadderMembership::getUserId).filter(Objects::nonNull).toList(),
                 cfg.getId())
-            : Map.of());
+            : Map.of();
+    model.addAttribute("courtNameByUser", courtNameByUser);
     if (cfg.isSessionType()) {
       List<User> activeUsers =
           members.stream()
               .map(member -> userById.get(member.getUserId()))
               .filter(Objects::nonNull)
               .toList();
+      Map<Long, PlayerNames.Name> playerNames =
+          PlayerNames.resolve(activeUsers, courtNameByUser, List.of());
+      model.addAttribute("sessionPlayerNames", playerNames);
       model.addAttribute("sessionHeroTitle", resolveSessionDisplayTitle(cfg));
-      applySessionRecentTickerModel(model, cfg);
+      applySessionRecentTickerModel(model, cfg, playerNames);
       applySessionStandingsModel(model, members, userById, targetSeason, sessionBaseStandings);
       model.addAttribute(
           "voiceLanguage",
@@ -1004,11 +1008,14 @@ public class LadderConfigController {
     userIds.add(user.getId());
   }
 
-  private void applySessionRecentTickerModel(Model model, LadderConfig sessionConfig) {
-    model.addAttribute("sessionRecentTickerItems", buildSessionRecentTickerItems(sessionConfig));
+  private void applySessionRecentTickerModel(
+      Model model, LadderConfig sessionConfig, Map<Long, PlayerNames.Name> playerNames) {
+    model.addAttribute(
+        "sessionRecentTickerItems", buildSessionRecentTickerItems(sessionConfig, playerNames));
   }
 
-  private List<SessionRecentTickerItem> buildSessionRecentTickerItems(LadderConfig sessionConfig) {
+  private List<SessionRecentTickerItem> buildSessionRecentTickerItems(
+      LadderConfig sessionConfig, Map<Long, PlayerNames.Name> playerNames) {
     if (sessionConfig == null
         || sessionConfig.getId() == null
         || !sessionConfig.isSessionType()
@@ -1041,7 +1048,7 @@ public class LadderConfigController {
               return new SessionRecentTickerItem(
                   match.getId(),
                   buildSessionRecentTickerAgeLabel(confirmedAt),
-                  buildSessionRecentTickerSummary(match),
+                  buildSessionRecentTickerSummary(match, playerNames),
                   confirmedAt);
             })
         .filter(Objects::nonNull)
@@ -1074,7 +1081,8 @@ public class LadderConfigController {
         .toList();
   }
 
-  private String buildSessionRecentTickerSummary(Match match) {
+  private String buildSessionRecentTickerSummary(
+      Match match, Map<Long, PlayerNames.Name> playerNames) {
     if (match == null) {
       return "";
     }
@@ -1083,37 +1091,49 @@ public class LadderConfigController {
     String winners =
         teamAWon
             ? sessionTickerTeamLabel(
-                match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest())
+                match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest(), playerNames)
             : sessionTickerTeamLabel(
-                match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest());
+                match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest(), playerNames);
     String losers =
         teamAWon
             ? sessionTickerTeamLabel(
-                match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest())
+                match.getB1(), match.isB1Guest(), match.getB2(), match.isB2Guest(), playerNames)
             : sessionTickerTeamLabel(
-                match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest());
+                match.getA1(), match.isA1Guest(), match.getA2(), match.isA2Guest(), playerNames);
     int winnerScore = teamAWon ? match.getScoreA() : match.getScoreB();
     int loserScore = teamAWon ? match.getScoreB() : match.getScoreA();
     return winners + " def " + losers + " " + winnerScore + "-" + loserScore;
   }
 
   private String sessionTickerTeamLabel(
-      User firstPlayer, boolean firstGuest, User secondPlayer, boolean secondGuest) {
+      User firstPlayer,
+      boolean firstGuest,
+      User secondPlayer,
+      boolean secondGuest,
+      Map<Long, PlayerNames.Name> playerNames) {
     List<String> names = new ArrayList<>(2);
     if (firstGuest) {
       names.add(UserPublicName.GUEST);
     } else if (firstPlayer != null) {
-      names.add(UserPublicName.forUser(firstPlayer));
+      names.add(sessionTickerPlayerName(firstPlayer, playerNames));
     }
     if (secondGuest) {
       names.add(UserPublicName.GUEST);
     } else if (secondPlayer != null) {
-      names.add(UserPublicName.forUser(secondPlayer));
+      names.add(sessionTickerPlayerName(secondPlayer, playerNames));
     }
     if (names.isEmpty()) {
       return "Guest Squad";
     }
     return String.join(" & ", names);
+  }
+
+  private String sessionTickerPlayerName(User player, Map<Long, PlayerNames.Name> names) {
+    var label = names.get(player.getId());
+    if (label == null) return UserPublicName.forUser(player);
+    return label.publicCode() == null
+        ? label.name()
+        : label.name() + " (" + label.publicCode() + ")";
   }
 
   private String buildSessionRecentTickerAgeLabel(Instant timeline) {

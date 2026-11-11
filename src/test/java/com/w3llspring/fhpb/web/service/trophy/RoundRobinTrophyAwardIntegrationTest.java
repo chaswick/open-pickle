@@ -217,6 +217,31 @@ class RoundRobinTrophyAwardIntegrationTest {
   }
 
   @Test
+  void resultNamesUseCourtNamesAndKeepDuplicateIdsSeparateFromTheNames() {
+    edit(
+        () -> {
+          for (int i = 0; i < 2; i++) {
+            User user = users.findById(people.get(i).getId()).orElseThrow();
+            UserCourtName alias = new UserCourtName();
+            alias.setUser(user);
+            alias.setAlias("Alex");
+            user.getCourtNames().add(alias);
+            users.saveAndFlush(user);
+          }
+        });
+    RoundRobin rr = run(RoundRobin.Format.ROTATING_PARTNERS);
+    standardGames(rr);
+    service.process(rr.getId());
+    var shown = service.awardsForRun(rr.getId());
+    assertThat(shown.get(0).players().getFirst().name()).isEqualTo("Alex");
+    assertThat(shown.get(0).players().getFirst().memberCode())
+        .isEqualTo(people.get(0).getPublicCode());
+    assertThat(shown.get(1).players().getFirst().name()).isEqualTo("Alex");
+    assertThat(shown.get(1).players().getFirst().memberCode())
+        .isEqualTo(people.get(1).getPublicCode());
+  }
+
+  @Test
   void earnedSessionQueryIncludesOnlyTheRequestedPlayersAwards() {
     RoundRobin rr = run(RoundRobin.Format.ROTATING_PARTNERS);
     standardGames(rr);

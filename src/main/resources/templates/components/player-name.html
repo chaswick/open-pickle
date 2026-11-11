@@ -1,0 +1,4 @@
+<span xmlns:th="http://www.thymeleaf.org" th:fragment="player-name(name, publicCode)" class="session-player-name notranslate" translate="no">
+  <span data-player-name th:text="${name}">Player</span>
+  <small class="session-player-id text-muted fw-normal" th:if="${publicCode != null}" th:text="${publicCode}">PB-sage-ace-247</small>
+</span>

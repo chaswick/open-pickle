@@ -20,7 +20,7 @@
       </div>
     </div>
 
-    <div th:replace="~{components/back-button :: back-button(@{/account-menu}, 'Back')}"></div>
+    <div th:replace="~{components/back-button :: back-button(${accountBackHref ?: '/account-menu'}, 'Back')}"></div>
 
     <div class="card-stack-col card-stack-col-desktop-fluid pb-5 text-start">
       <th:block th:replace="~{fragments/userDetailsFrag}"></th:block>

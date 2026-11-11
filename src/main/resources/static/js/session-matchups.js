@@ -29,7 +29,7 @@
             var select = document.createElement('select'); select.className = 'form-select';
             select.setAttribute('aria-label', 'Pair ' + (index + 1) + ', player ' + (side + 1));
             select.add(new Option('Choose player', ''));
-            members.forEach(function (m) { select.add(new Option(m.name, String(m.id))); });
+            members.forEach(function (m) { select.add(new Option(m.name + (m.publicCode ? ' (' + m.publicCode + ')' : ''), String(m.id))); });
             select.value = pair[side] == null ? '' : String(pair[side]);
             select.dataset.previousValue = select.value;
             select.addEventListener('change', function () {
@@ -80,7 +80,7 @@
       }
       var roundSelect = root.querySelector('[data-matchup-round]');
       if (roundSelect) {
-        roundSelect.value = root.dataset.selectedRound || root.dataset.initialRound;
+        roundSelect.value = root.dataset.selectedRound || 'all';
         if (!roundSelect.value) roundSelect.value = 'all';
       }
       api.filter(root);
@@ -89,7 +89,7 @@
       var select = root.querySelector('[data-matchup-round]');
       if (!select) return;
       var mine = root.dataset.gamesFilter === 'mine';
-      root.querySelectorAll('[data-games-filter]').forEach(function (button) {
+      root.querySelectorAll('button[data-games-filter]').forEach(function (button) {
         var chosen = button.dataset.gamesFilter === (mine ? 'mine' : 'all');
         button.classList.toggle('is-selected', chosen); button.setAttribute('aria-pressed', String(chosen));
       });
@@ -108,7 +108,7 @@
       if (!current || !fresh || current.dataset.revision === fresh.dataset.revision) return false;
       // Refresh live rosters and results without interrupting score entry or replacing a form
       // while somebody is using a keyboard. CSRF masking is intentionally not part of revision.
-      if (document.body.classList.contains('modal-open') || document.querySelector('.modal.show') || (current.contains(document.activeElement)
+      if (document.body.classList.contains('modal-open') || document.querySelector('.modal.show, form[data-submit-pending]') || (current.contains(document.activeElement)
           && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)
           && !document.activeElement.matches('[data-matchup-round]'))) return false;
       fresh.dataset.gamesFilter = current.dataset.gamesFilter || 'all';
@@ -124,10 +124,24 @@
         var scoring = oldSetup.querySelector('[name=organizerScored]:checked');
         if (scoring && newSetup.querySelector('[name=organizerScored][value="' + scoring.value + '"]')) newSetup.querySelector('[name=organizerScored][value="' + scoring.value + '"]').checked = true;
       }
-      var openOptions = current.querySelector('.matchups-options[open]');
-      if (openOptions && fresh.querySelector('.matchups-options')) fresh.querySelector('.matchups-options').open = true;
-      if (current.querySelector('[data-matchup-roster][open]') && fresh.querySelector('[data-matchup-roster]')) fresh.querySelector('[data-matchup-roster]').open = true;
-      current.replaceWith(fresh); api.mount(fresh);
+      ['[data-matchup-roster]', '#session-options-card'].forEach(function (selector) {
+        var previous = document.querySelector(selector), incoming = freshScope.querySelector(selector);
+        if (previous && incoming) {
+          if (previous.open) incoming.open = true;
+          previous.replaceWith(incoming);
+        } else if (incoming) {
+          if (selector === '[data-matchup-roster]') {
+            (document.querySelector('[data-session-standings-root]') || current).after(incoming);
+          } else current.parentNode.appendChild(incoming);
+        } else if (previous) previous.remove();
+      });
+      if (window.FHPB.CollapseState) current.querySelectorAll('.collapse[id]').forEach(function (collapse) {
+        window.FHPB.CollapseState.captureCurrentState(collapse.id, current);
+      });
+      current.replaceWith(fresh);
+      if (window.FHPB.CardCollapse) window.FHPB.CardCollapse.upgradeAll(fresh);
+      if (window.FHPB.CollapseState) window.FHPB.CollapseState.restoreAll(fresh);
+      api.mount(fresh);
       if (roundPickerFocused) fresh.querySelector('[data-matchup-round]').focus({ preventScroll: true });
       return true;
     }
@@ -163,6 +177,7 @@
     if (event.target.matches('[name=sessionWhen]')) updateSessionDate();
     if (event.target.matches('[name=playMode]')) updateIntentScoring();
     var root = event.target.closest('[data-session-matchups-root]');
+    if (!root && event.target.closest('[data-matchup-roster]')) root = document.querySelector('[data-session-matchups-root]');
     if (!root) return;
     if (event.target.matches('[data-matchup-round]')) api.filter(root);
     if (event.target.matches('[name=replacementId]')) {
@@ -182,8 +197,9 @@
       if (panel && window.bootstrap) window.bootstrap.Collapse.getOrCreateInstance(panel, { toggle: false }).show();
     }
     var root = event.target.closest('[data-session-matchups-root]');
+    if (!root && event.target.closest('[data-matchup-roster]')) root = document.querySelector('[data-session-matchups-root]');
     if (!root) return;
-    var filter = event.target.closest('[data-games-filter]');
+    var filter = event.target.closest('button[data-games-filter]');
     if (filter) { root.dataset.gamesFilter = filter.dataset.gamesFilter; api.filter(root); }
     var score = event.target.closest('[data-log-matchup]');
     if (score) {
@@ -198,7 +214,12 @@
       form.querySelector('button[type=submit]').textContent = correcting ? 'Save correction' : 'Save score';
       form.querySelector('[data-score-round]').textContent = 'Round ' + score.dataset.round;
       ['a', 'b'].forEach(function (team) {
-        form.querySelector('[data-score-team-' + team + ']').textContent = Array.from(game.querySelectorAll('[data-team-' + team + '] span')).map(function (s) { return s.textContent; }).join(' + ');
+        var label = form.querySelector('[data-score-team-' + team + ']');
+        label.replaceChildren();
+        Array.from(game.querySelector('[data-team-' + team + ']').children).forEach(function (player, index) {
+          if (index) label.appendChild(document.createTextNode(' + '));
+          label.appendChild(player.cloneNode(true));
+        });
       });
       window.bootstrap.Modal.getOrCreateInstance(root.querySelector('#matchupScoreModal')).show();
     }

@@ -6,6 +6,7 @@ public class RoundRobinStanding {
 
   private Long userId;
   private String nickName;
+  private String publicCode;
   private int wins;
   private int losses;
   private int gamesPlayed;
@@ -24,6 +25,14 @@ public class RoundRobinStanding {
 
   public String getNickName() {
     return nickName;
+  }
+
+  public String getPublicCode() {
+    return publicCode;
+  }
+
+  public void setPublicCode(String publicCode) {
+    this.publicCode = publicCode;
   }
 
   public int getWins() {

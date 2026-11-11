@@ -20,15 +20,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class MatchValidationService {
 
-  private static final int DEFAULT_MIN_WINNING_SCORE = 11;
   private static final int DEFAULT_MAX_SCORE = 35;
-  private static final int DEFAULT_MIN_WINNING_MARGIN = 1;
 
   private final LadderSeasonRepository seasonRepository;
   private final LadderMembershipRepository membershipRepository;
-  private final int minWinningScore;
   private final int maxScore;
-  private final int minWinningMargin;
   private CompetitionAutoModerationService competitionAutoModerationService;
 
   @Autowired
@@ -36,35 +32,23 @@ public class MatchValidationService {
       LadderSeasonRepository seasonRepository,
       LadderMembershipRepository membershipRepository,
       CompetitionAutoModerationService competitionAutoModerationService,
-      @Value("${fhpb.match-log.score-validation.min-winning-score:11}") int minWinningScore,
-      @Value("${fhpb.match-log.score-validation.max-score:35}") int maxScore,
-      @Value("${fhpb.match-log.score-validation.min-margin:1}") int minWinningMargin) {
+      @Value("${fhpb.match-log.score-validation.max-score:35}") int maxScore) {
     this.seasonRepository = seasonRepository;
     this.membershipRepository = membershipRepository;
     this.competitionAutoModerationService = competitionAutoModerationService;
-    this.minWinningScore = Math.max(1, minWinningScore);
-    this.maxScore = Math.max(this.minWinningScore, maxScore);
-    this.minWinningMargin = Math.max(1, minWinningMargin);
+    this.maxScore = Math.max(1, maxScore);
   }
 
   public MatchValidationService(
       LadderSeasonRepository seasonRepository,
       LadderMembershipRepository membershipRepository,
-      @Value("${fhpb.match-log.score-validation.min-winning-score:11}") int minWinningScore,
-      @Value("${fhpb.match-log.score-validation.max-score:35}") int maxScore,
-      @Value("${fhpb.match-log.score-validation.min-margin:1}") int minWinningMargin) {
-    this(seasonRepository, membershipRepository, null, minWinningScore, maxScore, minWinningMargin);
+      @Value("${fhpb.match-log.score-validation.max-score:35}") int maxScore) {
+    this(seasonRepository, membershipRepository, null, maxScore);
   }
 
   public MatchValidationService(
       LadderSeasonRepository seasonRepository, LadderMembershipRepository membershipRepository) {
-    this(
-        seasonRepository,
-        membershipRepository,
-        null,
-        DEFAULT_MIN_WINNING_SCORE,
-        DEFAULT_MAX_SCORE,
-        DEFAULT_MIN_WINNING_MARGIN);
+    this(seasonRepository, membershipRepository, null, DEFAULT_MAX_SCORE);
   }
 
   public MatchValidationResult validate(MatchValidationRequest request) {
@@ -158,12 +142,7 @@ public class MatchValidationService {
     return validateScore(scoreA.intValue(), scoreB.intValue());
   }
 
-  /**
-   * Validate a match score against configurable sanity limits. Defaults are intentionally broad:
-   * winner must reach at least 11, scores cannot tie, scores must be non-negative, and no score may
-   * exceed 35. The winning margin is configurable and defaults to 1, which allows alternative
-   * formats while still rejecting ties and impossible negatives.
-   */
+  /** Validate score entry without imposing a target score or winning margin. */
   public ScoreValidationResult validateScore(int scoreA, int scoreB) {
     if (scoreA < 0 || scoreB < 0) {
       return ScoreValidationResult.invalid("Scores must be zero or greater.");
@@ -174,20 +153,8 @@ public class MatchValidationService {
 
     int winnerScore = Math.max(scoreA, scoreB);
     int loserScore = Math.min(scoreA, scoreB);
-    if (winnerScore < minWinningScore) {
-      return ScoreValidationResult.invalid(
-          "Winning team must score at least " + minWinningScore + " points.");
-    }
     if (winnerScore > maxScore || loserScore > maxScore) {
       return ScoreValidationResult.invalid("Scores cannot exceed " + maxScore + " points.");
-    }
-    if (minWinningMargin > 1 && (winnerScore - loserScore) < minWinningMargin) {
-      return ScoreValidationResult.invalid(
-          "Winning team must lead by at least "
-              + minWinningMargin
-              + " "
-              + pointLabel(minWinningMargin)
-              + ".");
     }
 
     return ScoreValidationResult.valid();
@@ -460,9 +427,5 @@ public class MatchValidationService {
     public String getErrorMessage() {
       return errorMessage;
     }
-  }
-
-  private static String pointLabel(int count) {
-    return count == 1 ? "point" : "points";
   }
 }

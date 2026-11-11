@@ -55,10 +55,14 @@ class GlobalModelAttributesTest {
     request.setScheme("https");
     request.setServerName("open-pickle.example");
     request.setServerPort(443);
+    request.setRequestURI("/competition");
+    request.setQueryString("standingsPage=2&standingsSize=10");
 
     attributes.populateCommonAttributes(model, null, request);
 
     assertThat(model.get("publicMetadataBaseUrl")).isEqualTo("https://open-pickle.example");
+    assertThat(model.get("profileReturnTo"))
+        .isEqualTo("/competition?standingsPage=2&standingsSize=10");
   }
 
   @Test

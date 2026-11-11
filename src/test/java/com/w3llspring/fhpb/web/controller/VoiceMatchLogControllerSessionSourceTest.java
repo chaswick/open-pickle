@@ -220,8 +220,8 @@ class VoiceMatchLogControllerSessionSourceTest {
     request.setLadderConfigId(77L);
     request.setTeamAUserIds(Arrays.asList(1L, 2L));
     request.setTeamBUserIds(Arrays.asList(3L, 4L));
-    request.setScoreTeamA(11);
-    request.setScoreTeamB(9);
+    request.setScoreTeamA(7);
+    request.setScoreTeamB(6);
 
     VoiceMatchLogController.ConfirmResponse response = controller.confirm(request, auth);
 
@@ -229,6 +229,10 @@ class VoiceMatchLogControllerSessionSourceTest {
     assertThat(capturedMatch).isNotNull();
     assertThat(capturedMatch.getSourceSessionConfig()).isEqualTo(sessionConfig);
     assertThat(capturedMatch.getSeason()).isEqualTo(competitionSeason);
+    assertThat(capturedMatch.getScoreA()).isEqualTo(7);
+    assertThat(capturedMatch.getScoreB()).isEqualTo(6);
+    assertThat(capturedMatch.getState())
+        .isEqualTo(com.w3llspring.fhpb.web.model.MatchState.PROVISIONAL);
   }
 
   private User user(Long id, String nickname) {

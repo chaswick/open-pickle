@@ -9,6 +9,8 @@ import com.w3llspring.fhpb.web.service.matchworkflow.MatchStateTransitionService
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinModificationException;
 import com.w3llspring.fhpb.web.service.roundrobin.RoundRobinService;
 import com.w3llspring.fhpb.web.service.trophy.TrophyAwardService;
+import com.w3llspring.fhpb.web.util.PlayerNames;
+import com.w3llspring.fhpb.web.util.PlayerNames.Name;
 import com.w3llspring.fhpb.web.util.UserPublicName;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -109,7 +111,8 @@ public class SessionMatchupService {
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList());
-    Map<Long, Slot> roster = roster(all);
+    Map<Long, Name> names = playerNames(session, members, all);
+    Map<Long, Slot> roster = roster(all, names);
     Set<Long> playingIds = new HashSet<>();
     roster
         .values()
@@ -118,7 +121,10 @@ public class SessionMatchupService {
               if (s.userId() != null) playingIds.add(s.userId());
             });
     List<Member> available =
-        members.stream().filter(u -> !playingIds.contains(u.getId())).map(this::member).toList();
+        members.stream()
+            .filter(u -> !playingIds.contains(u.getId()))
+            .map(u -> member(u, names))
+            .toList();
     Set<Long> activeMemberIds = new HashSet<>();
     members.forEach(u -> activeMemberIds.add(u.getId()));
     List<Slot> slots =
@@ -132,7 +138,8 @@ public class SessionMatchupService {
                         s.guest(),
                         s.userId() != null && !activeMemberIds.contains(s.userId()),
                         all.stream()
-                            .anyMatch(e -> e.getMatchId() == null && containsSlot(e, s.id()))))
+                            .anyMatch(e -> e.getMatchId() == null && containsSlot(e, s.id())),
+                        s.publicCode()))
             .toList();
     List<Round> rounds = new ArrayList<>();
     int maxRound = all.stream().mapToInt(RoundRobinEntry::getRoundNumber).max().orElse(0);
@@ -142,13 +149,13 @@ public class SessionMatchupService {
     int initialRound = 0;
     for (int r = 1; r <= maxRound; r++) {
       List<Game> games = new ArrayList<>();
-      List<String> byes = new ArrayList<>();
+      List<Name> byes = new ArrayList<>();
       int gameNumber = 0;
       for (RoundRobinEntry entry : all) {
         if (entry.getRoundNumber() != r) continue;
         if (entry.isBye()) {
           for (Position p : Position.values())
-            if (entry.slotId(p) != null) byes.add(playerName(entry, p));
+            if (entry.slotId(p) != null) byes.add(playerName(entry, p, names));
           continue;
         }
         Match match = entry.getMatchId() == null ? null : matchMap.get(entry.getMatchId());
@@ -173,10 +180,10 @@ public class SessionMatchupService {
                 entry.getId(),
                 r,
                 ++gameNumber,
-                playerName(entry, Position.A1),
-                playerName(entry, Position.A2),
-                playerName(entry, Position.B1),
-                playerName(entry, Position.B2),
+                playerName(entry, Position.A1, names),
+                playerName(entry, Position.A2, names),
+                playerName(entry, Position.B1, names),
+                playerName(entry, Position.B2, names),
                 mine,
                 canLog,
                 status,
@@ -230,7 +237,7 @@ public class SessionMatchupService {
         pending,
         initialRound == 0 ? maxRound : initialRound,
         rr.isFixedTeamsFormat() ? "Fixed partners" : "Rotating partners",
-        members.stream().map(this::member).toList(),
+        members.stream().map(u -> member(u, names)).toList(),
         slots,
         available,
         rounds,
@@ -315,7 +322,7 @@ public class SessionMatchupService {
     RoundRobin rr = lockedSchedule(session, scheduleId);
     if (rr.getEndedAt() != null) throw problem("These matchups have ended.");
     List<RoundRobinEntry> all = loadEntries(rr);
-    Map<Long, Slot> roster = roster(all);
+    Map<Long, Slot> roster = roster(all, Map.of());
     if (!roster.containsKey(slotId)) throw problem("Choose a player from this schedule.");
     User replacement = null;
     String guest = null;
@@ -545,7 +552,7 @@ public class SessionMatchupService {
     return all;
   }
 
-  private Map<Long, Slot> roster(List<RoundRobinEntry> all) {
+  private Map<Long, Slot> roster(List<RoundRobinEntry> all, Map<Long, Name> names) {
     Map<Long, Slot> result = new LinkedHashMap<>();
     List<RoundRobinEntry> snapshots = new ArrayList<>(all);
     snapshots.sort(Comparator.comparing(e -> e.getMatchId() == null));
@@ -559,10 +566,11 @@ public class SessionMatchupService {
             new Slot(
                 id,
                 user == null ? null : user.getId(),
-                playerName(entry, p),
+                playerName(entry, p, names).name(),
                 user == null,
                 false,
-                false));
+                false,
+                playerName(entry, p, names).publicCode()));
       }
     return result;
   }
@@ -576,18 +584,36 @@ public class SessionMatchupService {
         .anyMatch(p -> e.player(p) != null && Objects.equals(e.player(p).getId(), id));
   }
 
-  private String playerName(RoundRobinEntry e, Position p) {
-    if (e.player(p) != null) return name(e.player(p));
-    String guest = e.guestName(p);
-    return guest == null ? (e.slotId(p) == null ? "" : "Guest") : guest;
+  private Map<Long, Name> playerNames(
+      LadderConfig session, List<User> members, List<RoundRobinEntry> all) {
+    Map<Long, User> known = new LinkedHashMap<>();
+    members.forEach(u -> known.put(u.getId(), u));
+    Map<Long, String> guests = new LinkedHashMap<>();
+    for (RoundRobinEntry entry : all) {
+      for (Position p : Position.values()) {
+        User user = entry.player(p);
+        if (user != null) known.putIfAbsent(user.getId(), user);
+        else if (entry.slotId(p) != null && entry.guestName(p) != null)
+          guests.put(entry.slotId(p), entry.guestName(p));
+      }
+    }
+    return PlayerNames.resolve(
+        known.values(),
+        roundRobins.buildCourtNameMap(known.keySet(), session.getId()),
+        guests.values());
   }
 
-  private String name(User user) {
-    return UserPublicName.forUser(user);
+  private Name playerName(RoundRobinEntry e, Position p, Map<Long, Name> names) {
+    if (e.player(p) != null)
+      return names.getOrDefault(
+          e.player(p).getId(), new Name(UserPublicName.forUser(e.player(p)), null));
+    String guest = e.guestName(p);
+    return new Name(guest == null ? (e.slotId(p) == null ? "" : "Guest") : guest, null);
   }
 
   private View preparation(
       LadderConfig session, List<User> members, boolean host, boolean configurable) {
+    Map<Long, Name> names = playerNames(session, members, List.of());
     return new View(
         null,
         host,
@@ -602,7 +628,7 @@ public class SessionMatchupService {
         0,
         0,
         "Rotating partners",
-        members.stream().map(this::member).toList(),
+        members.stream().map(u -> member(u, names)).toList(),
         List.of(),
         List.of(),
         List.of(),
@@ -610,11 +636,12 @@ public class SessionMatchupService {
         "ready:"
             + session.isOrganizerScored()
             + ":"
-            + members.stream().map(u -> u.getId() + ":" + name(u)).toList());
+            + members.stream().map(u -> u.getId() + ":" + member(u, names)).toList());
   }
 
-  private Member member(User user) {
-    return new Member(user.getId(), name(user));
+  private Member member(User user, Map<Long, Name> names) {
+    Name label = names.getOrDefault(user.getId(), new Name(UserPublicName.forUser(user), null));
+    return new Member(user.getId(), label.name(), label.publicCode());
   }
 
   private static boolean isHost(LadderConfig session, User actor) {
@@ -626,19 +653,25 @@ public class SessionMatchupService {
     return new RoundRobinModificationException(message);
   }
 
-  public record Member(Long id, String name) {}
+  public record Member(Long id, String name, String publicCode) {}
 
   public record Slot(
-      Long id, Long userId, String name, boolean guest, boolean left, boolean replaceable) {}
+      Long id,
+      Long userId,
+      String name,
+      boolean guest,
+      boolean left,
+      boolean replaceable,
+      String publicCode) {}
 
   public record Game(
       Long id,
       int round,
       int number,
-      String a1,
-      String a2,
-      String b1,
-      String b2,
+      Name a1,
+      Name a2,
+      Name b1,
+      Name b2,
       boolean mine,
       boolean canLog,
       String status,
@@ -646,7 +679,7 @@ public class SessionMatchupService {
       boolean canConfirm,
       boolean canEdit) {}
 
-  public record Round(int number, List<Game> games, List<String> byes) {}
+  public record Round(int number, List<Game> games, List<Name> byes) {}
 
   public record View(
       Long id,

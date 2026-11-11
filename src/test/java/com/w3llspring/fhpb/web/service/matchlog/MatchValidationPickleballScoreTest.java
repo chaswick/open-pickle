@@ -26,11 +26,12 @@ public class MatchValidationPickleballScoreTest {
   }
 
   @Test
-  @DisplayName("Scores with winner under 11 are invalid")
-  void underElevenInvalid() {
+  @DisplayName("Short games and one-point wins are accepted")
+  void shortGamesAreAccepted() {
     MatchValidationService svc = makeService();
-    assertFalse(svc.isValidPickleballScore(10, 8));
-    assertFalse(svc.isValidPickleballScore(9, 10));
+    assertTrue(svc.isValidPickleballScore(10, 8));
+    assertTrue(svc.isValidPickleballScore(9, 10));
+    assertTrue(svc.isValidPickleballScore(1, 0));
   }
 
   @Test

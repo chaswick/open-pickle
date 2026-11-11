@@ -40,9 +40,9 @@ import com.w3llspring.fhpb.web.service.user.CourtNameService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -120,7 +120,8 @@ class LadderConfigControllerShowTest {
             storyModeServiceStub,
             20);
     ReflectionTestUtils.setField(controller, "matchRepo", matchRepo);
-    ReflectionTestUtils.setField(controller, "matchConfirmationRepository", matchConfirmationRepository);
+    ReflectionTestUtils.setField(
+        controller, "matchConfirmationRepository", matchConfirmationRepository);
     ReflectionTestUtils.setField(controller, "siteWideAdminEmail", "admin@test.com");
   }
 
@@ -132,7 +133,8 @@ class LadderConfigControllerShowTest {
     var rows = new java.util.ArrayList<LadderV2Service.LadderRow>();
     var standings = new java.util.ArrayList<com.w3llspring.fhpb.web.model.RoundRobinStanding>();
     for (int i = 0; i < values.length; i++) {
-      var standing = new com.w3llspring.fhpb.web.model.RoundRobinStanding((long) i + 1, "Player" + i);
+      var standing =
+          new com.w3llspring.fhpb.web.model.RoundRobinStanding((long) i + 1, "Player" + i);
       for (int wins = 0; wins < values[i][0]; wins++) standing.incWins();
       standing.addPointsFor(values[i][1]);
       standings.add(standing);
@@ -142,12 +144,16 @@ class LadderConfigControllerShowTest {
       rows.add(rating);
     }
     var views = org.mockito.Mockito.mock(SeasonStandingsViewService.class);
-    when(views.load(season)).thenReturn(new SeasonStandingsViewService.SeasonStandingsView(List.of(), rows));
+    when(views.load(season))
+        .thenReturn(new SeasonStandingsViewService.SeasonStandingsView(List.of(), rows));
     ReflectionTestUtils.setField(controller, "seasonStandingsViewService", views);
     ExtendedModelMap model = new ExtendedModelMap();
-    ReflectionTestUtils.invokeMethod(controller, "applySessionStandingsModel", model, List.of(), Map.of(), season, standings);
-    assertThat((List<com.w3llspring.fhpb.web.model.RoundRobinStanding>) model.get("sessionStandings"))
-        .extracting(com.w3llspring.fhpb.web.model.RoundRobinStanding::getUserId).containsExactly(4L, 3L, 2L, 1L);
+    ReflectionTestUtils.invokeMethod(
+        controller, "applySessionStandingsModel", model, List.of(), Map.of(), season, standings);
+    assertThat(
+            (List<com.w3llspring.fhpb.web.model.RoundRobinStanding>) model.get("sessionStandings"))
+        .extracting(com.w3llspring.fhpb.web.model.RoundRobinStanding::getUserId)
+        .containsExactly(4L, 3L, 2L, 1L);
   }
 
   @Test
@@ -340,9 +346,7 @@ class LadderConfigControllerShowTest {
             org.mockito.ArgumentMatchers.eq(42L),
             org.mockito.ArgumentMatchers.eq(com.w3llspring.fhpb.web.model.MatchState.CONFIRMED),
             org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
-        .thenReturn(
-            List.of(
-                tickerTimeline(499L, Instant.parse("2026-03-31T16:05:00Z"))));
+        .thenReturn(List.of(tickerTimeline(499L, Instant.parse("2026-03-31T16:05:00Z"))));
     when(matchRepo.findAllByIdInWithUsers(List.of(499L))).thenReturn(List.of(recentConfirmedMatch));
 
     CompetitionSeasonService competitionSeasonService =
@@ -424,13 +428,13 @@ class LadderConfigControllerShowTest {
     ReflectionTestUtils.setField(
         controller,
         "matchEntryContextService",
-            new MatchEntryContextService(
-                new CourtNameService() {
-                  @Override
-                  public java.util.Map<Long, Set<String>> gatherCourtNamesForUsers(
-                      java.util.Collection<Long> userIds, Long ladderId) {
+        new MatchEntryContextService(
+            new CourtNameService() {
+              @Override
+              public java.util.Map<Long, Set<String>> gatherCourtNamesForUsers(
+                  java.util.Collection<Long> userIds, Long ladderId) {
                 return java.util.Map.of(7L, Set.of("Center Court"));
-                  }
+              }
 
               @Override
               public Set<String> gatherCourtNamesForUser(long userId, Long ladderConfigId) {
@@ -495,9 +499,11 @@ class LadderConfigControllerShowTest {
         .containsEntry(7L, 3);
     assertThat((String) model.get("ladderInviteLink")).contains("inviteCode=DINK-7");
     assertThat((String) model.get("ladderInviteLink")).contains("autoJoin=true");
-    assertThat((List<LadderConfigController.SessionRecentTickerItem>) model.get("sessionRecentTickerItems"))
+    assertThat(
+            (List<LadderConfigController.SessionRecentTickerItem>)
+                model.get("sessionRecentTickerItems"))
         .extracting(LadderConfigController.SessionRecentTickerItem::summary)
-        .containsExactly("Tester & Partner def Opponent & Guest 11-5");
+        .containsExactly("Center Court & Partner def Opponent & Guest 11-5");
   }
 
   @Test
@@ -573,7 +579,9 @@ class LadderConfigControllerShowTest {
     String view = controller.show(42L, null, model, auth, request);
 
     assertThat(view).isEqualTo("auth/show");
-    assertThat((List<LadderConfigController.SessionRecentTickerItem>) model.get("sessionRecentTickerItems"))
+    assertThat(
+            (List<LadderConfigController.SessionRecentTickerItem>)
+                model.get("sessionRecentTickerItems"))
         .extracting(
             LadderConfigController.SessionRecentTickerItem::matchId,
             LadderConfigController.SessionRecentTickerItem::confirmedAt)
@@ -1016,7 +1024,8 @@ class LadderConfigControllerShowTest {
 
     assertThat(view).isEqualTo("auth/show");
     @SuppressWarnings("unchecked")
-    List<Map<String, Object>> rounds = (List<Map<String, Object>>) model.get("sessionRoundRobinRounds");
+    List<Map<String, Object>> rounds =
+        (List<Map<String, Object>>) model.get("sessionRoundRobinRounds");
     assertThat(rounds).hasSize(2);
     assertThat(rounds.get(1))
         .containsEntry("a1Name", "Court-Tester")
@@ -1432,13 +1441,7 @@ class LadderConfigControllerShowTest {
   }
 
   private Match tickerMatch(
-      Long matchId,
-      LadderConfig sessionConfig,
-      User a1,
-      User a2,
-      User b1,
-      int scoreA,
-      int scoreB) {
+      Long matchId, LadderConfig sessionConfig, User a1, User a2, User b1, int scoreA, int scoreB) {
     Match match = new Match();
     ReflectionTestUtils.setField(match, "id", matchId);
     match.setSourceSessionConfig(sessionConfig);

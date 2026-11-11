@@ -7,12 +7,12 @@
   <div class="row justify-content-center">
     <div class="col-12 col-md-8 col-lg-6">
       <section class="card shadow-sm">
+        <div class="card-header card-header-title text-center"><h1 class="card-section-title" th:text="${invitedSession != null ? invitedSession.title : 'Join session'}">Join session</h1></div>
         <div class="card-body p-4">
-          <h1 class="h3" th:text="${invitedSession != null ? invitedSession.title : 'Join session'}">Join session</h1>
           <p class="text-muted" th:if="${invitedSession != null and invitedSession.sessionDateLabel != null}"
              th:text="${invitedSession.sessionDateLabel}"></p>
           <p class="alert alert-danger" role="alert" th:if="${joinError}" th:text="${joinError}"></p>
-          <form th:if="${inviteAvailable == true and playerAccessEnabled == true}" method="post" th:action="@{/join/session}">
+          <form th:if="${inviteAvailable == true and playerAccessEnabled == true}" method="post" th:action="@{/join/session}" data-submit-label="Joining…">
             <input type="hidden" name="inviteCode" th:value="${inviteCode}">
             <input type="hidden" name="direct" th:value="${directJoin}">
             <input type="hidden" name="formToken" th:value="${formToken}">

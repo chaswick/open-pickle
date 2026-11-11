@@ -2,6 +2,8 @@ package com.w3llspring.fhpb.web.service.trophy;
 
 import com.w3llspring.fhpb.web.db.*;
 import com.w3llspring.fhpb.web.model.*;
+import com.w3llspring.fhpb.web.service.user.CourtNameService;
+import com.w3llspring.fhpb.web.util.PlayerNames;
 import java.time.Instant;
 import java.util.*;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ public class RoundRobinTrophyAwardService {
   private final RoundRobinTrophyStats stats;
   private final TrophyAwardService expressions;
   private final TrophyArtRealizer art;
+  private final CourtNameService courtNames;
+  private final LadderMembershipRepository memberships;
 
   public RoundRobinTrophyAwardService(
       RoundRobinRepository runs,
@@ -34,7 +38,9 @@ public class RoundRobinTrophyAwardService {
       AutoTrophyService catalog,
       RoundRobinTrophyStats stats,
       TrophyAwardService expressions,
-      TrophyArtRealizer art) {
+      TrophyArtRealizer art,
+      CourtNameService courtNames,
+      LadderMembershipRepository memberships) {
     this.runs = runs;
     this.entries = entries;
     this.matches = matches;
@@ -47,6 +53,8 @@ public class RoundRobinTrophyAwardService {
     this.stats = stats;
     this.expressions = expressions;
     this.art = art;
+    this.courtNames = courtNames;
+    this.memberships = memberships;
   }
 
   /** Returns false for an already processed run, a running schedule or unsettled results. */
@@ -160,7 +168,11 @@ public class RoundRobinTrophyAwardService {
     affected.forEach(t -> trophies.findById(t).ifPresent(this::syncCollection));
   }
 
-  public record RunAwardPlayer(String name, String publicCode) {}
+  public record RunAwardPlayer(String name, String publicCode, String memberCode) {
+    public RunAwardPlayer(String name, String publicCode) {
+      this(name, publicCode, null);
+    }
+  }
 
   public record RunAward(
       Long trophyId, String title, int place, String imageUrl, List<RunAwardPlayer> players) {}
@@ -174,8 +186,44 @@ public class RoundRobinTrophyAwardService {
   /** Winner and runner-up awards for the session's result card. */
   @Transactional(readOnly = true)
   public List<RunAward> awardsForRun(Long id) {
+    List<RoundRobinTrophyAward> earned = awards.findForRun(id);
+    if (earned.isEmpty()) return List.of();
+    RoundRobin run = earned.getFirst().getRoundRobin();
+    List<User> people = new ArrayList<>();
+    earned.forEach(a -> people.add(a.getUser()));
+    Map<Long, String> guests = new LinkedHashMap<>();
+    for (RoundRobinEntry entry : entries.findByRoundRobinOrderByRoundNumberAscWithUsers(run)) {
+      for (RoundRobinEntry.Position p : RoundRobinEntry.Position.values()) {
+        if (entry.player(p) != null) people.add(entry.player(p));
+        else if (entry.slotId(p) != null && entry.guestName(p) != null)
+          guests.put(entry.slotId(p), entry.guestName(p));
+      }
+    }
+    Long sessionId = run.getSessionConfig() != null ? run.getSessionConfig().getId() : null;
+    if (sessionId != null) {
+      var ids =
+          memberships
+              .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+                  sessionId, LadderMembership.State.ACTIVE)
+              .stream()
+              .map(LadderMembership::getUserId)
+              .toList();
+      people.addAll(users.findAllById(ids));
+    }
+    Set<Long> ids = new LinkedHashSet<>();
+    people.forEach(u -> ids.add(u.getId()));
+    Map<Long, String> aliases = new HashMap<>();
+    courtNames
+        .gatherCourtNamesForUsers(ids, sessionId)
+        .forEach(
+            (userId, names) ->
+                names.stream()
+                    .filter(n -> n != null && !n.isBlank())
+                    .findFirst()
+                    .ifPresent(n -> aliases.put(userId, n)));
+    var labels = PlayerNames.resolve(people, aliases, guests.values());
     Map<Long, List<RoundRobinTrophyAward>> grouped = new LinkedHashMap<>();
-    awards.findForRun(id).stream()
+    earned.stream()
         .filter(a -> placement(a.getTrophy()) > 0)
         .forEach(
             a -> grouped.computeIfAbsent(a.getTrophy().getId(), k -> new ArrayList<>()).add(a));
@@ -194,8 +242,9 @@ public class RoundRobinTrophyAwardService {
                       .map(
                           a ->
                               new RunAwardPlayer(
-                                  com.w3llspring.fhpb.web.util.UserPublicName.forUser(a.getUser()),
-                                  a.getUser().getPublicCode()))
+                                  labels.get(a.getUser().getId()).name(),
+                                  a.getUser().getPublicCode(),
+                                  labels.get(a.getUser().getId()).publicCode()))
                       .sorted(
                           Comparator.comparing(RunAwardPlayer::name, String.CASE_INSENSITIVE_ORDER))
                       .toList());

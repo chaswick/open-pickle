@@ -2,7 +2,6 @@ package com.w3llspring.fhpb.web.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -69,7 +68,6 @@ class UserIdentityServiceTest {
 
     Instant changedAt = Instant.parse("2026-03-13T15:00:00Z");
     when(userRepository.findByIdForUpdate(11L)).thenReturn(Optional.of(user));
-    when(userRepository.findByNickName("NewName")).thenReturn(null);
     when(ladderMembershipRepository.findByUserIdAndState(11L, LadderMembership.State.ACTIVE))
         .thenReturn(List.of(membership(101L), membership(202L)));
 
@@ -116,27 +114,6 @@ class UserIdentityServiceTest {
     verify(userRepository, never()).saveAndFlush(any(User.class));
     verify(userDisplayNameAuditRepository, never()).save(any(UserDisplayNameAudit.class));
     verify(userDisplayNameAuditRepository, never()).saveAll(any());
-  }
-
-  @Test
-  void changeDisplayNameReturnsTakenWhenAnotherUserAlreadyUsesDesiredName() {
-    User user = new User();
-    user.setId(11L);
-    user.setNickName("OldName");
-
-    User conflictingUser = new User();
-    conflictingUser.setId(22L);
-    conflictingUser.setNickName("NewName");
-
-    Instant changedAt = Instant.parse("2026-03-13T15:00:00Z");
-    when(userRepository.findByIdForUpdate(11L)).thenReturn(Optional.of(user));
-    when(userRepository.findByNickName("NewName")).thenReturn(conflictingUser);
-
-    var result = service.changeDisplayName(11L, "NewName", 11L, changedAt, Duration.ofHours(1));
-
-    assertThat(result.status()).isEqualTo(DisplayNameChangeStatus.TAKEN);
-    verify(userRepository, never()).saveAndFlush(any(User.class));
-    verify(ladderMembershipRepository, never()).findByUserIdAndState(anyLong(), any());
   }
 
   @Test

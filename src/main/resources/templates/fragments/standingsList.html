@@ -2,7 +2,7 @@
 
 <div xmlns:th="http://www.thymeleaf.org"
      th:fragment="standingsList(ladderDisplay, currentUserId, listId, listClass, showCompetitionFeatures, reportedCompetitionUserIds, playedAgainstUserIds, showFilteredEmptyState, filteredEmptyId, filteredEmptyMessage)">
-    <div class="list-group"
+    <div class="list-group" th:with="duplicateNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).duplicates(ladderDisplay?.![displayName])}"
          th:id="${listId}"
          th:classappend="${listClass != null ? listClass : ''}">
         <div class="list-group-item ladder-standing-row ladder-header-row"
@@ -69,12 +69,13 @@
                                 <a class="player-link link-contrast fw-semibold player-name-label"
                                    th:if="${row.userPublicCode != null}"
                                    th:text="${row.displayName}"
-                                   th:href="@{/account(member=${row.userPublicCode})}"></a>
+                                   th:href="@{/account(member=${row.userPublicCode},returnTo=${profileReturnTo})}"></a>
                                 <span class="fw-semibold player-name-label"
                                       th:if="${row.userPublicCode == null}"
                                       th:text="${row.displayName}">
                                     Player Name
                                 </span>
+                                <small class="session-player-id text-muted fw-normal notranslate" translate="no" th:if="${row.userPublicCode != null and T(com.w3llspring.fhpb.web.util.PlayerNames).requiresId(duplicateNames, row.displayName)}" th:text="${row.userPublicCode}"></small>
                                 <span th:if="${showCompetitionFeatures and row.competitionSafeDisplayNameActive}"
                                       class="competition-name-override-indicator"
                                       title="Original display name hidden after player reports"

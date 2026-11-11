@@ -52,6 +52,54 @@ class DefaultSpokenMatchInterpreterTest {
   }
 
   @Test
+  void sharedDisplayNamesStayAmbiguousUntilThePlayerIsChosen() {
+    Long sessionId = 42L;
+    List<User> players =
+        List.of(
+            user(1L, "Chris", "chris@test.local"),
+            user(2L, "Alex", "first@test.local"),
+            user(3L, "Sam", "sam@test.local"),
+            user(4L, "Taylor", "taylor@test.local"),
+            user(5L, "Alex", "second@test.local"));
+    List<LadderMembership> members =
+        players.stream()
+            .map(
+                player -> {
+                  var member = new LadderMembership();
+                  member.setUserId(player.getId());
+                  return member;
+                })
+            .toList();
+    when(membershipRepository.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+            sessionId, LadderMembership.State.ACTIVE))
+        .thenReturn(members);
+    when(userRepository.findAllById(any())).thenReturn(players);
+    when(courtNameService.gatherCourtNamesForUsers(any(), eq(sessionId)))
+        .thenReturn(
+            Map.of(
+                1L,
+                Set.of("Chris"),
+                2L,
+                Set.of("Alex"),
+                3L,
+                Set.of("Sam"),
+                4L,
+                Set.of("Taylor"),
+                5L,
+                Set.of("Alex")));
+    var request = new SpokenMatchInterpretationRequest();
+    request.setCurrentUserId(1L);
+    request.setLadderConfigId(sessionId);
+    request.setTranscript("Me and Alex beat Sam and Taylor 7 to 6");
+    var result = interpreter.interpret(request);
+    var alex = result.getTeams().get(0).getPlayers().get(1);
+    assertThat(alex.isNeedsReview()).isTrue();
+    assertThat(alex.getAlternatives())
+        .extracting(SpokenMatchInterpretation.PlayerAlternative::getUserId)
+        .contains(2L, 5L);
+  }
+
+  @Test
   void interpretsSimpleDoublesPhrase() {
     Long ladderConfigId = 99L;
 

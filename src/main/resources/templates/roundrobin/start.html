@@ -98,7 +98,7 @@
                         </div>
                         <div class="row justify-content-center">
                             <div class="col-12 col-md-8 col-lg-6">
-                                <div id="participantList" class="d-flex flex-column align-items-center">
+                                <div id="participantList" class="d-flex flex-column align-items-center" th:with="participantNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).resolve(members, displayNames)}">
                                     <div th:each="u : ${members}" class="form-check w-100 text-start mb-2 participant-row">
                                         <input class="form-check-input participant me-2"
                                                type="checkbox"
@@ -111,7 +111,7 @@
                                                th:for="${'p_' + u.id}">
                                             <span class="d-block fw-semibold"
                                                   th:text="${displayNames != null and displayNames.containsKey(u.id) ? displayNames[u.id] : u.nickName}">Member Name</span>
-                                            <span th:replace="~{fragments/memberIdentity :: memberIdentity(${u.publicCode})}"></span>
+                                            <small class="session-player-id text-muted fw-normal notranslate" translate="no" th:if="${participantNames[u.id] != null and participantNames[u.id].publicCode != null}" th:text="${participantNames[u.id].publicCode}"></small>
                                         </label>
                                     </div>
                                 </div>

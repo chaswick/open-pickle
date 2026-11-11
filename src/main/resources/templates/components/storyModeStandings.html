@@ -1,4 +1,4 @@
-<div th:fragment="storyModeStandings">
+<div th:fragment="storyModeStandings" th:with="duplicateNames=${T(com.w3llspring.fhpb.web.util.PlayerNames).duplicates(ladderDisplay?.![displayName])}">
   <style>
     .story-mode-shell {
       --story-paper: linear-gradient(180deg, #fff7e8 0%, #f8ead2 100%);
@@ -380,7 +380,7 @@
             <div class="fw-semibold text-muted" th:text="${row.rank}">1</div>
             <div class="text-truncate">
               <div class="player-name-with-badges">
-                <span class="text-truncate player-name-label" th:text="${row.displayName}">Player Name</span>
+                <span class="text-truncate player-name-label" th:text="${row.displayName}">Player Name</span><small class="session-player-id text-muted fw-normal notranslate" translate="no" th:if="${row.userPublicCode != null and T(com.w3llspring.fhpb.web.util.PlayerNames).requiresId(duplicateNames, row.displayName)}" th:text="${row.userPublicCode}"></small>
                 <span class="name-badge-strip" th:if="${row.badgeViews != null and !#lists.isEmpty(row.badgeViews)}">
                   <span th:each="badge : ${row.badgeViews}"
                         class="name-badge-pill badge-detail-trigger"

@@ -39,6 +39,7 @@ class PlayerAccessIntegrationTest {
   @Autowired PlayerAccessService players;
   @Autowired RegistrationFormTokenService forms;
   @Autowired UserPasswordResetService passwordReset;
+  @Autowired com.w3llspring.fhpb.web.service.user.UserIdentityService identities;
   private User owner;
   private LadderConfig session;
 
@@ -147,9 +148,39 @@ class PlayerAccessIntegrationTest {
             .andReturn();
     User created = joined(result);
     assertThat(created.getId()).isNotEqualTo(owner.getId());
-    assertThat(created.getNickName()).startsWith("AccessHost-");
+    assertThat(created.getNickName()).isEqualTo("AccessHost");
+    assertThat(created.getPublicCode()).isNotEqualTo(owner.getPublicCode());
     assertThat(created.isAdmin()).isFalse();
     assertThat(created.isNameOnlyAccount()).isTrue();
+  }
+
+  @Test
+  void repeatedNamesKeepSeparateMemberIdsAndAccounts() throws Exception {
+    User first = joined(join("Alex"));
+    User second = joined(join("Alex"));
+    assertThat(first.getNickName()).isEqualTo("Alex");
+    assertThat(second.getNickName()).isEqualTo("Alex");
+    assertThat(first.getId()).isNotEqualTo(second.getId());
+    assertThat(first.getPublicCode()).isNotEqualTo(second.getPublicCode());
+    assertThat(first.getEmail()).isNotEqualTo(second.getEmail());
+    assertThat(users.findByPublicCode(first.getPublicCode()).orElseThrow().getId())
+        .isEqualTo(first.getId());
+    assertThat(users.findByPublicCode(second.getPublicCode()).orElseThrow().getId())
+        .isEqualTo(second.getId());
+    var renamed =
+        identities.changeDisplayName(
+            first.getId(),
+            owner.getNickName(),
+            first.getId(),
+            Instant.now(),
+            java.time.Duration.ZERO);
+    assertThat(renamed.status())
+        .isEqualTo(
+            com.w3llspring.fhpb.web.service.user.UserIdentityService.DisplayNameChangeStatus
+                .CHANGED);
+    assertThat(users.findById(first.getId()).orElseThrow().getNickName())
+        .isEqualTo(owner.getNickName());
+    assertThat(users.findById(second.getId()).orElseThrow().getNickName()).isEqualTo("Alex");
   }
 
   @Test

@@ -24,7 +24,7 @@ public class User {
 
   public static final int MAX_NICKNAME_LENGTH = 24;
 
-  @Column(nullable = false, unique = true, length = MAX_NICKNAME_LENGTH)
+  @Column(nullable = false, length = MAX_NICKNAME_LENGTH)
   private String nickName;
 
   @JsonIgnore

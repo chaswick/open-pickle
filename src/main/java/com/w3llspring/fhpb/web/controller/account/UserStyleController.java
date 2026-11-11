@@ -58,6 +58,7 @@ import com.w3llspring.fhpb.web.service.user.UserIdentityService.DisplayNameChang
 import com.w3llspring.fhpb.web.service.user.UserIdentityService.DisplayNameChangeStatus;
 import com.w3llspring.fhpb.web.service.trophy.TrophyBadgeSupport;
 import com.w3llspring.fhpb.web.util.InputValidation;
+import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 
 
 @Controller
@@ -112,6 +113,7 @@ public class UserStyleController {
 
 	@GetMapping("/account")
 	public String viewUser(@RequestParam(value = "member", required = false) String memberCode,
+			@RequestParam(value = "returnTo", required = false) String returnTo,
 			Model model) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
@@ -136,6 +138,8 @@ public class UserStyleController {
 		model.addAttribute("queryName", displayName);
 		model.addAttribute("accountPageTitle", buildAccountPageTitle(displayName));
 		model.addAttribute("accountPageSubtitle", buildAccountPageSubtitle(displayName, canEditDisplayName));
+		String backHref = ReturnToSanitizer.sanitize(returnTo);
+		model.addAttribute("accountBackHref", backHref != null ? backHref : "/account-menu");
 		if (styleOwner == null) {
 			model.addAttribute("styleList", Collections.emptyList());
 			model.addAttribute("canVote", false);
@@ -1083,11 +1087,6 @@ public class UserStyleController {
 			redirectAttributes.addFlashAttribute("toastMessage",
 					"You can change your display name again in "
 							+ formatRemainingDisplayNameCooldown(now, result.allowedAt()) + ".");
-			return "redirect:/account";
-		}
-		if (result.status() == DisplayNameChangeStatus.TAKEN) {
-			redirectAttributes.addFlashAttribute("toastLevel", "danger");
-			redirectAttributes.addFlashAttribute("toastMessage", "Display name is already taken. Try another.");
 			return "redirect:/account";
 		}
 

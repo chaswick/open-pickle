@@ -213,7 +213,7 @@
 
   <div class="card mb-3"
        data-session-standings-root="true"
-       th:data-card-collapse-default="${ladder.matchupSession ? 'closed' : 'open'}"
+       th:data-card-collapse-default="${ladder.matchupSession and (sessionMatchups == null or sessionMatchups.id == null) ? 'closed' : 'open'}"
        th:attr="data-session-standings-pending=${sessionStandingsRecalculationPending},
                 data-session-ladder-id=${ladder != null ? ladder.id : null},
                 data-session-season-id=${targetSeason != null ? targetSeason.id : null},
@@ -308,16 +308,20 @@
             <div class="player-cell session-roster-player-cell">
               <div class="player-name-with-badges">
                 <div class="player-name-line"
-                     th:with="player=${userById != null and s.userId != null ? userById[s.userId] : null}">
+                     th:with="player=${userById != null and s.userId != null ? userById[s.userId] : null},
+                              label=${sessionPlayerNames != null ? sessionPlayerNames[s.userId] : null},
+                              displayName=${label != null ? label.name : s.nickName}">
                   <a class="player-link link-contrast fw-semibold player-name-label"
                      th:if="${player != null and !#strings.isEmpty(player.publicCode)}"
-                     th:href="@{/account(member=${player.publicCode})}"
-                     th:title="${s.nickName}"
-                     th:text="${s.nickName}">Player Name</a>
+                     th:href="@{/account(member=${player.publicCode},returnTo=${profileReturnTo})}"
+                     th:title="${displayName}"
+                     th:text="${displayName}">Player Name</a>
                   <span class="fw-semibold player-name-label"
                         th:unless="${player != null and !#strings.isEmpty(player.publicCode)}"
-                        th:title="${s.nickName}"
-                        th:text="${s.nickName}">Player Name</span>
+                        th:title="${displayName}"
+                        th:text="${displayName}">Player Name</span>
+                  <small class="session-player-id text-muted fw-normal w-100 notranslate" translate="no" th:if="${label != null and label.publicCode != null}"
+                         th:text="${label.publicCode}"></small>
                 </div>
                 <span class="name-badge-strip"
                       th:if="${s.badgeViews != null and !#lists.isEmpty(s.badgeViews)}">
@@ -383,6 +387,8 @@
     </div>
   </div>
 
+  <div th:replace="~{fragments/show/sessionMatchups :: players}"></div>
+
   <script th:if="${targetSeason != null}" th:inline="javascript">
     /*<![CDATA[*/
     window.matchLogConfig = window.matchLogConfig || {};
@@ -422,14 +428,10 @@
           <div class="d-flex flex-wrap align-items-start justify-content-between w-100 gap-2">
             <div class="d-flex flex-column align-items-start gap-1 flex-grow-1 min-w-0">
               <div class="d-flex flex-wrap align-items-center gap-2">
-                <strong th:text="${
-  (userById[m.userId] != null && userById[m.userId].nickName != null && !#strings.isEmpty(userById[m.userId].nickName))
-    ? userById[m.userId].nickName
-    : 'missing name'
-}">Member Name</strong>
-                <span class="text-muted"
-                      th:if="${courtNameByUser != null and courtNameByUser[m.userId] != null and !#strings.isEmpty(courtNameByUser[m.userId])}"
-                      th:text="' - ' + ${courtNameByUser[m.userId]}"> - Lakeside Courts</span>
+                <span th:with="label=${sessionPlayerNames != null ? sessionPlayerNames[m.userId] : null}">
+                  <strong th:if="${label != null}"><span th:replace="~{components/player-name :: player-name(${label.name}, ${label.publicCode})}"></span></strong>
+                  <strong th:unless="${label != null}" th:text="${userById[m.userId] != null ? userById[m.userId].nickName : 'missing name'}">Member Name</strong>
+                </span>
               </div>
             </div>
 
@@ -479,6 +481,8 @@
       </div>
     </div>
   </div>
+
+  <div th:replace="~{fragments/show/sessionMatchups :: options}"></div>
 
   <script th:if="${targetSeason != null}"
           src="/js/match-log-voice.js"
