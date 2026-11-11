@@ -197,7 +197,7 @@ class ControllerEndpointAccessMatrixIntegrationTest {
             .getResponse()
             .getContentAsString();
 
-    assertThat(html).contains("Shared&#39;s Account");
+    assertThat(html).contains("Shared&#39;s account");
     assertThat(html).doesNotContain("Recent matches");
   }
 

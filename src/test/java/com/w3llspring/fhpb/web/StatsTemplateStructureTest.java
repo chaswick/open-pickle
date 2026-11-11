@@ -12,9 +12,9 @@ class StatsTemplateStructureTest {
   void statsTemplatePlacesActiveSeasonStatsBetweenPerformanceAndSiteActivity() throws Exception {
     String template = Files.readString(Path.of("src/main/resources/templates/auth/stats.html"));
 
-    int performanceIndex = template.indexOf("Performance Stats");
-    int activeSeasonIndex = template.indexOf("Active Seasons Stats");
-    int siteActivityIndex = template.indexOf("Site Activity");
+    int performanceIndex = template.indexOf("Performance stats");
+    int activeSeasonIndex = template.indexOf("Active seasons stats");
+    int siteActivityIndex = template.indexOf("Site activity");
 
     assertThat(performanceIndex).isGreaterThanOrEqualTo(0);
     assertThat(activeSeasonIndex).isGreaterThan(performanceIndex);
