@@ -87,7 +87,7 @@ class ThymeleafTemplateTest {
 
     String result = renderWebTemplate("public/unsubscribe_confirm", variables);
 
-    assertThat(result).contains("<title>Confirm Unsubscribe - Open-Pickle</title>");
+    assertThat(result).contains("<title>Confirm unsubscribe - Open-Pickle</title>");
     assertThat(result).contains("method=\"post\"", "action=\"/meetups/unsubscribe\"");
     assertThat(result).contains("name=\"token\" value=\"signed-unsubscribe-token\"");
     assertThat(result).contains("You are about to stop receiving");
@@ -169,7 +169,7 @@ class ThymeleafTemplateTest {
                     List.of(membership(7L, "Ladder X", LadderConfig.Type.STANDARD)),
                 "restorableLadders", List.of()));
 
-    assertThat(result).contains("Your Leagues");
+    assertThat(result).contains("Your leagues");
     assertThat(result).contains("Ladder X");
     assertThat(result).doesNotContain("Global Competition");
     assertThat(result).doesNotContain("/groups/99");
@@ -189,7 +189,7 @@ class ThymeleafTemplateTest {
     assertThat(result).contains("You're not in any leagues yet.");
     assertThat(result).doesNotContain("Create a new league, or view your existing leagues below.");
     assertThat(result).doesNotContain("Global Competition");
-    assertThat(result).doesNotContain("Your Leagues");
+    assertThat(result).doesNotContain("Your leagues");
   }
 
   @Test
@@ -300,10 +300,10 @@ class ThymeleafTemplateTest {
 
     assertThat(result).contains("Invite friends");
     assertThat(result).contains("id=\"ladderId\" value=\"42\"", "id=\"seasonId\" value=\"77\"");
-    assertThat(result).contains("Session Standings");
-    assertThat(result).contains("Manage Invited Buddies");
-    assertThat(result).contains("Pending Join Requests");
-    assertThat(result).doesNotContain("Start Round Robin");
+    assertThat(result).contains("Session standings");
+    assertThat(result).contains("Manage invited buddies");
+    assertThat(result).contains("Pending join requests");
+    assertThat(result).doesNotContain("Start Round robin");
     assertThat(result).contains("Choose the method that works for you.");
     assertThat(result).contains("No players have joined this session yet.");
     assertThat(result).doesNotContain("data-session-sort=\"");
@@ -347,7 +347,7 @@ class ThymeleafTemplateTest {
 
     assertThat(result).doesNotContain("Invite friends");
     assertThat(result).doesNotContain("Choose the method that works for you.");
-    assertThat(result).contains("Manage Invited Buddies");
+    assertThat(result).contains("Manage invited buddies");
   }
 
   @Test
@@ -385,8 +385,8 @@ class ThymeleafTemplateTest {
     String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
     assertThat(result).doesNotContain("Invite friends");
-    assertThat(result).doesNotContain("Pending Join Requests");
-    assertThat(result).doesNotContain("Start Round Robin");
+    assertThat(result).doesNotContain("Pending join requests");
+    assertThat(result).doesNotContain("Start Round robin");
     assertThat(result).doesNotContain("Choose the method that works for you.");
   }
 
@@ -421,9 +421,9 @@ class ThymeleafTemplateTest {
 
     String result = renderWebTemplate("fragments/show/groupBody", variables);
 
-    assertThat(result).contains("Invite Code");
+    assertThat(result).contains("Invite code");
     assertThat(result).contains("Enable Invite");
-    assertThat(result).contains("League Config");
+    assertThat(result).contains("League config");
     assertThat(result).contains("No members yet.");
     assertThat(result).contains("No banned members.");
   }
@@ -468,7 +468,7 @@ class ThymeleafTemplateTest {
     variables.put("checkInEnabled", false);
     variables.put("pendingSessionJoinRequests", List.of());
     variables.put("sessionStandingsRecalculationPending", false);
-    variables.put("memberSectionTitle", "Session Members (1/32)");
+    variables.put("memberSectionTitle", "Session members (1/32)");
     variables.put("members", List.of());
     variables.put("sort", "joined");
     variables.put("currentUserId", 7L);
@@ -487,11 +487,11 @@ class ThymeleafTemplateTest {
     assertThat(result.substring(0, result.indexOf("</head>")))
         .contains("/css/session-matchups.css");
     assertThat(result.substring(result.indexOf("<body"))).doesNotContain("rel=\"stylesheet\"");
-    assertThat(result).contains("Session Standings");
+    assertThat(result).contains("Session standings");
     assertThat(result).contains("Session is live now.");
     assertThat(result).contains("href=\"/home\"");
-    assertThat(result).doesNotContain("League Config");
-    assertThat(result).doesNotContain("Banned Members");
+    assertThat(result).doesNotContain("League config");
+    assertThat(result).doesNotContain("Banned members");
     assertThat(result).doesNotContain("Invite friends");
     assertThat(result).doesNotContain("Leave Session Early");
   }
@@ -516,7 +516,7 @@ class ThymeleafTemplateTest {
     variables.put("inviteActive", false);
     variables.put("pendingSessionJoinRequests", List.of());
     variables.put("sessionStandingsRecalculationPending", false);
-    variables.put("memberSectionTitle", "Session Members (1/32)");
+    variables.put("memberSectionTitle", "Session members (1/32)");
     variables.put("members", List.of());
     variables.put("sort", "joined");
     variables.put("currentUserId", 7L);
@@ -587,8 +587,8 @@ class ThymeleafTemplateTest {
 
     String result = renderWebTemplate("auth/show", variables);
 
-    assertThat(result).contains("Invite Code");
-    assertThat(result).contains("League Config");
+    assertThat(result).contains("Invite code");
+    assertThat(result).contains("League config");
     assertThat(result).doesNotContain("Invite friends");
     assertThat(result).doesNotContain("Who's Here");
     assertThat(result).doesNotContain("Session expires at");
@@ -640,7 +640,7 @@ class ThymeleafTemplateTest {
     variables.put("authPrincipal", null);
     variables.put("sessionDateTimePattern", "EEEE, MMM d, h:mm a");
     variables.put("sessionStandingsRecalculationPending", false);
-    variables.put("memberSectionTitle", "Session Members (2/32)");
+    variables.put("memberSectionTitle", "Session members (2/32)");
     variables.put("members", List.of(currentMembership, otherMembership));
     variables.put("sort", "joined");
     variables.put("currentUserId", 7L);
@@ -657,15 +657,15 @@ class ThymeleafTemplateTest {
     variables.put("sessionMomentumByUserId", Map.of(7L, 3));
     variables.put("sessionRatingByUserId", Map.of(7L, 1027));
     variables.put("leaveConfirmMessage", "End this session? Everyone will be removed immediately.");
-    variables.put("leaveActionLabel", "End Session");
+    variables.put("leaveActionLabel", "End session");
     variables.put("links", List.of());
     variables.put("improvementAdvice", null);
 
     String result = renderWebTemplate("fragments/show/sessionBody", variables);
 
-    assertThat(result).contains("Session Standings");
+    assertThat(result).contains("Session standings");
     assertThat(result).contains("href=\"/account?member=PB-sage-ace-247&amp;returnTo=/groups/42\"");
-    assertThat(result).contains("Manage Invited Buddies");
+    assertThat(result).contains("Manage invited buddies");
     assertThat(result).contains("Partner");
     assertThat(result).contains("session-player-name");
     assertThat(result).contains("data-session-stat-toggle=\"rating\"");
@@ -732,9 +732,9 @@ class ThymeleafTemplateTest {
         .doesNotContain("Confirm the location name below or enter your own.");
     assertThat(sessionTemplate).contains("Invite friends");
     assertThat(sessionTemplate).contains("sessionPlayerNames");
-    assertThat(sessionTemplate).contains("Manage Invited Buddies");
-    assertThat(sessionTemplate).contains("Pending Join Requests");
-    assertThat(sessionTemplate).contains("Session Standings");
+    assertThat(sessionTemplate).contains("Manage invited buddies");
+    assertThat(sessionTemplate).contains("Pending join requests");
+    assertThat(sessionTemplate).contains("Session standings");
     assertThat(sessionTemplate).contains("id=\"sessionMembersPanel\"");
     assertThat(sessionTemplate).contains("data-members-list");
     assertThat(sessionTemplate).contains("data-members-empty-state");
@@ -815,10 +815,10 @@ class ThymeleafTemplateTest {
     assertThat(sessionTemplate).contains("competition: true");
     assertThat(sessionTemplate).contains("Invite friends");
     assertThat(sessionTemplate).contains("data-session-round-robin-root=\"true\"");
-    assertThat(sessionTemplate.indexOf("Your Round Robin"))
-        .isLessThan(sessionTemplate.indexOf("Session Standings"));
+    assertThat(sessionTemplate.indexOf("Your round robin"))
+        .isLessThan(sessionTemplate.indexOf("Session standings"));
     assertThat(sessionTemplate.indexOf("Invite friends"))
-        .isLessThan(sessionTemplate.indexOf("Session Standings"));
+        .isLessThan(sessionTemplate.indexOf("Session standings"));
     assertThat(sessionTemplate).contains("Log This Match");
     assertThat(sessionTemplate).contains("session-round-nav");
     assertThat(sessionTemplate).contains("session-roster-list");
@@ -828,7 +828,7 @@ class ThymeleafTemplateTest {
     assertThat(sessionTemplate).doesNotContain("id=\"sessionConfirmationsInboxModal\"");
     assertThat(sessionTemplate)
         .contains("data-session-standings-pending=${sessionStandingsRecalculationPending}");
-    assertThat(sessionTemplate).contains("Recent Rating Changes");
+    assertThat(sessionTemplate).contains("Recent rating changes");
     assertThat(sessionTemplate).doesNotContain("climbFasterCardContainer");
     assertThat(sessionTemplate).doesNotContain("components/climbFasterCard");
     assertThat(sessionTemplate).doesNotContain("Disputed Match Review");
@@ -856,7 +856,7 @@ class ThymeleafTemplateTest {
         .contains("class=\"card-stack-col card-stack-col-desktop-fluid pb-5 text-start\"");
     int badgeSectionStart =
         fragmentTemplate.indexOf(
-            "<div class=\"card-header card-header-title text-center\">Name Badges</div>");
+            "<div class=\"card-header card-header-title text-center\">Name badges</div>");
     int badgeFormEnd = fragmentTemplate.indexOf("</form>", badgeSectionStart);
     String badgeSection = fragmentTemplate.substring(badgeSectionStart, badgeFormEnd);
 
@@ -868,7 +868,7 @@ class ThymeleafTemplateTest {
                 fragmentTemplate, "data-card-collapse-default=\"closed\""))
         .isEqualTo(4);
     assertThat(recentMatchesTemplate).contains("data-card-collapse-default=\"closed\"");
-    assertThat(fragmentTemplate).contains("Your Name(s)");
+    assertThat(fragmentTemplate).contains("Your name(s)");
     assertThat(fragmentTemplate).contains("placeholder=\"Add a name\"");
     assertThat(badgeSection).contains("Use Equip or Hide to save your selection immediately.");
     assertThat(badgeSection).doesNotContain(">Save</button>");
@@ -1021,11 +1021,11 @@ class ThymeleafTemplateTest {
     String template =
         Files.readString(Path.of("src/main/resources/templates/auth/private-group-picker.html"));
 
-    assertThat(template).contains("Create a League");
-    assertThat(template).contains("Join a League");
+    assertThat(template).contains("Create a league");
+    assertThat(template).contains("Join a league");
     assertThat(template).contains("th:href=\"@{/groups/new(returnTo='/private-groups')}\"");
     assertThat(template).contains("th:href=\"@{/groups/join(returnTo='/private-groups')}\"");
-    assertThat(template).contains("Create Tournament");
+    assertThat(template).contains("Create tournament");
     assertThat(template)
         .contains("th:href=\"@{/groups/new(returnTo='/private-groups',tournamentMode=true)}\"");
   }
@@ -1035,7 +1035,7 @@ class ThymeleafTemplateTest {
     String template =
         Files.readString(Path.of("src/main/resources/templates/fragments/helpContent.html"));
 
-    assertThat(template).contains("Removing a Confirmed Match");
+    assertThat(template).contains("Removing a confirmed match");
     assertThat(template).contains("Duplicates, accidental confirmations");
     assertThat(template)
         .contains(
@@ -1044,7 +1044,7 @@ class ThymeleafTemplateTest {
     assertThat(template).contains("Nullified</strong> label");
     assertThat(template)
         .contains("Use confirmed-match removal only after both sides already confirmed");
-    assertThat(template).contains("Player Names:");
+    assertThat(template).contains("Player names:");
   }
 
   @Test
@@ -1053,7 +1053,7 @@ class ThymeleafTemplateTest {
         Files.readString(Path.of("src/main/resources/templates/fragments/helpContent.html"));
 
     assertThat(template).contains("How do season standings work?");
-    assertThat(template.indexOf("Current Limitations"))
+    assertThat(template.indexOf("Current limitations"))
         .isLessThan(template.indexOf("How do season standings work?"));
   }
 
@@ -1137,7 +1137,7 @@ class ThymeleafTemplateTest {
                 + " for later.");
     assertThat(result)
         .doesNotContain("data-session-hosting-toggle", "homeSessionHostingInfo", "Manage sessions");
-    assertThat(result).contains("action=\"/groups/42/leave/101\"", "aria-label=\"End Session\"");
+    assertThat(result).contains("action=\"/groups/42/leave/101\"", "aria-label=\"End session\"");
     assertThat(result).contains("action=\"/groups/43/leave/102\"", "aria-label=\"Leave Session\"");
     assertThat(result).contains("href=\"/groups/new-session\"");
     assertThat(result).doesNotContain("Your first session");
@@ -1165,7 +1165,7 @@ class ThymeleafTemplateTest {
     Map<String, Object> variables = authenticatedShowLayoutVariables();
     variables.put("stats", Map.of("uptime", "1h 5m", "generatedAt", "Oct 28, 2026 6:00 PM"));
     String result = renderWebTemplate("auth/stats", variables);
-    assertThat(result).contains("Last Updated", "Generated", "1h 5m", "Oct 28, 2026");
+    assertThat(result).contains("Last updated", "Generated", "1h 5m", "Oct 28, 2026");
     assertThat(result)
         .doesNotContain(
             "Community Snapshot", "Registered Players", "Active Groups", "Current Seasons");
@@ -1202,7 +1202,7 @@ class ThymeleafTemplateTest {
     assertThat(navigationTemplate).contains("href=\"/competition/sessions\"");
     assertThat(navigationTemplate).doesNotContain("href=\"/private-groups\"");
     assertThat(navigationTemplate).contains("href=\"/account-menu\"");
-    assertThat(navigationTemplate).contains("Open Sessions");
+    assertThat(navigationTemplate).contains("Open sessions");
     assertThat(navigationTemplate).contains("navigationSessionConfigs");
     assertThat(navigationTemplate).contains("th:href=\"@{/groups/{id}(id=${sessionConfig.id})}\"");
     String authLayout =
@@ -1210,8 +1210,8 @@ class ThymeleafTemplateTest {
     assertThat(authLayout)
         .contains("components/mailbox :: bar", "components/mailbox :: modals", "/js/mailbox.js");
     assertThat(navigationTemplate).contains("Play with friends");
-    assertThat(navigationTemplate).doesNotContain("Private Leagues");
-    assertThat(navigationTemplate).contains("User Account");
+    assertThat(navigationTemplate).doesNotContain("Private leagues");
+    assertThat(navigationTemplate).contains("User account");
     assertThat(navigationTemplate).contains("@{/help}");
 
     assertThat(sessionPickerTemplate).contains("Play with friends");
@@ -1230,7 +1230,7 @@ class ThymeleafTemplateTest {
     assertThat(sessionPickerTemplate)
         .contains("class=\"btn-close competition-session-dismiss-btn\"");
     assertThat(sessionPickerTemplate).contains("Leave Session");
-    assertThat(sessionPickerTemplate).contains("End Session");
+    assertThat(sessionPickerTemplate).contains("End session");
     assertThat(sessionPickerTemplate).contains("'/leave/' + ${membership.id}");
     assertThat(sessionPickerTemplate)
         .contains("components/back-button :: back-button(@{/home}, 'Back')");
@@ -1239,11 +1239,11 @@ class ThymeleafTemplateTest {
                 "<div class=\"competition-session-card app-action-tile app-action-standings\""))
         .isLessThan(sessionPickerTemplate.indexOf("<a th:href=\"@{/groups/new-session}\""));
 
-    assertThat(accountMenuTemplate).contains("User Account");
+    assertThat(accountMenuTemplate).contains("User account");
     assertThat(accountMenuTemplate)
         .contains("components/back-button :: back-button(@{/home}, 'Back')");
     assertThat(accountMenuTemplate).doesNotContain("navigationSessionConfigs");
-    assertThat(accountMenuTemplate).contains("Account Settings");
+    assertThat(accountMenuTemplate).contains("Account settings");
     assertThat(accountMenuTemplate).contains("Trophies");
     assertThat(accountMenuTemplate).contains("Stats");
     assertThat(accountMenuTemplate).contains("Logout");
@@ -1272,7 +1272,7 @@ class ThymeleafTemplateTest {
     String result = renderWebTemplate("auth/competition-session-picker", variables);
 
     assertThat(result).contains("Saturday Open");
-    assertThat(result).contains("aria-label=\"End Session\"");
+    assertThat(result).contains("aria-label=\"End session\"");
     assertThat(result).contains("Host a session");
     assertThat(result.indexOf("Saturday Open")).isLessThan(result.indexOf("Join a session"));
   }
@@ -1311,7 +1311,7 @@ class ThymeleafTemplateTest {
     String result = renderWebTemplate("auth/account-menu", variables);
 
     assertThat(result).contains("href=\"/recent-matches\"", "Recent matches");
-    assertThat(result).contains("Account Settings", "Trophies", "Stats", "Logout");
+    assertThat(result).contains("Account settings", "Trophies", "Stats", "Logout");
     assertThat(result)
         .doesNotContain("app-action-groups", "Jump back into an active session you joined.");
   }
@@ -1520,12 +1520,12 @@ class ThymeleafTemplateTest {
                 Map.of(
                     "visibleBanner", true,
                     "bannerVariant", "danger",
-                    "bannerTitle", "Competition Match Lockout",
+                    "bannerTitle", "Competition match lockout",
                     "bannerMessage",
                         "You cannot be included in competition matches for the rest of this season.")));
 
     assertThat(result).contains("competitionAutoModBanner");
-    assertThat(result).contains("Competition Match Lockout");
+    assertThat(result).contains("Competition match lockout");
     assertThat(result).contains("rest of this season");
   }
 
@@ -1547,7 +1547,7 @@ class ThymeleafTemplateTest {
     assertThat(logMatchTemplate).doesNotContain("components/ladderSelector :: ladderSelector");
     assertThat(logMatchTemplate).contains("components/back-button :: back-button");
     assertThat(competitionLogTemplate).doesNotContain("/voice-match-log");
-    assertThat(competitionLogTemplate).contains("Open Voice Logger");
+    assertThat(competitionLogTemplate).contains("Open Voice logger");
     assertThat(competitionLogTemplate)
         .contains(
             "th:href=\"@{/log-match(ladderId=${ladderId},seasonId=${seasonId},competition=true,returnTo=${returnToPath})}\"");

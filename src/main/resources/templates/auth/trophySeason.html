@@ -6,7 +6,7 @@
       layout:decorate="~{layouts/authenticated}">
 
 <head>
-  <title layout:fragment="title" th:text="${'Trophy Season: ' + (seasonCatalog?.seasonName ?: 'Unknown')}">Trophy Season</title>
+  <title layout:fragment="title" th:text="${'Trophy season: ' + (seasonCatalog?.seasonName ?: 'Unknown')}">Trophy season</title>
   
   <th:block layout:fragment="styles">
     <link rel="preload" as="image" href="/images/trophy/TrophyLocked.png" th:href="@{/images/trophy/TrophyLocked.png}">

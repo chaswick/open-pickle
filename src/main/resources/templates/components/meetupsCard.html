@@ -1,5 +1,5 @@
 <div th:fragment="meetupsCard" class="card mb-4 shadow card-spotlight">
-  <div class="card-header card-header-title text-center">Play Plans</div>
+  <div class="card-header card-header-title text-center">Play plans</div>
   <div class="card-body">
     <div class="form-check mb-2" th:if="${loggedInUser == null or !loggedInUser.nameOnlyAccount}">
       <input class="form-check-input" type="checkbox" id="meetupsEmailOptIn" th:checked="${loggedInUser != null and loggedInUser.meetupsEmailOptIn}" />
@@ -68,7 +68,7 @@
         }
 
         if (!enabled) {
-          setStatus('Play Plans unavailable.');
+          setStatus('Play plans unavailable.');
           return;
         }
 

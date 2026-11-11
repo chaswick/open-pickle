@@ -170,7 +170,7 @@ class UserStyleControllerTest {
         assertThat(result.getModelAndView().getModel().get("queryName")).isEqualTo("owner");
         assertThat(result.getModelAndView().getModel().get("memberCode")).isEqualTo(owner.getPublicCode());
         assertThat(result.getModelAndView().getModel()).doesNotContainKey("showRecentMatches");
-        assertThat(result.getModelAndView().getModel().get("accountPageTitle")).isEqualTo("owner's Account");
+        assertThat(result.getModelAndView().getModel().get("accountPageTitle")).isEqualTo("owner's account");
         assertThat(result.getModelAndView().getModel().get("accountPageSubtitle"))
                 .isEqualTo("");
         assertThat(result.getResponse().getContentAsString()).doesNotContain("Recent matches");
@@ -236,7 +236,7 @@ class UserStyleControllerTest {
         assertThat(result.getModelAndView().getModel().get("profilePublicCode")).isEqualTo("PB-sage-ace-247");
         assertThat(result.getModelAndView().getModel().get("memberCode")).isEqualTo("PB-sage-ace-247");
         assertThat(result.getModelAndView().getModel()).doesNotContainKey("showRecentMatches");
-        assertThat(result.getModelAndView().getModel().get("accountPageTitle")).isEqualTo("viewer's Account");
+        assertThat(result.getModelAndView().getModel().get("accountPageTitle")).isEqualTo("viewer's account");
         assertThat(result.getModelAndView().getModel().get("accountPageSubtitle"))
                 .isEqualTo("Update viewer's profile, names, and preferences.");
     }
@@ -264,7 +264,7 @@ class UserStyleControllerTest {
         assertThat(result.getModelAndView().getModel().get("queryName")).isEqualTo("AdminCharlie");
         assertThat(result.getModelAndView().getModel().get("canEditDisplayName")).isEqualTo(true);
         assertThat(result.getModelAndView().getModel().get("userName")).isEqualTo("AdminCharlie");
-        assertThat(result.getModelAndView().getModel().get("accountPageTitle")).isEqualTo("AdminCharlie's Account");
+        assertThat(result.getModelAndView().getModel().get("accountPageTitle")).isEqualTo("AdminCharlie's account");
         assertThat(result.getModelAndView().getModel().get("accountPageSubtitle"))
                 .isEqualTo("Update AdminCharlie's profile, names, and preferences.");
         assertThat(sessionUser.getNickName()).isEqualTo("AdminCharlie");

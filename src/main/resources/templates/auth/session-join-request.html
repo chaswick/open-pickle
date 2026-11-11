@@ -2,15 +2,15 @@
 <html lang="en" layout:decorate="~{layouts/authenticated}">
 
 <head>
-  <title layout:fragment="title">Session Join Request</title>
+  <title layout:fragment="title">Session join request</title>
   <meta layout:fragment="meta-tags">
 </head>
 
 <body>
   <main layout:fragment="content" class="app-page">
     <div class="app-page-header"><div>
-    <h1 class="app-page-title" th:text="${joinRequestStatus.pending} ? 'Waiting for Approval' : 'Session Join Request'">
-      Session Join Request
+    <h1 class="app-page-title" th:text="${joinRequestStatus.pending} ? 'Waiting for approval' : 'Session join request'">
+      Session join request
     </h1>
     </div></div>
     <div th:replace="~{components/back-button :: back-button(@{/competition/sessions}, 'Back')}"></div>
@@ -20,7 +20,7 @@
         <div class="card mb-3 text-center"
              id="sessionJoinRequestStatusCard"
              th:attr="data-request-id=${joinRequestStatus.id}, data-pending=${joinRequestStatus.pending}, data-redirect-url=${joinRequestStatus.redirectUrl}">
-          <div class="card-header card-header-title">Session Join Request</div>
+          <div class="card-header card-header-title">Session join request</div>
           <div class="card-body">
             <div class="mb-3">
               <div class="fw-semibold"
@@ -56,7 +56,7 @@
                  id="sessionJoinRequestOpenBtn"
                  th:if="${joinRequestStatus.redirectUrl != null}"
                  th:href="@{${joinRequestStatus.redirectUrl}}">
-                Open Session
+                Open session
               </a>
             </div>
           </div>

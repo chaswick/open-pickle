@@ -18,7 +18,7 @@
 
         <section class="app-hero">
             <div class="app-hero-card">
-                <h1 class="app-hero-title">Let's Pickle!</h1>
+                <h1 class="app-hero-title">Let's pickle!</h1>
                 <p class="app-hero-subtitle"
                    th:if="${competitionUnavailable or canCreateCompetitionSession}">
                     Host a session, invite your players, and keep score together.
@@ -37,7 +37,7 @@
         </section>
 
         <div class="alert alert-info" th:if="${competitionUnavailable}">
-            Sessions are unavailable right now. Your match history and stats are still available under User Account.
+            Sessions are unavailable right now. Your match history and stats are still available under User account.
         </div>
 
         <section class="app-action-grid mb-4" aria-label="Start, join, or return to a session">
@@ -45,7 +45,7 @@
                  th:each="membership : ${competitionSessionMemberships}"
                  th:with="sessionConfig=${membership.ladderConfig},
                           owned=${membership.userId == sessionConfig.ownerUserId},
-                          leaveLabel=${owned ? 'End Session' : 'Leave Session'},
+                          leaveLabel=${owned ? 'End session' : 'Leave Session'},
                           leaveConfirm=${owned ? 'End this session and any remaining matchups for everyone? Recorded scores will be saved.' : 'Leave this session?'}">
                 <form method="post" class="competition-session-dismiss-form m-0"
                       th:if="${membership.id != null}"
@@ -114,7 +114,7 @@
             <a class="app-action-tile app-action-account" th:href="@{/account-menu}">
                 <div class="app-action-icon"><i class="bi bi-person-gear" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">User Account</div>
+                    <div class="app-action-title">User account</div>
                     <div class="app-action-subtitle">Account settings, trophies, stats, and sign-out in one place.</div>
                 </div>
             </a>

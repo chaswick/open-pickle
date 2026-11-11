@@ -29,7 +29,7 @@
         </div>
 
         <div class="card mb-4 shadow card-spotlight" th:if="${!competitionUnavailable and selectedSessionTitle != null}">
-            <div class="card-header card-header-title text-center">Selected Session</div>
+            <div class="card-header card-header-title text-center">Selected session</div>
             <div class="card-body text-center">
                 <div class="fw-semibold mb-1" th:text="${selectedSessionTitle}">Session</div>
                 <div class="small text-muted" th:if="${seasonName != null and seasonName != ''}">
@@ -40,7 +40,7 @@
         </div>
 
         <div class="card mb-4 shadow card-spotlight">
-            <div class="card-header card-header-title text-center">Log Match</div>
+            <div class="card-header card-header-title text-center">Log match</div>
             <div class="card-body">
                 <p class="text-muted mb-3">
                     Choose players from this session when you log the result.
@@ -49,25 +49,25 @@
                     <a class="btn btn-action-primary btn-lg"
                        th:if="${!competitionUnavailable and ladderId != null and seasonId != null}"
                        th:href="@{/groups/{ladderId}(ladderId=${ladderId})}">
-                        Open Voice Logger
+                        Open Voice logger
                     </a>
                     <a class="btn btn-action-primary btn-lg disabled"
                        th:unless="${!competitionUnavailable and ladderId != null and seasonId != null}"
                        href="#"
                        aria-disabled="true">
-                        Open Voice Logger
+                        Open Voice logger
                     </a>
 
                     <a class="btn btn-action-success btn-lg"
                        th:if="${!competitionUnavailable and ladderId != null and seasonId != null}"
                        th:href="@{/log-match(ladderId=${ladderId},seasonId=${seasonId},competition=true,returnTo=${returnToPath})}">
-                        Log Match
+                        Log match
                     </a>
                     <a class="btn btn-action-success btn-lg disabled"
                        th:unless="${!competitionUnavailable and ladderId != null and seasonId != null}"
                        href="#"
                        aria-disabled="true">
-                        Log Match
+                        Log match
                     </a>
                 </div>
             </div>

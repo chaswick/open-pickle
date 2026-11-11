@@ -3,14 +3,14 @@
     layout:decorate="~{layouts/authenticated}">
 
 <head>
-    <title layout:fragment="title">Private Leagues</title>
+    <title layout:fragment="title">Private leagues</title>
 </head>
 
 <body>
     <div layout:fragment="content" class="app-home">
         <section class="app-hero">
             <div class="app-hero-card">
-                <h1 class="app-hero-title" th:text="${ladderName != null ? ladderName : 'Private League'}">Private League</h1>
+                <h1 class="app-hero-title" th:text="${ladderName != null ? ladderName : 'Private league'}">Private league</h1>
                 <p class="app-hero-subtitle">Plans, match logging, standings, round robins, and league management.</p>
                 <div class="app-hero-subtitle" th:if="${seasonName != null and seasonName != ''}">
                     <div class="fw-semibold" th:text="${seasonName}">Season</div>
@@ -27,14 +27,14 @@
                th:if="${meetupsEnabled}">
                 <div class="app-action-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Play Plans</div>
+                    <div class="app-action-title">Play plans</div>
                     <div class="app-action-subtitle">Schedule or RSVP for pickup games.</div>
                 </div>
             </a>
             <div class="app-action-tile app-action-plans app-action-disabled" th:unless="${meetupsEnabled}">
                 <div class="app-action-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Play Plans</div>
+                    <div class="app-action-title">Play plans</div>
                     <div class="app-action-subtitle">Feature is currently disabled.</div>
                 </div>
             </div>
@@ -42,7 +42,7 @@
             <a class="app-action-tile app-action-log" th:href="@{/match-log(ladderId=${ladderId},seasonId=${seasonId})}">
                 <div class="app-action-icon"><i class="bi bi-mic" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Log Match</div>
+                    <div class="app-action-title">Log match</div>
                     <div class="app-action-subtitle">Voice or classic logging in seconds.</div>
                 </div>
             </a>
@@ -50,7 +50,7 @@
             <a class="app-action-tile app-action-standings" th:href="@{/standings(ladderId=${ladderId},seasonId=${seasonId})}">
                 <div class="app-action-icon"><i class="bi bi-bar-chart" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">View Standings</div>
+                    <div class="app-action-title">View standings</div>
                     <div class="app-action-subtitle">Check form, rank, and ratings.</div>
                 </div>
             </a>
@@ -59,7 +59,7 @@
                th:href="@{/round-robin/list(ladderId=${ladderId},seasonId=${seasonId})}">
                 <div class="app-action-icon"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Round Robins</div>
+                    <div class="app-action-title">Round robins</div>
                     <div class="app-action-subtitle">Start or review round-robin sessions.</div>
                 </div>
             </a>
@@ -68,7 +68,7 @@
                th:href="@{/groups/{id}(id=${ladderId})}">
                 <div class="app-action-icon"><i class="bi bi-people" aria-hidden="true"></i></div>
                 <div>
-                    <div class="app-action-title">Manage League</div>
+                    <div class="app-action-title">Manage league</div>
                     <div class="app-action-subtitle">Invite players, manage members, and adjust league settings.</div>
                 </div>
             </a>

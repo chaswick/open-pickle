@@ -145,6 +145,6 @@ public class PlayerEmailConnectionService {
 
   private IllegalArgumentException invalidLink() {
     return new IllegalArgumentException(
-        "This link has expired or has already been used. Request a new email from Account Settings.");
+        "This link has expired or has already been used. Request a new email from Account settings.");
   }
 }

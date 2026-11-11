@@ -1,20 +1,20 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layouts/authenticated}">
 <head>
-    <title layout:fragment="title">Round-Robin View</title>
+    <title layout:fragment="title">Round-robin view</title>
 </head>
 <body>
 <div layout:fragment="content" class="app-page">
     <div class="app-page-header">
         <div>
-            <h1 class="app-page-title">Round-Robin</h1>
+            <h1 class="app-page-title">Round-robin</h1>
             <p class="app-page-subtitle">View pairings, progress, and results for this round-robin.</p>
         </div>
     </div>
     <div th:replace="~{components/back-button :: back-button(${roundRobinListPath}, 'Back')}"></div>
     <div class="container">
     <div class="card mb-4 shadow card-spotlight">
-        <div class="card-header card-header-title">Round-Robin</div>
+        <div class="card-header card-header-title">Round-robin</div>
         <div class="card-body">
             <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center">
@@ -100,7 +100,7 @@
                         <td class="text-center"></td>
                         <td colspan="3">
                             <div class="text-start">
-                                <div class="fw-semibold mb-2">All Participants</div>
+                                <div class="fw-semibold mb-2">All participants</div>
                                 <div class="d-flex flex-wrap gap-2">
                                     <span th:each="p : ${allParticipants}" 
                                           th:class="${'badge ' + (p.status == 'playing' ? 'bg-success' : (p.status == 'bye' ? 'bg-secondary' : 'bg-warning'))}">

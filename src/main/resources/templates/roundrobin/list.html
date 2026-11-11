@@ -1,20 +1,20 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layouts/authenticated}">
 <head>
-    <title layout:fragment="title">Round-Robins</title>
+    <title layout:fragment="title">Round-robins</title>
 </head>
 <body>
 <div layout:fragment="content" class="app-page">
     <div class="app-page-header">
         <div>
-            <h1 class="app-page-title">Round-Robins</h1>
+            <h1 class="app-page-title">Round-robins</h1>
             <p class="app-page-subtitle">Start a new round-robin or review previous ones for this group.</p>
         </div>
     </div>
     <div th:replace="~{components/back-button :: back-button(${roundRobinBackPath != null ? roundRobinBackPath : '/private-groups'}, 'Back')}"></div>
     <div class="container">
         <div class="card mb-4 shadow card-spotlight">
-            <div class="card-header card-header-title text-center">Round-Robins</div>
+            <div class="card-header card-header-title text-center">Round-robins</div>
             <div class="card-body">
                 <div class="alert alert-warning text-start"
                      th:if="${roundRobinStartRestrictionMessage != null}">
@@ -24,18 +24,18 @@
                     <a class="btn btn-action-primary"
                        th:if="${ladderId != null and canStartRoundRobin}"
                         th:href="@{/round-robin(ladderId=${ladderId})}">
-                        Start Round-Robin
+                        Start round-robin
                     </a>
                     <a class="btn btn-action-primary disabled"
                        th:if="${ladderId == null or !canStartRoundRobin}"
                        href="#"
                        aria-disabled="true">
-                        Start Round-Robin
+                        Start round-robin
                     </a>
                 </div>
 
                 <div th:if="${!#lists.isEmpty(roundRobins) and !#lists.isEmpty(seasonStandings)}" class="mb-3">
-                    <div th:replace="~{fragments/roundrobinStandings :: standingsTable(${seasonStandings}, 'Cumulative Standings')}"></div>
+                    <div th:replace="~{fragments/roundrobinStandings :: standingsTable(${seasonStandings}, 'Cumulative standings')}"></div>
                 </div>
 
                 <div th:if="${#lists.isEmpty(roundRobins)}">

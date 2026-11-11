@@ -2,7 +2,7 @@
 <div th:if="${canEditDisplayName}">
 	<div th:replace="~{components/playerAccess :: recovery}"></div>
 	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
-	<div class="card-header card-header-title text-center">Update Display Name</div>
+	<div class="card-header card-header-title text-center">Update display name</div>
 	<div class="card-body text-center">
 		<div th:if="${displayNameMessage}" th:text="${displayNameMessage}" th:class="'alert mb-3 text-start ' +
 			(${displayNameStatus} == 'success' ? 'alert-success' :
@@ -32,10 +32,10 @@
 	</div>
 
 	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
-	<div class="card-header card-header-title text-center">Time Zone</div>
+	<div class="card-header card-header-title text-center">Time zone</div>
 	<div class="card-body">
 		<p class="text-muted small mb-3">
-			Used to display times across the app (Play Plans, match logs, etc). Defaults to Eastern Time.
+			Used to display times across the app (Play plans, match logs, etc). Defaults to Eastern Time.
 		</p>
 		<form method="post" data-submit-label="Saving…" th:action="@{/account/time-zone}" class="row g-2 align-items-end">
 			<div class="col-12 col-md-8">
@@ -60,7 +60,7 @@
 	</div>
 
 	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
-	<div class="card-header card-header-title text-center">Name Badges</div>
+	<div class="card-header card-header-title text-center">Name badges</div>
 	<div class="card-body">
 		<p class="text-muted small mb-3">
 			Choose one badge to display next to your name in standings tables. Unlocked trophy badges and always-available profile badges both work.
@@ -242,7 +242,7 @@
 	</div>
 
 	<div class="card mb-4 shadow card-spotlight" data-card-collapse-default="closed">
-	<div class="card-header card-header-title text-center">Your Name(s)</div>
+	<div class="card-header card-header-title text-center">Your name(s)</div>
 	<div class="card-body">
 		<div th:if="${courtNameMessage}" th:text="${courtNameMessage}" th:class="'alert mb-3 text-start ' +
 			(${courtNameStatus} == 'success' ? 'alert-success' :
@@ -317,7 +317,7 @@
 
 
 <div class="card mb-4">
-	<h1 class="card-header card-header-title text-center"><span th:text="${queryName}"></span>'s Styles</h1>
+	<h1 class="card-header card-header-title text-center"><span th:text="${queryName}"></span>'s styles</h1>
 	<div class="card-body">
 		Player style: <span th:if="${styleList.size() == 0}">No one has
 			voted on this player's styles yet.</span>

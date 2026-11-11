@@ -67,7 +67,7 @@ class SessionJoinRequestControllerTest {
     mockMvc
         .perform(get("/api/sessions/42/members").principal(auth))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.memberSectionTitle").value("Session Members (2/32)"))
+        .andExpect(jsonPath("$.memberSectionTitle").value("Session members (2/32)"))
         .andExpect(jsonPath("$.memberCount").value(2))
         .andExpect(jsonPath("$.members[0].membershipId").value(501))
         .andExpect(jsonPath("$.members[0].displayName").value("Tester"))

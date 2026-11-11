@@ -125,7 +125,7 @@ function renderRoundRobinCard(roundRobin) {
          data-session-round-robin-root="true"
          data-session-round-robin-id="${roundRobin.roundRobinId || '88'}"
          data-session-round-robin-current-round="${roundRobin.currentRound}">
-      <div class="card-header card-header-title text-center">Your Round Robin</div>
+      <div class="card-header card-header-title text-center">Your round robin</div>
       <div class="card-body d-grid gap-3">
         <div class="text-center">
           <div class="fw-semibold">
@@ -178,7 +178,7 @@ function renderStandingsCard(players, options = {}) {
          data-session-season-id="11"
          data-session-current-user-id="${currentUserId}">
       <div class="card-header card-header-title d-flex justify-content-between align-items-center">
-        <span>Session Standings</span>
+        <span>Session standings</span>
         <div class="session-standings-header-tools"></div>
       </div>
       ${includeCollapse ? `<div id="${collapseId}" class="collapse show">${cardBody}</div>` : cardBody}

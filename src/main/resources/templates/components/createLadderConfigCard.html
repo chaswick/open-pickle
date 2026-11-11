@@ -2,7 +2,7 @@
 <div th:fragment="createLadderConfigCard"
      th:with="visibleMemberships=${selectorMemberships != null ? selectorMemberships : myMemberships}">
   <div class="card mb-3 text-start text-center">
-    <div class="card-header card-header-title">Manage Leagues</div>
+    <div class="card-header card-header-title">Manage leagues</div>
     <div class="card-body">
       <p class="mb-3 text-muted" th:if="${visibleMemberships != null and !#lists.isEmpty(visibleMemberships)}">
         Create a new league, or view your existing leagues below.
@@ -33,16 +33,16 @@
       <div class="btn-group-card">
         <a class="btn btn-nav-primary btn-card-width" href="/groups/new"
            th:href="${groupHubReturnTo != null} ? @{/groups/new(returnTo=${groupHubReturnTo})} : @{/groups/new}">
-          Create League
+          Create league
         </a>
       </div>
       
       <div th:if="${visibleMemberships != null and !#lists.isEmpty(visibleMemberships)}" class="mt-4 text-start">
-        <h6 class="text-muted mb-2">Your Leagues</h6>
+        <h6 class="text-muted mb-2">Your leagues</h6>
         <ul class="list-group">
           <li class="list-group-item d-flex justify-content-between align-items-center" th:each="m : ${visibleMemberships}">
             <div class="d-flex flex-column gap-1">
-              <a class="link-contrast fw-semibold" th:href="@{'/groups/' + ${m.ladderConfig.id}}" th:text="${m.ladderConfig.title}">Group Title</a>
+              <a class="link-contrast fw-semibold" th:href="@{'/groups/' + ${m.ladderConfig.id}}" th:text="${m.ladderConfig.title}">Group title</a>
               <span class="small text-muted" th:if="${m.ladderConfig.type != null and m.ladderConfig.type.name() == 'SESSION'}">
                 Temporary match session
               </span>
@@ -67,7 +67,7 @@
               th:each="lad : ${restorableLadders}">
               <div class="me-md-3">
                 <div class="d-flex align-items-center gap-2">
-                  <strong th:text="${lad.title}">Group Title</strong>
+                  <strong th:text="${lad.title}">Group title</strong>
                   <span class="badge text-bg-warning">Pending deletion</span>
                 </div>
                 <div class="text-muted small mt-1">

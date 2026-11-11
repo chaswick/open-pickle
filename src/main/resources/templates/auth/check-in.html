@@ -3,19 +3,19 @@
     layout:decorate="~{layouts/authenticated}">
 
 <head>
-    <title layout:fragment="title">Check In</title>
+    <title layout:fragment="title">Check in</title>
 </head>
 
 <body>
     <div layout:fragment="content" class="app-home check-in-page" th:attr="data-autostart=${autoStartCheckIn}">
         <section class="app-hero">
             <div class="app-hero-card">
-                <h1 class="app-hero-title">Check In</h1>
+                <h1 class="app-hero-title">Check in</h1>
                 <p class="app-hero-subtitle" th:if="${checkInPage.activeCheckIn == null}">
                     Share where you're playing and see who else is there.
                 </p>
                 <div class="app-hero-subtitle" th:if="${checkInPage.activeCheckIn != null}">
-                    <div class="fw-semibold" th:text="${checkInPage.activeCheckIn.locationName}">Current Location</div>
+                    <div class="fw-semibold" th:text="${checkInPage.activeCheckIn.locationName}">Current location</div>
                     <div>
                         Checked in until
                         <span th:text="${checkInPage.activeCheckIn.expiresAtLabel}">Mar 15, 8:30 PM</span>
@@ -27,14 +27,14 @@
         <div th:replace="~{components/back-button :: back-button(@{/competition/sessions}, 'Back')}"></div>
 
         <div class="card mb-4 shadow card-spotlight">
-            <div class="card-header card-header-title text-center">Use Current Location</div>
+            <div class="card-header card-header-title text-center">Use current location</div>
             <div class="card-body">
                 <p class="text-muted small mb-3" th:if="${checkInPage.activeCheckIn == null}">
                     We only request your location after you tap the button. Each check-in stays active for
                     <span th:text="${checkInExpiryLabel}">3 hours</span>.
                 </p>
                 <p class="form-text mt-n1 mb-3">
-                    Tip: Check In works best after installing <span th:text="${branding.appName}">the app</span> to your home screen and allowing location
+                    Tip: Check in works best after installing <span th:text="${branding.appName}">the app</span> to your home screen and allowing location
                     access for the app.
                 </p>
                 <p class="text-muted small mb-3" th:if="${checkInPage.activeCheckIn != null}">
@@ -44,16 +44,16 @@
                 <button class="btn btn-action-primary btn-lg w-100"
                         id="checkInStartButton"
                         type="button"
-                        th:attr="data-default-label=${checkInPage.activeCheckIn != null ? 'Update My Check-In' : 'Check In Using My Location'}">
+                        th:attr="data-default-label=${checkInPage.activeCheckIn != null ? 'Update my check-in' : 'Check in using my location'}">
                     <i class="bi bi-geo-alt-fill me-2" aria-hidden="true"></i><span
-                        th:text="${checkInPage.activeCheckIn != null ? 'Update My Check-In' : 'Check In Using My Location'}">Check In Using My Location</span>
+                        th:text="${checkInPage.activeCheckIn != null ? 'Update my check-in' : 'Check in using my location'}">Check in using my location</span>
                 </button>
                 <div class="alert d-none mt-3 mb-0" id="checkInStatus" role="status" aria-live="polite"></div>
             </div>
         </div>
 
         <div class="card mb-4 shadow card-spotlight d-none" id="checkInNameCard">
-            <div class="card-header card-header-title text-center">Name This Location</div>
+            <div class="card-header card-header-title text-center">Name this location</div>
             <div class="card-body">
                 <p class="text-muted small mb-3" id="checkInPromptMessage">
                     Confirm the location name below or enter your own.
@@ -68,7 +68,7 @@
                             th:attr="maxlength=${checkInNameMaxLength}" />
                     </div>
                     <div class="d-grid gap-2 mt-3">
-                        <button class="btn btn-action-primary" type="submit">Finish Check In</button>
+                        <button class="btn btn-action-primary" type="submit">Finish check in</button>
                         <button class="btn btn-nav-secondary" id="checkInCancelButton" type="button">Cancel</button>
                     </div>
                 </form>
@@ -76,7 +76,7 @@
         </div>
 
         <div class="card mb-4 shadow card-spotlight">
-            <div class="card-header card-header-title text-center">Your Locations</div>
+            <div class="card-header card-header-title text-center">Your locations</div>
             <div class="card-body">
                 <p class="text-muted small mb-0" th:if="${#lists.isEmpty(checkInPage.locations)}">
                     Use the button above to add your first location.
@@ -112,7 +112,7 @@
         </div>
 
         <div class="card mb-4 shadow card-spotlight">
-            <div class="card-header card-header-title text-center">Court Flag</div>
+            <div class="card-header card-header-title text-center">Court flag</div>
             <div class="card-body">
                 <p class="text-muted small mb-3">
                     Want people to know which court you are on? Print the <span th:text="${branding.appName}">app</span> flag and set it out so other

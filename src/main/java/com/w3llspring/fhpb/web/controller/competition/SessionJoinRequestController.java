@@ -84,7 +84,7 @@ public class SessionJoinRequestController {
           sessionJoinRequests.listActiveMembers(sessionId, userId);
       return new SessionMembersResponse(
           String.format(
-              "Session Members (%d/%d)", activeMembers.size(), LadderConfig.MAX_SESSION_MEMBERS),
+              "Session members (%d/%d)", activeMembers.size(), LadderConfig.MAX_SESSION_MEMBERS),
           activeMembers.size(),
           activeMembers.stream()
               .map(

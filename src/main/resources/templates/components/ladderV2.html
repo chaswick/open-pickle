@@ -80,19 +80,19 @@
       <div class="position-relative mb-2">
         <div class="d-flex justify-content-center align-items-center gap-2">
           <button th:if="${seasonActive}" id="logMatchVoiceBtn" type="button" class="btn btn-action-success btn-lg d-flex align-items-center justify-content-center p-3"
-            aria-pressed="false" aria-label="Log Match by Voice" style="position:relative;">
+            aria-pressed="false" aria-label="Log match by voice" style="position:relative;">
             <i class="bi bi-mic fs-4" aria-hidden="true"></i>
-            <span id="logMatchVoiceBtnLabel" class="visually-hidden">Log Match</span>
+            <span id="logMatchVoiceBtnLabel" class="visually-hidden">Log match</span>
             <span id="logMatchVoiceSpinner" class="ms-2 d-none" aria-hidden="true">
               <span class="spinner-border spinner-border-sm text-warning"></span>
             </span>
           </button>
 
-          <a th:if="${seasonActive}" class="btn btn-action-primary btn-lg d-flex align-items-center justify-content-center p-3" title="Log Match (Classic)"
+          <a th:if="${seasonActive}" class="btn btn-action-primary btn-lg d-flex align-items-center justify-content-center p-3" title="Log match (classic)"
              th:href="${seasonId} != null ? @{/log-match(ladderId=${ladderId}, seasonId=${seasonId})} : @{/log-match(ladderId=${ladderId})}"
-             aria-label="Log Match (Classic)">
+             aria-label="Log match (classic)">
             <i class="bi bi-pencil-square fs-4" aria-hidden="true"></i>
-            <span class="visually-hidden">Log Match (Classic)</span>
+            <span class="visually-hidden">Log match (classic)</span>
           </a>
         </div>
 

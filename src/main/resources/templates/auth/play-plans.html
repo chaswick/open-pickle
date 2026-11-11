@@ -3,14 +3,14 @@
     layout:decorate="~{layouts/authenticated}">
 
 <head>
-    <title layout:fragment="title">Play Plans</title>
+    <title layout:fragment="title">Play plans</title>
 </head>
 
 <body>
     <div layout:fragment="content" class="app-page">
         <div class="app-page-header">
             <div>
-                <h1 class="app-page-title">Play Plans</h1>
+                <h1 class="app-page-title">Play plans</h1>
                 <p class="app-page-subtitle">Set up pickup games and RSVP with your group.</p>
             </div>
         </div>
@@ -20,7 +20,7 @@
         <div class="card mb-3 shadow card-spotlight">
             <div class="card-header card-header-title text-center">Notifications</div>
             <div class="card-body">
-                <p class="card-text text-muted mb-3">Get a push notification when new Play Plans are posted</p>
+                <p class="card-text text-muted mb-3">Get a push notification when new Play plans are posted</p>
                 <button type="button" class="btn btn-primary" id="fhpb-enable-playplan-push">Enable notifications</button>
                 <div class="form-text mt-2" id="fhpb-playplan-push-help">Tip: Works best after installing the app to your home screen. Try to enable Settings->Notifications for <span th:text="${branding.appName}">the app</span> if you encounter an issue.</div>
             </div>
@@ -28,7 +28,7 @@
 
         <div th:if="${meetupsEnabled}" th:replace="~{components/meetupsCard :: meetupsCard}"></div>
         <div th:unless="${meetupsEnabled}" class="alert alert-info">
-            Play Plans are currently disabled for this site.
+            Play plans are currently disabled for this site.
         </div>
     </div>
 </body>

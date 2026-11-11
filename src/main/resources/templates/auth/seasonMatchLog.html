@@ -6,7 +6,7 @@
       layout:decorate="~{layouts/authenticated}">
 
 <head>
-  <title layout:fragment="title" th:text="${recentOnly} ? 'Recent Match Log' : 'Season Match Log'">Season Match Log</title>
+  <title layout:fragment="title" th:text="${recentOnly} ? 'Recent match log' : 'Season match log'">Season match log</title>
 </head>
 
 <body>
@@ -48,7 +48,7 @@
             </nav>
           </div>
           <div th:if="${#lists.isEmpty(groups)}" class="card mb-3 shadow card-spotlight">
-            <div class="card-header card-header-title">Full Match Log</div>
+            <div class="card-header card-header-title">Full match log</div>
             <div class="card-body text-muted">
               No matches logged for this season yet.
             </div>

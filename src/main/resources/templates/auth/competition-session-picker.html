@@ -30,7 +30,7 @@
                  th:with="sessionConfig=${membership.ladderConfig},
                           owned=${membership.userId != null and sessionConfig != null and membership.userId == sessionConfig.ownerUserId},
                           suggested=${activeCompetitionSessionId != null and sessionConfig != null and activeCompetitionSessionId == sessionConfig.id},
-                          leaveLabel=${owned ? 'End Session' : 'Leave Session'},
+                          leaveLabel=${owned ? 'End session' : 'Leave Session'},
                           leaveConfirm=${owned ? 'End this session and any remaining matchups for everyone? Recorded scores will be saved.' : 'Leave this session?'}">
                 <form method="post"
                       class="competition-session-dismiss-form m-0"

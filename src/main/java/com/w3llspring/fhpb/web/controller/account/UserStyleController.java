@@ -185,7 +185,7 @@ public class UserStyleController {
 		if (!StringUtils.hasText(displayName)) {
 			return "Account";
 		}
-		return displayName + "'s Account";
+		return displayName + "'s account";
 	}
 
 	private String buildAccountPageSubtitle(String displayName, boolean canEditDisplayName) {

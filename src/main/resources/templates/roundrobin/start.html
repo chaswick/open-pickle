@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layouts/authenticated}">
 <head>
-    <title layout:fragment="title">Start Round-Robin</title>
+    <title layout:fragment="title">Start round-robin</title>
     <style>
         #rounds::-webkit-outer-spin-button,
         #rounds::-webkit-inner-spin-button {
@@ -20,14 +20,14 @@
 <div layout:fragment="content" class="app-page">
     <div class="app-page-header">
         <div>
-            <h1 class="app-page-title">Start Round-Robin</h1>
+            <h1 class="app-page-title">Start round-robin</h1>
             <p class="app-page-subtitle">Choose the players in this group and spin up a round-robin quickly.</p>
         </div>
     </div>
     <div th:replace="~{components/back-button :: back-button(${roundRobinListPath != null ? roundRobinListPath : '/home'}, 'Back')}"></div>
     <div class="container">
         <div class="card mb-4 shadow card-spotlight">
-            <div class="card-header card-header-title text-center">Start Round-Robin</div>
+            <div class="card-header card-header-title text-center">Start round-robin</div>
             <div class="card-body">
                 <div class="alert alert-warning text-start"
                      th:if="${roundRobinStartRestrictionMessage != null}">
@@ -169,7 +169,7 @@
                         <p id="fixedTeamsRoundsHint" class="small text-muted text-center d-none">
                             Fixed teams automatically play every other team once, and require an even number of players.
                         </p>
-                        <button class="btn btn-action-primary btn-workflow-happy w-50" type="submit">Start Round-Robin</button>
+                        <button class="btn btn-action-primary btn-workflow-happy w-50" type="submit">Start round-robin</button>
                     </div>
                 </form>
             </div>

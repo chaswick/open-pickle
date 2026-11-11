@@ -6,7 +6,7 @@
       layout:decorate="~{layouts/authenticated}">
 
 <head>
-  <title layout:fragment="title">Create League</title>
+  <title layout:fragment="title">Create league</title>
 </head>
 
 <body>
@@ -15,8 +15,8 @@
       <div class="app-page-header">
         <div>
           <h1 class="app-page-title"
-              th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start Match Session' : (${tournamentModePreset} ? 'Create Tournament' : 'Create League')">
-            Create League
+              th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start match session' : (${tournamentModePreset} ? 'Create tournament' : 'Create league')">
+            Create league
           </h1>
           <p class="app-page-subtitle"
              th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Create a temporary roster-sharing session that logs into the competition season.' : (${tournamentModePreset} ? 'Create a tournament-ready league with manual seasons and admin-run round robins.' : 'Set up a new league, season mode, and invite settings.')">
@@ -46,8 +46,8 @@
               
               <div class="mb-3">
                 <label class="form-label"
-                       th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Session Name' : (${tournamentModePreset} ? 'Tournament Name' : 'League Name')">
-                  League Name
+                       th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Session name' : (${tournamentModePreset} ? 'Tournament name' : 'League name')">
+                  League name
                 </label>
                 <input type="text" class="form-control" name="title"
                        th:attr="maxlength=${groupTitleMaxLength}"
@@ -91,7 +91,7 @@
 
               
               <div class="mb-3" th:if="${(selectedLadderType == null or selectedLadderType.name() != 'SESSION') and !tournamentModePreset}">
-                <label class="form-label">Season Mode</label>
+                <label class="form-label">Season mode</label>
                 <div class="d-flex flex-wrap gap-2">
                   <select class="form-select w-auto" name="mode" id="modeSelect" required>
                     <option value="ROLLING" selected>Rolling (auto)</option>
@@ -128,7 +128,7 @@
 
               
               <div class="mb-3" th:if="${(selectedLadderType == null or selectedLadderType.name() != 'SESSION') and !tournamentModePreset}">
-                <label class="form-label">Match Confirmation</label>
+                <label class="form-label">Match confirmation</label>
                 <select class="form-select" name="securityLevel" id="securityLevelSelect" required>
                   <option value="STANDARD" selected>Standard (opponent confirms)</option>
                   <option value="SELF_CONFIRM">Casual (self-confirm)</option>
@@ -169,8 +169,8 @@
           <div class="d-grid gap-2">
             <button class="btn btn-action-primary btn-card-width" type="submit"
                     th:disabled="${selectedLadderType != null and selectedLadderType.name() == 'SESSION' and !competitionSeasonAvailable}"
-                    th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start Match Session' : (${tournamentModePreset} ? 'Create Tournament' : 'Create League')">
-              Create League
+                    th:text="${selectedLadderType != null and selectedLadderType.name() == 'SESSION'} ? 'Start match session' : (${tournamentModePreset} ? 'Create tournament' : 'Create league')">
+              Create league
             </button>
             <a class="btn btn-nav-secondary btn-card-width" href="/" th:href="@{/home}" th:if="${!tournamentModePreset}">Cancel</a>
           </div>

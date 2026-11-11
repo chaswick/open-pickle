@@ -614,7 +614,7 @@ public class RoundRobinController {
     model.addAttribute("roundComplete", isRoundComplete(entryViews));
     model.addAttribute("roundRobinComplete", roundRobinComplete);
     model.addAttribute(
-        "standingsTitle", roundRobinComplete ? "Standings (Completed)" : "Standings");
+        "standingsTitle", roundRobinComplete ? "Standings (completed)" : "Standings");
     model.addAttribute("entries", entryViews);
     model.addAttribute("allParticipants", allParticipants);
     model.addAttribute("standings", standings);

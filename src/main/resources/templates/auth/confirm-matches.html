@@ -3,14 +3,14 @@
     layout:decorate="~{layouts/authenticated}">
 
 <head>
-    <title layout:fragment="title">Confirm Matches</title>
+    <title layout:fragment="title">Confirm matches</title>
 </head>
 
 <body>
     <div layout:fragment="content" class="app-page">
         <div class="app-page-header">
             <div>
-                <h1 class="app-page-title">Confirm Matches</h1>
+                <h1 class="app-page-title">Confirm matches</h1>
                 <p class="app-page-subtitle">Review your pending match results and confirm the scores.</p>
             </div>
         </div>
@@ -18,7 +18,7 @@
         <div th:replace="~{components/back-button :: back-button(@{/competition/sessions}, 'Back')}"></div>
 
         <div class="card mb-4 shadow card-spotlight">
-            <div class="card-header card-header-title text-center">Player Dashboard</div>
+            <div class="card-header card-header-title text-center">Player dashboard</div>
             <div class="card-body">
                 <div th:replace="~{components/matchDashboard :: matchDashboard}"></div>
             </div>

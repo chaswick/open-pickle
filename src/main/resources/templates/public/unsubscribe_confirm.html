@@ -3,7 +3,7 @@
 <head>
     <div th:replace="~{components/head-analytics :: google-analytics}"></div>
     <div th:replace="~{components/head-external :: fonts}"></div>
-    <title th:text="|Confirm Unsubscribe - ${branding.appName}|">Confirm Unsubscribe</title>
+    <title th:text="|Confirm unsubscribe - ${branding.appName}|">Confirm unsubscribe</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: Roboto, "Helvetica Neue", "Segoe UI", Arial, sans-serif; background-color: #f4f4f4; padding: 20px; text-align: center; }
@@ -17,8 +17,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>Confirm Unsubscribe</h1>
-        <p>You are about to stop receiving <span th:text="${branding.appName}">the app</span> Play Plans emails.</p>
+        <h1>Confirm unsubscribe</h1>
+        <p>You are about to stop receiving <span th:text="${branding.appName}">the app</span> Play plans emails.</p>
         <form method="post" action="/meetups/unsubscribe" th:action="@{/meetups/unsubscribe}">
             <input type="hidden" name="token" th:value="${token}">
             <div class="actions">

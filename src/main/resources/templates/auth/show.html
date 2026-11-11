@@ -674,10 +674,10 @@
                   type="button"
                   class="btn btn-action-success d-flex align-items-center justify-content-center px-3 py-2 session-hero-action-voice"
                   aria-pressed="false"
-                  aria-label="Log Match by Voice"
+                  aria-label="Log match by voice"
                   style="position:relative;">
             <i class="bi bi-mic fs-5" aria-hidden="true"></i>
-            <span id="logMatchVoiceBtnLabel" class="ms-2">Voice Log</span>
+            <span id="logMatchVoiceBtnLabel" class="ms-2">Voice log</span>
             <span id="logMatchVoiceSpinner" class="ms-2 d-none" aria-hidden="true">
               <span class="spinner-border spinner-border-sm text-warning"></span>
             </span>
@@ -686,20 +686,20 @@
              th:unless="${targetSeason != null}"
              href="#"
              aria-disabled="true">
-            Voice Log
+            Voice log
           </a>
           <a class="btn btn-action-primary d-inline-flex align-items-center session-hero-action-classic"
              th:if="${targetSeason != null}"
-             title="Log Match (Classic)"
+             title="Log match (classic)"
              th:href="@{/log-match(ladderId=${ladder.id}, seasonId=${targetSeason.id}, returnTo=${'/groups/' + ladder.id})}"
-             aria-label="Log Match (Classic)">
-            Log Match
+             aria-label="Log match (classic)">
+            Log match
           </a>
           <a class="btn btn-action-primary disabled d-inline-flex align-items-center session-hero-action-classic"
              th:unless="${targetSeason != null}"
              href="#"
              aria-disabled="true">
-            Log Match
+            Log match
           </a>
         </div>
 
@@ -710,12 +710,12 @@
            th:if="${isSessionLadder and sessionTourVariant != null}"
            data-onboarding-guide
            th:attr="data-onboarding-url=@{/groups/session-tour-complete}, data-onboarding-tour=${sessionTourVariant}">
-      <div class="card-header card-header-title text-center"><h2 class="card-section-title" th:text="${sessionTourVariant == 'owner' ? 'Your Session Is Ready' : 'You Are In The Session'}">Your Session Is Ready</h2></div>
+      <div class="card-header card-header-title text-center"><h2 class="card-section-title" th:text="${sessionTourVariant == 'owner' ? 'Your session is ready' : 'You are in the session'}">Your session is ready</h2></div>
     <div class="card-body text-start">
 
         <p th:if="${sessionTourVariant == 'owner'}">Share the code, QR, or link below so your friends can join this session.</p>
         <p th:if="${sessionTourVariant == 'joiner' and ladder.matchupSession}">Your matchups and results are below.</p>
-        <p th:if="${sessionTourVariant == 'joiner' and !ladder.matchupSession}">Use <strong>Log Match</strong> to record a game with the people in this session.</p>
+        <p th:if="${sessionTourVariant == 'joiner' and !ladder.matchupSession}">Use <strong>Log match</strong> to record a game with the people in this session.</p>
         <p th:unless="${ladder.organizerScored}">One opponent confirms each result from Inbox. Confirmed matches update the standings.</p>
         <button type="button" class="btn btn-nav-secondary btn-sm" data-onboarding-dismiss>Dismiss tips</button>
         <p class="small text-danger mb-0 mt-2" data-onboarding-error role="status" hidden></p>

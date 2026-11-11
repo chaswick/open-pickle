@@ -6,7 +6,7 @@
       layout:decorate="~{layouts/authenticated}">
 
 <head>
-  <title layout:fragment="title">Log Match</title>
+  <title layout:fragment="title">Log match</title>
   
   
   <style>
@@ -285,13 +285,13 @@
        th:attr="data-player-picker-mode=${useSearchablePlayerPicker == true ? 'search' : 'native'}">
     
     <div class="app-page-header"><div>
-      <h1 class="app-page-title" th:text="${editMode == true ? 'Edit match' : (voiceReviewMode == true ? 'Review match' : 'Log Match')}">Log Match</h1>
+      <h1 class="app-page-title" th:text="${editMode == true ? 'Edit match' : (voiceReviewMode == true ? 'Review match' : 'Log match')}">Log match</h1>
     </div></div>
     <div th:replace="~{components/back-button :: back-button(${returnToRoundRobinId != null} ? @{/round-robin/view/{id}(id=${returnToRoundRobinId},round=${returnToRoundRobinRound})} : (${returnToPath != null} ? @{${returnToPath}} : (${competitionLogMode} ? @{/competition/log-match(ladderId=${ladderId})} : @{/private-groups/{ladderId}(ladderId=${ladderId},seasonId=${seasonId})})), 'Back')}"></div>
 
     <div th:if="${editMode}" class="alert alert-info mb-3" role="alert">
       <i class="bi bi-pencil-square me-2"></i>
-      <strong>Editing Match</strong>
+      <strong>Editing match</strong>
       <span th:if="${match != null}"> #<span th:text="${match.id}">123</span></span>
     </div>
     
@@ -532,7 +532,7 @@
 
       <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center log-match-actions">
   <button type="submit" class="btn btn-action-primary btn-lg" 
-    th:text="${editMode == true ? 'Update Match' : 'Log Match'}">Log Match</button>
+    th:text="${editMode == true ? 'Update match' : 'Log match'}">Log match</button>
         <a th:href="${returnToRoundRobinId != null}
                       ? @{/round-robin/view/{id}(id=${returnToRoundRobinId},round=${returnToRoundRobinRound})}
                       : (${returnToPath != null}

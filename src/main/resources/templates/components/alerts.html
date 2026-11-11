@@ -6,7 +6,7 @@
          class="alert mb-3 border-2 shadow-sm"
          th:classappend="${competitionAutoModStatus.bannerVariant == 'danger'} ? ' alert-danger' : (${competitionAutoModStatus.bannerVariant == 'warning'} ? ' alert-warning' : ' alert-info')"
          role="alert">
-        <div class="fw-semibold" th:text="${competitionAutoModStatus.bannerTitle}">Competition Match Lockout</div>
+        <div class="fw-semibold" th:text="${competitionAutoModStatus.bannerTitle}">Competition match lockout</div>
         <div th:text="${competitionAutoModStatus.bannerMessage}">
             You cannot be included in competition matches again until the next season starts.
         </div>

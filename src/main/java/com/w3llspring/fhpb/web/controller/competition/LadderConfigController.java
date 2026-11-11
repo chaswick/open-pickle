@@ -785,7 +785,7 @@ public class LadderConfigController {
         "memberSectionTitle",
         cfg.isSessionType()
             ? String.format(
-                "Session Members (%d/%d)", activeMemberCount, LadderConfig.MAX_SESSION_MEMBERS)
+                "Session members (%d/%d)", activeMemberCount, LadderConfig.MAX_SESSION_MEMBERS)
             : String.format("Members (%d/%d)", activeMemberCount, defaultMaxMembers));
     model.addAttribute("maxRollingEveryCount", LadderConfig.MAX_ROLLING_EVERY_COUNT);
     model.addAttribute("storyModeFeatureEnabled", storyModeFeatureEnabled());

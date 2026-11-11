@@ -3,14 +3,14 @@
 
 <head>
   <title layout:fragment="title"
-         th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join a session' : 'Join Group'">Join Group</title>
+         th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join a session' : 'Join group'">Join group</title>
   <meta layout:fragment="meta-tags">
 </head>
 
 <body>
   <main layout:fragment="content" class="app-page">
     <div class="app-page-header"><div>
-      <h1 class="app-page-title" th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join a session' : 'Join Group'">Join Group</h1>
+      <h1 class="app-page-title" th:text="${sessionApprovalMode == true or sessionJoinContext == true} ? 'Join a session' : 'Join group'">Join group</h1>
     </div></div>
     <div th:replace="~{components/back-button :: back-button(${returnToPath != null} ? @{${returnToPath}} : @{/home}, 'Back')}"></div>
 
@@ -60,7 +60,7 @@
             <div class="card-header card-header-title" th:if="${sessionApprovalMode == true or sessionJoinContext == true}">
               Join with a code
             </div>
-            <div class="card-header card-header-title" th:unless="${sessionApprovalMode == true or sessionJoinContext == true}">Invite Code</div>
+            <div class="card-header card-header-title" th:unless="${sessionApprovalMode == true or sessionJoinContext == true}">Invite code</div>
             <div class="card-body">
               <p class="fw-semibold" th:if="${inviteSessionDateLabel != null and !#strings.isEmpty(inviteSessionDateLabel)}"
                  th:text="${inviteSessionDateLabel}">Upcoming · Sat, Nov 7</p>
