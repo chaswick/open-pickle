@@ -8,6 +8,7 @@
   // confirmations, live matchups, score dialogs, and player pickers all add names dynamically.
   var nameSelectors = [
     '[data-translation-name]', '.player-link', '.nav-user-link', '.player-name-label',
+    '.session-player-id', '.identity-code-value', '.competition-public-code',
     'a[href^="/account?member="]', '.site-footer-brand', '.navbar-brand',
     '.matchups-player-chips li', '.matchups-team > span', '.matchups-byes > span',
     '.matchups-result-players > li > span',

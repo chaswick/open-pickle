@@ -47,6 +47,9 @@ class RegistrationBindingSecurityTest {
     RegistrationFormTokenService tokens = new RegistrationFormTokenService("test-secret", "", 360);
     DisplayNameModerationService names = displayName -> Optional.empty();
     ReflectionTestUtils.setField(controller, "userRepo", users);
+    ReflectionTestUtils.setField(controller, "userCreationService",
+        new com.w3llspring.fhpb.web.service.user.UserCreationService(users,
+            mock(org.springframework.transaction.PlatformTransactionManager.class)));
     ReflectionTestUtils.setField(controller, "registrationAbuseGuard", guard);
     ReflectionTestUtils.setField(controller, "registrationFormTokenService", tokens);
     ReflectionTestUtils.setField(controller, "passwordPolicyService", new PasswordPolicyService());
@@ -95,7 +98,9 @@ class RegistrationBindingSecurityTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/home"));
 
-    assertThat(submitted.get()).isEqualTo(new SubmittedAccount(null, false, 10, null, null, false));
+    assertThat(submitted.get().publicCode()).matches("[a-z]{3,6}-[a-z]{3,6}-[a-z]{3,6}");
+    assertThat(submitted.get()).isEqualTo(
+        new SubmittedAccount(null, false, 10, submitted.get().publicCode(), null, false));
   }
 
   private record SubmittedAccount(

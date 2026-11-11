@@ -28,7 +28,7 @@ public class User {
   private String nickName;
 
   @JsonIgnore
-  @Column(name = "public_code", unique = true, length = 17)
+  @Column(name = "public_code", unique = true, length = 24)
   private String publicCode;
 
   @Transient // This field is not persisted, just used during registration

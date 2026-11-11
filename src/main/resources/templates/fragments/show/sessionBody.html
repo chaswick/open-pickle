@@ -82,7 +82,7 @@
                 <div class="flex-grow-1 min-w-0">
                   <div class="d-flex flex-wrap align-items-center gap-2">
                     <strong th:text="${request.requesterDisplayName}">Player</strong>
-                    <span class="badge bg-light text-dark border"
+                    <span class="badge bg-light text-dark border notranslate" translate="no"
                           th:if="${request.requesterPublicCode != null and !#strings.isEmpty(request.requesterPublicCode)}"
                           th:text="${request.requesterPublicCode}">CODE</span>
                   </div>

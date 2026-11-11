@@ -129,6 +129,14 @@ replaces the previous one. Public member IDs, names, and shared session invites 
 recover an account. If both the device credential and private recovery code are lost,
 the player must join with a new account.
 
+New public member IDs use three different short words, for example
+`calm-ruby-paddle` (1,070,598,144 combinations from 1,024 bundled words). Existing
+IDs stay unchanged. The word list is adapted from [EFF's Short Wordlist #1](https://www.eff.org/files/2016/09/08/eff_short_wordlist_1.txt);
+attribution and the CC BY 4.0 license are included in `src/main/resources/META-INF/licenses/member-code-words.LICENSE`.
+Normal registration and name-only joining check availability and retry
+the entire creation transaction if another signup takes the same code. The database
+unique constraint remains the final guarantee; other signup errors are not retried.
+
 Players can also connect an email from Account Settings. A small reminder appears on
 User Account once a name-only account is seven days old; **Not now** hides it
 for another seven days. A confirmation email contains a single-use, 30-minute link;

@@ -18,18 +18,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest(
     properties = {
       "fhpb.security.remember-me.key=player-access-integration-test-key",
       "server.servlet.session.cookie.secure=false",
-      "fhpb.security.guest-access.enabled=true"
+      "fhpb.security.guest-access.enabled=true",
+      "spring.datasource.url=jdbc:h2:mem:playeraccess;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE"
     })
 @AutoConfigureMockMvc
-@Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class PlayerAccessIntegrationTest {
   @Autowired MockMvc mvc;
   @Autowired UserRepository users;
@@ -56,9 +57,11 @@ class PlayerAccessIntegrationTest {
     session.setTitle("Friends on Sunday");
     session.setType(LadderConfig.Type.SESSION);
     session.setSessionPlayMode(LadderConfig.SessionPlayMode.MATCHUPS);
-    session.setInviteCode("FRESH-COURT-42");
+    session.setInviteCode(
+        "FRESH-COURT-"
+            + UUID.randomUUID().toString().substring(0, 8).toUpperCase(java.util.Locale.ROOT));
     session.setExpiresAt(Instant.now().plusSeconds(172800));
-    sessions.saveAndFlush(session);
+    session = sessions.saveAndFlush(session);
     var member = new LadderMembership();
     member.setLadderConfig(session);
     member.setUserId(owner.getId());
@@ -99,7 +102,8 @@ class PlayerAccessIntegrationTest {
                 .param("inviteCode", session.getInviteCode())
                 .param("autoJoin", "true"))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/join/session?inviteCode=FRESH-COURT-42&direct=true"));
+        .andExpect(
+            redirectedUrl("/join/session?inviteCode=" + session.getInviteCode() + "&direct=true"));
     mvc.perform(get("/join/session").param("inviteCode", session.getInviteCode()))
         .andExpect(status().isOk())
         .andExpect(
@@ -114,7 +118,7 @@ class PlayerAccessIntegrationTest {
     assertThat(user.isNameOnlyAccount()).isTrue();
     assertThat(user.isAdmin()).isFalse();
     assertThat(user.getNickName()).isEqualTo("Yuki");
-    assertThat(user.getPublicCode()).startsWith("PB-");
+    assertThat(user.getPublicCode()).matches("[a-z]{3,6}-[a-z]{3,6}-[a-z]{3,6}");
     assertThat(user.getAcknowledgedTermsAt()).isNotNull();
     assertThat(new BCryptPasswordEncoder().matches(user.getPassword(), user.getPassword()))
         .isFalse();
@@ -181,6 +185,28 @@ class PlayerAccessIntegrationTest {
     assertThat(users.findById(first.getId()).orElseThrow().getNickName())
         .isEqualTo(owner.getNickName());
     assertThat(users.findById(second.getId()).orElseThrow().getNickName()).isEqualTo("Alex");
+  }
+
+  @Test
+  void quickJoinRetriesAnOccupiedMemberCodeWithoutDuplicatingTheAccountOrMembership()
+      throws Exception {
+    long accountsBefore = users.count();
+    long membersBefore = memberships.count();
+    try (var codes =
+        org.mockito.Mockito.mockStatic(
+            com.w3llspring.fhpb.web.service.user.UserPublicCodeGenerator.class,
+            org.mockito.Mockito.CALLS_REAL_METHODS)) {
+      codes
+          .when(com.w3llspring.fhpb.web.service.user.UserPublicCodeGenerator::nextCode)
+          .thenReturn(owner.getPublicCode(), "calm-ruby-paddle");
+      User created = joined(join("Alex"));
+      assertThat(created.getPublicCode()).isEqualTo("calm-ruby-paddle");
+      assertThat(created.getId()).isNotEqualTo(owner.getId());
+      assertThat(users.count()).isEqualTo(accountsBefore + 1);
+      assertThat(memberships.count()).isEqualTo(membersBefore + 1);
+      assertThat(users.findById(owner.getId()).orElseThrow().getPublicCode())
+          .isEqualTo(owner.getPublicCode());
+    }
   }
 
   @Test
@@ -286,7 +312,7 @@ class PlayerAccessIntegrationTest {
   void invalidExpiredOrDisabledInvitesNeverCreateAccounts() throws Exception {
     long before = users.count();
     session.setExpiresAt(Instant.now().minusSeconds(1));
-    sessions.saveAndFlush(session);
+    session = sessions.saveAndFlush(session);
     mvc.perform(
             post("/join/session")
                 .with(csrf())
@@ -297,9 +323,10 @@ class PlayerAccessIntegrationTest {
         .andExpect(status().isOk());
     assertThat(users.count()).isEqualTo(before);
     session.setExpiresAt(Instant.now().plusSeconds(3600));
+    String oldInvite = session.getInviteCode();
     session.setInviteCode(null);
-    sessions.saveAndFlush(session);
-    assertThatThrownBy(() -> players.createAndJoin("FRESH-COURT-42", "Late", true, true))
+    session = sessions.saveAndFlush(session);
+    assertThatThrownBy(() -> players.createAndJoin(oldInvite, "Late", true, true))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(users.count()).isEqualTo(before);
   }

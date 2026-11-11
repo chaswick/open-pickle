@@ -10,6 +10,7 @@ import com.w3llspring.fhpb.web.service.auth.RegistrationAbuseGuard;
 import com.w3llspring.fhpb.web.service.auth.RegistrationFormTokenService;
 import com.w3llspring.fhpb.web.service.user.DisplayNameModerationService;
 import com.w3llspring.fhpb.web.service.user.UserAccountSettingsService;
+import com.w3llspring.fhpb.web.service.user.UserCreationService;
 import com.w3llspring.fhpb.web.util.InputValidation;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import jakarta.servlet.http.HttpServletRequest;
@@ -52,6 +53,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 public class UserController {
   private static final Logger log = LoggerFactory.getLogger(UserController.class);
   @Autowired private UserRepository userRepo;
+  @Autowired private UserCreationService userCreationService;
 
   @Autowired private UserAccountSettingsService userAccountSettingsService;
 
@@ -338,7 +340,7 @@ public class UserController {
     }
 
     try {
-      userRepo.saveAndFlush(user);
+      user = userCreationService.register(user);
     } catch (DataIntegrityViolationException e) {
       String message =
           Optional.ofNullable(e.getMostSpecificCause()).map(Throwable::getMessage).orElse("");

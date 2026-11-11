@@ -39,6 +39,8 @@ class RoundRobinTrophyAwardIntegrationTest {
   private LadderSeason season;
   private Map<String, Trophy> definitions;
   private int gameNumber;
+  private static final java.util.concurrent.atomic.AtomicInteger MEMBER_SEQUENCE =
+      new java.util.concurrent.atomic.AtomicInteger();
 
   private <T> T tx(Supplier<T> work) {
     T result = new TransactionTemplate(transactions).execute(s -> work.get());
@@ -65,6 +67,9 @@ class RoundRobinTrophyAwardIntegrationTest {
             user.setEmail("rr-" + suffix + i + "@test.local");
             user.setNickName("P" + suffix + i);
             user.setPassword("unused");
+            user.setPublicCode(
+                String.format(
+                    java.util.Locale.ROOT, "PB-test-user-%06d", MEMBER_SEQUENCE.incrementAndGet()));
             people.add(users.save(user));
           }
           LadderConfig league = new LadderConfig();

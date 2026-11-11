@@ -105,6 +105,12 @@ class UserControllerTest {
     DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
 
     ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(
+        controller,
+        "userCreationService",
+        new com.w3llspring.fhpb.web.service.user.UserCreationService(
+            userRepository,
+            mock(org.springframework.transaction.PlatformTransactionManager.class)));
     ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
     ReflectionTestUtils.setField(
         controller, "registrationFormTokenService", registrationFormTokenService);
@@ -174,6 +180,12 @@ class UserControllerTest {
     DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
 
     ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(
+        controller,
+        "userCreationService",
+        new com.w3llspring.fhpb.web.service.user.UserCreationService(
+            userRepository,
+            mock(org.springframework.transaction.PlatformTransactionManager.class)));
     ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
     ReflectionTestUtils.setField(
         controller, "registrationFormTokenService", registrationFormTokenService);
@@ -236,6 +248,12 @@ class UserControllerTest {
     DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
 
     ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(
+        controller,
+        "userCreationService",
+        new com.w3llspring.fhpb.web.service.user.UserCreationService(
+            userRepository,
+            mock(org.springframework.transaction.PlatformTransactionManager.class)));
     ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
     ReflectionTestUtils.setField(
         controller, "registrationFormTokenService", registrationFormTokenService);
@@ -306,6 +324,12 @@ class UserControllerTest {
     DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
 
     ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(
+        controller,
+        "userCreationService",
+        new com.w3llspring.fhpb.web.service.user.UserCreationService(
+            userRepository,
+            mock(org.springframework.transaction.PlatformTransactionManager.class)));
     ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
     ReflectionTestUtils.setField(
         controller, "registrationFormTokenService", registrationFormTokenService);
@@ -367,6 +391,12 @@ class UserControllerTest {
     DisplayNameModerationService displayNameModerationService = displayName -> Optional.empty();
 
     ReflectionTestUtils.setField(controller, "userRepo", userRepository);
+    ReflectionTestUtils.setField(
+        controller,
+        "userCreationService",
+        new com.w3llspring.fhpb.web.service.user.UserCreationService(
+            userRepository,
+            mock(org.springframework.transaction.PlatformTransactionManager.class)));
     ReflectionTestUtils.setField(controller, "registrationAbuseGuard", registrationAbuseGuard);
     ReflectionTestUtils.setField(
         controller, "registrationFormTokenService", registrationFormTokenService);

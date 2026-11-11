@@ -52,6 +52,23 @@ describe('optional automatic display translation', () => {
     expect(document.querySelector('[name=scoreA]').value).toBe('11');
   });
 
+  it('preserves three-word member IDs in initial content and inserted fragments', async () => {
+    const document = page('<small class="session-player-id">calm-ruby-paddle</small><p>Round robin</p>');
+    const code = document.querySelector('.session-player-id');
+    expect(code.getAttribute('translate')).toBe('no');
+    expect(code.classList.contains('notranslate')).toBe(true);
+    expect(code.textContent).toBe('calm-ruby-paddle');
+    expect(document.querySelector('p').hasAttribute('translate')).toBe(false);
+    const fresh = document.createElement('span');
+    fresh.className = 'identity-code-value';
+    fresh.textContent = 'bright-maple-otter';
+    document.body.append(fresh);
+    await Promise.resolve();
+    expect(fresh.getAttribute('translate')).toBe('no');
+    expect(fresh.classList.contains('notranslate')).toBe(true);
+    expect(fresh.textContent).toBe('bright-maple-otter');
+  });
+
   it('keeps an English fallback if the provider fails and replaces the placeholder only when ready', async () => {
     const document = page('<h1>Start a session</h1>');
     const provider = document.querySelector('script');

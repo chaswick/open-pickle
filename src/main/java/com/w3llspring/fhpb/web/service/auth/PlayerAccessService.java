@@ -11,6 +11,7 @@ import com.w3llspring.fhpb.web.service.GlobalLadderBootstrapService;
 import com.w3llspring.fhpb.web.service.competition.GroupAdministrationService;
 import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.service.user.DisplayNameModerationService;
+import com.w3llspring.fhpb.web.service.user.UserCreationService;
 import com.w3llspring.fhpb.web.util.InputValidation;
 import com.w3llspring.fhpb.web.util.SessionInviteCodeSupport;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PlayerAccessService {
   private static final SecureRandom RANDOM = new SecureRandom();
   private final UserRepository users;
+  private final UserCreationService userCreation;
   private final LadderConfigRepository sessions;
   private final LadderMembershipRepository memberships;
   private final GroupAdministrationService groups;
@@ -39,6 +41,7 @@ public class PlayerAccessService {
 
   public PlayerAccessService(
       UserRepository users,
+      UserCreationService userCreation,
       LadderConfigRepository sessions,
       LadderMembershipRepository memberships,
       GroupAdministrationService groups,
@@ -48,6 +51,7 @@ public class PlayerAccessService {
       @Value("${fhpb.sessions.invite-active-seconds:1800}") long inviteSeconds,
       @Value("${fhpb.ladder.max-per-user:3}") int maxOwned) {
     this.users = users;
+    this.userCreation = userCreation;
     this.sessions = sessions;
     this.memberships = memberships;
     this.groups = groups;
@@ -63,10 +67,13 @@ public class PlayerAccessService {
     return validate(sessions.findByInviteCode(normalize(invite)).orElse(null));
   }
 
-  @Transactional
   public Joined createAndJoin(String invite, String name, boolean acceptTerms, boolean direct) {
     if (!acceptTerms) throw new IllegalArgumentException("Please agree to the terms to join.");
     String cleanName = InputValidation.requireDisplayName(name, moderation);
+    return userCreation.create(code -> createAndJoinOnce(invite, cleanName, direct, code));
+  }
+
+  private Joined createAndJoinOnce(String invite, String cleanName, boolean direct, String code) {
     LadderConfig found = preview(invite);
     LadderConfig session = validate(sessions.lockById(found.getId()));
     if (memberships
@@ -76,6 +83,7 @@ public class PlayerAccessService {
         >= LadderConfig.MAX_SESSION_MEMBERS)
       throw new IllegalArgumentException("This session is full. Ask the organizer for help.");
     User user = new User();
+    user.setPublicCode(code);
     user.setNameOnlyAccount(true);
     user.setEmail(UUID.randomUUID().toString().replace("-", "") + "@g.invalid");
     user.setPassword(newInternalCredential());
