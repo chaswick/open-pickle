@@ -56,6 +56,7 @@ class SessionJoinRequestControllerTest {
 
   @Test
   void membersReturnsActiveRosterForSessionPageRefresh() throws Exception {
+    when(sessionJoinRequests.memberLimit(42L)).thenReturn(32);
     when(sessionJoinRequests.listActiveMembers(42L, 123L))
         .thenReturn(
             List.of(

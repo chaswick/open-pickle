@@ -28,6 +28,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   private final LadderInviteGenerator generator;
   private final UserRepository userRepo;
   private final SessionLifecycleService sessionLifecycleService;
+  private final SessionCapacityService capacity;
   private final int defaultMaxMembers;
   private final long inviteChangeCooldownSeconds;
   private final String siteWideAdminEmail;
@@ -38,6 +39,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
       LadderInviteGenerator generator,
       UserRepository userRepo,
       SessionLifecycleService sessionLifecycleService,
+      SessionCapacityService capacity,
       @Value("${fhpb.ladder.max-members:20}") int defaultMaxMembers,
       @Value("${fhpb.invites.change-cooldown-seconds:30}") long inviteChangeCooldownSeconds,
       @Value("${fhpb.bootstrap.admin.email:}") String siteWideAdminEmail) {
@@ -46,6 +48,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
     this.generator = generator;
     this.userRepo = userRepo;
     this.sessionLifecycleService = sessionLifecycleService;
+    this.capacity = capacity;
     this.defaultMaxMembers = defaultMaxMembers;
     this.inviteChangeCooldownSeconds = inviteChangeCooldownSeconds;
     this.siteWideAdminEmail = siteWideAdminEmail;
@@ -97,6 +100,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
             .orElseThrow(() -> new IllegalArgumentException("Invalid invite code"));
 
     LadderConfig locked = configs.lockById(cfg.getId());
+    if (locked.isSessionType()) capacity.refreshLockedSession(locked);
 
     if (locked.getStatus() != LadderConfig.Status.ACTIVE) {
       throw new IllegalArgumentException("Invalid invite code");
@@ -110,9 +114,13 @@ public class GroupAdministrationService implements GroupAdministrationOperations
       throw new IllegalStateException("This match session has expired.");
     }
 
-    var existing = memberships.findByLadderConfigIdAndUserId(locked.getId(), userId);
+    if (locked.isSessionType()) capacity.fillVacancies(locked);
+    var existing =
+        locked.isSessionType()
+            ? memberships.lockMember(locked.getId(), userId)
+            : memberships.findByLadderConfigIdAndUserId(locked.getId(), userId);
     boolean enforceMemberCap = locked.getType() != LadderConfig.Type.COMPETITION;
-    int memberLimit = locked.isSessionType() ? LadderConfig.MAX_SESSION_MEMBERS : defaultMaxMembers;
+    int memberLimit = locked.isSessionType() ? locked.getSessionMemberLimit() : defaultMaxMembers;
     if (existing.isPresent()) {
       LadderMembership membership = existing.get();
       switch (membership.getState()) {
@@ -123,10 +131,11 @@ public class GroupAdministrationService implements GroupAdministrationOperations
         case LEFT:
           if (enforceMemberCap) {
             long activeCount =
-                memberships
-                    .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
-                        locked.getId(), LadderMembership.State.ACTIVE)
-                    .size();
+                (locked.isSessionType()
+                        ? memberships.lockActiveMembers(locked.getId())
+                        : memberships.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+                            locked.getId(), LadderMembership.State.ACTIVE))
+                    .stream().filter(member -> locked.isSessionPlayer(member.getUserId())).count();
             if (activeCount >= memberLimit) {
               throw new IllegalStateException("Sorry, that group is full.");
             }
@@ -142,10 +151,11 @@ public class GroupAdministrationService implements GroupAdministrationOperations
 
     if (enforceMemberCap) {
       long activeCount =
-          memberships
-              .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
-                  locked.getId(), LadderMembership.State.ACTIVE)
-              .size();
+          (locked.isSessionType()
+                  ? memberships.lockActiveMembers(locked.getId())
+                  : memberships.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
+                      locked.getId(), LadderMembership.State.ACTIVE))
+              .stream().filter(member -> locked.isSessionPlayer(member.getUserId())).count();
       if (activeCount >= memberLimit) {
         throw new IllegalStateException("Sorry, that group is full.");
       }
@@ -164,6 +174,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   @Override
   @Transactional
   public void leaveMember(Long configId, Long requesterUserId, Long membershipId) {
+    lockConfig(configId);
     LadderMembership membership =
         memberships
             .findById(membershipId)
@@ -192,6 +203,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
       membership.setState(LadderMembership.State.LEFT);
       membership.setLeftAt(Instant.now());
       memberships.save(membership);
+      capacity.fillVacancies(membership.getLadderConfig());
 
       if (ownerLeaving && !membership.getLadderConfig().isSessionType()) {
         LadderConfig cfg = membership.getLadderConfig();
@@ -206,6 +218,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   @Override
   @Transactional
   public void banMember(Long configId, Long requesterUserId, Long membershipId) {
+    lockConfig(configId);
     requireAdmin(configId, requesterUserId);
 
     LadderMembership membership =
@@ -238,6 +251,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
   @Override
   @Transactional
   public void removeSessionMember(Long configId, Long requesterUserId, Long membershipId) {
+    lockConfig(configId);
     requireAdmin(configId, requesterUserId);
 
     LadderMembership membership =
@@ -596,6 +610,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
       membership.setState(LadderMembership.State.LEFT);
       membership.setLeftAt(Instant.now());
       memberships.save(membership);
+      capacity.fillVacancies(membership.getLadderConfig());
     }
   }
 
@@ -604,6 +619,7 @@ public class GroupAdministrationService implements GroupAdministrationOperations
     if (cfg == null) {
       throw new IllegalArgumentException("Ladder not found");
     }
+    if (cfg.isSessionType()) capacity.refreshLockedSession(cfg);
     return cfg;
   }
 }

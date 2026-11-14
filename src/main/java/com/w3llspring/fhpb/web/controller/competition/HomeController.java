@@ -1094,6 +1094,7 @@ public class HomeController {
                 .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
                     effective.ladderId, LadderMembership.State.ACTIVE)
                 .stream()
+                .filter(LadderMembership::isPlayingParticipant)
                 .map(LadderMembership::getUserId)
                 .filter(Objects::nonNull)
                 .distinct()

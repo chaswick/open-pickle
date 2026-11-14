@@ -9,6 +9,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface LadderMembershipRepository extends JpaRepository<LadderMembership, Long> {
+  @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+  @Query(
+      "select m from LadderMembership m where m.ladderConfig.id = :configId and m.userId = :userId")
+  Optional<LadderMembership> lockMember(Long configId, Long userId);
+
+  @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+  @Query(
+      "select m from LadderMembership m where m.ladderConfig.id = :configId and m.state = 'ACTIVE' order by m.joinedAt, m.id")
+  List<LadderMembership> lockActiveMembers(Long configId);
+
   Optional<LadderMembership> findByLadderConfigIdAndUserId(Long configId, Long userId);
 
   List<LadderMembership> findByUserIdAndState(Long userId, LadderMembership.State state);

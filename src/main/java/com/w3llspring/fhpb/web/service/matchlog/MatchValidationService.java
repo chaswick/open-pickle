@@ -182,6 +182,7 @@ public class MatchValidationService {
             .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
                 ladderConfigId, LadderMembership.State.ACTIVE)
             .stream()
+            .filter(LadderMembership::isPlayingParticipant)
             .map(LadderMembership::getUserId)
             .filter(Objects::nonNull)
             .collect(Collectors.toCollection(LinkedHashSet::new));

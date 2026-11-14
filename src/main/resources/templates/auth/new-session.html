@@ -79,6 +79,19 @@
              th:value="${sessionName}" th:maxlength="${sessionNameMaxLength}" placeholder="e.g. Amateur Bracket">
       </div>
     </section>
+    <section class="card session-when-card" data-card-collapse="off" aria-labelledby="session-capacity-title">
+      <div class="card-header card-header-title"><h2 id="session-capacity-title" class="card-section-title session-create-step-title"><span class="session-step-number" aria-hidden="true">4</span><label for="session-member-limit" class="mb-0">Player limit</label></h2></div>
+      <div class="card-body">
+        <div class="form-check mb-3">
+          <input id="session-host-playing" type="checkbox" name="hostPlaying" value="true" class="form-check-input"
+                 th:checked="${sessionHostPlaying != false}">
+          <label for="session-host-playing" class="form-check-label">Host is playing</label>
+        </div>
+        <input id="session-member-limit" name="memberLimit" type="number" class="form-control" min="1" max="32"
+               th:value="${sessionMemberLimit}" required inputmode="numeric" aria-describedby="session-capacity-note">
+        <p id="session-capacity-note" class="small text-muted mt-2 mb-0">When full, new players join the waitlist.</p>
+      </div>
+    </section>
     <button type="submit" class="btn btn-action-primary w-100">Create session</button>
   </form>
 </div>

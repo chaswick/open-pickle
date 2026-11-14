@@ -75,6 +75,10 @@ public class SessionMatchupController {
       times.put(time.toString(), time.format(DateTimeFormatter.ofPattern("h:mm a", Locale.US)));
     }
     model.addAttribute("sessionStartTimes", times);
+    if (!model.containsAttribute("sessionMemberLimit"))
+      model.addAttribute("sessionMemberLimit", LadderConfig.MAX_SESSION_MEMBERS);
+    if (!model.containsAttribute("sessionHostPlaying"))
+      model.addAttribute("sessionHostPlaying", true);
     model.addAttribute("sessionNameMaxLength", LadderConfig.MAX_SESSION_NAME_LENGTH);
     model.addAttribute(
         "sessionMaxDate",
@@ -92,13 +96,18 @@ public class SessionMatchupController {
       @RequestParam(required = false) String sessionDate,
       @RequestParam(required = false) String sessionTime,
       @RequestParam(required = false) String sessionName,
+      @RequestParam(defaultValue = "32") int memberLimit,
+      @RequestParam(defaultValue = "false") boolean hostPlaying,
       RedirectAttributes flash) {
     User actor = actor(auth);
+    flash.addFlashAttribute("sessionMemberLimit", memberLimit);
+    flash.addFlashAttribute("sessionHostPlaying", hostPlaying);
     LocalDate plannedDate = null;
     LocalTime plannedTime = null;
     String title = null;
     String problem = null;
     try {
+      new LadderConfig().setSessionMemberLimit(memberLimit);
       if ("LATER".equals(sessionWhen)) {
         plannedDate = LocalDate.parse(sessionDate == null ? "" : sessionDate);
         plannedTime = LocalTime.parse(sessionTime == null ? "" : sessionTime);
@@ -133,6 +142,8 @@ public class SessionMatchupController {
     }
     if (!outcome.reusedExistingSession()) {
       LadderConfig session = sessions.lockById(outcome.configId());
+      session.setSessionMemberLimit(memberLimit);
+      session.setSessionHostPlaying(hostPlaying);
       session.setSessionPlayMode(playMode);
       session.setSecurityLevel(
           playMode == LadderConfig.SessionPlayMode.MATCHUPS && organizerScored
@@ -143,6 +154,51 @@ public class SessionMatchupController {
       message(flash, "You already have an active session. We've opened it for you.", "info");
     }
     return back(outcome.configId());
+  }
+
+  public String create(
+      Authentication auth,
+      LadderConfig.SessionPlayMode playMode,
+      boolean organizerScored,
+      String sessionWhen,
+      String sessionDate,
+      String sessionTime,
+      String sessionName,
+      RedirectAttributes flash) {
+    return create(
+        auth,
+        playMode,
+        organizerScored,
+        sessionWhen,
+        sessionDate,
+        sessionTime,
+        sessionName,
+        LadderConfig.MAX_SESSION_MEMBERS,
+        true,
+        flash);
+  }
+
+  public String create(
+      Authentication auth,
+      LadderConfig.SessionPlayMode playMode,
+      boolean organizerScored,
+      String sessionWhen,
+      String sessionDate,
+      String sessionTime,
+      String sessionName,
+      int memberLimit,
+      RedirectAttributes flash) {
+    return create(
+        auth,
+        playMode,
+        organizerScored,
+        sessionWhen,
+        sessionDate,
+        sessionTime,
+        sessionName,
+        memberLimit,
+        true,
+        flash);
   }
 
   @PostMapping("/{sessionId}/matchups/start")

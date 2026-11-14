@@ -46,6 +46,7 @@ class LadderConfigServiceLeaveBehaviorTest {
   private LadderConfigService service;
   private GroupAdministrationService groupAdministrationService;
   private SessionLifecycleService sessionLifecycleService;
+  @Mock private com.w3llspring.fhpb.web.service.competition.SessionCapacityService capacity;
 
   @BeforeEach
   void setUp() {
@@ -76,6 +77,7 @@ class LadderConfigServiceLeaveBehaviorTest {
             inviteGenerator,
             userRepo,
             sessionLifecycleService,
+            capacity,
             20,
             30L,
             "admin@test.com");
@@ -127,6 +129,7 @@ class LadderConfigServiceLeaveBehaviorTest {
     ownerMembership.setState(LadderMembership.State.ACTIVE);
 
     when(membershipRepo.findById(membershipId)).thenReturn(Optional.of(ownerMembership));
+    when(configRepo.lockById(configId)).thenReturn(cfg);
 
     groupAdministrationService.leaveMember(configId, ownerId, membershipId);
 
@@ -158,6 +161,7 @@ class LadderConfigServiceLeaveBehaviorTest {
     member.setState(LadderMembership.State.ACTIVE);
 
     when(membershipRepo.findById(membershipId)).thenReturn(Optional.of(member));
+    when(configRepo.lockById(configId)).thenReturn(cfg);
 
     groupAdministrationService.leaveMember(configId, memberId, membershipId);
 
@@ -198,6 +202,7 @@ class LadderConfigServiceLeaveBehaviorTest {
     otherMembership.setState(LadderMembership.State.ACTIVE);
 
     when(membershipRepo.findById(membershipId)).thenReturn(Optional.of(ownerMembership));
+    when(configRepo.lockById(configId)).thenReturn(cfg);
     when(configRepo.lockById(configId)).thenReturn(cfg);
     when(membershipRepo.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             configId, LadderMembership.State.ACTIVE))
@@ -247,6 +252,7 @@ class LadderConfigServiceLeaveBehaviorTest {
     when(membershipRepo.findByLadderConfigIdAndUserId(configId, adminId))
         .thenReturn(Optional.of(adminMembership));
     when(configRepo.findById(configId)).thenReturn(Optional.of(cfg));
+    org.mockito.Mockito.lenient().when(configRepo.lockById(configId)).thenReturn(cfg);
     when(membershipRepo.findById(memberMembershipId)).thenReturn(Optional.of(memberMembership));
 
     groupAdministrationService.banMember(configId, adminId, memberMembershipId);
@@ -286,6 +292,7 @@ class LadderConfigServiceLeaveBehaviorTest {
     when(membershipRepo.findByLadderConfigIdAndUserId(configId, adminId))
         .thenReturn(Optional.of(adminMembership));
     when(configRepo.findById(configId)).thenReturn(Optional.of(cfg));
+    org.mockito.Mockito.lenient().when(configRepo.lockById(configId)).thenReturn(cfg);
     when(membershipRepo.findById(memberMembershipId)).thenReturn(Optional.of(memberMembership));
 
     groupAdministrationService.banMember(configId, adminId, memberMembershipId);
@@ -319,6 +326,7 @@ class LadderConfigServiceLeaveBehaviorTest {
     memberMembership.setState(LadderMembership.State.ACTIVE);
 
     when(configRepo.findById(configId)).thenReturn(Optional.of(cfg));
+    org.mockito.Mockito.lenient().when(configRepo.lockById(configId)).thenReturn(cfg);
     when(userRepo.findById(adminId)).thenReturn(Optional.of(nonSiteWideAdmin));
 
     assertThatThrownBy(

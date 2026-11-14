@@ -125,7 +125,9 @@ public class SessionNearbyShareService {
                         memberships
                             .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
                                 session.getId(), LadderMembership.State.ACTIVE)
-                            .size()))
+                            .stream()
+                            .filter(member -> session.isSessionPlayer(member.getUserId()))
+                            .count()))
             .toList();
 
     return new NearbySessionsView(resolveOptionalLocationName(activeCheckIn), views);

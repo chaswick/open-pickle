@@ -445,7 +445,10 @@ public class MatchLogController {
             competitionMode,
             contextService().shouldUsePlainHomeNav(ladderId, competitionMode));
 
-    if (voiceReviewMode && currentUser != null) {
+    boolean currentUserIsPlayer =
+        currentUser != null
+            && (eligibleMemberIds == null || eligibleMemberIds.contains(currentUser.getId()));
+    if (voiceReviewMode && currentUserIsPlayer) {
       model.addAttribute("selectedA1Guest", Boolean.FALSE);
       model.addAttribute("selectedA1", currentUser.getId());
     }
@@ -461,6 +464,7 @@ public class MatchLogController {
       model.addAttribute("selectedB2Id", parseUserId(prefillB2));
     } else if (!voiceReviewMode
         && canLogForOthers
+        && currentUserIsPlayer
         && currentUser != null
         && currentUser.getId() != null) {
       model.addAttribute("selectedA1Guest", Boolean.FALSE);

@@ -42,6 +42,53 @@ class ThymeleafTemplateTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
+  void hostParticipationCheckboxIsIndependentOfOrganizerScoring(boolean playing) {
+    var variables = authenticatedShowLayoutVariables();
+    variables.put("sessionHostPlaying", playing);
+    variables.put("sessionOrganizerScored", !playing);
+    String html = renderWebTemplate("auth/new-session", variables);
+    var checkbox =
+        java.util.regex.Pattern.compile("<input[^>]*name=\"hostPlaying\"[^>]*>").matcher(html);
+    assertThat(checkbox.find()).isTrue();
+    assertThat(checkbox.group().contains("checked")).isEqualTo(playing);
+    assertThat(checkbox.group()).doesNotContain("disabled");
+    variables.remove("sessionHostPlaying");
+    String fresh = renderWebTemplate("auth/new-session", variables);
+    var defaultCheckbox =
+        java.util.regex.Pattern.compile("<input[^>]*name=\"hostPlaying\"[^>]*>").matcher(fresh);
+    assertThat(defaultCheckbox.find()).isTrue();
+    assertThat(defaultCheckbox.group()).contains("checked");
+  }
+
+  @Test
+  void waitlistedPlayerCanKeepPollingAndLeaveTheWaitlist() {
+    var variables = authenticatedShowLayoutVariables();
+    variables.put(
+        org.thymeleaf.spring6.expression.ThymeleafEvaluationContext
+            .THYMELEAF_EVALUATION_CONTEXT_CONTEXT_VARIABLE_NAME,
+        new org.thymeleaf.spring6.expression.ThymeleafEvaluationContext(applicationContext, null));
+    variables.put(
+        "joinRequestStatus",
+        new com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService.RequestStatusView(
+            10L,
+            42L,
+            "Saturday",
+            com.w3llspring.fhpb.web.model.SessionJoinRequest.Status.WAITLISTED,
+            Instant.now(),
+            Instant.now().plusSeconds(3600),
+            "You are on the waitlist.",
+            null));
+    String html = renderWebTemplate("auth/session-join-request", variables);
+    assertThat(html)
+        .contains(
+            "On the waitlist",
+            "Leave waitlist",
+            "data-pending=\"true\"",
+            "/groups/join-requests/10/cancel");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
   void automaticTranslationIsOptionalOnPublicAndAuthenticatedPages(boolean enabled) {
     var variables = authenticatedShowLayoutVariables();
     variables.put("translationEnabled", enabled);

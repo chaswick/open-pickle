@@ -1,14 +1,11 @@
 package com.w3llspring.fhpb.web.service.auth;
 
 import com.w3llspring.fhpb.web.db.LadderConfigRepository;
-import com.w3llspring.fhpb.web.db.LadderMembershipRepository;
 import com.w3llspring.fhpb.web.db.UserRepository;
 import com.w3llspring.fhpb.web.model.LadderConfig;
-import com.w3llspring.fhpb.web.model.LadderMembership;
 import com.w3llspring.fhpb.web.model.User;
 import com.w3llspring.fhpb.web.model.UserCourtName;
 import com.w3llspring.fhpb.web.service.GlobalLadderBootstrapService;
-import com.w3llspring.fhpb.web.service.competition.GroupAdministrationService;
 import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.service.user.DisplayNameModerationService;
 import com.w3llspring.fhpb.web.service.user.UserCreationService;
@@ -31,8 +28,6 @@ public class PlayerAccessService {
   private final UserRepository users;
   private final UserCreationService userCreation;
   private final LadderConfigRepository sessions;
-  private final LadderMembershipRepository memberships;
-  private final GroupAdministrationService groups;
   private final SessionJoinRequestService requests;
   private final GlobalLadderBootstrapService enrollment;
   private final DisplayNameModerationService moderation;
@@ -43,8 +38,6 @@ public class PlayerAccessService {
       UserRepository users,
       UserCreationService userCreation,
       LadderConfigRepository sessions,
-      LadderMembershipRepository memberships,
-      GroupAdministrationService groups,
       SessionJoinRequestService requests,
       GlobalLadderBootstrapService enrollment,
       DisplayNameModerationService moderation,
@@ -53,8 +46,6 @@ public class PlayerAccessService {
     this.users = users;
     this.userCreation = userCreation;
     this.sessions = sessions;
-    this.memberships = memberships;
-    this.groups = groups;
     this.requests = requests;
     this.enrollment = enrollment;
     this.moderation = moderation;
@@ -75,13 +66,7 @@ public class PlayerAccessService {
 
   private Joined createAndJoinOnce(String invite, String cleanName, boolean direct, String code) {
     LadderConfig found = preview(invite);
-    LadderConfig session = validate(sessions.lockById(found.getId()));
-    if (memberships
-            .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
-                session.getId(), LadderMembership.State.ACTIVE)
-            .size()
-        >= LadderConfig.MAX_SESSION_MEMBERS)
-      throw new IllegalArgumentException("This session is full. Ask the organizer for help.");
+    validate(sessions.lockById(found.getId()));
     User user = new User();
     user.setPublicCode(code);
     user.setNameOnlyAccount(true);
@@ -104,8 +89,10 @@ public class PlayerAccessService {
   @Transactional
   public String joinExisting(String invite, User user, boolean direct) {
     preview(invite);
-    if (direct) return "/groups/" + groups.joinByInvite(normalize(invite), user.getId()).getId();
-    var outcome = requests.submitByInvite(normalize(invite), user.getId());
+    var outcome =
+        direct
+            ? requests.joinDirectByInvite(normalize(invite), user.getId())
+            : requests.submitByInvite(normalize(invite), user.getId());
     return outcome.state() == SessionJoinRequestService.SubmissionState.ALREADY_MEMBER
         ? "/groups/" + outcome.sessionId()
         : "/groups/join-requests/" + outcome.requestId();

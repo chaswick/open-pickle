@@ -204,9 +204,30 @@
 </details>
 
 <section th:fragment="options" class="card mb-3" id="session-options-card" data-card-collapse="off"
-         th:if="${(sessionMatchups != null and sessionMatchups.host) or (currentUserId != null and currentUserId == ownerUserId)}">
+         th:if="${currentUserIsAdmin or (sessionMatchups != null and sessionMatchups.host) or (currentUserId != null and currentUserId == ownerUserId)}">
   <div class="card-header card-header-title text-center">Session options</div>
   <div class="card-body d-grid gap-3">
+    <div id="session-capacity" data-session-capacity th:attr="data-session-id=${ladder.id}"
+         th:with="joinedPlayerCount=${members != null ? #lists.size(members.?[playingParticipant]) : 0}">
+      <form th:if="${currentUserId == ownerUserId}" method="post" th:action="@{/groups/{id}/capacity(id=${ladder.id})}" class="mb-3">
+        <label for="session-limit" class="form-label">Player limit</label>
+        <div class="d-flex gap-2">
+          <input id="session-limit" name="memberLimit" class="form-control" type="number" max="32"
+                 th:min="${T(java.lang.Math).max(1, joinedPlayerCount)}" th:value="${ladder.sessionMemberLimit}"
+                 required inputmode="numeric" aria-describedby="session-limit-note">
+          <button type="submit" class="btn btn-nav-primary">Save</button>
+        </div>
+        <p id="session-limit-note" class="small text-muted mt-2 mb-0" data-joined-player-count
+           th:text="${joinedPlayerCount + (joinedPlayerCount == 1 ? ' player joined.' : ' players joined.')}">4 players joined.</p>
+      </form>
+      <p class="form-label mb-2">Waitlist</p>
+      <p class="text-muted mb-0" data-waitlist-empty th:hidden="${waitlistedSessionJoinRequests != null and !#lists.isEmpty(waitlistedSessionJoinRequests)}">No players waiting.</p>
+      <ul class="list-group" data-waitlist aria-label="Waitlist in joining order">
+        <li class="list-group-item" th:each="request : ${waitlistedSessionJoinRequests}">
+          <span th:replace="~{components/player-name :: player-name(${request.requesterDisplayName}, ${request.requesterPublicCode})}"></span>
+        </li>
+      </ul>
+    </div>
     <div th:if="${sessionMatchups != null and sessionMatchups.id != null and (sessionMatchups.ended or sessionMatchups.complete)}">
       <p class="small">Your games are saved. Make another schedule with everyone currently in the session.</p>
       <a class="btn btn-outline-primary w-100" th:href="@{/groups/{id}(id=${ladder.id},prepareMatchups=true)} + '#matchups'">Make more matchups</a>

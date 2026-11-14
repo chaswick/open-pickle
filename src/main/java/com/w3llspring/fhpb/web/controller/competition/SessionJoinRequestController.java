@@ -1,6 +1,5 @@
 package com.w3llspring.fhpb.web.controller.competition;
 
-import com.w3llspring.fhpb.web.model.LadderConfig;
 import com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
 import java.util.List;
@@ -75,6 +74,16 @@ public class SessionJoinRequestController {
     }
   }
 
+  @GetMapping("/api/sessions/{sessionId}/waitlist")
+  public List<SessionJoinRequestService.PendingRequestView> waitlist(
+      @PathVariable Long sessionId, Authentication auth) {
+    try {
+      return sessionJoinRequests.listWaitlistedForAdmin(sessionId, requireCurrentUserId(auth));
+    } catch (IllegalArgumentException | SecurityException ex) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+  }
+
   @GetMapping("/api/sessions/{sessionId}/members")
   public SessionMembersResponse members(
       @PathVariable("sessionId") Long sessionId, Authentication auth) {
@@ -84,7 +93,8 @@ public class SessionJoinRequestController {
           sessionJoinRequests.listActiveMembers(sessionId, userId);
       return new SessionMembersResponse(
           String.format(
-              "Session members (%d/%d)", activeMembers.size(), LadderConfig.MAX_SESSION_MEMBERS),
+              "Session members (%d/%d)",
+              activeMembers.size(), sessionJoinRequests.memberLimit(sessionId)),
           activeMembers.size(),
           activeMembers.stream()
               .map(

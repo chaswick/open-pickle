@@ -1,4 +1,5 @@
-<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sessionBody">
+<th:block xmlns:th="http://www.thymeleaf.org" th:fragment="sessionBody"
+          th:with="sessionPlayerCount=${members != null ? #lists.size(members.?[playingParticipant]) : 0}">
   <th:block th:if="${targetSeason != null and !ladder.matchupSession}">
     <input type="hidden" id="ladderId" th:value="${ladder.id}">
     <input type="hidden" id="seasonId" th:value="${targetSeason.id}">
@@ -229,7 +230,7 @@
       </div>
     </div>
     <div class="card-body p-0">
-      <div th:if="${targetSeason != null and members != null and #lists.size(members) > 1 and sessionRoundRobinTask == null}"
+      <div th:if="${targetSeason != null and members != null and sessionPlayerCount > 1 and sessionRoundRobinTask == null}"
            id="logMatchVoiceCaption"
            class="small text-muted px-3 pt-3 pb-3 d-none"
            aria-live="polite"
@@ -417,14 +418,14 @@
 
       <div class="text-muted text-center"
            data-members-empty-state
-           th:classappend="${#lists.isEmpty(members)} ? '' : ' d-none'">
+           th:classappend="${sessionPlayerCount == 0} ? '' : ' d-none'">
         No players have joined this session yet.
       </div>
 
       <ul class="list-group"
           data-members-list
-          th:classappend="${#lists.isEmpty(members)} ? ' d-none' : ''">
-        <li class="list-group-item" th:each="m : ${members}">
+          th:classappend="${sessionPlayerCount == 0} ? ' d-none' : ''">
+        <li class="list-group-item" th:each="m : ${members}" th:if="${ladder.isSessionPlayer(m.userId)}">
           <div class="d-flex flex-wrap align-items-start justify-content-between w-100 gap-2">
             <div class="d-flex flex-column align-items-start gap-1 flex-grow-1 min-w-0">
               <div class="d-flex flex-wrap align-items-center gap-2">
@@ -482,7 +483,10 @@
     </div>
   </div>
 
+
   <div th:replace="~{fragments/show/sessionMatchups :: options}"></div>
+  <script th:if="${currentUserIsAdmin}" th:src="@{/js/session-capacity.js(v=${assetVersion})}"></script>
+
 
   <script th:if="${targetSeason != null}"
           src="/js/match-log-voice.js"

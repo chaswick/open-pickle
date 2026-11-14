@@ -29,7 +29,8 @@ public class SessionJoinRequestService {
 
   public enum SubmissionState {
     ALREADY_MEMBER,
-    PENDING_APPROVAL
+    PENDING_APPROVAL,
+    WAITLISTED
   }
 
   public record SubmissionOutcome(SubmissionState state, Long sessionId, Long requestId) {}
@@ -62,7 +63,8 @@ public class SessionJoinRequestService {
       String redirectUrl) {
 
     public boolean pending() {
-      return status == SessionJoinRequest.Status.PENDING;
+      return status == SessionJoinRequest.Status.PENDING
+          || status == SessionJoinRequest.Status.WAITLISTED;
     }
   }
 
@@ -79,6 +81,7 @@ public class SessionJoinRequestService {
   private final GroupAdministrationService groupAdministration;
   private final MatchEntryContextService matchEntryContextService;
   private final long joinRequestTtlSeconds;
+  private final SessionCapacityService capacity;
 
   @Value("${fhpb.sessions.invite-active-seconds:1800}")
   private long sessionInviteActiveSeconds = 1800L;
@@ -91,7 +94,9 @@ public class SessionJoinRequestService {
       UserRepository userRepo,
       GroupAdministrationService groupAdministration,
       MatchEntryContextService matchEntryContextService,
+      SessionCapacityService capacity,
       @Value("${fhpb.sessions.join-request-ttl-seconds:300}") long joinRequestTtlSeconds) {
+    this.capacity = capacity;
     this.configs = configs;
     this.memberships = memberships;
     this.requests = requests;
@@ -99,17 +104,6 @@ public class SessionJoinRequestService {
     this.groupAdministration = groupAdministration;
     this.matchEntryContextService = matchEntryContextService;
     this.joinRequestTtlSeconds = joinRequestTtlSeconds;
-  }
-
-  SessionJoinRequestService(
-      LadderConfigRepository configs,
-      LadderMembershipRepository memberships,
-      SessionJoinRequestRepository requests,
-      UserRepository userRepo,
-      GroupAdministrationService groupAdministration,
-      long joinRequestTtlSeconds) {
-    this(
-        configs, memberships, requests, userRepo, groupAdministration, null, joinRequestTtlSeconds);
   }
 
   @Transactional
@@ -129,12 +123,63 @@ public class SessionJoinRequestService {
     return submitBySession(locked, normalizeInviteCode(locked.getInviteCode()), requesterUserId);
   }
 
+  @Transactional
+  public SubmissionOutcome joinDirectByInvite(String inviteCode, Long userId) {
+    String code = normalizeInviteCode(inviteCode);
+    LadderConfig found =
+        configs
+            .findByInviteCode(code)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid invite code"));
+    LadderConfig session = lockSession(found.getId());
+    SubmissionOutcome outcome = submitBySession(session, code, userId);
+    if (outcome.state() == SubmissionState.ALREADY_MEMBER
+        || outcome.state() == SubmissionState.WAITLISTED) return outcome;
+    SessionJoinRequest request = lockRequest(outcome.requestId(), session.getId());
+    capacity.admitOrWaitlist(request, null);
+    return new SubmissionOutcome(
+        request.getStatus() == SessionJoinRequest.Status.APPROVED
+            ? SubmissionState.ALREADY_MEMBER
+            : SubmissionState.WAITLISTED,
+        session.getId(),
+        request.getId());
+  }
+
+  @Transactional(readOnly = true)
+  public int memberLimit(Long sessionId) {
+    return findSession(sessionId).getSessionMemberLimit();
+  }
+
+  @Transactional
+  public List<PendingRequestView> listWaitlistedForAdmin(Long sessionId, Long adminId) {
+    LadderConfig session = lockSession(sessionId);
+    groupAdministration.requireAdmin(session, adminId);
+    return requests
+        .findByLadderConfigIdAndStatusOrderByResolvedAtAscIdAsc(
+            sessionId, SessionJoinRequest.Status.WAITLISTED)
+        .stream()
+        .map(request -> expireIfNeeded(request, Instant.now()))
+        .filter(request -> request.getStatus() == SessionJoinRequest.Status.WAITLISTED)
+        .map(
+            request -> {
+              User user = userRepo.findById(request.getRequesterUserId()).orElse(null);
+              return new PendingRequestView(
+                  request.getId(),
+                  sessionId,
+                  request.getRequesterUserId(),
+                  UserPublicName.forUser(user),
+                  user != null ? user.getPublicCode() : null,
+                  request.getRequestedAt(),
+                  request.getExpiresAt());
+            })
+        .toList();
+  }
+
   private SubmissionOutcome submitBySession(
       LadderConfig locked, String normalizedCode, Long requesterUserId) {
     validateSessionInvite(locked, normalizedCode);
 
     LadderMembership membership =
-        memberships.findByLadderConfigIdAndUserId(locked.getId(), requesterUserId).orElse(null);
+        memberships.lockMember(locked.getId(), requesterUserId).orElse(null);
     if (membership != null) {
       if (membership.getState() == LadderMembership.State.ACTIVE) {
         return new SubmissionOutcome(SubmissionState.ALREADY_MEMBER, locked.getId(), null);
@@ -156,6 +201,9 @@ public class SessionJoinRequestService {
                   return created;
                 });
     request = expireIfNeeded(request, now);
+    if (request.getStatus() == SessionJoinRequest.Status.WAITLISTED) {
+      return new SubmissionOutcome(SubmissionState.WAITLISTED, locked.getId(), request.getId());
+    }
     if (request.getStatus() == SessionJoinRequest.Status.PENDING
         && Objects.equals(request.getInviteCodeSnapshot(), normalizedCode)) {
       return new SubmissionOutcome(
@@ -177,7 +225,7 @@ public class SessionJoinRequestService {
 
   @Transactional
   public List<PendingRequestView> listPendingForAdmin(Long sessionId, Long adminUserId) {
-    LadderConfig session = findSession(sessionId);
+    LadderConfig session = lockSession(sessionId);
     groupAdministration.requireAdmin(session, adminUserId);
     List<SessionJoinRequest> pending =
         requests.findByLadderConfigIdAndStatusOrderByRequestedAtAsc(
@@ -223,6 +271,10 @@ public class SessionJoinRequestService {
     if (activeMembers == null || activeMembers.isEmpty()) {
       return List.of();
     }
+    activeMembers =
+        activeMembers.stream()
+            .filter(member -> session.isSessionPlayer(member.getUserId()))
+            .toList();
     List<Long> userIds =
         activeMembers.stream()
             .map(LadderMembership::getUserId)
@@ -268,9 +320,7 @@ public class SessionJoinRequestService {
     }
 
     LadderMembership membership =
-        memberships
-            .findByLadderConfigIdAndUserId(sessionId, request.getRequesterUserId())
-            .orElse(null);
+        memberships.lockMember(sessionId, request.getRequesterUserId()).orElse(null);
     if (membership != null) {
       if (membership.getState() == LadderMembership.State.ACTIVE) {
         markApproved(request, adminUserId, now);
@@ -287,11 +337,12 @@ public class SessionJoinRequestService {
 
     try {
       validateSessionInvite(session, request.getInviteCodeSnapshot());
-      groupAdministration.joinByInvite(
-          request.getInviteCodeSnapshot(), request.getRequesterUserId());
-      markApproved(request, adminUserId, now);
-      requests.save(request);
-      return new ReviewOutcome(SessionJoinRequest.Status.APPROVED, "Player joined the session.");
+      capacity.admitOrWaitlist(request, adminUserId);
+      return new ReviewOutcome(
+          request.getStatus(),
+          request.getStatus() == SessionJoinRequest.Status.WAITLISTED
+              ? "Session is full. Player added to the waitlist."
+              : "Player joined the session.");
     } catch (IllegalArgumentException ex) {
       markExpired(request, now);
       requests.save(request);
@@ -305,17 +356,6 @@ public class SessionJoinRequestService {
         return new ReviewOutcome(
             SessionJoinRequest.Status.EXPIRED,
             "That invite is no longer active. Ask the host for the latest session code.");
-      }
-      if ("Sorry, that group is full.".equals(ex.getMessage())) {
-        return new ReviewOutcome(
-            SessionJoinRequest.Status.PENDING,
-            "Session is full right now. Remove a player or wait for someone to leave.");
-      }
-      if ("You are banned from this ladder".equals(ex.getMessage())) {
-        markDenied(request, adminUserId, now);
-        requests.save(request);
-        return new ReviewOutcome(
-            SessionJoinRequest.Status.DENIED, "This player is banned from the session.");
       }
       if ("This match session has expired.".equals(ex.getMessage())) {
         markExpired(request, now);
@@ -354,8 +394,27 @@ public class SessionJoinRequestService {
     if (!Objects.equals(request.getRequesterUserId(), requesterUserId)) {
       throw new SecurityException("Join request not found");
     }
+    lockSession(request.getLadderConfig().getId());
+    request = lockRequest(requestId, request.getLadderConfig().getId());
     request = expireIfNeeded(request, Instant.now());
     return toStatusView(request);
+  }
+
+  @Transactional
+  public void cancel(Long requestId, Long userId) {
+    SessionJoinRequest found =
+        requests
+            .findById(requestId)
+            .orElseThrow(() -> new IllegalArgumentException("Join request not found"));
+    if (!Objects.equals(found.getRequesterUserId(), userId))
+      throw new SecurityException("Join request not found");
+    lockSession(found.getLadderConfig().getId());
+    SessionJoinRequest request = lockRequest(requestId, found.getLadderConfig().getId());
+    if (request.getStatus() == SessionJoinRequest.Status.WAITLISTED
+        || request.getStatus() == SessionJoinRequest.Status.PENDING) {
+      markDenied(request, userId, Instant.now());
+      requests.save(request);
+    }
   }
 
   private RequestStatusView toStatusView(SessionJoinRequest request) {
@@ -375,6 +434,9 @@ public class SessionJoinRequestService {
   }
 
   private String statusMessageFor(SessionJoinRequest.Status status) {
+    if (status == SessionJoinRequest.Status.WAITLISTED) {
+      return "You'll join automatically when a spot opens.";
+    }
     if (status == SessionJoinRequest.Status.APPROVED) {
       return "Approved. Opening the session.";
     }
@@ -397,6 +459,7 @@ public class SessionJoinRequestService {
     if (status == SessionJoinRequest.Status.EXPIRED) {
       return "This join request already expired.";
     }
+    if (status == SessionJoinRequest.Status.WAITLISTED) return "Player is on the waitlist.";
     return "Join request is still pending.";
   }
 
@@ -410,18 +473,29 @@ public class SessionJoinRequestService {
   private SessionJoinRequest expireIfNeeded(SessionJoinRequest request, Instant now) {
     if (request == null
         || request.getId() == null
-        || request.getStatus() != SessionJoinRequest.Status.PENDING) {
+        || (request.getStatus() != SessionJoinRequest.Status.PENDING
+            && request.getStatus() != SessionJoinRequest.Status.WAITLISTED)) {
       return request;
     }
     LadderConfig session = request.getLadderConfig();
+    boolean waitlistClosed =
+        request.getStatus() == SessionJoinRequest.Status.WAITLISTED
+            && session != null
+            && (session.getStatus() != LadderConfig.Status.ACTIVE
+                || (session.getExpiresAt() != null && !session.getExpiresAt().isAfter(now)));
+    if (request.getStatus() == SessionJoinRequest.Status.WAITLISTED && !waitlistClosed) {
+      return request;
+    }
     boolean datedSessionClosed =
         request.getId() != null
             && session != null
+            && request.getStatus() == SessionJoinRequest.Status.PENDING
             && session.getSessionScheduledAt() != null
             && (session.getStatus() != LadderConfig.Status.ACTIVE
                 || (session.getExpiresAt() != null && !session.getExpiresAt().isAfter(now))
                 || !Objects.equals(session.getInviteCode(), request.getInviteCodeSnapshot()));
-    if (!datedSessionClosed
+    if (!waitlistClosed
+        && !datedSessionClosed
         && (request.getExpiresAt() == null || request.getExpiresAt().isAfter(now))) return request;
     request.setStatus(SessionJoinRequest.Status.EXPIRED);
     request.setResolvedAt(now);
@@ -482,6 +556,7 @@ public class SessionJoinRequestService {
     if (session == null || !session.isSessionType()) {
       throw new IllegalArgumentException("Session not found");
     }
+    capacity.refreshLockedSession(session);
     return session;
   }
 
@@ -502,6 +577,7 @@ public class SessionJoinRequestService {
         || !Objects.equals(request.getLadderConfig().getId(), sessionId)) {
       throw new SecurityException("Join request not found");
     }
+    capacity.refreshLockedRequest(request);
     return request;
   }
 

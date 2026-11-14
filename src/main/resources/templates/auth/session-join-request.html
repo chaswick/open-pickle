@@ -9,7 +9,7 @@
 <body>
   <main layout:fragment="content" class="app-page">
     <div class="app-page-header"><div>
-    <h1 class="app-page-title" th:text="${joinRequestStatus.pending} ? 'Waiting for approval' : 'Session join request'">
+    <h1 class="app-page-title" th:text="${joinRequestStatus.status.name() == 'WAITLISTED' ? 'On the waitlist' : (joinRequestStatus.pending ? 'Waiting for approval' : 'Session join request')}">
       Session join request
     </h1>
     </div></div>
@@ -47,10 +47,9 @@
                th:text="${joinRequestStatus.message}">
               Waiting for the session host to approve your request.
             </p>
-            <p class="small text-muted" th:if="${scheduledSessionInvite == true and joinRequestStatus.pending}">
-              Your request is saved. You can leave this page. Once approved, the session will appear on Home.
-            </p>
-
+            <form th:if="${joinRequestStatus.pending}" method="post" th:action="@{/groups/join-requests/{id}/cancel(id=${joinRequestStatus.id})}" class="mb-3">
+              <button type="submit" class="btn btn-nav-secondary" th:text="${joinRequestStatus.status.name() == 'WAITLISTED' ? 'Leave waitlist' : 'Cancel request'}">Cancel request</button>
+            </form>
             <div class="d-grid gap-2">
               <a class="btn btn-action-primary"
                  id="sessionJoinRequestOpenBtn"
@@ -107,12 +106,18 @@
           if (messageEl && payload.message) {
             messageEl.textContent = payload.message;
           }
+          if (payload.status === 'WAITLISTED') {
+            const heading = document.querySelector('h1.app-page-title');
+            if (heading) heading.textContent = 'On the waitlist';
+            const cancel = card.querySelector('form button[type="submit"]');
+            if (cancel) cancel.textContent = 'Leave waitlist';
+          }
           if (payload.status === 'APPROVED' && payload.redirectUrl) {
             stopPolling();
             window.location = payload.redirectUrl;
             return;
           }
-          if (payload.status !== 'PENDING') {
+          if (payload.status !== 'PENDING' && payload.status !== 'WAITLISTED') {
             stopPolling();
           }
         }).catch(function () {

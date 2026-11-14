@@ -23,11 +23,35 @@ Run the scheduler and fixed-team regression checks with:
 
 `RoundRobinServiceManageTest` starts fixed-team schedules through the service for every even roster from 4 through 32. It verifies intact partners, one meeting per opposing team, every player accounted for in each round, the expected number of courts, and one bye per team when the team count is odd. Every odd roster from 5 through 31 is rejected for fixed partners.
 
-`SessionMatchupServiceTest` checks automatic inclusion through 32 players in both formats and rejection of 33 players. `GroupAdministrationServiceTest` checks that new and returning players can fill the 32nd slot and cannot exceed it. The member API reports the same session limit.
+`SessionMatchupServiceTest` checks automatic inclusion through 32 players in both formats and rejection of 33 players. `GroupAdministrationServiceTest` checks that new and returning players respect the session's player limit. The member API reports the configured limit and counts only playing members.
 
 The 26- and 30-player cases need alternate constraint search orders to find balanced byes within a bounded search budget. The eight-player circle partnership template could force heavily repeated opponents despite distinct partners; the binary-field schedules for 4, 8, 16, and 32 avoid that problem. Other counts prioritize fresh opponents but do not promise exactly two meetings per opponent.
 
-The current session flow accepts **4–32 players** and **1–30 requested rotating rounds**. Session invitations, approval, member counts, and matchup generation share the 32-player limit. A scheduler-selected default cycle can exceed 30 rounds; for example, 32 players have a 31-round full cycle. Fixed partners use a complete team cycle. Fairness is measured over the generated schedule; an early stop or a replacement can change an individual person's actual playing time. Replacement preserves the slot's remaining assignments and recorded history.
+The current session flow accepts **4–32 players** and **1–30 requested rotating rounds**. Session invitations, approval, and member counts respect the host's configured capacity, up to 32 players. A scheduler-selected default cycle can exceed 30 rounds; for example, 32 players have a 31-round full cycle. Fixed partners use a complete team cycle. Fairness is measured over the generated schedule; an early stop or a replacement can change an individual person's actual playing time. Replacement preserves the slot's remaining assignments and recorded history.
+
+## Capacity and host participation
+
+Hosts choose a player limit from 1 through 32 when creating a session and can change it in
+Session options. The limit cannot be lower than the number of joined players. Waitlisted
+players do not count toward that minimum. Existing sessions retain the default limit of 32.
+
+Direct invites admit a player when there is space and otherwise add them to the waitlist.
+Code-based requests still need host approval; approval adds the player to the session or,
+when full, to the waitlist. Departures, host removals, and capacity increases fill vacancies
+in waitlist order within the same transaction. Waiting players can cancel their place.
+Ending a session does not admit waiting players.
+
+The checked-by-default Host is playing option determines whether the host uses a player
+spot and appears in rosters, player pickers, and schedules created later. An unchecked host
+keeps their administrative membership and can manage the session and record scores.
+This choice is independent of organizer scoring. The older standalone round-robin
+participant picker selects players for that schedule; the session flow uses its playing roster.
+Migrations V61 and V62 persist capacity and host participation respectively.
+
+`SessionCapacityIntegrationTest` covers FIFO admission, departures, removals, cancellations,
+capacity changes, minimum validation, session closure, and concurrent joins for the last spot.
+`SessionSchedulingIntegrationTest` covers a non-playing host creating matchups later with
+either scoring mode. Frontend checks cover the live minimum and consistent waitlist names.
 
 ## Organizer scoring
 
@@ -107,7 +131,7 @@ scores continue to use Enter score beside the scheduled game.
 
 ## Session creation layout
 
-The form uses numbered sections for When, How, and the optional session name. Now/Later and
+The form uses numbered sections for When, How, the optional session name, and the player limit. Now/Later and
 Round Robin/open play are separate either-or choices. Play modes share one group, displayed
 side by side on wider screens and stacked with an “or” on phones. Organizer scoring stays
 inside the selected Round Robin option; switching to open play disables that checkbox.

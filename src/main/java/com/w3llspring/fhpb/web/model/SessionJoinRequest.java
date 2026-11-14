@@ -20,12 +20,12 @@ import java.time.Instant;
 @Entity
 @Table(
     name = "session_join_request",
-    uniqueConstraints =
-        @UniqueConstraint(columnNames = {"ladder_config_id", "requester_user_id"}))
+    uniqueConstraints = @UniqueConstraint(columnNames = {"ladder_config_id", "requester_user_id"}))
 public class SessionJoinRequest {
 
   public enum Status {
     PENDING,
+    WAITLISTED,
     APPROVED,
     DENIED,
     EXPIRED

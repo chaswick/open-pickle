@@ -142,7 +142,10 @@ class LadderConfigControllerJoinTest {
     cfg.setTitle("Open Session");
     cfg.setType(LadderConfig.Type.SESSION);
     when(configs.findByInviteCode("DINK-7")).thenReturn(Optional.of(cfg));
-    when(groupAdministration.joinByInvite("DINK-7", 7L)).thenReturn(cfg);
+    when(sessionJoinRequests.joinDirectByInvite("DINK-7", 7L))
+        .thenReturn(
+            new SessionJoinRequestService.SubmissionOutcome(
+                SessionJoinRequestService.SubmissionState.ALREADY_MEMBER, 42L, null));
 
     User user = new User();
     user.setId(7L);
@@ -154,7 +157,7 @@ class LadderConfigControllerJoinTest {
     String view = controller.joinForm("dink-7", null, true, auth, model);
 
     assertThat(view).isEqualTo("redirect:/groups/42?joined=1&tour=joiner");
-    verify(groupAdministration).joinByInvite("DINK-7", 7L);
+    verify(sessionJoinRequests).joinDirectByInvite("DINK-7", 7L);
   }
 
   @Test

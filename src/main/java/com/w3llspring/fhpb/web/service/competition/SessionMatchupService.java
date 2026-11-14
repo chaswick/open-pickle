@@ -329,7 +329,7 @@ public class SessionMatchupService {
     if (replacementId != null) {
       if (guestName != null && !guestName.isBlank())
         throw problem("Choose a joined player or enter a guest name.");
-      if (!isActiveMember(sessionId, replacementId))
+      if (!isActiveMember(sessionId, replacementId) || !session.isSessionPlayer(replacementId))
         throw problem("That player has not joined this session.");
       if (roster.values().stream().anyMatch(s -> Objects.equals(s.userId(), replacementId))) {
         throw problem("That player already has a place in the matchups.");

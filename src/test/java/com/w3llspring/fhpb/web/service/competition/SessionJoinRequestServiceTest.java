@@ -37,6 +37,7 @@ class SessionJoinRequestServiceTest {
   @Mock private GroupAdministrationService groupAdministration;
   @Mock private MatchEntryContextService matchEntryContextService;
 
+  @Mock private SessionCapacityService capacity;
   private SessionJoinRequestService service;
 
   @BeforeEach
@@ -49,6 +50,7 @@ class SessionJoinRequestServiceTest {
             userRepo,
             groupAdministration,
             matchEntryContextService,
+            capacity,
             300L);
   }
 
@@ -57,7 +59,7 @@ class SessionJoinRequestServiceTest {
     LadderConfig session = session(42L, "DINK-7");
     when(configs.findByInviteCode("DINK-7")).thenReturn(Optional.of(session));
     when(configs.lockById(42L)).thenReturn(session);
-    when(memberships.findByLadderConfigIdAndUserId(42L, 7L)).thenReturn(Optional.empty());
+    when(memberships.lockMember(42L, 7L)).thenReturn(Optional.empty());
     when(requests.findByLadderConfigIdAndRequesterUserId(42L, 7L)).thenReturn(Optional.empty());
     when(requests.save(any(SessionJoinRequest.class)))
         .thenAnswer(
@@ -85,7 +87,7 @@ class SessionJoinRequestServiceTest {
                     ? Optional.of(session)
                     : Optional.empty());
     when(configs.lockById(42L)).thenReturn(session);
-    when(memberships.findByLadderConfigIdAndUserId(42L, 7L)).thenReturn(Optional.empty());
+    when(memberships.lockMember(42L, 7L)).thenReturn(Optional.empty());
     when(requests.findByLadderConfigIdAndRequesterUserId(42L, 7L)).thenReturn(Optional.empty());
     when(requests.save(any(SessionJoinRequest.class)))
         .thenAnswer(
@@ -115,7 +117,7 @@ class SessionJoinRequestServiceTest {
 
     when(configs.findByInviteCode("DINK-7")).thenReturn(Optional.of(session));
     when(configs.lockById(42L)).thenReturn(session);
-    when(memberships.findByLadderConfigIdAndUserId(42L, 7L)).thenReturn(Optional.of(membership));
+    when(memberships.lockMember(42L, 7L)).thenReturn(Optional.of(membership));
 
     SessionJoinRequestService.SubmissionOutcome outcome = service.submitByInvite("dink-7", 7L);
 
@@ -146,7 +148,7 @@ class SessionJoinRequestServiceTest {
   void submitBySessionId_createsPendingApprovalRequestFromCurrentInvite() {
     LadderConfig session = session(42L, "MINT-COURT-42");
     when(configs.lockById(42L)).thenReturn(session);
-    when(memberships.findByLadderConfigIdAndUserId(42L, 7L)).thenReturn(Optional.empty());
+    when(memberships.lockMember(42L, 7L)).thenReturn(Optional.empty());
     when(requests.findByLadderConfigIdAndRequesterUserId(42L, 7L)).thenReturn(Optional.empty());
     when(requests.save(any(SessionJoinRequest.class)))
         .thenAnswer(
@@ -172,10 +174,15 @@ class SessionJoinRequestServiceTest {
 
     when(configs.lockById(42L)).thenReturn(session);
     when(requests.lockById(100L)).thenReturn(Optional.of(request));
-    when(memberships.findByLadderConfigIdAndUserId(42L, 8L)).thenReturn(Optional.empty());
-    when(groupAdministration.joinByInvite("DINK-7", 8L)).thenReturn(session);
-    when(requests.save(any(SessionJoinRequest.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(memberships.lockMember(42L, 8L)).thenReturn(Optional.empty());
+    org.mockito.Mockito.doAnswer(
+            invocation -> {
+              request.setStatus(SessionJoinRequest.Status.APPROVED);
+              request.setResolvedByUserId(7L);
+              return null;
+            })
+        .when(capacity)
+        .admitOrWaitlist(request, 7L);
 
     SessionJoinRequestService.ReviewOutcome outcome = service.approve(42L, 100L, 7L);
 
@@ -183,25 +190,31 @@ class SessionJoinRequestServiceTest {
     assertThat(request.getStatus()).isEqualTo(SessionJoinRequest.Status.APPROVED);
     assertThat(request.getResolvedByUserId()).isEqualTo(7L);
     verify(groupAdministration).requireAdmin(session, 7L);
-    verify(groupAdministration).joinByInvite("DINK-7", 8L);
+    verify(capacity).admitOrWaitlist(request, 7L);
   }
 
   @Test
-  void approve_keepsRequestPendingWhenSessionIsFull() {
+  void approve_reportsWaitlistedWhenSessionIsFull() {
     LadderConfig session = session(42L, "DINK-7");
     SessionJoinRequest request = pendingRequest(100L, session, 8L, "DINK-7");
 
     when(configs.lockById(42L)).thenReturn(session);
     when(requests.lockById(100L)).thenReturn(Optional.of(request));
-    when(memberships.findByLadderConfigIdAndUserId(42L, 8L)).thenReturn(Optional.empty());
-    when(groupAdministration.joinByInvite("DINK-7", 8L))
-        .thenThrow(new IllegalStateException("Sorry, that group is full."));
+    when(memberships.lockMember(42L, 8L)).thenReturn(Optional.empty());
+    org.mockito.Mockito.doAnswer(
+            invocation -> {
+              request.setStatus(SessionJoinRequest.Status.WAITLISTED);
+              return null;
+            })
+        .when(capacity)
+        .admitOrWaitlist(request, 7L);
 
     SessionJoinRequestService.ReviewOutcome outcome = service.approve(42L, 100L, 7L);
 
-    assertThat(outcome.status()).isEqualTo(SessionJoinRequest.Status.PENDING);
-    assertThat(outcome.message()).contains("Session is full right now");
-    assertThat(request.getStatus()).isEqualTo(SessionJoinRequest.Status.PENDING);
+    assertThat(outcome.status()).isEqualTo(SessionJoinRequest.Status.WAITLISTED);
+    assertThat(outcome.pending()).isFalse();
+    assertThat(outcome.message()).contains("waitlist");
+    assertThat(request.getStatus()).isEqualTo(SessionJoinRequest.Status.WAITLISTED);
   }
 
   @Test
@@ -258,6 +271,8 @@ class SessionJoinRequestServiceTest {
     request.setResolvedByUserId(7L);
 
     when(requests.findById(100L)).thenReturn(Optional.of(request));
+    when(configs.lockById(42L)).thenReturn(session);
+    when(requests.lockById(100L)).thenReturn(Optional.of(request));
 
     SessionJoinRequestService.RequestStatusView status = service.getStatusForRequester(100L, 8L);
 

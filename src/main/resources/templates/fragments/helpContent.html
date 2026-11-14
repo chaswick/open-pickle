@@ -228,7 +228,7 @@
         <div class="accordion-body">
           <p>Current hard limits in the app:</p>
           <ul>
-            <li><strong>Session size:</strong> Up to <strong th:text="${sessionMaxMembers}">32</strong> active players in a session.</li>
+            <li><strong>Session size:</strong> Up to <strong th:text="${sessionMaxMembers}">32</strong> active players in a session. The host can set a smaller limit and change it later. Hosts who choose not to play keep their host controls without taking a player spot. Players on the waitlist join in order when a spot opens.</li>
             <li><strong>Season fair-play thresholds:</strong> First warning at <strong th:text="${competitionAutoModWarningOneThreshold}">3</strong> missed required confirmations in one season, final warning at <strong th:text="${competitionAutoModWarningTwoThreshold}">5</strong>, and a season lockout at <strong th:text="${competitionAutoModBlockThreshold}">7</strong>.</li>
           </ul>
           <p class="mb-0"><small class="text-muted">These limits may change over time as the app evolves.</small></p>

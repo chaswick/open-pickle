@@ -38,6 +38,7 @@ class PlayerAccessIntegrationTest {
   @Autowired LadderMembershipRepository memberships;
   @Autowired SessionJoinRequestRepository joinRequests;
   @Autowired PlayerAccessService players;
+  @Autowired com.w3llspring.fhpb.web.service.competition.SessionJoinRequestService requests;
   @Autowired RegistrationFormTokenService forms;
   @Autowired UserPasswordResetService passwordReset;
   @Autowired com.w3llspring.fhpb.web.service.user.UserIdentityService identities;
@@ -374,7 +375,7 @@ class PlayerAccessIntegrationTest {
   }
 
   @Test
-  void aFullSessionCreatesNoOrphanAccount() {
+  void aFullSessionCreatesAnAccountAndWaitlistEntry() {
     for (int i = 0; i < 31; i++) {
       User user = new User();
       user.setEmail("full-" + i + "@test.local");
@@ -389,9 +390,18 @@ class PlayerAccessIntegrationTest {
       memberships.saveAndFlush(member);
     }
     long before = users.count();
-    assertThatThrownBy(() -> players.createAndJoin(session.getInviteCode(), "Overflow", true, true))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("full");
-    assertThat(users.count()).isEqualTo(before);
+    var joined = players.createAndJoin(session.getInviteCode(), "Overflow", true, true);
+    assertThat(users.count()).isEqualTo(before + 1);
+    assertThat(joined.destination()).startsWith("/groups/join-requests/");
+    assertThat(memberships.findByLadderConfigIdAndUserId(session.getId(), joined.user().getId()))
+        .isEmpty();
+    assertThat(
+            requests
+                .getStatusForRequester(
+                    Long.valueOf(
+                        joined.destination().substring(joined.destination().lastIndexOf('/') + 1)),
+                    joined.user().getId())
+                .status())
+        .isEqualTo(com.w3llspring.fhpb.web.model.SessionJoinRequest.Status.WAITLISTED);
   }
 }

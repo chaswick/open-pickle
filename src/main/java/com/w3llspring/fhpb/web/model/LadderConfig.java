@@ -16,6 +16,38 @@ public class LadderConfig {
   public static final int MAX_SESSION_NAME_LENGTH = 40;
   public static final int MAX_SESSION_MEMBERS = 32;
 
+  @Column(name = "session_member_limit", nullable = false)
+  @org.hibernate.annotations.ColumnDefault("32")
+  private int sessionMemberLimit = MAX_SESSION_MEMBERS;
+
+  @Column(name = "session_host_playing", nullable = false)
+  @org.hibernate.annotations.ColumnDefault("true")
+  private boolean sessionHostPlaying = true;
+
+  public boolean isSessionHostPlaying() {
+    return sessionHostPlaying;
+  }
+
+  public void setSessionHostPlaying(boolean sessionHostPlaying) {
+    this.sessionHostPlaying = sessionHostPlaying;
+  }
+
+  public boolean isSessionPlayer(Long userId) {
+    return !isSessionType() || sessionHostPlaying || !java.util.Objects.equals(ownerUserId, userId);
+  }
+
+  public int getSessionMemberLimit() {
+    return sessionMemberLimit;
+  }
+
+  public void setSessionMemberLimit(int limit) {
+    if (limit < 1 || limit > MAX_SESSION_MEMBERS) {
+      throw new IllegalArgumentException(
+          "Choose a player limit between 1 and " + MAX_SESSION_MEMBERS + ".");
+    }
+    this.sessionMemberLimit = limit;
+  }
+
   public enum Status {
     ACTIVE,
     ARCHIVED

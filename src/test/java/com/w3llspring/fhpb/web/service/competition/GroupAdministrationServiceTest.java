@@ -31,6 +31,7 @@ class GroupAdministrationServiceTest {
   @Mock private LadderInviteGenerator generator;
   @Mock private UserRepository userRepo;
   @Mock private SessionLifecycleService sessionLifecycleService;
+  @Mock private com.w3llspring.fhpb.web.service.competition.SessionCapacityService capacity;
 
   @ParameterizedTest
   @CsvSource({
@@ -47,7 +48,15 @@ class GroupAdministrationServiceTest {
       LadderConfig.Type type, int activeCount, boolean returning, boolean allowed) {
     GroupAdministrationService service =
         new GroupAdministrationService(
-            configs, memberships, generator, userRepo, sessionLifecycleService, 20, 30L, "");
+            configs,
+            memberships,
+            generator,
+            userRepo,
+            sessionLifecycleService,
+            capacity,
+            20,
+            30L,
+            "");
     LadderConfig cfg = new LadderConfig();
     cfg.setId(42L);
     cfg.setType(type);
@@ -58,9 +67,17 @@ class GroupAdministrationServiceTest {
     previous.setLadderConfig(cfg);
     previous.setUserId(99L);
     previous.setState(LadderMembership.State.LEFT);
-    when(memberships.findByLadderConfigIdAndUserId(42L, 99L))
-        .thenReturn(returning ? Optional.of(previous) : Optional.empty());
-    if (type != LadderConfig.Type.COMPETITION) {
+    if (type == LadderConfig.Type.SESSION) {
+      when(memberships.lockMember(42L, 99L))
+          .thenReturn(returning ? Optional.of(previous) : Optional.empty());
+    } else {
+      when(memberships.findByLadderConfigIdAndUserId(42L, 99L))
+          .thenReturn(returning ? Optional.of(previous) : Optional.empty());
+    }
+    if (type == LadderConfig.Type.SESSION) {
+      when(memberships.lockActiveMembers(42L))
+          .thenReturn(Collections.nCopies(activeCount, new LadderMembership()));
+    } else if (type != LadderConfig.Type.COMPETITION) {
       when(memberships.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
               42L, LadderMembership.State.ACTIVE))
           .thenReturn(Collections.nCopies(activeCount, new LadderMembership()));
@@ -84,7 +101,15 @@ class GroupAdministrationServiceTest {
   void requireActiveMember_acceptsUserPresentInActiveRoster() {
     GroupAdministrationService service =
         new GroupAdministrationService(
-            configs, memberships, generator, userRepo, sessionLifecycleService, 20, 30L, "");
+            configs,
+            memberships,
+            generator,
+            userRepo,
+            sessionLifecycleService,
+            capacity,
+            20,
+            30L,
+            "");
 
     LadderConfig cfg = new LadderConfig();
     cfg.setId(42L);
@@ -105,7 +130,15 @@ class GroupAdministrationServiceTest {
   void requireActiveMember_rejectsUserMissingFromActiveRoster() {
     GroupAdministrationService service =
         new GroupAdministrationService(
-            configs, memberships, generator, userRepo, sessionLifecycleService, 20, 30L, "");
+            configs,
+            memberships,
+            generator,
+            userRepo,
+            sessionLifecycleService,
+            capacity,
+            20,
+            30L,
+            "");
 
     when(memberships.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
             42L, LadderMembership.State.ACTIVE))

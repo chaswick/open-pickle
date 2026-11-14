@@ -64,6 +64,11 @@ public class LadderMembership {
     return userId;
   }
 
+  /** Host access is independent of participation in session games. */
+  public boolean isPlayingParticipant() {
+    return ladderConfig == null || ladderConfig.isSessionPlayer(userId);
+  }
+
   public void setUserId(Long userId) {
     this.userId = userId;
   }

@@ -302,6 +302,7 @@ public class MatchLogContextService {
     return ladderMembershipRepository
         .findByLadderConfigIdAndStateOrderByJoinedAtAsc(ladderId, LadderMembership.State.ACTIVE)
         .stream()
+        .filter(LadderMembership::isPlayingParticipant)
         .map(LadderMembership::getUserId)
         .filter(Objects::nonNull)
         .collect(Collectors.toCollection(HashSet::new));

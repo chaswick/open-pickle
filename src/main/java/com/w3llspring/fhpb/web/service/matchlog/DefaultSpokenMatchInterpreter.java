@@ -1897,6 +1897,7 @@ public class DefaultSpokenMatchInterpreter implements SpokenMatchInterpreter {
           membershipRepository.findByLadderConfigIdAndStateOrderByJoinedAtAsc(
               ladderConfigId, LadderMembership.State.ACTIVE);
       memberships.stream()
+          .filter(LadderMembership::isPlayingParticipant)
           .map(LadderMembership::getUserId)
           .filter(Objects::nonNull)
           .forEach(userIds::add);

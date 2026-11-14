@@ -9,10 +9,15 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface SessionJoinRequestRepository extends JpaRepository<SessionJoinRequest, Long> {
 
+  @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
   Optional<SessionJoinRequest> findByLadderConfigIdAndRequesterUserId(
       Long ladderConfigId, Long requesterUserId);
 
   List<SessionJoinRequest> findByLadderConfigIdAndStatusOrderByRequestedAtAsc(
+      Long ladderConfigId, SessionJoinRequest.Status status);
+
+  @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+  List<SessionJoinRequest> findByLadderConfigIdAndStatusOrderByResolvedAtAscIdAsc(
       Long ladderConfigId, SessionJoinRequest.Status status);
 
   @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)

@@ -682,6 +682,11 @@ public class LadderConfigController {
     }
 
     model.addAttribute(
+        "waitlistedSessionJoinRequests",
+        cfg.isSessionType() && currentUserIsLadderAdmin && sessionJoinRequestService != null
+            ? sessionJoinRequestService.listWaitlistedForAdmin(configId, currentUser.getId())
+            : List.of());
+    model.addAttribute(
         "pendingSessionJoinRequests",
         cfg.isSessionType() && currentUserIsLadderAdmin && sessionJoinRequestService != null
             ? sessionJoinRequestService.listPendingForAdmin(configId, currentUser.getId())
@@ -759,6 +764,7 @@ public class LadderConfigController {
     if (cfg.isSessionType()) {
       List<User> activeUsers =
           members.stream()
+              .filter(member -> cfg.isSessionPlayer(member.getUserId()))
               .map(member -> userById.get(member.getUserId()))
               .filter(Objects::nonNull)
               .toList();
@@ -767,7 +773,12 @@ public class LadderConfigController {
       model.addAttribute("sessionPlayerNames", playerNames);
       model.addAttribute("sessionHeroTitle", resolveSessionDisplayTitle(cfg));
       applySessionRecentTickerModel(model, cfg, playerNames);
-      applySessionStandingsModel(model, members, userById, targetSeason, sessionBaseStandings);
+      applySessionStandingsModel(
+          model,
+          members.stream().filter(member -> cfg.isSessionPlayer(member.getUserId())).toList(),
+          userById,
+          targetSeason,
+          sessionBaseStandings);
       model.addAttribute(
           "voiceLanguage",
           matchEntryContextService != null
@@ -780,12 +791,13 @@ public class LadderConfigController {
               : List.of());
       model.addAttribute("voiceMaxAlternatives", Integer.valueOf(3));
     }
-    int activeMemberCount = members.size();
+    int activeMemberCount =
+        (int) members.stream().filter(member -> cfg.isSessionPlayer(member.getUserId())).count();
     model.addAttribute(
         "memberSectionTitle",
         cfg.isSessionType()
             ? String.format(
-                "Session members (%d/%d)", activeMemberCount, LadderConfig.MAX_SESSION_MEMBERS)
+                "Session members (%d/%d)", activeMemberCount, cfg.getSessionMemberLimit())
             : String.format("Members (%d/%d)", activeMemberCount, defaultMaxMembers));
     model.addAttribute("maxRollingEveryCount", LadderConfig.MAX_ROLLING_EVERY_COUNT);
     model.addAttribute("storyModeFeatureEnabled", storyModeFeatureEnabled());
@@ -1885,9 +1897,11 @@ public class LadderConfigController {
       User currentUser = getCurrentUser(auth);
       if (currentUser != null && currentUser.getId() != null) {
         try {
-          LadderConfig joinedConfig =
-              groupAdministration.joinByInvite(sanitizedInvite, currentUser.getId());
-          return joinRedirectFor(joinedConfig);
+          var outcome =
+              sessionJoinRequestService.joinDirectByInvite(sanitizedInvite, currentUser.getId());
+          return outcome.state() == SessionJoinRequestService.SubmissionState.ALREADY_MEMBER
+              ? "redirect:/groups/" + outcome.sessionId() + "?joined=1&tour=joiner"
+              : "redirect:/groups/join-requests/" + outcome.requestId();
         } catch (IllegalArgumentException ex) {
           applyJoinFeedback(model, invalidInviteFeedback());
           return "auth/join";
@@ -1901,10 +1915,11 @@ public class LadderConfigController {
         membershipRepo
             .findByLadderConfigIdAndStateOrderByJoinedAtAsc(
                 cfg.getId(), LadderMembership.State.ACTIVE)
-            .size();
+            .stream()
+            .filter(member -> cfg.isSessionPlayer(member.getUserId()))
+            .count();
     if ((cfg.getType() == LadderConfig.Type.STANDARD || (cfg.isSessionType() && autoJoin))
-        && activeCount
-            >= (cfg.isSessionType() ? LadderConfig.MAX_SESSION_MEMBERS : defaultMaxMembers)) {
+        && activeCount >= (cfg.isSessionType() ? cfg.getSessionMemberLimit() : defaultMaxMembers)) {
       applyJoinFeedback(model, fullGroupFeedback());
       return "auth/join";
     }

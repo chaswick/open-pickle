@@ -112,6 +112,7 @@ public class RoundRobinService {
         new DefaultRoundRobinScheduler());
   }
 
+  @Transactional(readOnly = true)
   public List<User> listMembersForLadder(Long ladderConfigId) {
     if (ladderConfigId == null) return Collections.emptyList();
     List<LadderMembership> members =
@@ -121,7 +122,7 @@ public class RoundRobinService {
 
     java.util.LinkedHashSet<Long> userIds = new java.util.LinkedHashSet<>();
     for (LadderMembership membership : members) {
-      if (membership.getUserId() != null) {
+      if (membership.getUserId() != null && membership.isPlayingParticipant()) {
         userIds.add(membership.getUserId());
       }
     }
@@ -265,6 +266,10 @@ public class RoundRobinService {
                 .filter(id -> id > 0)
                 .distinct()
                 .toList();
+    if (ownerConfig != null
+        && normalizedParticipants.stream().anyMatch(id -> !ownerConfig.isSessionPlayer(id))) {
+      throw new RoundRobinModificationException("The host is not playing in this session.");
+    }
     List<List<Long>> normalizedFixedTeams =
         resolvedFormat == RoundRobin.Format.FIXED_TEAMS
             ? normalizeFixedTeams(normalizedParticipants, fixedTeams)
@@ -2372,7 +2377,9 @@ public class RoundRobinService {
             .orElseThrow(() -> new RoundRobinModificationException("Player not found."));
     if (ladderConfig != null && ladderConfig.getId() != null) {
       var membership = membershipRepo.findByLadderConfigIdAndUserId(ladderConfig.getId(), userId);
-      if (membership.isEmpty() || membership.get().getState() != LadderMembership.State.ACTIVE) {
+      if (membership.isEmpty()
+          || membership.get().getState() != LadderMembership.State.ACTIVE
+          || !ladderConfig.isSessionPlayer(userId)) {
         throw new RoundRobinModificationException(
             "Player " + safeNick(user) + " is not an active member of this ladder.");
       }

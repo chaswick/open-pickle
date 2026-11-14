@@ -58,6 +58,164 @@ class SessionSchedulingIntegrationTest {
     season = seasons.saveAndFlush(season);
   }
 
+  @Autowired SessionMatchupService matchups;
+  @Autowired RoundRobinEntryRepository roundRobinEntries;
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+  void nonPlayingHostCanPlanAndStartLaterWithEitherScoringMode(boolean organizerScored) {
+    var auth =
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(owner), null, java.util.List.of());
+    var flash = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+    LocalDate date = LocalDate.now(ZoneId.of(owner.getTimeZone())).plusDays(1);
+    assertThat(
+            controller.create(
+                auth,
+                LadderConfig.SessionPlayMode.MATCHUPS,
+                organizerScored,
+                "LATER",
+                date.toString(),
+                "18:30",
+                null,
+                4,
+                false,
+                flash))
+        .startsWith("redirect:/groups/");
+    LadderConfig planned =
+        configs.findByOwnerUserId(owner.getId()).stream()
+            .filter(LadderConfig::isSessionType)
+            .findFirst()
+            .orElseThrow();
+    assertThat(planned.isSessionHostPlaying()).isFalse();
+    assertThat(planned.isOrganizerScored()).isEqualTo(organizerScored);
+    assertThat(
+            memberships
+                .findByLadderConfigIdAndUserId(planned.getId(), owner.getId())
+                .orElseThrow()
+                .getRole())
+        .isEqualTo(LadderMembership.Role.ADMIN);
+    for (int i = 0; i < 4; i++) {
+      User player = new User();
+      player.setEmail(UUID.randomUUID().toString().substring(0, 16) + "@test.local");
+      player.setNickName("Player " + i);
+      player.setPassword("unused");
+      users.saveAndFlush(player);
+      assertThat(joinRequests.joinDirectByInvite(planned.getInviteCode(), player.getId()).state())
+          .isEqualTo(SessionJoinRequestService.SubmissionState.ALREADY_MEMBER);
+    }
+    assertThat(joinRequests.listActiveMembers(planned.getId(), owner.getId()))
+        .hasSize(4)
+        .noneMatch(member -> member.userId().equals(owner.getId()));
+    var preparation = matchups.view(planned, owner, java.util.Set.of());
+    assertThat(preparation.host()).isTrue();
+    assertThat(preparation.members())
+        .hasSize(4)
+        .noneMatch(member -> member.id().equals(owner.getId()));
+    RoundRobin schedule =
+        matchups.start(
+            planned.getId(),
+            owner,
+            RoundRobin.Format.ROTATING_PARTNERS,
+            2,
+            java.util.List.of(),
+            null);
+    assertThat(roundRobinEntries.findByRoundRobinOrderByRoundNumberAsc(schedule))
+        .allSatisfy(
+            entry -> {
+              for (RoundRobinEntry.Position position : RoundRobinEntry.Position.values()) {
+                if (entry.player(position) != null)
+                  assertThat(entry.player(position).getId()).isNotEqualTo(owner.getId());
+              }
+            });
+    var board = matchups.view(planned, owner, java.util.Set.of());
+    assertThat(board.host()).isTrue();
+    assertThat(board.rounds())
+        .flatExtracting(SessionMatchupService.Round::games)
+        .allMatch(SessionMatchupService.Game::canLog);
+    var context =
+        new com.w3llspring.fhpb.web.service.matchlog.MatchLogContextService(
+            seasons, configs, memberships, null, null, null, ZoneId.of("America/New_York"));
+    var resolved =
+        context.resolveMatchLogContext(season.getId(), planned.getId(), Instant.now(), false);
+    assertThat(resolved.getEligibleMemberIds()).hasSize(4).doesNotContain(owner.getId());
+    assertThat(context.canLogForOthersInContext(owner, resolved)).isTrue();
+  }
+
+  @Test
+  void uncheckedHostOptionSurvivesValidationAndDefaultsToPlayingOnANewForm() {
+    var auth =
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(owner), null, java.util.List.of());
+    var model = new org.springframework.ui.ExtendedModelMap();
+    controller.newSession(model, auth);
+    assertThat(model.get("sessionHostPlaying")).isEqualTo(true);
+    var flash = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+    assertThat(
+            controller.create(
+                auth,
+                LadderConfig.SessionPlayMode.MATCHUPS,
+                false,
+                "LATER",
+                "",
+                "",
+                null,
+                4,
+                false,
+                flash))
+        .isEqualTo("redirect:/groups/new-session");
+    assertThat(flash.getFlashAttributes().get("sessionHostPlaying")).isEqualTo(false);
+    model.addAllAttributes(flash.getFlashAttributes());
+    controller.newSession(model, auth);
+    assertThat(model.get("sessionHostPlaying")).isEqualTo(false);
+  }
+
+  @Test
+  void creationSavesPlayerLimitAndRejectsInvalidLimitBeforeCreating() {
+    var auth =
+        new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            new CustomUserDetails(owner), null, java.util.List.of());
+    var invalid = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+    assertThat(
+            controller.create(
+                auth,
+                LadderConfig.SessionPlayMode.OPEN_PLAY,
+                false,
+                "NOW",
+                null,
+                null,
+                null,
+                0,
+                invalid))
+        .isEqualTo("redirect:/groups/new-session");
+    assertThat(invalid.getFlashAttributes().get("sessionMemberLimit")).isEqualTo(0);
+    assertThat(configs.findByOwnerUserId(owner.getId())).noneMatch(LadderConfig::isSessionType);
+    var flash = new org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap();
+    assertThat(
+            controller.create(
+                auth,
+                LadderConfig.SessionPlayMode.OPEN_PLAY,
+                false,
+                "NOW",
+                null,
+                null,
+                null,
+                8,
+                flash))
+        .startsWith("redirect:/groups/");
+    LadderConfig session =
+        configs.findByOwnerUserId(owner.getId()).stream()
+            .filter(LadderConfig::isSessionType)
+            .findFirst()
+            .orElseThrow();
+    assertThat(session.getSessionMemberLimit()).isEqualTo(8);
+    // Reopening a current session must not silently replace its host settings.
+    controller.create(
+        auth, LadderConfig.SessionPlayMode.MATCHUPS, false, "NOW", null, null, null, 16, flash);
+    assertThat(configs.findById(session.getId()).orElseThrow().getSessionMemberLimit())
+        .isEqualTo(8);
+  }
+
   @Test
   void upcomingSignupsDoNotBlockNowAndNowDoesNotBlockAnotherUpcomingSession() {
     LocalDate date = LocalDate.now(ZoneId.of(owner.getTimeZone())).plusWeeks(1);
