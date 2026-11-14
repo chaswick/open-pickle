@@ -41,6 +41,39 @@ class ThymeleafTemplateTest {
   @Autowired private org.springframework.context.ApplicationContext applicationContext;
 
   @ParameterizedTest
+  @org.junit.jupiter.params.provider.CsvSource({
+    "Open-Pickle, https://open-pickle.example, /images/landing/op_logo.png",
+    "PickleBuddies, https://www.picklebuddies.com, /images/landing/picklebuddies_logo.png"
+  })
+  void publicSearchMetadataUsesTheDeploymentBrandAndAssets(
+      String appName, String origin, String logoPath) throws Exception {
+    var branding = new BrandingProperties();
+    branding.setAppName(appName);
+    branding.setLogoPath(logoPath);
+    var operator = new OperatorProperties();
+    operator.setPublicUrl(origin);
+    var request = new MockHttpServletRequest("GET", "/");
+    var seo =
+        new com.w3llspring.fhpb.web.service.site.PublicSeoService(
+            branding, operator, new com.fasterxml.jackson.databind.ObjectMapper(), origin);
+    var variables = authenticatedShowLayoutVariables();
+    variables.put("branding", branding);
+    variables.put("operator", operator);
+    variables.put("publicMetadataBaseUrl", origin);
+    variables.put("publicSeo", seo.describe(request));
+    String html = renderWebTemplate("public/landing", variables);
+    String head = html.substring(0, html.indexOf("</head>"));
+    assertThat(head)
+        .contains(
+            " | " + appName + "</title>",
+            "href=\"" + origin + "/\"",
+            "content=\"" + origin + logoPath + "?v=test-build\"");
+    if ("Open-Pickle".equals(appName))
+      assertThat(head).doesNotContain("PickleBuddies", "picklebuddies.com", "picklebuddies_logo");
+    else assertThat(head).doesNotContain("Open-Pickle", "open-pickle.example", "op_logo.png");
+  }
+
+  @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void hostParticipationCheckboxIsIndependentOfOrganizerScoring(boolean playing) {
     var variables = authenticatedShowLayoutVariables();

@@ -76,6 +76,8 @@ class ControllerEndpointAccessMatrixIntegrationTest {
           "/terms",
           "/privacy",
           "/site.webmanifest",
+          "/robots.txt",
+          "/sitemap.xml",
           "/sw.js",
           "/apple-touch-icon-precomposed.png");
 

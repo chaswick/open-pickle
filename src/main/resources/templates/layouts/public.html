@@ -9,10 +9,10 @@
     <div th:replace="~{components/head-meta :: cache-control}"></div>
     <div th:replace="~{components/head-meta :: basic-meta}"></div>
     <div th:replace="~{components/head-meta :: theme-meta}"></div>
+    <th:block th:replace="~{components/head-meta :: public-search-meta}"></th:block>
     <div th:replace="~{components/head-meta :: public-social-image}"></div>
     
-        <title layout:title-pattern="|$CONTENT_TITLE | ${branding.appName}|"
-            th:text="${branding.appName}">Open-Pickle</title>
+    <title th:text="${branding.appName}">Open-Pickle</title>
     
     <div th:replace="~{components/head-meta :: js-ready-marker}"></div>
     

@@ -27,6 +27,20 @@
     </script>
 </th:block>
 
+<th:block th:fragment="public-search-meta">
+    <meta name="robots" th:content="${publicSeo != null and publicSeo.indexable ? 'index, follow' : 'noindex, nofollow'}">
+    <th:block th:if="${publicSeo != null and publicSeo.indexable}">
+        <meta name="description" th:content="${publicSeo.description}">
+        <link rel="canonical" th:href="${publicSeo.canonicalUrl}">
+        <meta property="og:title" th:content="${publicSeo.title}">
+        <meta property="og:description" th:content="${publicSeo.description}">
+        <meta property="og:url" th:content="${publicSeo.canonicalUrl}">
+        <meta name="twitter:title" th:content="${publicSeo.title}">
+        <meta name="twitter:description" th:content="${publicSeo.description}">
+        <script type="application/ld+json" th:if="${publicSeo.structuredData != null}" th:utext="${publicSeo.structuredData}"></script>
+    </th:block>
+</th:block>
+
 
 <th:block th:fragment="public-social-image"
           th:with="
@@ -36,12 +50,13 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Open-Pickle" th:content="${branding.appName}">
     <meta property="og:image" content="/images/landing/op_logo.png" th:content="${logoUrl}">
-    <meta property="og:image:secure_url" content="/images/landing/op_logo.png" th:content="${logoUrl}">
+    <meta property="og:image:secure_url" th:if="${#strings.startsWith(logoUrl, 'https://')}" th:content="${logoUrl}">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1024">
     <meta property="og:image:height" content="1024">
     <meta property="og:image:alt" content="Open-Pickle logo" th:content="${branding.socialImageAlt}">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:image" content="/images/landing/op_logo.png" th:content="${logoUrl}">
+    <meta name="twitter:image:alt" th:content="${branding.socialImageAlt}">
     <link rel="image_src" href="/images/landing/op_logo.png" th:href="${logoUrl}">
 </th:block>

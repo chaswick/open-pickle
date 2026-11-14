@@ -5,11 +5,9 @@
       layout:decorate="~{layouts/public}">
 
 <head>
-    <title layout:fragment="title" th:text="${branding.appName}">Open-Pickle</title>
+    <title layout:fragment="title" th:text="${branding.landingSearchTitle + ' | ' + branding.appName}">Free pickleball sessions &amp; round robin scheduler | Open-Pickle</title>
 
     <th:block layout:fragment="styles">
-          <meta name="description" content="Free pickleball sessions for friends and clubs. Share an invite, log scores, and track standings, round robins, and trophies together."
-              th:content="${branding.landingMetaDescription}">
         <link rel="preload" as="image" href="/images/landing/openPickleScreenshot.png" th:href="@{${branding.snapshotPath}}">
     </th:block>
 </head>
@@ -43,7 +41,7 @@
                                     </div>
                                 </div>
                                 <h1 class="landing-title" th:text="${branding.landingPageTitle}">Make your next pickleball session count.</h1>
-                                <p class="landing-copy" th:text="${branding.landingCopy}">Start a session, share the invite, and track your results. Your rating will reset each season. Open-Pickle is free to use, whether you play with the same four people or a whole club.</p>
+                                <p class="landing-copy" th:text="${branding.landingCopy}">Bring your pickleball group together. Organize play, record results, and follow your progress. Open-Pickle is free for friends and clubs.</p>
                                 <div class="landing-proof-mark landing-proof-mark-cta">
                                     <img src="/images/landing/notamoneygrab.png"
                                          th:src="@{/images/landing/notamoneygrab.png}"
@@ -58,11 +56,11 @@
                                     <a th:href="@{/login}" class="btn btn-action-primary btn-lg">Sign in</a>
                                 </div>
                                 <ul class="landing-checklist">
-                                    <li>Start with the people you already play with.</li>
-                                    <li>Invite friends with a code, QR, or link.</li>
-                                    <li>Log scores and see standings after each confirmed match.</li>
-                                    <li>Mix up your games with rotating partners or fixed-team round robins.</li>
-                                    <li>Earn season trophies and track your progress.</li>
+                                    <li>Play now or schedule a pickleball session for later.</li>
+                                    <li>Share a code, QR, or link. Friends can join an invite with just their name.</li>
+                                    <li>Generate rotating-partner or fixed-team round robin schedules.</li>
+                                    <li>Record scores with opponent confirmation or organizer scoring.</li>
+                                    <li>Follow season standings, match history, and trophies.</li>
                                     <li>Free, community-supported, and <a href="https://github.com/chaswick/open-pickle" target="_blank" rel="noopener">open source.</a></li>
                                 </ul>
                                 <div class="landing-voices-inline" id="testimonial-strip" aria-live="polite">
@@ -108,7 +106,7 @@
                 <div class="landing-benefit-grid">
                     <article class="landing-benefit-card">
                         <div class="landing-benefit-tag">A session for your crew</div>
-                        <p>One person starts the session and shares the invite. Everyone plays together, one player logs each result, and an opponent confirms it.</p>
+                        <p>Choose open play or a round robin for your group. The host can join the games or just organize.</p>
                     </article>
                     <article class="landing-benefit-card">
                         <div class="landing-benefit-tag">Season trophies and ratings bands</div>
@@ -117,7 +115,7 @@
                     </article>
                     <article class="landing-benefit-card">
                         <div class="landing-benefit-tag">Room to keep playing</div>
-                        <p>Mix things up with a round robin, follow your season standings, or look back at your match history. Start with what suits your group.</p>
+                        <p>Set a player limit and let the waitlist fill openings automatically when someone leaves.</p>
                     </article>
                 </div>
             </div>
@@ -127,7 +125,7 @@
             <div class="container">
                 <div class="landing-bottom-panel">
                     <h2>Who are you playing with next?</h2>
-                    <p>Create a free account, start a session, and send the invite to your friends. Your next game is all you need to get started.</p>
+                    <p>Create a free account to host, then send the invite to your friends.</p>
                     <div class="landing-bottom-actions">
                         <a th:href="@{/register}" class="btn btn-light btn-lg">Play with friends</a>
                         <a th:href="@{/login}" class="btn btn-action-primary btn-lg">Sign in</a>

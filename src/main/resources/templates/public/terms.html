@@ -3,7 +3,7 @@
     layout:decorate="~{layouts/public}">
 
 <head>
-    <title layout:fragment="title">Terms of service</title>
+    <title layout:fragment="title" th:text="${'Terms of service | ' + branding.appName}">Terms of service</title>
 
     <th:block layout:fragment="styles">
         <style>

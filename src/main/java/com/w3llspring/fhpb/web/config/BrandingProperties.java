@@ -14,7 +14,7 @@ public class BrandingProperties {
   private static final String DEFAULT_LANDING_PAGE_TITLE =
       "Make your next pickleball session count.";
   private static final String DEFAULT_LANDING_META_DESCRIPTION =
-      "Free pickleball sessions for friends and clubs. Share an invite, log scores, and track standings, round robins, and trophies together.";
+      "Plan pickleball sessions, share invites, and build round robin schedules. Set player limits and waitlists, log scores, and track standings with friends.";
   private static final String DEFAULT_LANDING_KICKER = "Community-driven Pickleball";
   private static final String DEFAULT_MANIFEST_THEME_COLOR = "#2d4a3b";
   private static final String DEFAULT_MANIFEST_BACKGROUND_COLOR = "#2d4a3b";
@@ -26,6 +26,8 @@ public class BrandingProperties {
   private String logoPath = DEFAULT_LOGO_PATH;
   private String snapshotPath = DEFAULT_SNAPSHOT_PATH;
   private String flagPath = DEFAULT_FLAG_PATH;
+  private String landingSearchTitle;
+  private String landingMetaDescription;
 
   public String getAppName() {
     return normalize(appName, DEFAULT_APP_NAME);
@@ -68,7 +70,19 @@ public class BrandingProperties {
   }
 
   public String getLandingMetaDescription() {
-    return DEFAULT_LANDING_META_DESCRIPTION;
+    return normalize(landingMetaDescription, DEFAULT_LANDING_META_DESCRIPTION);
+  }
+
+  public void setLandingMetaDescription(String landingMetaDescription) {
+    this.landingMetaDescription = landingMetaDescription;
+  }
+
+  public String getLandingSearchTitle() {
+    return normalize(landingSearchTitle, "Free pickleball sessions & round robin scheduler");
+  }
+
+  public void setLandingSearchTitle(String landingSearchTitle) {
+    this.landingSearchTitle = landingSearchTitle;
   }
 
   public String getLandingKicker() {
@@ -76,9 +90,9 @@ public class BrandingProperties {
   }
 
   public String getLandingCopy() {
-    return "Start a session, share the invite, and track your results. Your rating will reset each season. "
+    return "Bring your pickleball group together. Organize play, record results, and follow your progress. "
         + getAppName()
-        + " is free to use, whether you play with the same four people or a whole club.";
+        + " is free for friends and clubs.";
   }
 
   public String getSocialImagePath() {

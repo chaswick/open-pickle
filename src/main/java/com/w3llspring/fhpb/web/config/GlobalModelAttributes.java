@@ -8,6 +8,7 @@ import com.w3llspring.fhpb.web.service.LadderConfigService;
 import com.w3llspring.fhpb.web.service.MatchDashboardService;
 import com.w3llspring.fhpb.web.service.user.UserAccountSettingsService;
 import com.w3llspring.fhpb.web.util.AuthenticatedUserSupport;
+import com.w3llspring.fhpb.web.util.PublicSiteUrls;
 import com.w3llspring.fhpb.web.util.ReturnToSanitizer;
 import com.w3llspring.fhpb.web.util.UserPublicName;
 import jakarta.servlet.http.HttpServletRequest;
@@ -328,50 +329,7 @@ public class GlobalModelAttributes {
   }
 
   private String resolvePublicMetadataBaseUrl(HttpServletRequest request) {
-    String normalizedOperatorUrl = normalizePublicBaseUrl(operatorProperties.getPublicUrl());
-    if (!normalizedOperatorUrl.isEmpty()) {
-      return normalizedOperatorUrl;
-    }
-    String normalizedConfigured = normalizePublicBaseUrl(publicBaseUrl);
-    if (!normalizedConfigured.isEmpty()) {
-      return normalizedConfigured;
-    }
-    return buildRequestBaseUrl(request);
-  }
-
-  private String normalizePublicBaseUrl(String value) {
-    if (value == null) {
-      return "";
-    }
-
-    String trimmed = value.trim();
-    if (trimmed.isEmpty()) {
-      return "";
-    }
-    if (trimmed.endsWith("/")) {
-      return trimmed.substring(0, trimmed.length() - 1);
-    }
-    return trimmed;
-  }
-
-  private String buildRequestBaseUrl(HttpServletRequest request) {
-    if (request == null) {
-      return "";
-    }
-
-    String scheme = request.getScheme();
-    String serverName = request.getServerName();
-    if (scheme == null || scheme.isBlank() || serverName == null || serverName.isBlank()) {
-      return "";
-    }
-
-    int port = request.getServerPort();
-    boolean defaultPort =
-        port <= 0
-            || ("http".equalsIgnoreCase(scheme) && port == 80)
-            || ("https".equalsIgnoreCase(scheme) && port == 443);
-    String portSuffix = defaultPort ? "" : ":" + port;
-    return scheme + "://" + serverName + portSuffix;
+    return PublicSiteUrls.baseUrl(publicBaseUrl, operatorProperties.getPublicUrl(), request);
   }
 
   private String resolveRequestPath(HttpServletRequest request) {

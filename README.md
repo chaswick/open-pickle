@@ -173,6 +173,43 @@ If you self-host, treat this repo as the application source and create your own 
 Build release images with `docker compose build --pull` to refresh the Java base images.
 Operator-specific legal text, support links, analytics IDs, and donation links have been replaced with neutral defaults or placeholders and should be customized in your own deployment.
 
+### Search metadata
+
+Set `FHPB_PUBLIC_BASE_URL` to the deployment's preferred public HTTPS origin. This value
+takes precedence over `FHPB_OPERATOR_PUBLIC_URL` for canonical links, social images, and
+crawl discovery. If neither is configured, URLs use the request's origin; the default
+`your-domain.example` operator placeholder is ignored. Configure `FHPB_BRANDING_APP_NAME`
+and the logo override for the deployment's own name and sharing image.
+The public build keeps Open-Pickle defaults; customized deployments supply their own
+branding and assets through configuration and resource overlays. Optional
+`FHPB_BRANDING_LANDING_SEARCH_TITLE` and `FHPB_BRANDING_LANDING_META_DESCRIPTION` overrides
+let a hosted implementation customize search copy without changing shared templates.
+The application appends the configured brand name to the search title.
+
+The landing page describes the current session and round-robin features and includes
+a branded search title, description, canonical URL, Open Graph and Twitter previews,
+and `WebSite` structured data. Terms and privacy pages have separate metadata. Tracking
+and return-navigation query parameters do not appear in canonical URLs.
+
+`/sitemap.xml` lists only the public landing, terms, and privacy pages. `/robots.txt`
+advertises that sitemap and permits HTML crawling so search engines can read `noindex`.
+Account, invite, session, and other utility routes send `X-Robots-Tag: noindex, nofollow`;
+the shared public and authenticated layouts also provide the appropriate robots meta tag.
+Authentication continues to protect private pages. Public images, CSS, and JavaScript
+remain crawlable. New public content pages must be added to `PublicSeoService.INDEXABLE_PATHS`.
+
+After deploying, verify the rendered canonical domain, fetch the sitemap without signing
+in, submit it in the deployment's Google Search Console property, and request a recrawl
+of the homepage. The application does not submit Search Console requests automatically.
+`PublicSeoIntegrationTest` covers rendered metadata, structured data, query variants,
+discovery endpoints, utility pages, and private redirects. `PublicSiteUrlsTest` covers
+canonical configuration, local fallbacks, and context paths.
+
+Reference: Google's [canonical URL guidance](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls),
+[robots metadata guidance](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag),
+[sitemap guidance](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap),
+and [site-name structured data](https://developers.google.com/search/docs/appearance/site-names).
+
 ## Live Service
 
 A live deployment of this codebase runs at `https://www.picklebuddies.com`.

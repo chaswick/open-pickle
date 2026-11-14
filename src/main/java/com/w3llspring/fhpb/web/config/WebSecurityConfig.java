@@ -195,6 +195,7 @@ public class WebSecurityConfig {
                       SecurityRequestMatchers.path("/browserconfig.xml"),
                       SecurityRequestMatchers.path("/site.webmanifest"),
                       SecurityRequestMatchers.path("/robots.txt"),
+                      SecurityRequestMatchers.path("/sitemap.xml"),
                       SecurityRequestMatchers.path("/.well-known/security.txt"))
                   .permitAll()
                   .requestMatchers(
