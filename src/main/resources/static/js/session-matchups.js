@@ -158,6 +158,14 @@
     choice.hidden = selected.value !== 'MATCHUPS';
     choice.querySelector('input').disabled = choice.hidden;
   }
+  function updateHostParticipation() {
+    var checkbox = document.getElementById('session-host-playing');
+    var label = document.querySelector('label[for="session-host-playing"]');
+    if (!checkbox || !label) return;
+    label.textContent = checkbox.checked
+      ? 'You are playing in the session'
+      : 'You are running but not playing in the session';
+  }
   function updateSessionDate() {
     var choice = document.querySelector('[data-session-date-choice]');
     if (!choice) return;
@@ -172,10 +180,12 @@
   document.addEventListener('DOMContentLoaded', function () {
     updateIntentScoring();
     updateSessionDate();
+    updateHostParticipation();
   });
   document.addEventListener('change', function (event) {
     if (event.target.matches('[name=sessionWhen]')) updateSessionDate();
     if (event.target.matches('[name=playMode]')) updateIntentScoring();
+    if (event.target.matches('#session-host-playing')) updateHostParticipation();
     var root = event.target.closest('[data-session-matchups-root]');
     if (!root && event.target.closest('[data-matchup-roster]')) root = document.querySelector('[data-session-matchups-root]');
     if (!root) return;

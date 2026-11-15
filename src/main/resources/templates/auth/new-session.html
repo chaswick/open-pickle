@@ -85,7 +85,8 @@
         <div class="form-check mb-3">
           <input id="session-host-playing" type="checkbox" name="hostPlaying" value="true" class="form-check-input"
                  th:checked="${sessionHostPlaying != false}">
-          <label for="session-host-playing" class="form-check-label">Host is playing</label>
+          <label for="session-host-playing" class="form-check-label"
+                 th:text="${sessionHostPlaying == false} ? 'You are running but not playing in the session' : 'You are playing in the session'">You are playing in the session</label>
         </div>
         <input id="session-member-limit" name="memberLimit" type="number" class="form-control" min="1" max="32"
                th:value="${sessionMemberLimit}" required inputmode="numeric" aria-describedby="session-capacity-note">
