@@ -43,9 +43,10 @@
           <label><input type="radio" name="organizerScored" value="false" th:checked="${!board.organizerScored}"><span><strong>Players record and confirm</strong><small>One opponent confirms each score</small></span></label>
           <label><input type="radio" name="organizerScored" value="true" th:checked="${board.organizerScored}"><span><strong>Organizer records scores</strong><small>Confirmed automatically; everyone else reviews results</small></span></label>
         </fieldset>
-        <fieldset class="matchups-format"><legend>Partners</legend>
-          <label><input type="radio" name="format" value="ROTATING_PARTNERS" checked><span><strong>Mix it up</strong><small>Rotate partners each game</small></span></label>
-          <label><input type="radio" name="format" value="FIXED_TEAMS"><span><strong>Stay together</strong><small>Keep the same partner</small></span></label>
+        <fieldset class="matchups-format"><legend>Round robin</legend>
+          <label><input type="radio" name="format" value="ROTATING_PARTNERS" checked><span><strong>Normal</strong><small>Rotate partners each game</small></span></label>
+          <label><input type="radio" name="format" value="PERFORMANCE"><span><strong>Performance</strong><small>Play near your season rating</small></span></label>
+          <label><input type="radio" name="format" value="FIXED_TEAMS"><span><strong>Fixed teams</strong><small>Keep the same partner</small></span></label>
         </fieldset>
         <div data-fixed-pairs hidden>
           <p class="small">Choose each pair. Everyone on the list plays.</p>
@@ -73,6 +74,7 @@
         <div class="card-header card-header-title text-center">Round robin</div>
         <div class="card-body">
         <p class="fw-semibold mb-2" th:text="${board.format}">Rotating partners</p>
+        <p th:if="${board.format == 'Performance' and !board.ended and !board.complete}" class="matchups-note">The next round appears when all scores in the current round are confirmed.</p>
         <p th:if="${board.ended or board.complete}" class="small" th:text="${board.ended ? 'Matchups ended' : 'All scores recorded'}">Matchups ended</p>
         <p class="matchups-meta"><a href="#matchup-players" data-open-matchup-roster th:text="${#lists.size(board.roster) + ' players'}">16 players</a>
           <span th:if="${!#lists.isEmpty(board.available)}" class="matchups-available-count" th:text="${#lists.size(board.available) + ' available'}">1 available</span>
@@ -80,10 +82,10 @@
           <span th:text="${board.roundCount}">6</span> rounds <span aria-hidden="true">·</span>
           <span th:text="${board.remaining}">24</span> games left</p>
         <p th:if="${board.organizerScored}" class="matchups-note" data-organizer-scoring-notice><strong>Organizer records scores.</strong> Results are confirmed automatically. No player confirmation is needed.</p>
-        <p th:if="${!board.organizerScored and !board.ended and !board.complete}" class="matchups-note">Play ahead when the people in your next game are ready. Scores can be confirmed afterward.</p>
+        <p th:if="${board.format != 'Performance' and !board.organizerScored and !board.ended and !board.complete}" class="matchups-note">Play ahead when the people in your next game are ready. Scores can be confirmed afterward.</p>
         <p th:if="${board.waiting}" class="matchups-waiting">You're in the session without a place in the current matchups. The organizer can bring you in as a replacement.</p>
-        <p th:if="${board.pending > 0}" class="small mb-0"><span th:text="${board.pending}">1</span> score(s) awaiting confirmation. You can keep playing.</p>
-        <p th:if="${!board.organizerScored and board.player and board.next == null and !board.ended}" class="matchups-note">You've recorded all your games. You can still view the schedule and confirm scores below.</p>
+        <p th:if="${board.pending > 0}" class="small mb-0"><span th:text="${board.pending}">1</span> score(s) awaiting confirmation.<span th:if="${board.format != 'Performance'}"> You can keep playing.</span></p>
+        <p th:if="${board.format != 'Performance' and !board.organizerScored and board.player and board.next == null and !board.ended}" class="matchups-note">You've recorded all your games. You can still view the schedule and confirm scores below.</p>
         </div>
       </section>
 
@@ -161,10 +163,17 @@
   </th:block>
 </section>
 <div th:fragment="teams(game)" class="matchups-teams">
-  <div class="matchups-team" data-team-a><span th:replace="~{components/player-name :: player-name(${game.a1.name}, ${game.a1.publicCode})}"></span><span th:replace="~{components/player-name :: player-name(${game.a2.name}, ${game.a2.publicCode})}"></span></div>
+  <div class="matchups-team" data-team-a><span th:replace="~{fragments/show/sessionMatchups :: rated-player(${game.a1}, ${game.a1Rating})}"></span><span th:replace="~{fragments/show/sessionMatchups :: rated-player(${game.a2}, ${game.a2Rating})}"></span></div>
   <span class="matchups-versus">vs</span>
-  <div class="matchups-team" data-team-b><span th:replace="~{components/player-name :: player-name(${game.b1.name}, ${game.b1.publicCode})}"></span><span th:replace="~{components/player-name :: player-name(${game.b2.name}, ${game.b2.publicCode})}"></span></div>
+  <div class="matchups-team" data-team-b><span th:replace="~{fragments/show/sessionMatchups :: rated-player(${game.b1}, ${game.b1Rating})}"></span><span th:replace="~{fragments/show/sessionMatchups :: rated-player(${game.b2}, ${game.b2Rating})}"></span></div>
 </div>
+
+<span th:fragment="rated-player(player, rating)" class="session-player-name notranslate" translate="no">
+  <span data-player-name th:text="${player.name}">Player</span>
+  <small th:if="${rating != null}" class="matchups-player-rating text-muted fw-normal notranslate" translate="no"
+         th:attr="aria-label=${'Season rating ' + rating}" th:text="${'(' + rating + ')'}">(1000)</small>
+  <small class="session-player-id text-muted fw-normal notranslate" translate="no" th:if="${player.publicCode != null}" th:text="${player.publicCode}"></small>
+</span>
 
 <div th:fragment="roster-player(name, publicCode, playerAccount)" class="session-player-name notranslate" translate="no">
   <a th:if="${playerAccount != null and !#strings.isEmpty(playerAccount.publicCode)}" class="player-link link-contrast fw-semibold"

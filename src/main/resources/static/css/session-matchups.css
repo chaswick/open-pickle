@@ -393,6 +393,10 @@
   color:#79909c;
   text-align:center;
 }
+.matchups-player-rating {
+  font-size: .75em;
+  white-space: nowrap;
+}
 .matchups-schedule-heading {
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;

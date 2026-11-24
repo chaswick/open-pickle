@@ -370,6 +370,13 @@ public class RoundRobinController {
       current = Math.max(derivedCurrent, 1);
     }
     var entries = roundRobinService.getEntriesForRound(id, current);
+    var seasonRatings =
+        rr.isPerformanceFormat()
+            ? roundRobinService.getSeasonDisplayRatings(rr)
+            : java.util.Map.<Long, Integer>of();
+    model.addAttribute("performanceMode", rr.isPerformanceFormat());
+    model.addAttribute(
+        "performanceRoundWaiting", rr.isPerformanceFormat() && current > rr.getPreparedRound());
 
     List<RoundRobinStanding> standings = roundRobinService.computeStandings(id);
 
@@ -464,6 +471,26 @@ public class RoundRobinController {
         m.put("a2Id", a2Id);
         m.put("b1Id", b1Id);
         m.put("b2Id", b2Id);
+        m.put(
+            "a1Rating",
+            rr.isPerformanceFormat() && a1Id != null
+                ? seasonRatings.getOrDefault(a1Id, 1000)
+                : null);
+        m.put(
+            "a2Rating",
+            rr.isPerformanceFormat() && a2Id != null
+                ? seasonRatings.getOrDefault(a2Id, 1000)
+                : null);
+        m.put(
+            "b1Rating",
+            rr.isPerformanceFormat() && b1Id != null
+                ? seasonRatings.getOrDefault(b1Id, 1000)
+                : null);
+        m.put(
+            "b2Rating",
+            rr.isPerformanceFormat() && b2Id != null
+                ? seasonRatings.getOrDefault(b2Id, 1000)
+                : null);
         m.put(
             "a1Name",
             a1Id != null

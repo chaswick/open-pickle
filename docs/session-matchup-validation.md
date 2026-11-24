@@ -1,5 +1,122 @@
 # Session matchup validation
 
+## Seven-game Normal versus Performance comparisons
+
+```bash
+./gradlew test --tests '*SevenGameRoundRobinSimulationTest' --tests '*PerformanceRoundRobinSchedulerTest' --tests '*SessionMatchupPersistenceTest' --rerun-tasks
+```
+
+Performance uses the latest available season standings when releasing each round.
+The existing season scorer owns ability updates; there is no additional Elo-style session
+model. Starting points are saved as a fallback if a standing is unavailable. A registered
+replacement uses their own standing and a named guest uses the unrated baseline. Once
+released, pairings stay stable even if standings subsequently change. Integration tests
+cover updated standings, missing standings, confirmation gating, concurrent release,
+and stable released games. Standings may refresh asynchronously: the next round uses
+the latest completed update without recalculating the season under the round-robin lock.
+
+Normal favors broad rotation. Performance favors nearby individual ratings, then team
+balance and partner/opponent variety. Scheduling costs preserve relative rating gaps and
+ties while normalizing the roster's numerical range. Changing the common rating baseline
+or multiplying all ratings by a constant does not change scheduling preferences. This
+normalization never changes season points. Each nearby quartet first tries all three
+team divisions before exchanging players across courts; otherwise local search can mix
+distant levels just to escape an old partnership when a nearby rotation exists. Fair
+bye allocation takes precedence throughout.
+
+Performance matchup cards display each registered player's current season rating as a
+small suffix after their name, using the same 1000-point base as the standings. The
+starting snapshot is the fallback; a player without a standing or saved value uses
+1000. Named guests have no numeric suffix. Normal and Fixed teams omit ratings. Live
+refresh revisions include only the schedule's players, so unrelated league rating
+changes do not refresh these cards. Mode choices use short explanatory text rather
+than an info icon or tooltip.
+
+### Reproducible sessions
+
+The report is written to `build/reports/roundrobin-seven-games/runs.csv` (sessions) and
+`build/reports/roundrobin-seven-games/players.csv` (each person's experience and
+starting/ending season points). There are 1,044 reported sessions, 7,530 scheduled rounds,
+and 30,924 games. Every player count from 4 through 32 is covered with seeds 7, 41, 101.
+Five profiles use seven scheduled rounds: equal skill, accurately seeded bands, noisy
+starting ratings, everyone unrated, and one badly underrated strong player. A second set
+of accurately seeded sessions schedules enough rounds for everyone to play seven games.
+The report distinguishes these time budgets rather than counting a bye as a played game.
+
+| Players | Games each in seven rounds | Rounds for at least seven games each |
+| ---: | ---: | ---: |
+| 5 | 5-6 | 9 |
+| 6 | 4-5 | 11 |
+| 7 | 4 | 13 |
+| 15 | 5-6 | 9 |
+| 31 | 6-7 | 8 |
+
+After confirmed results, the simulation applies the real default
+`MarginCurveV1LadderScoringAlgorithm`, including margin, recent variety, and streak
+adjustments. History is supplied newest first. Both modes use the same scorer and
+outcome model. Performance reads those updated points before the next round; Normal's
+whole schedule is prepared upfront. This models promptly refreshed standings.
+Installations using Balanced V1 supply their actual standing points to the same
+production scheduler, but their scoring dynamics are not simulated here.
+
+Latent skill is separate from season points. Accurate bands are at 0/300/600/900 latent
+skill and 0/40/80/120 initial season points. Continuous profiles span 0-800 latent skill;
+noisy estimates add Gaussian error with a standard deviation of 20 season points.
+Unrated players start at zero; the underrated profile gives one skill-800 player a zero
+starting estimate. IDs are shuffled independently of skill. This conversion between
+latent skill and initial points is a modeling assumption, not a real-world calibration.
+
+Synthetic rallies use `P(A wins point) = 1 / (1 + 10^((mean skill B - mean skill A) / 1600))`.
+Games reach eleven, win by two, with a thirty-five-point cap. Canonical teams, round,
+and seed determine the random stream: identical games in either mode receive identical
+outcomes. These synthetic tests cannot establish real player experiences or promise
+recovery from a badly inaccurate starting rating within seven games.
+
+### What the metrics mean
+
+- Individual opponent gaps and all-four-player skill span are measured alongside team
+  balance. A balanced score can hide a player sharing a court with people far outside
+  their level.
+- A near-opponent encounter is an individual opponent within 200 latent skill points.
+- A far-level game has an average absolute gap to the two opponents above 300 latent
+  points. The worst person's share and longest streak are also recorded so improved
+  group averages cannot conceal one person's poor session.
+- The report includes unique partners/opponents, repeat encounters, consecutive
+  partnerships, games actually played, byes, and bye-count spread after every round.
+
+### Observed seven-game experience
+
+In accurately seeded 8/12/16/24/32-player cohorts everyone plays seven actual games.
+These are equal-weight averages over fifteen runs per mode:
+
+| Metric | Normal | Performance |
+| --- | ---: | ---: |
+| Mean individual opponent skill gap | 364 | 199 |
+| Near-opponent encounters | 23% | 46% |
+| Far-level games | 45% | 15% |
+| Longest far-level streak per session | 4.0 | 1.9 |
+| Unique partners per person | 7.0 | 6.9 |
+| Unique opponents per person | 10.5 | 8.9 |
+
+Performance gives a distinct short-session experience: closer individual opponents with
+fewer distinct opponents. It does not depend on learning another ability model over many
+rounds. Equal-skill groups offer no skill advantage to either mode. Unrated groups show
+little benefit. A badly underrated player can still spend several games in the wrong
+group even when the rest of the group benefits; those cases are reported rather than
+called successful recovery.
+
+Tests enforce roster validity, full court use, fair total byes, fair byes after every
+Performance round, no consecutive Performance byes, no consecutive Performance partners
+for groups of eight or more in these scenarios, and at least three distinct partners
+when enough games are played. Aggregate seven-game checks require at least a 15%
+reduction in individual opponent gap and court skill span for the accurately seeded
+cohorts, plus fewer far-level games. Thirty-round scheduler tests remain as mechanical
+fairness stress tests; long-horizon recovery is no longer the product target. The old
+session-rating and placement-challenge experiments have been removed from the active
+test suite along with the duplicate session ability calculation.
+
+## Scheduler and workflow regression checks
+
 Run the scheduler and fixed-team regression checks with:
 
 ```bash

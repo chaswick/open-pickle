@@ -42,6 +42,8 @@ public class RoundRobinService {
   private final RoundRobinScheduler roundRobinScheduler;
   private LadderConfigRepository ladderConfigRepo;
   private TrophyBadgeViewService trophyBadgeViewService;
+  @Autowired private com.w3llspring.fhpb.web.db.LadderStandingRepository standingRepo;
+  @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
 
   @Autowired
   public RoundRobinService(
@@ -145,6 +147,7 @@ public class RoundRobinService {
     return users;
   }
 
+  @Transactional
   public Optional<ActiveSessionAssignment> findActiveSessionAssignment(
       LadderConfig sessionConfig, Long userId) {
     if (sessionConfig == null
@@ -299,6 +302,21 @@ public class RoundRobinService {
     rr.setSeason(season);
     rr.setSessionConfig(ownerConfig != null && ownerConfig.isSessionType() ? ownerConfig : null);
     rr.setFormat(resolvedFormat);
+    if (rr.isPerformanceFormat()) {
+      if (normalizedParticipants.size() < 4) {
+        throw new RoundRobinModificationException("Please select at least 4 players.");
+      }
+      if (rounds < 0 || rounds > 30) {
+        throw new RoundRobinModificationException("Choose between 1 and 30 rounds.");
+      }
+      for (Long id : normalizedParticipants) rr.getSeedRatings().put(id, 0);
+      for (LadderStanding standing : standingRepo.findBySeasonOrderByRankNoAscWithUser(season)) {
+        if (standing.getUser() != null
+            && rr.getSeedRatings().containsKey(standing.getUser().getId())) {
+          rr.getSeedRatings().put(standing.getUser().getId(), standing.getPoints());
+        }
+      }
+    }
     // Use start datetime as the round-robin name (e.g. "2025-10-26 15:04")
     java.time.format.DateTimeFormatter fmt =
         java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -362,6 +380,21 @@ public class RoundRobinService {
     List<List<RoundRobinScheduler.MatchSpec>> schedule;
     if (resolvedFormat == RoundRobin.Format.FIXED_TEAMS) {
       schedule = buildFixedTeamSchedule(normalizedFixedTeams);
+    } else if (rr.isPerformanceFormat()) {
+      PerformanceRoundRobinScheduler scheduler = new PerformanceRoundRobinScheduler();
+      var first =
+          scheduler.nextRound(
+              normalizedParticipants,
+              rr.getSeedRatings().entrySet().stream()
+                  .collect(
+                      Collectors.toMap(
+                          java.util.Map.Entry::getKey, e -> e.getValue().doubleValue())),
+              List.of(),
+              rr.getId());
+      // Future entries reserve roster slots and the requested duration. They are hidden and
+      // cannot be scored until replaced with pairings based on confirmed earlier results.
+      schedule = new ArrayList<>();
+      for (int r = 0; r < (rounds == 0 ? 6 : rounds); r++) schedule.add(first);
     } else {
       // Delegate schedule generation to a pluggable scheduler so algorithms can be swapped
       RoundRobinScheduler.GenerationResult generation =
@@ -859,6 +892,10 @@ public class RoundRobinService {
               .findByIdWithUsersForUpdate(entryId)
               .orElseThrow(
                   () -> new RoundRobinModificationException("Round-robin matchup not found."));
+      if (lockedEntry.getRoundRobin() != null
+          && lockedEntry.getRoundRobin().isPerformanceFormat()) {
+        requirePerformanceRoundReady(lockedEntry.getRoundRobin(), lockedEntry.getRoundNumber());
+      }
       if (!isActiveTournamentEntry(lockedEntry, season)) {
         throw new RoundRobinModificationException(
             "Tournament matches must be assigned to an active round-robin matchup.");
@@ -934,6 +971,34 @@ public class RoundRobinService {
     return rrEntryRepo.save(entry);
   }
 
+  @Transactional
+  public RoundRobinEntry reservePerformanceEntry(
+      Long rrId, Long entryId, LadderSeason season, User a1, User a2, User b1, User b2) {
+    RoundRobin rr = getRoundRobin(rrId);
+    if (rr == null || !rr.isPerformanceFormat()) return null;
+    int current = resolveCurrentRound(rr);
+    RoundRobinEntry entry =
+        rrEntryRepo
+            .findByIdWithUsersForUpdate(entryId)
+            .orElseThrow(
+                () -> new RoundRobinModificationException("Round-robin matchup not found."));
+    if (!java.util.Objects.equals(entry.getRoundRobin().getId(), rrId)
+        || !java.util.Objects.equals(rr.getSeason().getId(), season.getId())
+        || rr.getEndedAt() != null
+        || entry.getRoundNumber() != current
+        || entry.isBye()
+        || entry.getMatchId() != null
+        || !teamsMatchUnordered(
+            teamIds(entry.getA1(), entry.getA2()),
+            teamIds(entry.getB1(), entry.getB2()),
+            teamIds(a1, a2),
+            teamIds(b1, b2))) {
+      throw new RoundRobinModificationException(
+          "Choose an unplayed matchup in the current performance round.");
+    }
+    return entry;
+  }
+
   /**
    * Return true if the two matches of teams are equal ignoring order: team labels (A/B) and player
    * positions are ignored. Comparison is by player id sets.
@@ -995,7 +1060,7 @@ public class RoundRobinService {
       }
     }
 
-    if (linkedMatch == null) {
+    if (linkedMatch == null && !entry.getRoundRobin().isPerformanceFormat()) {
       linkedMatch =
           findLoggedMatchForEntry(
                   entry.getRoundRobin(), entry, entry.getRoundRobin().getCreatedAt())
@@ -1064,14 +1129,17 @@ public class RoundRobinService {
     return String.format("%d-%d", scoreA, scoreB);
   }
 
+  @Transactional
   public int resolveCurrentRound(Long rrId) {
     RoundRobin rr = getRoundRobin(rrId);
     if (rr == null) return 1;
     return resolveCurrentRound(rr);
   }
 
+  @Transactional
   public int resolveCurrentRound(RoundRobin rr) {
     if (rr == null) return 1;
+    if (rr.isPerformanceFormat()) return preparePerformanceRound(rr);
     List<RoundRobinEntry> entries = rrEntryRepo.findByRoundRobinOrderByRoundNumberAscWithUsers(rr);
     if (rr.isSessionFlow()) return computeEffectiveCurrentRound(rr, entries, false);
     int effectiveRound = computeEffectiveCurrentRound(rr, entries, true);
@@ -1080,6 +1148,105 @@ public class RoundRobinService {
       rrRepo.save(rr);
     }
     return effectiveRound;
+  }
+
+  @Transactional(readOnly = true)
+  public java.util.Map<Long, Integer> getSeasonDisplayRatings(RoundRobin rr) {
+    if (rr == null || !rr.isPerformanceFormat()) return java.util.Map.of();
+    java.util.Map<Long, Integer> ratings = new java.util.HashMap<>();
+    rr.getSeedRatings().forEach((id, points) -> ratings.put(id, 1000 + points));
+    for (LadderStanding standing :
+        standingRepo.findBySeasonOrderByRankNoAscWithUser(rr.getSeason())) {
+      if (standing.getUser() != null)
+        ratings.put(standing.getUser().getId(), 1000 + standing.getPoints());
+    }
+    return ratings;
+  }
+
+  private int preparePerformanceRound(RoundRobin supplied) {
+    RoundRobin rr = rrRepo.findByIdForUpdate(supplied.getId()).orElseThrow();
+    // A page may have loaded this entity before waiting for another request's lock.
+    entityManager.refresh(rr, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+    List<RoundRobinEntry> all = rrEntryRepo.findByRoundRobinOrderByRoundNumberAscWithUsers(rr);
+    int current = computeEffectiveCurrentRound(rr, all, false);
+    int max = all.stream().mapToInt(RoundRobinEntry::getRoundNumber).max().orElse(0);
+    if (rr.getEndedAt() == null && current <= max && current > rr.getPreparedRound()) {
+      var scheduler = new PerformanceRoundRobinScheduler();
+      var history = new ArrayList<List<RoundRobinScheduler.MatchSpec>>();
+      for (int r = 1; r < current; r++) {
+        var games = new ArrayList<RoundRobinScheduler.MatchSpec>();
+        for (RoundRobinEntry e : all) {
+          if (e.getRoundNumber() != r) continue;
+          var spec = performanceSpec(e);
+          games.add(spec);
+        }
+        history.add(games);
+      }
+      List<RoundRobinEntry> target =
+          all.stream().filter(e -> e.getRoundNumber() == current).toList();
+      record Slot(User user, String guest) {}
+      java.util.Map<Long, Slot> slots = new java.util.LinkedHashMap<>();
+      for (RoundRobinEntry e : target)
+        for (var p : RoundRobinEntry.Position.values()) {
+          if (e.slotId(p) != null) slots.put(e.slotId(p), new Slot(e.player(p), e.guestName(p)));
+        }
+      java.util.Map<Long, Integer> seasonPoints = new java.util.HashMap<>(rr.getSeedRatings());
+      for (LadderStanding standing :
+          standingRepo.findBySeasonOrderByRankNoAscWithUser(rr.getSeason())) {
+        if (standing.getUser() != null)
+          seasonPoints.put(standing.getUser().getId(), standing.getPoints());
+      }
+      java.util.Map<Long, Double> ratings = new java.util.HashMap<>();
+      slots.forEach(
+          (id, slot) ->
+              ratings.put(
+                  id,
+                  slot.user() == null
+                      ? 0d
+                      : seasonPoints.getOrDefault(slot.user().getId(), 0).doubleValue()));
+      var games =
+          scheduler.nextRound(new ArrayList<>(slots.keySet()), ratings, history, rr.getId());
+      if (games.size() != target.size())
+        throw new RoundRobinModificationException("The performance roster has changed size.");
+      for (int i = 0; i < games.size(); i++) {
+        var spec = games.get(i);
+        var entry = target.get(i);
+        if (entry.getMatchId() != null)
+          throw new RoundRobinModificationException("Cannot change recorded matchups.");
+        entry.setBye(spec.bye);
+        Long[] ids = {spec.a1, spec.a2, spec.b1, spec.b2};
+        for (var p : RoundRobinEntry.Position.values()) {
+          Long id = ids[p.ordinal()];
+          Slot slot = slots.get(id);
+          entry.replace(
+              p, id, slot == null ? null : slot.user(), slot == null ? null : slot.guest());
+        }
+      }
+      rrEntryRepo.saveAll(target);
+      rr.setPreparedRound(current);
+    }
+    rr.setCurrentRound(current);
+    rrRepo.save(rr);
+    supplied.setPreparedRound(rr.getPreparedRound());
+    supplied.setCurrentRound(current);
+    return current;
+  }
+
+  private RoundRobinScheduler.MatchSpec performanceSpec(RoundRobinEntry e) {
+    return new RoundRobinScheduler.MatchSpec(
+        e.slotId(RoundRobinEntry.Position.A1),
+        e.slotId(RoundRobinEntry.Position.A2),
+        e.slotId(RoundRobinEntry.Position.B1),
+        e.slotId(RoundRobinEntry.Position.B2),
+        e.isBye());
+  }
+
+  @Transactional
+  public void requirePerformanceRoundReady(RoundRobin rr, int round) {
+    if (rr.isPerformanceFormat() && round != resolveCurrentRound(rr)) {
+      throw new RoundRobinModificationException(
+          "Confirm all scores in the current round before playing the next round.");
+    }
   }
 
   private int computeEffectiveCurrentRound(
@@ -1149,7 +1316,7 @@ public class RoundRobinService {
 
     // Session score entry links an exact game under a lock. Inferring a link by players
     // would mistake a later repeat matchup for an earlier, already recorded game.
-    if (rr.isSessionFlow()) return null;
+    if (rr.isSessionFlow() || rr.isPerformanceFormat()) return null;
     var maybe = findLoggedMatchForEntry(rr, entry, rr.getCreatedAt());
     if (maybe.isEmpty()) {
       return null;
@@ -1177,13 +1344,19 @@ public class RoundRobinService {
     return user != null && user.getId() != null && user.getId().equals(userId);
   }
 
+  @Transactional
   public List<RoundRobinEntry> getEntriesForRound(Long rrId, int roundNumber) {
     RoundRobin rr = getRoundRobin(rrId);
     if (rr == null) return List.of();
+    if (rr.isPerformanceFormat()) {
+      resolveCurrentRound(rr);
+      if (roundNumber > rr.getPreparedRound()) return List.of();
+    }
     // OPTIMIZED: Use eager loading query to fetch all players at once
     return rrEntryRepo.findByRoundRobinAndRoundNumberWithUsers(rr, roundNumber);
   }
 
+  @Transactional
   public boolean canAdvance(Long rrId) {
     RoundRobin rr = getRoundRobin(rrId);
     if (rr == null) return false;
@@ -1694,6 +1867,10 @@ public class RoundRobinService {
     if (rr == null) {
       throw new RoundRobinModificationException("Round-robin not found.");
     }
+    if (rr.isPerformanceFormat()) {
+      throw new RoundRobinModificationException(
+          "Performance matchups rotate byes automatically after each confirmed round.");
+    }
     if (rr.isFixedTeamsFormat()) {
       throw new RoundRobinModificationException(
           "Fixed-team round-robins cannot regenerate round pairings.");
@@ -1868,6 +2045,10 @@ public class RoundRobinService {
     RoundRobin rr = getRoundRobin(rrId);
     if (rr == null) {
       throw new RoundRobinModificationException("Round-robin not found.");
+    }
+    if (rr.isPerformanceFormat()) {
+      throw new RoundRobinModificationException(
+          "Performance matchups rebalance automatically after each confirmed round.");
     }
     if (rr.isFixedTeamsFormat()) {
       throw new RoundRobinModificationException(

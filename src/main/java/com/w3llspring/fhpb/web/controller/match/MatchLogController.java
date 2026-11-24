@@ -1038,16 +1038,32 @@ public class MatchLogController {
     // by the higher-level confirmation service; for now proceed with match logging.
 
     RoundRobinEntry reservedTournamentEntry = null;
-    if (isTournamentMode(targetSeason) && roundRobinService != null) {
+    if (roundRobinService != null
+        && (isTournamentMode(targetSeason)
+            || (returnToRoundRobinId != null && returnToRoundRobinEntryId != null))) {
       try {
-        reservedTournamentEntry =
-            roundRobinService.reserveTournamentEntry(
-                targetSeason,
-                returnToRoundRobinEntryId,
-                effectiveA1,
-                resolvedA2,
-                resolvedB1,
-                resolvedB2);
+        if (!isTournamentMode(targetSeason)
+            && returnToRoundRobinId != null
+            && returnToRoundRobinEntryId != null) {
+          reservedTournamentEntry =
+              roundRobinService.reservePerformanceEntry(
+                  returnToRoundRobinId,
+                  returnToRoundRobinEntryId,
+                  targetSeason,
+                  effectiveA1,
+                  resolvedA2,
+                  resolvedB1,
+                  resolvedB2);
+        }
+        if (reservedTournamentEntry == null && isTournamentMode(targetSeason))
+          reservedTournamentEntry =
+              roundRobinService.reserveTournamentEntry(
+                  targetSeason,
+                  returnToRoundRobinEntryId,
+                  effectiveA1,
+                  resolvedA2,
+                  resolvedB1,
+                  resolvedB2);
       } catch (RoundRobinModificationException ex) {
         formInternal(
             model,

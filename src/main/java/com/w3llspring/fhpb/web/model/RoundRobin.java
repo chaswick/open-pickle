@@ -33,6 +33,7 @@ public class RoundRobin {
 
   public enum Format {
     ROTATING_PARTNERS,
+    PERFORMANCE,
     FIXED_TEAMS;
 
     public static Format fromParam(String value) {
@@ -94,6 +95,32 @@ public class RoundRobin {
   @Enumerated(EnumType.STRING)
   @Column(name = "format", nullable = false, length = 32)
   private Format format = Format.ROTATING_PARTNERS;
+
+  @Column(name = "prepared_round", nullable = false)
+  private int preparedRound = 1;
+
+  @ElementCollection
+  @CollectionTable(name = "round_robin_seed", joinColumns = @JoinColumn(name = "round_robin_id"))
+  @MapKeyColumn(name = "user_id")
+  @Column(name = "rating", nullable = false)
+  private java.util.Map<Long, Integer> seedRatings = new java.util.HashMap<>();
+
+  public int getPreparedRound() {
+    return preparedRound;
+  }
+
+  public void setPreparedRound(int value) {
+    preparedRound = value;
+  }
+
+  public java.util.Map<Long, Integer> getSeedRatings() {
+    return seedRatings;
+  }
+
+  @Transient
+  public boolean isPerformanceFormat() {
+    return format == Format.PERFORMANCE;
+  }
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "created_by")

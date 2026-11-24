@@ -10,6 +10,7 @@ function preparation(count, revision = 'one') {
     <input name="organizerScored" type="radio" value="false" checked>
     <input name="organizerScored" type="radio" value="true">
     <input name="format" type="radio" value="ROTATING_PARTNERS" checked>
+    <input name="format" type="radio" value="PERFORMANCE">
     <input name="format" type="radio" value="FIXED_TEAMS">
     <div data-fixed-pairs hidden><div data-pair-list></div><input data-fixed-teams></div>
     <div data-rotating-rounds><input name="rounds" value="6"></div>
@@ -31,6 +32,19 @@ beforeAll(() => window.eval(source));
 afterEach(() => { document.body.innerHTML = ''; document.body.classList.remove('modal-open'); });
 
 describe('Session matchup setup', () => {
+  it.each([4, 5, 7, 8, 15, 16, 31, 32])('keeps the round count and rotating setup for %i performance players', count => {
+    const root = mount(count);
+    fixed(root);
+    const performance = root.querySelector('[value=PERFORMANCE]');
+    performance.checked = true;
+    performance.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(root.querySelector('[data-fixed-pairs]').hidden).toBe(true);
+    expect(root.querySelector('[data-rotating-rounds]').hidden).toBe(false);
+    expect(root.querySelector('[name=rounds]').disabled).toBe(false);
+    expect(root.querySelector('[name=rounds]').value).toBe('6');
+    expect(root.querySelector('button[type=submit]').disabled).toBe(false);
+    expect(root.querySelector('[data-setup-summary]').textContent).toContain('6 rounds');
+  });
   it.each(['all', 'mine'])('starts on all rounds with the server-selected %s games view', filter => {
     document.body.innerHTML = `<section data-session-matchups-root data-games-filter="${filter}" data-initial-round="2">
       <select data-matchup-round><option value="all">All rounds</option><option value="2">2</option></select>

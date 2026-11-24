@@ -209,6 +209,52 @@ class SessionMatchupServiceTest {
   }
 
   @Test
+  void performanceShowsSeasonRatingsAndRefreshesWhenTheyChange() {
+    rr.setFormat(RoundRobin.Format.PERFORMANCE);
+    when(entries.findByRoundRobinOrderByRoundNumberAscWithUsers(rr))
+        .thenReturn(List.of(game(20, 1)));
+    when(roundRobins.getSeasonDisplayRatings(rr))
+        .thenReturn(
+            Map.of(1L, 1042, 2L, 990, 3L, 1000, 4L, 1200, 99L, 1000),
+            Map.of(1L, 1070, 2L, 990, 3L, 1000, 4L, 1200, 99L, 1000),
+            Map.of(1L, 1070, 2L, 990, 3L, 1000, 4L, 1200, 99L, 1500));
+    var first = service.view(session, host, Set.of());
+    assertThat(first.next().a1Rating()).isEqualTo(1042);
+    assertThat(first.next().a2Rating()).isEqualTo(990);
+    assertThat(first.next().b1Rating()).isEqualTo(1000);
+    assertThat(first.next().b2Rating()).isEqualTo(1200);
+    var refreshed = service.view(session, host, Set.of());
+    assertThat(refreshed.next().a1Rating()).isEqualTo(1070);
+    assertThat(refreshed.revision()).isNotEqualTo(first.revision());
+    assertThat(service.view(session, host, Set.of()).revision()).isEqualTo(refreshed.revision());
+  }
+
+  @Test
+  void normalAndFixedTeamCardsOmitSeasonRatings() {
+    when(entries.findByRoundRobinOrderByRoundNumberAscWithUsers(rr))
+        .thenReturn(List.of(game(20, 1)));
+    for (var format : List.of(RoundRobin.Format.ROTATING_PARTNERS, RoundRobin.Format.FIXED_TEAMS)) {
+      rr.setFormat(format);
+      var g = service.view(session, host, Set.of()).next();
+      assertThat(Arrays.asList(g.a1Rating(), g.a2Rating(), g.b1Rating(), g.b2Rating()))
+          .containsOnlyNulls();
+    }
+    verify(roundRobins, never()).getSeasonDisplayRatings(any());
+  }
+
+  @Test
+  void performanceUsesBaselineForUnratedPlayersAndOmitsRatingsForNamedGuests() {
+    rr.setFormat(RoundRobin.Format.PERFORMANCE);
+    var entry = game(20, 1);
+    entry.replace(Position.B2, 4L, null, "Taylor");
+    when(entries.findByRoundRobinOrderByRoundNumberAscWithUsers(rr)).thenReturn(List.of(entry));
+    var g = service.view(session, host, Set.of()).next();
+    assertThat(g.a1Rating()).isEqualTo(1000);
+    assertThat(g.b2Rating()).isNull();
+    assertThat(g.b2().name()).isEqualTo("Taylor");
+  }
+
+  @Test
   void guestReplacementPreservesPendingAndOutOfOrderRecordedGamesAndKeepsStableSlot() {
     RoundRobinEntry first = game(20, 1), unplayed = game(21, 2), playedAhead = game(22, 6);
     first.setMatchId(100L);

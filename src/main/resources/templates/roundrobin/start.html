@@ -47,8 +47,13 @@
                                        value="ROTATING_PARTNERS"
                                        th:checked="${roundRobinFormat == null or roundRobinFormat == 'ROTATING_PARTNERS'}" />
                                 <label class="form-check-label" for="formatRotatingPartners">
-                                    Rotating partners each round
+                                    Normal
+                                    <small class="d-block text-muted">Rotate partners each game</small>
                                 </label>
+                            </div>
+                            <div class="form-check text-start">
+                                <input class="form-check-input" type="radio" id="formatPerformance" name="format" value="PERFORMANCE" th:checked="${roundRobinFormat == 'PERFORMANCE'}" />
+                                <label class="form-check-label" for="formatPerformance">Performance<small class="d-block text-muted">Play near your season rating</small></label>
                             </div>
                             <div class="form-check text-start">
                                 <input class="form-check-input"
@@ -59,12 +64,10 @@
                                        th:checked="${roundRobinFormat == 'FIXED_TEAMS'}" />
                                 <label class="form-check-label" for="formatFixedTeams">
                                     Fixed teams
+                                    <small class="d-block text-muted">Keep the same partner</small>
                                 </label>
                             </div>
                         </div>
-                        <p class="small text-muted text-center mt-2 mb-0">
-                            Rotating partners reshuffles matchups each round. Fixed teams keep the same team together throughout the bracket.
-                        </p>
                     </div>
 
                     <div th:if="${members != null and !members.isEmpty()}">

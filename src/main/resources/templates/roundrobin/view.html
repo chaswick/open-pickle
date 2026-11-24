@@ -16,6 +16,8 @@
     <div class="card mb-4 shadow card-spotlight">
         <div class="card-header card-header-title">Round-robin</div>
         <div class="card-body">
+            <p th:if="${performanceMode == true}" class="small text-muted">Performance: the next round is matched after all scores in this round are confirmed.</p>
+            <p th:if="${performanceRoundWaiting == true}" class="text-center">Matchups will appear after the previous round is confirmed.</p>
             <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Round <span th:text="${currentRound}"></span>
@@ -53,19 +55,19 @@
                             
                             <div class="d-flex flex-column text-center small">
                                 
-                                <span th:text="${e.a1Name != null ? e.a1Name : (e.b1Name != null ? e.b1Name : '')}"></span>
+                                <span><span th:text="${e.a1Name != null ? e.a1Name : (e.b1Name != null ? e.b1Name : '')}"></span><small th:if="${e.a1Rating != null}" class="text-muted fw-normal ms-1 notranslate" translate="no" th:attr="aria-label=${'Season rating ' + e.a1Rating}" th:text="${'(' + e.a1Rating + ')'}"></small></span>
 
                                 
-                                <span th:text="${e.a2Name != null ? e.a2Name : ''}"></span>
+                                <span><span th:text="${e.a2Name != null ? e.a2Name : ''}"></span><small th:if="${e.a2Rating != null}" class="text-muted fw-normal ms-1 notranslate" translate="no" th:attr="aria-label=${'Season rating ' + e.a2Rating}" th:text="${'(' + e.a2Rating + ')'}"></small></span>
 
                                 
                                 <span class="fw-bold">vs</span>
 
                                 
-                                <span th:text="${e.b1Name != null ? e.b1Name : ''}"></span>
+                                <span><span th:text="${e.b1Name != null ? e.b1Name : ''}"></span><small th:if="${e.b1Rating != null}" class="text-muted fw-normal ms-1 notranslate" translate="no" th:attr="aria-label=${'Season rating ' + e.b1Rating}" th:text="${'(' + e.b1Rating + ')'}"></small></span>
 
                                 
-                                <span th:text="${e.b2Name != null ? e.b2Name : ''}"></span>
+                                <span><span th:text="${e.b2Name != null ? e.b2Name : ''}"></span><small th:if="${e.b2Rating != null}" class="text-muted fw-normal ms-1 notranslate" translate="no" th:attr="aria-label=${'Season rating ' + e.b2Rating}" th:text="${'(' + e.b2Rating + ')'}"></small></span>
 
                                 
                                 <div class="mt-1">

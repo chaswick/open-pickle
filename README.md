@@ -105,6 +105,30 @@ English can also appear briefly before a saved language is applied. Check
 site; the free widget has use restrictions. Private branding overlays should retain the
 shared layout's `components/language` include, which is separate from the footer override.
 
+## Performance round robins
+
+Round-robin setup defaults to **Normal** and also offers **Performance**, with a short
+explanation under the option. The existing fixed-team format remains available.
+Performance rotates partners among nearby season ratings and releases each round after
+the preceding round's results are confirmed;
+future pairings stay hidden and cannot be scored ahead. Organizer-entered scores confirm
+immediately, while player-entered scores must receive the usual confirmation.
+
+Each new round uses the latest available season standing points (the displayed rating
+minus its common base). The existing season scorer handles score margins, variety, and
+streaks; Performance does not calculate a second ability rating. Starting ratings are
+saved as a fallback if a standing is unavailable, and unrated players use the normal
+zero-point baseline. Rating updates affect future pairings; released games stay stable. Performance matchup
+cards show the current displayed season rating after each registered player's name; named
+guests have no numeric rating.
+Standings may refresh asynchronously, so a round uses the latest completed update.
+
+Bye allocation takes priority: players with fewer byes rest first, with the oldest rest
+breaking ties. Counts stay within one for an unchanged roster, and consecutive rests
+are avoided when possible. Pairings then balance nearby strengths against accumulated
+and recent partner/opponent repeats. Repeats can be necessary in small groups. The mode
+supports 1–30 rounds and works with the session roster replacement flow.
+
 ## Name-only session joining
 
 Session invitation links let a new player enter a name and join without supplying an
@@ -122,12 +146,13 @@ checks the signed cookie and renews it when a returning player resumes their acc
 App restarts and the end of a playing session/season do not erase that account.
 Logging out clears the cookie and revokes previous name-only cookies for that account.
 
-Account Settings offers an optional recovery-code download. Only the hash is stored;
-the secret is delivered as a private, uncached text attachment. It can be entered at
-`/recover-player` to resume the same account on another browser. Generating a new code
-replaces the previous one. Public member IDs, names, and shared session invites cannot
-recover an account. If both the device credential and private recovery code are lost,
-the player must join with a new account.
+Account Settings directs name-only players to connect an email to keep access to their
+account. The recovery-code download option is hidden from this experience. Previously
+saved recovery codes can still be entered at `/recover-player` to resume the same
+account on another browser. Only the recovery-code hash is stored. Public member IDs,
+names, and shared session invites cannot recover an account. Without a connected email,
+device credential, or previously saved recovery code, the player must join with a new
+account.
 
 New public member IDs use three different short words, for example
 `calm-ruby-paddle` (1,070,598,144 combinations from 1,024 bundled words). Existing

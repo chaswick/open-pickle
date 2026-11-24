@@ -55,7 +55,7 @@
             </a>
 
             <form method="post" th:action="@{/logout}" class="m-0"
-                  th:attr="onsubmit=${loggedInUser != null and loggedInUser.nameOnlyAccount} ? 'return handleConfirmForm(this, &quot;Log out of this device? You will need your saved recovery code to sign back in to this account.&quot;);' : null">
+                  th:attr="onsubmit=${loggedInUser != null and loggedInUser.nameOnlyAccount} ? 'return handleConfirmForm(this, &quot;Log out of this device? Connect an email before logging out to keep access to your account.&quot;);' : null">
                 <button type="submit" class="app-action-tile app-action-logout w-100 text-start border-0">
                     <div class="app-action-icon"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></div>
                     <div>

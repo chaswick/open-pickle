@@ -98,6 +98,7 @@ public class SessionMatchupService {
       return preparation(session, members, host, true);
     }
     List<RoundRobinEntry> all = loadEntries(rr);
+    int performanceRound = rr.isPerformanceFormat() ? rr.getPreparedRound() : Integer.MAX_VALUE;
     if (prepareMore
         && host
         && (rr.getEndedAt() != null
@@ -112,6 +113,16 @@ public class SessionMatchupService {
                 .distinct()
                 .toList());
     Map<Long, Name> names = playerNames(session, members, all);
+    Map<Long, Integer> seasonRatings = new HashMap<>();
+    if (rr.isPerformanceFormat()) {
+      Map<Long, Integer> latest = roundRobins.getSeasonDisplayRatings(rr);
+      for (RoundRobinEntry entry : all)
+        for (Position position : Position.values()) {
+          User player = entry.player(position);
+          if (player != null)
+            seasonRatings.put(player.getId(), latest.getOrDefault(player.getId(), 1000));
+        }
+    }
     Map<Long, Slot> roster = roster(all, names);
     Set<Long> playingIds = new HashSet<>();
     roster
@@ -153,6 +164,10 @@ public class SessionMatchupService {
       int gameNumber = 0;
       for (RoundRobinEntry entry : all) {
         if (entry.getRoundNumber() != r) continue;
+        if (r > performanceRound) {
+          if (!entry.isBye()) remaining++;
+          continue;
+        }
         if (entry.isBye()) {
           for (Position p : Position.values())
             if (entry.slotId(p) != null) byes.add(playerName(entry, p, names));
@@ -162,7 +177,10 @@ public class SessionMatchupService {
         boolean mine = containsUser(entry, actor.getId());
         boolean unplayed = entry.getMatchId() == null;
         boolean canLog =
-            rr.getEndedAt() == null && unplayed && (host || (mine && !session.isOrganizerScored()));
+            rr.getEndedAt() == null
+                && unplayed
+                && (host || (mine && !session.isOrganizerScored()))
+                && (!rr.isPerformanceFormat() || r == rr.getCurrentRound());
         String status =
             unplayed
                 ? "Ready to play"
@@ -184,6 +202,10 @@ public class SessionMatchupService {
                 playerName(entry, Position.A2, names),
                 playerName(entry, Position.B1, names),
                 playerName(entry, Position.B2, names),
+                rating(entry.getA1(), rr, seasonRatings),
+                rating(entry.getA2(), rr, seasonRatings),
+                rating(entry.getB1(), rr, seasonRatings),
+                rating(entry.getB2(), rr, seasonRatings),
                 mine,
                 canLog,
                 status,
@@ -200,7 +222,7 @@ public class SessionMatchupService {
             && match.getState() != MatchState.CONFIRMED
             && match.getState() != MatchState.NULLIFIED) pending++;
       }
-      rounds.add(new Round(r, games, byes));
+      if (r <= performanceRound) rounds.add(new Round(r, games, byes));
     }
     String revision =
         rr.getId()
@@ -216,6 +238,8 @@ public class SessionMatchupService {
             + slots
             + ":"
             + available
+            + ":"
+            + new TreeMap<>(seasonRatings)
             + ":"
             + all.stream().map(e -> e.getId() + ":" + e.getMatchId()).toList()
             + ":"
@@ -236,7 +260,9 @@ public class SessionMatchupService {
         remaining,
         pending,
         initialRound == 0 ? maxRound : initialRound,
-        rr.isFixedTeamsFormat() ? "Fixed partners" : "Rotating partners",
+        rr.isPerformanceFormat()
+            ? "Performance"
+            : rr.isFixedTeamsFormat() ? "Fixed partners" : "Normal",
         members.stream().map(u -> member(u, names)).toList(),
         slots,
         available,
@@ -371,6 +397,7 @@ public class SessionMatchupService {
     if (!Objects.equals(entry.getRoundRobin().getId(), rr.getId()) || entry.isBye()) {
       throw problem("Choose a game from this schedule.");
     }
+    roundRobins.requirePerformanceRoundReady(rr, entry.getRoundNumber());
     boolean host = isHost(session, actor);
     if (!host && (session.isOrganizerScored() || !containsUser(entry, actor.getId())))
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -533,6 +560,7 @@ public class SessionMatchupService {
   }
 
   private List<RoundRobinEntry> loadEntries(RoundRobin rr) {
+    if (rr.isPerformanceFormat()) roundRobins.resolveCurrentRound(rr);
     List<RoundRobinEntry> all =
         new ArrayList<>(entries.findByRoundRobinOrderByRoundNumberAscWithUsers(rr));
     all.sort(
@@ -541,7 +569,7 @@ public class SessionMatchupService {
     if (!rr.isSessionFlow()) {
       // Convert existing schedules once. Earlier UI paths linked ordinary score entries lazily.
       for (RoundRobinEntry e : all) {
-        if (!e.isBye() && e.getMatchId() == null)
+        if (!rr.isPerformanceFormat() && !e.isBye() && e.getMatchId() == null)
           roundRobins
               .findLoggedMatchForEntry(rr, e, rr.getCreatedAt())
               .ifPresent(m -> roundRobins.linkEntryToMatch(e, m.getId()));
@@ -653,6 +681,12 @@ public class SessionMatchupService {
     return new RoundRobinModificationException(message);
   }
 
+  private Integer rating(User player, RoundRobin rr, Map<Long, Integer> ratings) {
+    return rr.isPerformanceFormat() && player != null
+        ? ratings.getOrDefault(player.getId(), 1000)
+        : null;
+  }
+
   public record Member(Long id, String name, String publicCode) {}
 
   public record Slot(
@@ -672,6 +706,10 @@ public class SessionMatchupService {
       Name a2,
       Name b1,
       Name b2,
+      Integer a1Rating,
+      Integer a2Rating,
+      Integer b1Rating,
+      Integer b2Rating,
       boolean mine,
       boolean canLog,
       String status,
